@@ -5,7 +5,7 @@
 
 ## v1 Requirements
 
-Requirements for MVP release. Complete end-to-end flow: Blueprint → GitHub Actions CI → Docker deployment.
+Requirements for MVP release. Complete end-to-end flow: Blueprint -> GitHub Actions CI -> Docker deployment.
 
 ### Foundation
 
@@ -167,6 +167,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FNDN-12 | Phase 1 | Pending |
 | FNDN-13 | Phase 1 | Pending |
 | FNDN-14 | Phase 1 | Pending |
+| UIUX-01 | Phase 1 | Pending |
+| UIUX-05 | Phase 1 | Pending |
 | PROJ-01 | Phase 2 | Pending |
 | PROJ-02 | Phase 2 | Pending |
 | PROJ-03 | Phase 2 | Pending |
@@ -180,6 +182,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ENV-04 | Phase 2 | Pending |
 | ENV-05 | Phase 2 | Pending |
 | ENV-06 | Phase 2 | Pending |
+| UIUX-02 | Phase 2 | Pending |
 | INTG-01 | Phase 3 | Pending |
 | INTG-02 | Phase 3 | Pending |
 | INTG-03 | Phase 3 | Pending |
@@ -205,6 +208,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SRVC-08 | Phase 5 | Pending |
 | SRVC-09 | Phase 5 | Pending |
 | SRVC-10 | Phase 5 | Pending |
+| UIUX-03 | Phase 5 | Pending |
+| UIUX-04 | Phase 5 | Pending |
+| UIUX-06 | Phase 5 | Pending |
 | BILD-01 | Phase 6 | Pending |
 | BILD-02 | Phase 6 | Pending |
 | BILD-03 | Phase 6 | Pending |
@@ -219,18 +225,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DPLY-06 | Phase 7 | Pending |
 | DPLY-07 | Phase 7 | Pending |
 | DPLY-08 | Phase 7 | Pending |
-| UIUX-01 | Phase 1 | Pending |
-| UIUX-02 | Phase 2 | Pending |
-| UIUX-03 | Phase 5 | Pending |
-| UIUX-04 | Phase 5 | Pending |
-| UIUX-05 | Phase 1 | Pending |
-| UIUX-06 | Phase 5 | Pending |
 
 **Coverage:**
-- v1 requirements: 59 total
-- Mapped to phases: 59
-- Unmapped: 0 ✓
+- v1 requirements: 72 total
+- Mapped to phases: 72
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-01-21*
-*Last updated: 2026-01-21 after initial definition*
+*Last updated: 2026-01-22 after roadmap creation*
