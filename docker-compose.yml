@@ -1,0 +1,49 @@
+# Self-Service Portal - Docker Compose
+# Compatible with both Docker Compose and Podman Compose
+
+services:
+  ssp:
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.ssp.rule=Host(`ssp.yourdevops.me`)
+      - traefik.http.services.ssp.loadbalancer.server.port=8000
+      - traefik.http.routers.ssp.tls=true
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ssp-portal
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}
+      - SSP_DATA_DIR=${SSP_DATA_DIR:-/app/data}
+      - SSP_PUBLIC_URL=${SSP_PUBLIC_URL}
+    volumes:
+      # Mount manifests directory for persistence
+      - ./manifests:/app/manifests
+      # Use named volume for data persistence
+      - ssp-data:/app/data
+      # Mount Docker socket for container management (optional)
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    # Required for Docker socket access - set DOCKER_GID to your host's docker group ID
+    group_add:
+      - ${DOCKER_GID:-999}
+    restart: unless-stopped
+    networks:
+      - yourdevops_public
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  ssp-data:
+
+networks:
+  yourdevops_public:
+    external: true
