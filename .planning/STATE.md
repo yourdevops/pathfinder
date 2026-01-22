@@ -90,9 +90,10 @@ None yet.
 | 003 | Fix unlock token bypass security issue | 2026-01-22 | 92aae42 | [003-fix-unlock-token-bypass-security-issue](./quick/003-fix-unlock-token-bypass-security-issue/) |
 | 004 | Add root URL redirect to /projects/ | 2026-01-22 | 9c37520 | [004-add-root-url-redirect-to-projects](./quick/004-add-root-url-redirect-to-projects/) |
 | 005 | Fix humanize and JSONField contains errors | 2026-01-22 | 413b55a | [005-fix-humanize-and-jsonfield-contains-errors](./quick/005-fix-humanize-and-jsonfield-contains-errors/) |
+| 006 | Consolidate has_system_role SQLite compat | 2026-01-22 | e09d598 | [006-consolidate-has-system-role-sqlite-compat](./quick/006-consolidate-has-system-role-sqlite-compat/) |
 
 ## Session Continuity
 
-Last session: 2026-01-22T13:47:42Z
-Stopped at: Completed quick task 005
+Last session: 2026-01-22T14:08:46Z
+Stopped at: Completed quick task 006
 Resume file: None
