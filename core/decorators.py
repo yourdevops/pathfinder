@@ -10,11 +10,11 @@ def has_system_role(user, role):
     """Check if user has a specific SystemRole through any group."""
     if not user.is_authenticated:
         return False
-    return GroupMembership.objects.filter(
+    memberships = GroupMembership.objects.filter(
         user=user,
-        group__status='active',
-        group__system_roles__contains=[role]
-    ).exists()
+        group__status='active'
+    ).select_related('group')
+    return any(role in m.group.system_roles for m in memberships)
 
 
 def admin_required(view_func):
