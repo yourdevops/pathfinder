@@ -78,6 +78,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.user_roles',
+                'core.context_processors.navigation_context',
             ],
         },
     },
@@ -142,5 +143,5 @@ SESSION_SAVE_EVERY_REQUEST = True  # Reset expiry on activity
 
 # Authentication URLs
 LOGIN_URL = 'auth:login'
-LOGIN_REDIRECT_URL = 'users:list'
+LOGIN_REDIRECT_URL = 'projects:list'
 LOGOUT_REDIRECT_URL = 'auth:login'
