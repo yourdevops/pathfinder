@@ -7,6 +7,7 @@ from .views import (
     GroupDeleteView, GroupAddMemberView, GroupRemoveMemberView,
     AuditLogView,
     BlueprintsListView, ConnectionsListView,
+    ProjectListView, ProjectCreateModalView, ProjectCreateView,
 )
 
 # Setup URLs
@@ -51,4 +52,11 @@ blueprints_patterns = [
 
 connections_patterns = [
     path('', ConnectionsListView.as_view(), name='list'),
+]
+
+# Project management URLs
+projects_patterns = [
+    path('', ProjectListView.as_view(), name='list'),
+    path('create/', ProjectCreateModalView.as_view(), name='create_modal'),
+    path('create/submit/', ProjectCreateView.as_view(), name='create'),
 ]

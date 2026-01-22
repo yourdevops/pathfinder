@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Projects - DevSSP{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-dark-text">Projects</h1>
+            <p class="text-dark-muted mt-1">Manage your deployment projects and environments</p>
+        </div>
+        {% if is_admin %}
+        <button hx-get="{% url 'projects:create_modal' %}"
+                hx-target="body"
+                hx-swap="beforeend"
+                class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create Project
+        </button>
+        {% endif %}
+    </div>
+
+    {% if projects %}
+    <!-- Projects Table -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg overflow-hidden">
+        <table class="w-full">
+            <thead>
+                <tr class="border-b border-dark-border bg-dark-bg/50">
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-dark-muted uppercase tracking-wider">Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-dark-muted uppercase tracking-wider">Description</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-dark-muted uppercase tracking-wider">Environments</th>
+                    <th class="px-6 py-3 text-left text-xs font-semibold text-dark-muted uppercase tracking-wider">Last Activity</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-dark-border">
+                {% for project in projects %}
+                <tr class="hover:bg-dark-border/30 transition-colors">
+                    <td class="px-6 py-4">
+                        <!-- Link to project detail - placeholder # until Plan 03 -->
+                        <a href="#" class="text-dark-text hover:text-dark-accent font-medium transition-colors">
+                            {{ project.name }}
+                        </a>
+                        {% if project.status == 'inactive' %}
+                        <span class="ml-2 px-2 py-0.5 text-xs rounded bg-yellow-500/20 text-yellow-400">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-dark-muted max-w-md">
+                        <span class="line-clamp-2">{{ project.description|default:"-"|truncatewords:20 }}</span>
+                    </td>
+                    <td class="px-6 py-4 text-dark-text">
+                        <span class="inline-flex items-center gap-1">
+                            <svg class="w-4 h-4 text-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+                            </svg>
+                            {{ project.env_count }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-dark-muted text-sm">
+                        {% load humanize %}
+                        {{ project.updated_at|naturaltime }}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg p-12 text-center">
+        <svg class="w-16 h-16 mx-auto text-dark-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+        </svg>
+        <h2 class="text-xl font-semibold text-dark-text mb-2">No projects yet</h2>
+        <p class="text-dark-muted mb-6">Get started by creating your first project to organize deployments.</p>
+        {% if is_admin %}
+        <button hx-get="{% url 'projects:create_modal' %}"
+                hx-target="body"
+                hx-swap="beforeend"
+                class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors inline-flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create Project
+        </button>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
