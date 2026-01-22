@@ -9,28 +9,29 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 
 ## Current Position
 
-Phase: 1 of 7 (Foundation & Security) - COMPLETE
-Plan: 6 of 6 in current phase (all complete)
-Status: Phase complete
-Last activity: 2026-01-22 - Completed quick task 003: Fix unlock token bypass security issue
+Phase: 2 of 7 (Core Domain)
+Plan: 1 of 4 in current phase
+Status: In progress
+Last activity: 2026-01-22 - Completed 02-01-PLAN.md (Project/Environment/ProjectMembership models)
 
-Progress: [============        ] 30%
+Progress: [=============       ] 35%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
+- Total plans completed: 7
 - Average duration: 4 min
-- Total execution time: 0.42 hours
+- Total execution time: 0.45 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation-security | 6 | 25 min | 4 min |
+| 02-core-domain | 1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (6 min), 01-03 (8 min), 01-04 (3 min), 01-05 (4 min), 01-06 (2 min)
+- Last 5 plans: 01-03 (8 min), 01-04 (3 min), 01-05 (4 min), 01-06 (2 min), 02-01 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -58,6 +59,9 @@ Recent decisions affecting current work:
 | 01-05 | Card-based group list vs table for users | Visual hierarchy and scanability for groups |
 | 01-05 | Template tags for audit log formatting | Consistent human-readable entries like "John created user Alice" |
 | 01-06 | LoginRequiredMixin for placeholder views | Standard Django pattern for auth enforcement |
+| 02-01 | JSONField for env_vars with list of dicts | Flexible schema, supports locked values, easy merge |
+| 02-01 | project_role on ProjectMembership not Group | Same group can have different roles per project |
+| 02-01 | HTMX via CDN (unpkg) | No build step, version pinned in template |
 
 ### Pending Todos
 
@@ -65,9 +69,9 @@ None yet.
 
 ### Blockers/Concerns
 
-- All Phase 1 navigation links now work (blueprints:list, connections:list added in 01-06)
-- Phase 1 success criteria all met
-- Ready to proceed to Phase 2 (Settings Storage & Encryption)
+- Phase 1 complete, Phase 2 in progress
+- Project/Environment/ProjectMembership models ready for CRUD UI
+- HTMX infrastructure ready for partial updates
 
 ### Quick Tasks Completed
 
@@ -79,6 +83,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-22T11:38:10Z
-Stopped at: Completed quick task 003
+Last session: 2026-01-22T12:55:02Z
+Stopped at: Completed 02-01-PLAN.md
 Resume file: None
