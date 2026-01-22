@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import RedirectView
 
 from core.urls import (
     setup_patterns, auth_patterns, users_patterns,
@@ -25,6 +26,7 @@ from core.urls import (
 )
 
 urlpatterns = [
+    path('', RedirectView.as_view(url='/projects/', permanent=False), name='root'),
     path('admin/', admin.site.urls),
     path('setup/', include((setup_patterns, 'setup'), namespace='setup')),
     path('auth/', include((auth_patterns, 'auth'), namespace='auth')),
