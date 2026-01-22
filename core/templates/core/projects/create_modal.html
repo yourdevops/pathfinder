@@ -1,0 +1,60 @@
+<!-- Modal backdrop -->
+<div id="create-project-modal" class="fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/50" onclick="this.parentElement.remove()"></div>
+    <div class="relative bg-dark-surface border border-dark-border rounded-lg shadow-xl w-full max-w-md mx-4">
+        <form hx-post="{% url 'projects:create' %}" hx-target="#create-project-modal" hx-swap="outerHTML">
+            {% csrf_token %}
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-dark-text">Create Project</h2>
+                    <button type="button" onclick="this.closest('#create-project-modal').remove()"
+                            class="text-dark-muted hover:text-dark-text transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Name Field -->
+                    <div>
+                        <label for="id_name" class="block text-sm font-medium text-dark-text mb-1">Name</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                        <p class="mt-1 text-sm text-red-400">{{ form.name.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-dark-muted">Lowercase letters, numbers, hyphens. Max 20 chars.</p>
+                    </div>
+
+                    <!-- Description Field -->
+                    <div>
+                        <label for="id_description" class="block text-sm font-medium text-dark-text mb-1">Description</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                        <p class="mt-1 text-sm text-red-400">{{ form.description.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if form.non_field_errors %}
+                <div class="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                    {% for error in form.non_field_errors %}
+                    <p class="text-sm text-red-400">{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="flex justify-end gap-3 p-4 border-t border-dark-border">
+                <button type="button" onclick="this.closest('#create-project-modal').remove()"
+                        class="px-4 py-2 text-dark-text hover:bg-dark-border rounded-lg transition-colors">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors">
+                    Create Project
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

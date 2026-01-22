@@ -1,9 +1,11 @@
+import re
+
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from .models import User, Group, GroupMembership
+from .models import User, Group, GroupMembership, Project
 
 
 class UnlockForm(forms.Form):
@@ -323,3 +325,35 @@ class GroupAddMemberForm(forms.Form):
             # Exclude users already in the group
             existing_user_ids = GroupMembership.objects.filter(group=group).values_list('user_id', flat=True)
             self.fields['user'].queryset = User.objects.filter(status='active').exclude(id__in=existing_user_ids)
+
+
+class ProjectCreateForm(forms.ModelForm):
+    """Form for creating a new project."""
+
+    class Meta:
+        model = Project
+        fields = ['name', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
+                'placeholder': 'my-project',
+                'pattern': '[a-z0-9][a-z0-9-]*[a-z0-9]|[a-z0-9]',
+                'title': 'Lowercase letters, numbers, and hyphens only',
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
+                'rows': 3,
+                'placeholder': 'A brief description of this project',
+            }),
+        }
+
+    def clean_name(self):
+        name = self.cleaned_data['name'].lower()
+        # DNS-compatible validation
+        if not name or len(name) > 20:
+            raise forms.ValidationError('Name must be 1-20 characters')
+        if not re.match(r'^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$', name):
+            raise forms.ValidationError('Must be lowercase alphanumeric with optional hyphens (not at start/end)')
+        if Project.objects.filter(name=name).exists():
+            raise forms.ValidationError('A project with this name already exists.')
+        return name
