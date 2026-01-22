@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'core.apps.CoreConfig',  # Must be first for custom User
     'auditlog',
     'tailwind',
+    'theme',  # django-tailwind theme app
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -41,6 +42,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 ]
+
+# Tailwind CSS
+TAILWIND_APP_NAME = 'theme'
+INTERNAL_IPS = ['127.0.0.1']  # For django-browser-reload if used
+# NPM_BIN_PATH = '/usr/local/bin/npm'  # Uncomment if needed
 
 # Custom User Model - MUST be set before first migration
 AUTH_USER_MODEL = 'core.User'
