@@ -22,7 +22,11 @@
 </head>
 <body class="bg-dark-bg text-dark-text min-h-screen">
     {% if user.is_authenticated %}
-    {% include "core/components/nav.html" %}
+        {% if in_project_context and current_project %}
+            {% include "core/components/nav_project.html" %}
+        {% else %}
+            {% include "core/components/nav.html" %}
+        {% endif %}
     {% endif %}
 
     <main class="{% if user.is_authenticated %}ml-64{% endif %} min-h-screen">

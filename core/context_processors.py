@@ -29,13 +29,31 @@ def navigation_context(request):
     This context processor provides:
     - in_project_context: True when viewing a project-scoped page
     - current_project: The Project instance when in project context
-
-    Project context detection will be fully implemented in Plan 03.
+    - current_project_role: User's role on the current project
     """
+    from core.models import Project
+    from core.permissions import get_user_project_role
+
     context = {
         'in_project_context': False,
         'current_project': None,
+        'current_project_role': None,
     }
-    # Project context detection will be added in Plan 03
-    # when project detail views are created with project_uuid in URL
+
+    # Check if we're in a project-scoped URL
+    if hasattr(request, 'resolver_match') and request.resolver_match:
+        if 'project_uuid' in request.resolver_match.kwargs:
+            try:
+                project = Project.objects.get(
+                    uuid=request.resolver_match.kwargs['project_uuid']
+                )
+                context['in_project_context'] = True
+                context['current_project'] = project
+                if request.user.is_authenticated:
+                    context['current_project_role'] = get_user_project_role(
+                        request.user, project
+                    )
+            except Project.DoesNotExist:
+                pass
+
     return context
