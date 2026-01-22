@@ -5,33 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 2 - Core Domain (In Progress)
+**Current focus:** Phase 2 - Core Domain (Complete)
 
 ## Current Position
 
 Phase: 2 of 7 (Core Domain)
-Plan: 3 of 4 in current phase
-Status: In progress
-Last activity: 2026-01-22 - Completed 02-03-PLAN.md (Project detail with HTMX tabs and context-replacing sidebar)
+Plan: 4 of 4 in current phase
+Status: Phase Complete
+Last activity: 2026-01-22 - Completed 02-04-PLAN.md (Project governance and env management)
 
-Progress: [================    ] 45%
+Progress: [====================] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
+- Total plans completed: 10
 - Average duration: 4 min
-- Total execution time: 0.6 hours
+- Total execution time: 0.7 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation-security | 6 | 25 min | 4 min |
-| 02-core-domain | 3 | 14 min | 5 min |
+| 02-core-domain | 4 | 20 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-05 (4 min), 01-06 (2 min), 02-01 (2 min), 02-02 (4 min), 02-03 (8 min)
+- Last 5 plans: 01-06 (2 min), 02-01 (2 min), 02-02 (4 min), 02-03 (8 min), 02-04 (6 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -68,6 +68,9 @@ Recent decisions affecting current work:
 | 02-03 | Role hierarchy viewer < contributor < owner | Clear role escalation with system role override |
 | 02-03 | HTMX tab pattern with hx-push-url | No page reload, browser history works |
 | 02-03 | Context-replacing sidebar (AWS style) | Clearer project context, dedicated project nav |
+| 02-04 | Env var lock prevents override | Locked project vars cannot be overridden at environment level |
+| 02-04 | Amber styling for production | bg-amber-500/20 for production environments |
+| 02-04 | Inheritance shown via badge | Blue "Inherited" for project-level, green "Environment" for local |
 
 ### Pending Todos
 
@@ -75,10 +78,8 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 2 in progress
-- Project detail with HTMX tabs functional
-- Context-replacing sidebar working
-- Plan 04 (polish/remaining views) needed to complete Phase 2
+- Phase 2 complete
+- Ready for Phase 3 (External Integrations)
 
 ### Quick Tasks Completed
 
@@ -90,6 +91,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-22T14:15:00Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-01-22T13:18:00Z
+Stopped at: Completed 02-04-PLAN.md
 Resume file: None
