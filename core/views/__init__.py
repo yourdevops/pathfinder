@@ -6,6 +6,7 @@ from .groups import (
     GroupDeleteView, GroupAddMemberView, GroupRemoveMemberView,
 )
 from .audit import AuditLogView
+from .placeholders import BlueprintsListView, ConnectionsListView
 
 __all__ = [
     'UnlockView', 'AdminRegistrationView',
@@ -14,4 +15,5 @@ __all__ = [
     'GroupListView', 'GroupDetailView', 'GroupCreateView', 'GroupEditView',
     'GroupDeleteView', 'GroupAddMemberView', 'GroupRemoveMemberView',
     'AuditLogView',
+    'BlueprintsListView', 'ConnectionsListView',
 ]
