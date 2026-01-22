@@ -2,8 +2,17 @@ from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth import login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse, NoReverseMatch
 
 from ..forms import LoginForm
+
+
+def get_default_redirect_url():
+    """Get default redirect URL after login, with fallback."""
+    try:
+        return reverse('users:list')
+    except NoReverseMatch:
+        return '/users/'
 
 
 class LoginView(View):
@@ -12,7 +21,7 @@ class LoginView(View):
 
     def get(self, request):
         if request.user.is_authenticated:
-            return redirect('users:list')
+            return redirect(get_default_redirect_url())
         return render(request, self.template_name, {'form': LoginForm()})
 
     def post(self, request):
@@ -28,8 +37,10 @@ class LoginView(View):
                 request.session.set_expiry(86400)  # 1 day
 
             # Redirect to next URL or default
-            next_url = request.GET.get('next', 'users:list')
-            return redirect(next_url)
+            next_url = request.GET.get('next')
+            if next_url:
+                return redirect(next_url)
+            return redirect(get_default_redirect_url())
 
         return render(request, self.template_name, {'form': form})
 

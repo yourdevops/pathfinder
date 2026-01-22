@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth import login
+from django.urls import reverse, NoReverseMatch
 
 from ..forms import UnlockForm, AdminRegistrationForm
 from ..utils import verify_unlock_token, complete_setup
@@ -75,6 +76,11 @@ class AdminRegistrationView(View):
             login(request, user)
 
             # Redirect to user management per requirements
-            return redirect('users:list')
+            # Use try/except since users:list may not exist until Plan 04
+            try:
+                return redirect('users:list')
+            except NoReverseMatch:
+                # Fallback to hardcoded path when users app not yet created
+                return redirect('/users/')
 
         return render(request, self.template_name, {'form': form})
