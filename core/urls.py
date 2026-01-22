@@ -9,8 +9,10 @@ from .views import (
     BlueprintsListView, ConnectionsListView,
     ProjectListView, ProjectCreateModalView, ProjectCreateView,
     ProjectDetailView, ProjectUpdateView, ProjectArchiveView,
-    EnvironmentCreateView, EnvironmentDetailView,
+    EnvironmentCreateView, EnvironmentDetailView, EnvironmentUpdateView, EnvironmentDeleteView,
     AddMemberModalView, RemoveMemberView,
+    ProjectEnvVarModalView, ProjectEnvVarSaveView, ProjectEnvVarDeleteView,
+    EnvVarModalView, EnvVarSaveView, EnvVarDeleteView,
 )
 
 # Setup URLs
@@ -67,6 +69,15 @@ projects_patterns = [
     path('<uuid:project_uuid>/archive/', ProjectArchiveView.as_view(), name='archive'),
     path('<uuid:project_uuid>/environments/create/', EnvironmentCreateView.as_view(), name='environment_create'),
     path('<uuid:project_uuid>/environments/<uuid:env_uuid>/', EnvironmentDetailView.as_view(), name='environment_detail'),
+    path('<uuid:project_uuid>/environments/<uuid:env_uuid>/update/', EnvironmentUpdateView.as_view(), name='environment_update'),
+    path('<uuid:project_uuid>/environments/<uuid:env_uuid>/delete/', EnvironmentDeleteView.as_view(), name='environment_delete'),
+    path('<uuid:project_uuid>/environments/<uuid:env_uuid>/env-vars/', EnvVarModalView.as_view(), name='env_var_modal'),
+    path('<uuid:project_uuid>/environments/<uuid:env_uuid>/env-vars/save/', EnvVarSaveView.as_view(), name='env_var_save'),
+    path('<uuid:project_uuid>/environments/<uuid:env_uuid>/env-vars/<str:key>/delete/', EnvVarDeleteView.as_view(), name='env_var_delete'),
     path('<uuid:project_uuid>/members/add/', AddMemberModalView.as_view(), name='add_member_modal'),
     path('<uuid:project_uuid>/members/<uuid:group_uuid>/remove/', RemoveMemberView.as_view(), name='remove_member'),
+    # Project-level env vars
+    path('<uuid:project_uuid>/env-vars/', ProjectEnvVarModalView.as_view(), name='project_env_var_modal'),
+    path('<uuid:project_uuid>/env-vars/save/', ProjectEnvVarSaveView.as_view(), name='project_env_var_save'),
+    path('<uuid:project_uuid>/env-vars/<str:key>/delete/', ProjectEnvVarDeleteView.as_view(), name='project_env_var_delete'),
 ]

@@ -381,7 +381,7 @@ class EnvironmentForm(forms.ModelForm):
 
     class Meta:
         model = Environment
-        fields = ['name', 'description', 'is_production', 'order']
+        fields = ['name', 'description', 'is_production', 'is_default', 'order']
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
@@ -394,10 +394,20 @@ class EnvironmentForm(forms.ModelForm):
             'is_production': forms.CheckboxInput(attrs={
                 'class': 'rounded border-dark-border bg-dark-bg text-dark-accent focus:ring-dark-accent',
             }),
+            'is_default': forms.CheckboxInput(attrs={
+                'class': 'rounded border-dark-border bg-dark-bg text-dark-accent focus:ring-dark-accent',
+            }),
             'order': forms.NumberInput(attrs={
                 'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
             }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Name cannot be changed after creation
+        if self.instance and self.instance.pk:
+            self.fields['name'].disabled = True
+            self.fields['name'].widget.attrs['class'] += ' cursor-not-allowed opacity-50'
 
     def clean_name(self):
         name = self.cleaned_data['name'].lower()

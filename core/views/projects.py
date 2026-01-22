@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
 from django.urls import reverse
 from django.http import HttpResponse
-from django.shortcuts import redirect, get_object_or_404
+from django.shortcuts import redirect, get_object_or_404, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.vary import vary_on_headers
 from django.contrib import messages
@@ -159,10 +159,95 @@ class EnvironmentDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['environment'] = get_object_or_404(
+        env = get_object_or_404(
             Environment, uuid=kwargs.get('env_uuid'), project=self.project
         )
+        context['environment'] = env
+        context['form'] = EnvironmentForm(instance=env)
+        # Get merged env vars with inheritance info
+        context['merged_env_vars'] = self.get_merged_env_vars(env)
         return context
+
+    def get_merged_env_vars(self, environment):
+        """Merge project and environment env vars with inheritance tracking."""
+        merged = {}
+
+        # First add project-level vars (all inherited)
+        for var in (self.project.env_vars or []):
+            merged[var['key']] = {
+                'key': var['key'],
+                'value': var['value'],
+                'lock': var.get('lock', False),
+                'inherited': True,
+                'source': 'project',
+            }
+
+        # Then add/override with environment-level vars
+        for var in (environment.env_vars or []):
+            key = var['key']
+            if key in merged and merged[key]['lock']:
+                # Locked at project level - can't override, mark as locked
+                merged[key]['locked_override'] = True
+            else:
+                merged[key] = {
+                    'key': var['key'],
+                    'value': var['value'],
+                    'lock': var.get('lock', False),
+                    'inherited': False,
+                    'source': 'environment',
+                }
+
+        return list(merged.values())
+
+
+class EnvironmentUpdateView(LoginRequiredMixin, ProjectContributorMixin, View):
+    """Update environment settings."""
+
+    def post(self, request, *args, **kwargs):
+        env = get_object_or_404(
+            Environment, uuid=kwargs.get('env_uuid'), project=self.project
+        )
+        form = EnvironmentForm(request.POST, instance=env)
+        if form.is_valid():
+            # Handle is_default - ensure only one default
+            if form.cleaned_data.get('is_default'):
+                Environment.objects.filter(
+                    project=self.project, is_default=True
+                ).exclude(pk=env.pk).update(is_default=False)
+
+            form.save()
+            messages.success(request, f'Environment "{env.name}" updated.')
+            return redirect('projects:environment_detail',
+                          project_uuid=self.project.uuid, env_uuid=env.uuid)
+        # Re-render with errors
+        return render(request, 'core/projects/environment_detail.html', {
+            'project': self.project,
+            'environment': env,
+            'form': form,
+            'user_project_role': self.user_project_role,
+        })
+
+
+class EnvironmentDeleteView(LoginRequiredMixin, ProjectOwnerMixin, View):
+    """Delete an environment."""
+
+    def post(self, request, *args, **kwargs):
+        env = get_object_or_404(
+            Environment, uuid=kwargs.get('env_uuid'), project=self.project
+        )
+        env_name = env.name
+        was_default = env.is_default
+        env.delete()
+
+        # If deleted env was default, make another one default
+        if was_default:
+            next_env = self.project.environments.first()
+            if next_env:
+                next_env.is_default = True
+                next_env.save()
+
+        messages.success(request, f'Environment "{env_name}" deleted.')
+        return redirect('projects:detail', project_uuid=self.project.uuid)
 
 
 class AddMemberModalView(LoginRequiredMixin, ProjectOwnerMixin, TemplateView):
@@ -206,3 +291,165 @@ class RemoveMemberView(LoginRequiredMixin, ProjectOwnerMixin, View):
         membership.delete()
         messages.success(request, f'Group "{group.name}" removed from project.')
         return redirect('projects:detail', project_uuid=self.project.uuid)
+
+
+# ============================================================================
+# Project-level Environment Variables
+# ============================================================================
+
+class ProjectEnvVarModalView(LoginRequiredMixin, ProjectOwnerMixin, TemplateView):
+    """Show modal to add/edit project-level env var."""
+    template_name = 'core/projects/env_var_modal.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['target'] = 'project'
+        context['action_url'] = reverse('projects:project_env_var_save',
+                                        kwargs={'project_uuid': self.project.uuid})
+        return context
+
+
+class ProjectEnvVarSaveView(LoginRequiredMixin, ProjectOwnerMixin, View):
+    """Save a project-level env var."""
+
+    def post(self, request, *args, **kwargs):
+        import re
+        key = request.POST.get('key', '').strip().upper()
+        value = request.POST.get('value', '')
+        lock = request.POST.get('lock') == 'on'
+
+        # Validate key
+        if not key:
+            messages.error(request, 'Key is required.')
+            return redirect('projects:detail', project_uuid=self.project.uuid)
+
+        if not re.match(r'^[A-Z][A-Z0-9_]*$', key):
+            messages.error(request, 'Key must start with a letter and contain only uppercase letters, numbers, and underscores.')
+            return redirect('projects:detail', project_uuid=self.project.uuid)
+
+        # Update or add env var
+        env_vars = list(self.project.env_vars or [])
+        updated = False
+        for var in env_vars:
+            if var['key'] == key:
+                var['value'] = value
+                var['lock'] = lock
+                updated = True
+                break
+
+        if not updated:
+            env_vars.append({'key': key, 'value': value, 'lock': lock})
+
+        self.project.env_vars = env_vars
+        self.project.save(update_fields=['env_vars', 'updated_at'])
+        messages.success(request, f'Variable "{key}" saved.')
+
+        # Return to settings tab
+        response = HttpResponse(status=204)
+        response['HX-Redirect'] = reverse('projects:detail',
+                                          kwargs={'project_uuid': self.project.uuid}) + '?tab=settings'
+        return response
+
+
+class ProjectEnvVarDeleteView(LoginRequiredMixin, ProjectOwnerMixin, View):
+    """Delete a project-level env var."""
+
+    def delete(self, request, *args, **kwargs):
+        key = kwargs.get('key')
+        env_vars = [v for v in (self.project.env_vars or []) if v['key'] != key]
+        self.project.env_vars = env_vars
+        self.project.save(update_fields=['env_vars', 'updated_at'])
+        return HttpResponse(status=200)  # HTMX will remove the element
+
+
+# ============================================================================
+# Environment-level Environment Variables
+# ============================================================================
+
+class EnvVarModalView(LoginRequiredMixin, ProjectContributorMixin, TemplateView):
+    """Show modal to add/edit environment-level env var."""
+    template_name = 'core/projects/env_var_modal.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        env = get_object_or_404(
+            Environment, uuid=kwargs.get('env_uuid'), project=self.project
+        )
+        context['environment'] = env
+        context['target'] = 'environment'
+        context['action_url'] = reverse('projects:env_var_save',
+                                        kwargs={'project_uuid': self.project.uuid,
+                                               'env_uuid': env.uuid})
+        # Pass locked keys from project for validation hint
+        context['locked_keys'] = [v['key'] for v in (self.project.env_vars or [])
+                                  if v.get('lock')]
+        return context
+
+
+class EnvVarSaveView(LoginRequiredMixin, ProjectContributorMixin, View):
+    """Save an environment-level env var."""
+
+    def post(self, request, *args, **kwargs):
+        import re
+        env = get_object_or_404(
+            Environment, uuid=kwargs.get('env_uuid'), project=self.project
+        )
+
+        key = request.POST.get('key', '').strip().upper()
+        value = request.POST.get('value', '')
+
+        # Validate key
+        if not key:
+            messages.error(request, 'Key is required.')
+            return redirect('projects:environment_detail',
+                          project_uuid=self.project.uuid, env_uuid=env.uuid)
+
+        if not re.match(r'^[A-Z][A-Z0-9_]*$', key):
+            messages.error(request, 'Key must start with a letter and contain only uppercase letters, numbers, and underscores.')
+            return redirect('projects:environment_detail',
+                          project_uuid=self.project.uuid, env_uuid=env.uuid)
+
+        # Check if key is locked at project level
+        locked_keys = [v['key'] for v in (self.project.env_vars or [])
+                      if v.get('lock')]
+        if key in locked_keys:
+            messages.error(request, f'Variable "{key}" is locked at project level and cannot be overridden.')
+            return redirect('projects:environment_detail',
+                          project_uuid=self.project.uuid, env_uuid=env.uuid)
+
+        # Update or add env var
+        env_vars = list(env.env_vars or [])
+        updated = False
+        for var in env_vars:
+            if var['key'] == key:
+                var['value'] = value
+                updated = True
+                break
+
+        if not updated:
+            env_vars.append({'key': key, 'value': value})
+
+        env.env_vars = env_vars
+        env.save(update_fields=['env_vars', 'updated_at'])
+        messages.success(request, f'Variable "{key}" saved.')
+
+        # Return to environment detail
+        response = HttpResponse(status=204)
+        response['HX-Redirect'] = reverse('projects:environment_detail',
+                                          kwargs={'project_uuid': self.project.uuid,
+                                                 'env_uuid': env.uuid})
+        return response
+
+
+class EnvVarDeleteView(LoginRequiredMixin, ProjectContributorMixin, View):
+    """Delete an environment-level env var."""
+
+    def delete(self, request, *args, **kwargs):
+        env = get_object_or_404(
+            Environment, uuid=kwargs.get('env_uuid'), project=self.project
+        )
+        key = kwargs.get('key')
+        env_vars = [v for v in (env.env_vars or []) if v['key'] != key]
+        env.env_vars = env_vars
+        env.save(update_fields=['env_vars', 'updated_at'])
+        return HttpResponse(status=200)  # HTMX will remove the element

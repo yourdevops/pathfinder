@@ -1,9 +1,10 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}{{ environment.name }} - {{ project.name }} - DevSSP{% endblock %}
 
 {% block content %}
-<div class="p-6">
+<div class="p-6 max-w-4xl">
     <!-- Breadcrumb -->
     <nav class="flex mb-6" aria-label="Breadcrumb">
         <ol class="flex items-center space-x-2 text-sm">
@@ -27,7 +28,7 @@
             <span class="px-2 py-0.5 text-xs rounded bg-dark-accent/20 text-dark-accent">Default</span>
             {% endif %}
             {% if environment.is_production %}
-            <span class="px-2 py-0.5 text-xs rounded bg-red-500/20 text-red-400">Production</span>
+            <span class="px-2 py-0.5 text-xs rounded bg-amber-500/20 text-amber-400">Production</span>
             {% endif %}
         </div>
         {% if environment.description %}
@@ -35,11 +36,60 @@
         {% endif %}
     </div>
 
-    <!-- Environment Info -->
-    <div class="bg-dark-surface border border-dark-border rounded-lg">
+    <!-- Environment Settings -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg mb-6">
         <div class="px-6 py-4 border-b border-dark-border">
-            <h2 class="text-lg font-semibold text-dark-text">Environment Details</h2>
+            <h2 class="text-lg font-semibold text-dark-text">Environment Settings</h2>
         </div>
+        {% if user_project_role == 'owner' or user_project_role == 'contributor' %}
+        <form method="post" action="{% url 'projects:environment_update' project_uuid=project.uuid env_uuid=environment.uuid %}" class="p-6 space-y-4">
+            {% csrf_token %}
+
+            <div>
+                <label for="id_name" class="block text-sm font-medium text-dark-text mb-1">Name</label>
+                {{ form.name }}
+                <p class="text-dark-muted text-xs mt-1">Environment names cannot be changed after creation.</p>
+            </div>
+
+            <div>
+                <label for="id_description" class="block text-sm font-medium text-dark-text mb-1">Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="id_order" class="block text-sm font-medium text-dark-text mb-1">Order</label>
+                    {{ form.order }}
+                    {% if form.order.errors %}
+                    <p class="text-red-400 text-sm mt-1">{{ form.order.errors.0 }}</p>
+                    {% endif %}
+                    <p class="text-dark-muted text-xs mt-1">Lower numbers appear first (dev=10, staging=20, prod=30)</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-2">
+                    {{ form.is_production }}
+                    <label for="id_is_production" class="text-sm text-dark-text">Production environment</label>
+                </div>
+                <div class="flex items-center gap-2">
+                    {{ form.is_default }}
+                    <label for="id_is_default" class="text-sm text-dark-text">Default environment</label>
+                </div>
+            </div>
+            <p class="text-dark-muted text-xs -mt-2">Production environments are highlighted with amber styling. The default environment is pre-selected for new services.</p>
+
+            <div class="pt-4">
+                <button type="submit" class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <!-- Read-only view for viewers -->
         <div class="p-6">
             <dl class="grid grid-cols-2 gap-4">
                 <div>
@@ -62,28 +112,121 @@
                 </div>
                 <div>
                     <dt class="text-sm text-dark-muted">Created</dt>
-                    <dd class="text-dark-text">{% load humanize %}{{ environment.created_at|naturaltime }}</dd>
+                    <dd class="text-dark-text">{{ environment.created_at|naturaltime }}</dd>
                 </div>
             </dl>
         </div>
+        {% endif %}
     </div>
 
-    <!-- Environment Variables Placeholder -->
-    <div class="mt-6 bg-dark-surface border border-dark-border rounded-lg">
-        <div class="px-6 py-4 border-b border-dark-border">
-            <h2 class="text-lg font-semibold text-dark-text">Environment Variables</h2>
-            <p class="text-dark-muted text-sm mt-1">Variables for this environment. Inherited variables from the project can be overridden.</p>
+    <!-- Environment Variables -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg mb-6">
+        <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between">
+            <div>
+                <h2 class="text-lg font-semibold text-dark-text">Environment Variables</h2>
+                <p class="text-dark-muted text-sm mt-1">Variables for this environment. Inherited variables from the project can be overridden unless locked.</p>
+            </div>
+            {% if user_project_role == 'owner' or user_project_role == 'contributor' %}
+            <button hx-get="{% url 'projects:env_var_modal' project_uuid=project.uuid env_uuid=environment.uuid %}"
+                    hx-target="body"
+                    hx-swap="beforeend"
+                    class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Variable
+            </button>
+            {% endif %}
         </div>
         <div class="p-6">
+            {% if merged_env_vars %}
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b border-dark-border">
+                            <th class="px-4 py-2 text-left text-xs font-semibold text-dark-muted uppercase tracking-wider">Key</th>
+                            <th class="px-4 py-2 text-left text-xs font-semibold text-dark-muted uppercase tracking-wider">Value</th>
+                            <th class="px-4 py-2 text-left text-xs font-semibold text-dark-muted uppercase tracking-wider">Source</th>
+                            <th class="px-4 py-2 text-right text-xs font-semibold text-dark-muted uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-dark-border">
+                        {% for var in merged_env_vars %}
+                        <tr class="hover:bg-dark-border/30">
+                            <td class="px-4 py-3">
+                                <code class="text-dark-text font-mono">{{ var.key }}</code>
+                                {% if var.lock %}
+                                <svg class="w-4 h-4 inline-block text-amber-400 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="Locked">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3">
+                                <code class="text-dark-muted font-mono text-sm">{{ var.value|truncatechars:40 }}</code>
+                            </td>
+                            <td class="px-4 py-3">
+                                {% if var.inherited %}
+                                <span class="px-2 py-0.5 text-xs rounded bg-blue-500/20 text-blue-400">Inherited</span>
+                                {% else %}
+                                <span class="px-2 py-0.5 text-xs rounded bg-green-500/20 text-green-400">Environment</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-right">
+                                {% if not var.inherited and user_project_role != 'viewer' %}
+                                <button hx-delete="{% url 'projects:env_var_delete' project_uuid=project.uuid env_uuid=environment.uuid key=var.key %}"
+                                        hx-confirm="Delete variable {{ var.key }}?"
+                                        hx-target="closest tr"
+                                        hx-swap="outerHTML"
+                                        class="text-dark-muted hover:text-red-400 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                                {% elif var.inherited %}
+                                <span class="text-dark-muted text-xs">from project</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
             <div class="text-center py-8">
                 <svg class="w-12 h-12 mx-auto text-dark-muted mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                <p class="text-dark-muted">Environment variable management coming in a future release.</p>
+                <p class="text-dark-muted">No environment variables defined.</p>
+                <p class="text-dark-muted text-sm mt-1">Add variables at the project level for all environments, or here for this environment only.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Danger Zone -->
+    {% if user_project_role == 'owner' %}
+    <div class="bg-dark-surface border border-red-500/30 rounded-lg">
+        <div class="px-6 py-4 border-b border-red-500/30">
+            <h2 class="text-lg font-semibold text-red-400">Danger Zone</h2>
+        </div>
+        <div class="p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-dark-text font-medium">Delete this environment</h3>
+                    <p class="text-dark-muted text-sm">Once deleted, all services in this environment will be removed.</p>
+                </div>
+                <form method="post" action="{% url 'projects:environment_delete' project_uuid=project.uuid env_uuid=environment.uuid %}"
+                      onsubmit="return confirm('Are you sure you want to delete this environment? This action cannot be undone.');">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 border border-red-500/50 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
+                        Delete Environment
+                    </button>
+                </form>
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- Back link -->
     <div class="mt-6">

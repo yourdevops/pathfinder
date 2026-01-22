@@ -10,8 +10,10 @@ from .placeholders import BlueprintsListView, ConnectionsListView
 from .projects import (
     ProjectListView, ProjectCreateModalView, ProjectCreateView,
     ProjectDetailView, ProjectUpdateView, ProjectArchiveView,
-    EnvironmentCreateView, EnvironmentDetailView,
+    EnvironmentCreateView, EnvironmentDetailView, EnvironmentUpdateView, EnvironmentDeleteView,
     AddMemberModalView, RemoveMemberView,
+    ProjectEnvVarModalView, ProjectEnvVarSaveView, ProjectEnvVarDeleteView,
+    EnvVarModalView, EnvVarSaveView, EnvVarDeleteView,
 )
 
 __all__ = [
@@ -24,6 +26,8 @@ __all__ = [
     'BlueprintsListView', 'ConnectionsListView',
     'ProjectListView', 'ProjectCreateModalView', 'ProjectCreateView',
     'ProjectDetailView', 'ProjectUpdateView', 'ProjectArchiveView',
-    'EnvironmentCreateView', 'EnvironmentDetailView',
+    'EnvironmentCreateView', 'EnvironmentDetailView', 'EnvironmentUpdateView', 'EnvironmentDeleteView',
     'AddMemberModalView', 'RemoveMemberView',
+    'ProjectEnvVarModalView', 'ProjectEnvVarSaveView', 'ProjectEnvVarDeleteView',
+    'EnvVarModalView', 'EnvVarSaveView', 'EnvVarDeleteView',
 ]

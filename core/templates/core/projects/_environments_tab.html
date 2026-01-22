@@ -28,7 +28,7 @@
             </thead>
             <tbody class="divide-y divide-dark-border">
                 {% for env in environments %}
-                <tr class="{% if env.is_production %}bg-red-500/5 hover:bg-red-500/10{% else %}hover:bg-dark-border/30{% endif %} transition-colors">
+                <tr class="{% if env.is_production %}bg-amber-500/5 hover:bg-amber-500/10{% else %}hover:bg-dark-border/30{% endif %} transition-colors">
                     <td class="px-6 py-4">
                         <a href="{% url 'projects:environment_detail' project_uuid=project.uuid env_uuid=env.uuid %}"
                            class="text-dark-text hover:text-dark-accent font-medium transition-colors">
@@ -43,7 +43,7 @@
                     </td>
                     <td class="px-6 py-4">
                         {% if env.is_production %}
-                        <span class="px-2 py-0.5 text-xs rounded bg-red-500/20 text-red-400">Production</span>
+                        <span class="px-2 py-0.5 text-xs rounded bg-amber-500/20 text-amber-400">Production</span>
                         {% else %}
                         <span class="text-dark-muted">-</span>
                         {% endif %}
