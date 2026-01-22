@@ -9,37 +9,48 @@ from ..models import User, Group, GroupMembership
 
 
 class UnlockView(View):
-    """Handle unlock token entry."""
+    """Handle unlock token entry and admin account creation in single-page flow."""
     template_name = 'core/setup/unlock.html'
 
     def get(self, request):
-        return render(request, self.template_name, {'form': UnlockForm()})
+        # Check if unlock already verified - show registration form
+        if request.session.get('unlock_verified'):
+            return render(request, self.template_name, {
+                'unlock_verified': True,
+                'form': AdminRegistrationForm(),
+            })
+        # Show unlock form
+        return render(request, self.template_name, {
+            'unlock_verified': False,
+            'form': UnlockForm(),
+        })
 
     def post(self, request):
+        # Check if this is a registration submission (unlock already verified)
+        if request.session.get('unlock_verified'):
+            return self._handle_registration(request)
+        # Otherwise handle unlock token validation
+        return self._handle_unlock(request)
+
+    def _handle_unlock(self, request):
+        """Validate unlock token and transition to registration form."""
         form = UnlockForm(request.POST)
         if form.is_valid():
             if verify_unlock_token(form.cleaned_data['token']):
-                # Store verified state in session for registration step
+                # Store verified state in session - stay on same page
                 request.session['unlock_verified'] = True
-                return redirect('setup:register')
+                return render(request, self.template_name, {
+                    'unlock_verified': True,
+                    'form': AdminRegistrationForm(),
+                })
             form.add_error('token', 'Invalid unlock token.')
-        return render(request, self.template_name, {'form': form})
+        return render(request, self.template_name, {
+            'unlock_verified': False,
+            'form': form,
+        })
 
-
-class AdminRegistrationView(View):
-    """Handle first admin account creation."""
-    template_name = 'core/setup/register.html'
-
-    def dispatch(self, request, *args, **kwargs):
-        # Must have verified unlock token first
-        if not request.session.get('unlock_verified'):
-            return redirect('setup:unlock')
-        return super().dispatch(request, *args, **kwargs)
-
-    def get(self, request):
-        return render(request, self.template_name, {'form': AdminRegistrationForm()})
-
-    def post(self, request):
+    def _handle_registration(self, request):
+        """Create admin account after unlock verification."""
         form = AdminRegistrationForm(request.POST)
         if form.is_valid():
             # Create user
@@ -83,4 +94,7 @@ class AdminRegistrationView(View):
                 # Fallback to hardcoded path when users app not yet created
                 return redirect('/users/')
 
-        return render(request, self.template_name, {'form': form})
+        return render(request, self.template_name, {
+            'unlock_verified': True,
+            'form': form,
+        })

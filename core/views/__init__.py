@@ -1,4 +1,4 @@
-from .setup import UnlockView, AdminRegistrationView
+from .setup import UnlockView
 from .auth import LoginView, LogoutView
 from .users import UserListView, UserCreateView, UserEditView, UserDeleteView
 from .groups import (
@@ -9,7 +9,7 @@ from .audit import AuditLogView
 from .placeholders import BlueprintsListView, ConnectionsListView
 
 __all__ = [
-    'UnlockView', 'AdminRegistrationView',
+    'UnlockView',
     'LoginView', 'LogoutView',
     'UserListView', 'UserCreateView', 'UserEditView', 'UserDeleteView',
     'GroupListView', 'GroupDetailView', 'GroupCreateView', 'GroupEditView',

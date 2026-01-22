@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    UnlockView, AdminRegistrationView,
+    UnlockView,
     LoginView, LogoutView,
     UserListView, UserCreateView, UserEditView, UserDeleteView,
     GroupListView, GroupDetailView, GroupCreateView, GroupEditView,
@@ -12,7 +12,6 @@ from .views import (
 # Setup URLs
 setup_patterns = [
     path('unlock/', UnlockView.as_view(), name='unlock'),
-    path('register/', AdminRegistrationView.as_view(), name='register'),
 ]
 
 # Auth URLs
