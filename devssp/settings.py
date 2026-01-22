@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
 INSTALLED_APPS = [
     'core.apps.CoreConfig',  # Must be first for custom User
     'auditlog',
+    'django_htmx',
     'tailwind',
     'theme',  # django-tailwind theme app
     'django.contrib.admin',
@@ -54,6 +55,7 @@ AUTH_USER_MODEL = 'core.User'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django_htmx.middleware.HtmxMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'core.middleware.SetupMiddleware',  # Before auth - enforce setup flow
