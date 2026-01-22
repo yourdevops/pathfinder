@@ -1,0 +1,35 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}DevSSP{% endblock %}</title>
+    {% tailwind_css %}
+    <script>
+        // Ensure dark mode class is set before render to prevent flash
+        document.documentElement.classList.add('dark');
+    </script>
+</head>
+<body class="bg-dark-bg text-dark-text min-h-screen">
+    {% if user.is_authenticated %}
+    {% include "core/components/nav.html" %}
+    {% endif %}
+
+    <main class="{% if user.is_authenticated %}ml-64{% endif %} min-h-screen">
+        {% if messages %}
+        <div class="p-4">
+            {% for message in messages %}
+            <div class="card mb-2 {% if message.tags %}{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>
