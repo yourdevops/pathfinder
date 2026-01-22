@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 Phase: 1 of 7 (Foundation & Security) - COMPLETE
 Plan: 6 of 6 in current phase (all complete)
 Status: Phase complete
-Last activity: 2026-01-22 - Completed 01-06-PLAN.md
+Last activity: 2026-01-22 - Completed quick task 001: Fix STATIC_ROOT setting
 
 Progress: [============        ] 30%
 
@@ -68,6 +68,12 @@ None yet.
 - All Phase 1 navigation links now work (blueprints:list, connections:list added in 01-06)
 - Phase 1 success criteria all met
 - Ready to proceed to Phase 2 (Settings Storage & Encryption)
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 001 | Fix STATIC_ROOT setting for collectstatic | 2026-01-22 | 1cac75c | [001-fix-static-root-setting-for-collectstati](./quick/001-fix-static-root-setting-for-collectstati/) |
 
 ## Session Continuity
 
