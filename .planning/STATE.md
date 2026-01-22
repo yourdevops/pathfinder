@@ -5,33 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 1 - Foundation & Security (COMPLETE)
+**Current focus:** Phase 2 - Core Domain (In Progress)
 
 ## Current Position
 
 Phase: 2 of 7 (Core Domain)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-22 - Completed 02-01-PLAN.md (Project/Environment/ProjectMembership models)
+Last activity: 2026-01-22 - Completed 02-02-PLAN.md (Navigation restructure, project list with create modal)
 
-Progress: [=============       ] 35%
+Progress: [==============      ] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
+- Total plans completed: 8
 - Average duration: 4 min
-- Total execution time: 0.45 hours
+- Total execution time: 0.5 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation-security | 6 | 25 min | 4 min |
-| 02-core-domain | 1 | 2 min | 2 min |
+| 02-core-domain | 2 | 6 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-03 (8 min), 01-04 (3 min), 01-05 (4 min), 01-06 (2 min), 02-01 (2 min)
+- Last 5 plans: 01-04 (3 min), 01-05 (4 min), 01-06 (2 min), 02-01 (2 min), 02-02 (4 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -62,6 +62,9 @@ Recent decisions affecting current work:
 | 02-01 | JSONField for env_vars with list of dicts | Flexible schema, supports locked values, easy merge |
 | 02-01 | project_role on ProjectMembership not Group | Same group can have different roles per project |
 | 02-01 | HTMX via CDN (unpkg) | No build step, version pinned in template |
+| 02-02 | Settings section groups User Management | Cleaner organization per CONTEXT.md |
+| 02-02 | Projects link visible to all users | Permissions handled at view/project level |
+| 02-02 | LOGIN_REDIRECT_URL to projects:list | Projects is the primary workflow entry point |
 
 ### Pending Todos
 
@@ -69,9 +72,9 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 1 complete, Phase 2 in progress
-- Project/Environment/ProjectMembership models ready for CRUD UI
-- HTMX infrastructure ready for partial updates
+- Phase 2 in progress
+- Navigation restructured, project list with create modal functional
+- Project detail views needed next (Plan 03)
 
 ### Quick Tasks Completed
 
@@ -83,6 +86,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-22T12:55:02Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-01-22T13:01:42Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None
