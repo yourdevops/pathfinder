@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 1 of 7 (Foundation & Security)
-Plan: 4 of 6 in current phase (01-04 complete)
+Plan: 5 of 6 in current phase (01-05 complete)
 Status: In progress
-Last activity: 2026-01-22 - Completed 01-04-PLAN.md
+Last activity: 2026-01-22 - Completed 01-05-PLAN.md
 
-Progress: [========            ] 20%
+Progress: [==========          ] 25%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
+- Total plans completed: 5
 - Average duration: 5 min
-- Total execution time: 0.32 hours
+- Total execution time: 0.38 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-foundation-security | 4 | 19 min | 5 min |
+| 01-foundation-security | 5 | 23 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (2 min), 01-02 (6 min), 01-03 (8 min), 01-04 (3 min)
+- Last 5 plans: 01-01 (2 min), 01-02 (6 min), 01-03 (8 min), 01-04 (3 min), 01-05 (4 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -55,6 +55,8 @@ Recent decisions affecting current work:
 | 01-03 | Fallback to hardcoded /users/ path | users:list URL doesn't exist until Plan 04 |
 | 01-04 | AdminRequiredMixin for CBV permission checking | Consistent with Django patterns for class-based views |
 | 01-04 | has_system_role helper for system_roles checking | Reusable permission logic via GroupMembership query |
+| 01-05 | Card-based group list vs table for users | Visual hierarchy and scanability for groups |
+| 01-05 | Template tags for audit log formatting | Consistent human-readable entries like "John created user Alice" |
 
 ### Pending Todos
 
@@ -62,11 +64,11 @@ None yet.
 
 ### Blockers/Concerns
 
-- Navigation links (blueprints:list, connections:list, groups:list, audit:list) will not work until those URL patterns are added in future plans
-- users:list now works (added in 01-04)
+- Navigation links (blueprints:list, connections:list) will not work until those URL patterns are added in Phase 2
+- users:list, groups:list, audit:list now work (added in 01-04, 01-05)
 
 ## Session Continuity
 
-Last session: 2026-01-22T10:39:35Z
-Stopped at: Completed 01-04-PLAN.md
+Last session: 2026-01-22T10:41:24Z
+Stopped at: Completed 01-05-PLAN.md
 Resume file: None
