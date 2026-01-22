@@ -1,0 +1,78 @@
+<!-- Settings Tab Content -->
+<div class="space-y-8">
+    <!-- Basic Info Section -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg">
+        <div class="px-6 py-4 border-b border-dark-border">
+            <h2 class="text-lg font-semibold text-dark-text">Project Information</h2>
+            <p class="text-dark-muted text-sm mt-1">Update your project's basic information.</p>
+        </div>
+        <form method="post" action="{% url 'projects:update' project_uuid=project.uuid %}" class="p-6 space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-sm font-medium text-dark-text mb-1">Name</label>
+                <input type="text" value="{{ project.name }}" disabled
+                       class="w-full px-3 py-2 bg-dark-bg/50 border border-dark-border rounded-lg text-dark-muted cursor-not-allowed">
+                <p class="text-dark-muted text-xs mt-1">Project names cannot be changed after creation.</p>
+            </div>
+            <div>
+                <label for="id_description" class="block text-sm font-medium text-dark-text mb-1">Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div>
+                <label for="id_status" class="block text-sm font-medium text-dark-text mb-1">Status</label>
+                {{ form.status }}
+                {% if form.status.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ form.status.errors.0 }}</p>
+                {% endif %}
+            </div>
+            <div class="pt-4">
+                <button type="submit" class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Environment Variables Section (Placeholder) -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg">
+        <div class="px-6 py-4 border-b border-dark-border">
+            <h2 class="text-lg font-semibold text-dark-text">Project Environment Variables</h2>
+            <p class="text-dark-muted text-sm mt-1">Variables set here are inherited by all environments.</p>
+        </div>
+        <div class="p-6">
+            <div class="text-center py-8">
+                <svg class="w-12 h-12 mx-auto text-dark-muted mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <p class="text-dark-muted">Environment variable management coming in a future release.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Danger Zone -->
+    <div class="bg-dark-surface border border-red-500/30 rounded-lg">
+        <div class="px-6 py-4 border-b border-red-500/30">
+            <h2 class="text-lg font-semibold text-red-400">Danger Zone</h2>
+            <p class="text-dark-muted text-sm mt-1">Irreversible and destructive actions.</p>
+        </div>
+        <div class="p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-dark-text font-medium">Archive this project</h3>
+                    <p class="text-dark-muted text-sm">Mark the project as archived. It will be hidden from the project list.</p>
+                </div>
+                <form method="post" action="{% url 'projects:archive' project_uuid=project.uuid %}"
+                      onsubmit="return confirm('Are you sure you want to archive this project? This action can be undone by an administrator.');">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 border border-red-500/50 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
+                        Archive Project
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

@@ -7,7 +7,12 @@ from .groups import (
 )
 from .audit import AuditLogView
 from .placeholders import BlueprintsListView, ConnectionsListView
-from .projects import ProjectListView, ProjectCreateModalView, ProjectCreateView
+from .projects import (
+    ProjectListView, ProjectCreateModalView, ProjectCreateView,
+    ProjectDetailView, ProjectUpdateView, ProjectArchiveView,
+    EnvironmentCreateView, EnvironmentDetailView,
+    AddMemberModalView, RemoveMemberView,
+)
 
 __all__ = [
     'UnlockView',
@@ -18,4 +23,7 @@ __all__ = [
     'AuditLogView',
     'BlueprintsListView', 'ConnectionsListView',
     'ProjectListView', 'ProjectCreateModalView', 'ProjectCreateView',
+    'ProjectDetailView', 'ProjectUpdateView', 'ProjectArchiveView',
+    'EnvironmentCreateView', 'EnvironmentDetailView',
+    'AddMemberModalView', 'RemoveMemberView',
 ]

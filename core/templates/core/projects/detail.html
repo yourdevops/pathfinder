@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }} - DevSSP{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Project Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-dark-text">{{ project.name }}</h1>
+        {% if project.description %}
+        <p class="text-dark-muted mt-1">{{ project.description }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="border-b border-dark-border mb-6">
+        <nav class="flex space-x-4">
+            <a href="{% url 'projects:detail' project_uuid=project.uuid %}?tab=services"
+               hx-get="{% url 'projects:detail' project_uuid=project.uuid %}?tab=services"
+               hx-target="#tab-content"
+               hx-swap="innerHTML"
+               hx-push-url="true"
+               class="px-4 py-3 text-sm font-medium border-b-2 transition-colors {% if active_tab == 'services' %}border-dark-accent text-dark-accent{% else %}border-transparent text-dark-muted hover:text-dark-text hover:border-dark-border{% endif %}">
+                Services
+            </a>
+            <a href="{% url 'projects:detail' project_uuid=project.uuid %}?tab=environments"
+               hx-get="{% url 'projects:detail' project_uuid=project.uuid %}?tab=environments"
+               hx-target="#tab-content"
+               hx-swap="innerHTML"
+               hx-push-url="true"
+               class="px-4 py-3 text-sm font-medium border-b-2 transition-colors {% if active_tab == 'environments' %}border-dark-accent text-dark-accent{% else %}border-transparent text-dark-muted hover:text-dark-text hover:border-dark-border{% endif %}">
+                Environments
+            </a>
+            <a href="{% url 'projects:detail' project_uuid=project.uuid %}?tab=members"
+               hx-get="{% url 'projects:detail' project_uuid=project.uuid %}?tab=members"
+               hx-target="#tab-content"
+               hx-swap="innerHTML"
+               hx-push-url="true"
+               class="px-4 py-3 text-sm font-medium border-b-2 transition-colors {% if active_tab == 'members' %}border-dark-accent text-dark-accent{% else %}border-transparent text-dark-muted hover:text-dark-text hover:border-dark-border{% endif %}">
+                Members
+            </a>
+            {% if user_project_role == 'owner' %}
+            <a href="{% url 'projects:detail' project_uuid=project.uuid %}?tab=settings"
+               hx-get="{% url 'projects:detail' project_uuid=project.uuid %}?tab=settings"
+               hx-target="#tab-content"
+               hx-swap="innerHTML"
+               hx-push-url="true"
+               class="px-4 py-3 text-sm font-medium border-b-2 transition-colors {% if active_tab == 'settings' %}border-dark-accent text-dark-accent{% else %}border-transparent text-dark-muted hover:text-dark-text hover:border-dark-border{% endif %}">
+                Settings
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+
+    <!-- Tab Content -->
+    <div id="tab-content">
+        {% if active_tab == 'services' %}
+            {% include "core/projects/_services_tab.html" %}
+        {% elif active_tab == 'environments' %}
+            {% include "core/projects/_environments_tab.html" %}
+        {% elif active_tab == 'members' %}
+            {% include "core/projects/_members_tab.html" %}
+        {% elif active_tab == 'settings' %}
+            {% include "core/projects/_settings_tab.html" %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

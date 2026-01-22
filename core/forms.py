@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from .models import User, Group, GroupMembership, Project
+from .models import User, Group, GroupMembership, Project, Environment
 
 
 class UnlockForm(forms.Form):
@@ -357,3 +357,85 @@ class ProjectCreateForm(forms.ModelForm):
         if Project.objects.filter(name=name).exists():
             raise forms.ValidationError('A project with this name already exists.')
         return name
+
+
+class ProjectUpdateForm(forms.ModelForm):
+    """Form for updating project settings."""
+
+    class Meta:
+        model = Project
+        fields = ['description', 'status']
+        widgets = {
+            'description': forms.Textarea(attrs={
+                'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
+                'rows': 3,
+            }),
+            'status': forms.Select(attrs={
+                'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
+            }),
+        }
+
+
+class EnvironmentForm(forms.ModelForm):
+    """Form for creating/editing environments."""
+
+    class Meta:
+        model = Environment
+        fields = ['name', 'description', 'is_production', 'order']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
+                'placeholder': 'e.g., dev, staging, production',
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
+                'rows': 2,
+            }),
+            'is_production': forms.CheckboxInput(attrs={
+                'class': 'rounded border-dark-border bg-dark-bg text-dark-accent focus:ring-dark-accent',
+            }),
+            'order': forms.NumberInput(attrs={
+                'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
+            }),
+        }
+
+    def clean_name(self):
+        name = self.cleaned_data['name'].lower()
+        if not name or len(name) > 20:
+            raise forms.ValidationError('Name must be 1-20 characters')
+        if not re.match(r'^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$', name):
+            raise forms.ValidationError('Must be lowercase alphanumeric with optional hyphens (not at start/end)')
+        return name
+
+
+# Project role choices for project membership
+PROJECT_ROLE_CHOICES = [
+    ('owner', 'Owner'),
+    ('contributor', 'Contributor'),
+    ('viewer', 'Viewer'),
+]
+
+
+class AddProjectMemberForm(forms.Form):
+    """Form for adding a group to a project."""
+    group = forms.ModelChoiceField(
+        queryset=Group.objects.filter(status='active'),
+        widget=forms.Select(attrs={
+            'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
+        }),
+        label='Group'
+    )
+    project_role = forms.ChoiceField(
+        choices=PROJECT_ROLE_CHOICES,
+        widget=forms.Select(attrs={
+            'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
+        }),
+        label='Role'
+    )
+
+    def __init__(self, *args, existing_group_ids=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if existing_group_ids:
+            self.fields['group'].queryset = Group.objects.filter(
+                status='active'
+            ).exclude(id__in=existing_group_ids)

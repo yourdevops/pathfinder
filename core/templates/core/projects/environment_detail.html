@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}{{ environment.name }} - {{ project.name }} - DevSSP{% endblock %}
+
+{% block content %}
+<div class="p-6">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2 text-sm">
+            <li>
+                <a href="{% url 'projects:list' %}" class="text-dark-muted hover:text-dark-text transition-colors">Projects</a>
+            </li>
+            <li class="text-dark-muted">/</li>
+            <li>
+                <a href="{% url 'projects:detail' project_uuid=project.uuid %}?tab=environments" class="text-dark-muted hover:text-dark-text transition-colors">{{ project.name }}</a>
+            </li>
+            <li class="text-dark-muted">/</li>
+            <li class="text-dark-text">{{ environment.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center gap-3">
+            <h1 class="text-2xl font-bold text-dark-text">{{ environment.name }}</h1>
+            {% if environment.is_default %}
+            <span class="px-2 py-0.5 text-xs rounded bg-dark-accent/20 text-dark-accent">Default</span>
+            {% endif %}
+            {% if environment.is_production %}
+            <span class="px-2 py-0.5 text-xs rounded bg-red-500/20 text-red-400">Production</span>
+            {% endif %}
+        </div>
+        {% if environment.description %}
+        <p class="text-dark-muted mt-1">{{ environment.description }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Environment Info -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg">
+        <div class="px-6 py-4 border-b border-dark-border">
+            <h2 class="text-lg font-semibold text-dark-text">Environment Details</h2>
+        </div>
+        <div class="p-6">
+            <dl class="grid grid-cols-2 gap-4">
+                <div>
+                    <dt class="text-sm text-dark-muted">Name</dt>
+                    <dd class="text-dark-text">{{ environment.name }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm text-dark-muted">Order</dt>
+                    <dd class="text-dark-text">{{ environment.order }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm text-dark-muted">Status</dt>
+                    <dd>
+                        {% if environment.status == 'active' %}
+                        <span class="px-2 py-0.5 text-xs rounded bg-green-500/20 text-green-400">Active</span>
+                        {% else %}
+                        <span class="px-2 py-0.5 text-xs rounded bg-yellow-500/20 text-yellow-400">{{ environment.status|title }}</span>
+                        {% endif %}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-sm text-dark-muted">Created</dt>
+                    <dd class="text-dark-text">{% load humanize %}{{ environment.created_at|naturaltime }}</dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Environment Variables Placeholder -->
+    <div class="mt-6 bg-dark-surface border border-dark-border rounded-lg">
+        <div class="px-6 py-4 border-b border-dark-border">
+            <h2 class="text-lg font-semibold text-dark-text">Environment Variables</h2>
+            <p class="text-dark-muted text-sm mt-1">Variables for this environment. Inherited variables from the project can be overridden.</p>
+        </div>
+        <div class="p-6">
+            <div class="text-center py-8">
+                <svg class="w-12 h-12 mx-auto text-dark-muted mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <p class="text-dark-muted">Environment variable management coming in a future release.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back link -->
+    <div class="mt-6">
+        <a href="{% url 'projects:detail' project_uuid=project.uuid %}?tab=environments"
+           class="text-dark-muted hover:text-dark-text transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to environments
+        </a>
+    </div>
+</div>
+{% endblock %}

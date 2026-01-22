@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Create Environment - {{ project.name }} - DevSSP{% endblock %}
+
+{% block content %}
+<div class="p-6 max-w-2xl">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2 text-sm">
+            <li>
+                <a href="{% url 'projects:list' %}" class="text-dark-muted hover:text-dark-text transition-colors">Projects</a>
+            </li>
+            <li class="text-dark-muted">/</li>
+            <li>
+                <a href="{% url 'projects:detail' project_uuid=project.uuid %}?tab=environments" class="text-dark-muted hover:text-dark-text transition-colors">{{ project.name }}</a>
+            </li>
+            <li class="text-dark-muted">/</li>
+            <li class="text-dark-text">New Environment</li>
+        </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-dark-text">Create Environment</h1>
+        <p class="text-dark-muted mt-1">Add a new environment to {{ project.name }}</p>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg">
+        <form method="post" class="p-6 space-y-4">
+            {% csrf_token %}
+
+            <div>
+                <label for="id_name" class="block text-sm font-medium text-dark-text mb-1">Name</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ form.name.errors.0 }}</p>
+                {% endif %}
+                <p class="text-dark-muted text-xs mt-1">Lowercase letters, numbers, and hyphens only. E.g., dev, staging, production</p>
+            </div>
+
+            <div>
+                <label for="id_description" class="block text-sm font-medium text-dark-text mb-1">Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="id_order" class="block text-sm font-medium text-dark-text mb-1">Order</label>
+                {{ form.order }}
+                {% if form.order.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ form.order.errors.0 }}</p>
+                {% endif %}
+                <p class="text-dark-muted text-xs mt-1">Lower numbers appear first. Common values: dev=10, staging=20, production=30</p>
+            </div>
+
+            <div class="flex items-center gap-2">
+                {{ form.is_production }}
+                <label for="id_is_production" class="text-sm text-dark-text">Mark as production environment</label>
+            </div>
+            <p class="text-dark-muted text-xs -mt-2">Production environments are visually highlighted and may have additional protections.</p>
+
+            {% if form.non_field_errors %}
+            <div class="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                {% for error in form.non_field_errors %}
+                <p class="text-red-400 text-sm">{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="pt-4 flex gap-3">
+                <button type="submit" class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors">
+                    Create Environment
+                </button>
+                <a href="{% url 'projects:detail' project_uuid=project.uuid %}?tab=environments"
+                   class="px-4 py-2 border border-dark-border text-dark-text hover:bg-dark-border/50 rounded-lg transition-colors">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

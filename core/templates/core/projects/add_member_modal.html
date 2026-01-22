@@ -1,0 +1,67 @@
+<!-- Add Group Modal -->
+<div id="add-member-modal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- Background overlay -->
+    <div class="fixed inset-0 bg-black/50 transition-opacity" onclick="this.parentElement.remove()"></div>
+
+    <!-- Modal panel -->
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative bg-dark-surface border border-dark-border rounded-lg shadow-xl w-full max-w-md">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-dark-text" id="modal-title">Add Group to Project</h3>
+                <button type="button" onclick="this.closest('#add-member-modal').remove()" class="text-dark-muted hover:text-dark-text transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Form -->
+            <form method="post" hx-post="{% url 'projects:add_member_modal' project_uuid=project.uuid %}" hx-swap="outerHTML">
+                {% csrf_token %}
+                <div class="p-6 space-y-4">
+                    <!-- Group Select -->
+                    <div>
+                        <label for="id_group" class="block text-sm font-medium text-dark-text mb-1">Group</label>
+                        {{ form.group }}
+                        {% if form.group.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.group.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Role Select -->
+                    <div>
+                        <label for="id_project_role" class="block text-sm font-medium text-dark-text mb-1">Role</label>
+                        {{ form.project_role }}
+                        {% if form.project_role.errors %}
+                        <p class="text-red-400 text-sm mt-1">{{ form.project_role.errors.0 }}</p>
+                        {% endif %}
+                        <p class="text-dark-muted text-xs mt-1">
+                            <strong>Owner:</strong> Full control including settings and membership<br>
+                            <strong>Contributor:</strong> Create and manage services and environments<br>
+                            <strong>Viewer:</strong> Read-only access to project
+                        </p>
+                    </div>
+
+                    {% if form.non_field_errors %}
+                    <div class="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                        <p class="text-red-400 text-sm">{{ form.non_field_errors.0 }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Footer -->
+                <div class="px-6 py-4 border-t border-dark-border flex justify-end gap-3">
+                    <button type="button" onclick="this.closest('#add-member-modal').remove()"
+                            class="px-4 py-2 border border-dark-border text-dark-text hover:bg-dark-border/50 rounded-lg transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors">
+                        Add Group
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
