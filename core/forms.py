@@ -228,3 +228,98 @@ class UserEditForm(forms.Form):
             except ValidationError as e:
                 raise forms.ValidationError(e.messages)
         return password
+
+
+# System role choices for groups
+SYSTEM_ROLE_CHOICES = [
+    ('admin', 'Admin - Full system access'),
+    ('operator', 'Operator - Manage integrations and blueprints'),
+    ('auditor', 'Auditor - Read-only access to all projects'),
+]
+
+
+class GroupCreateForm(forms.Form):
+    """Form for creating a new group."""
+    name = forms.CharField(
+        max_length=63,
+        widget=forms.TextInput(attrs={
+            'class': 'input-field w-full',
+            'placeholder': 'Group name (DNS-compatible)',
+        }),
+        label='Name',
+        help_text='Lowercase letters, numbers, and hyphens only. Max 63 characters.'
+    )
+    description = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'input-field w-full',
+            'rows': 3,
+            'placeholder': 'Optional description',
+        }),
+        label='Description'
+    )
+    system_roles = forms.MultipleChoiceField(
+        required=False,
+        choices=SYSTEM_ROLE_CHOICES,
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'rounded border-dark-border bg-dark-bg text-dark-accent',
+        }),
+        label='System Roles'
+    )
+
+    def clean_name(self):
+        import re
+        name = self.cleaned_data.get('name', '').lower()
+        if not re.match(r'^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$', name):
+            raise forms.ValidationError(
+                'Name must be DNS-compatible: lowercase letters, numbers, and hyphens. '
+                'Must start and end with a letter or number.'
+            )
+        if Group.objects.filter(name=name).exists():
+            raise forms.ValidationError('A group with this name already exists.')
+        return name
+
+
+class GroupEditForm(forms.Form):
+    """Form for editing an existing group."""
+    description = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'input-field w-full',
+            'rows': 3,
+        }),
+        label='Description'
+    )
+    status = forms.ChoiceField(
+        choices=[('active', 'Active'), ('inactive', 'Inactive')],
+        widget=forms.Select(attrs={
+            'class': 'input-field w-full',
+        }),
+        label='Status'
+    )
+    system_roles = forms.MultipleChoiceField(
+        required=False,
+        choices=SYSTEM_ROLE_CHOICES,
+        widget=forms.CheckboxSelectMultiple(attrs={
+            'class': 'rounded border-dark-border bg-dark-bg text-dark-accent',
+        }),
+        label='System Roles'
+    )
+
+
+class GroupAddMemberForm(forms.Form):
+    """Form for adding a user to a group."""
+    user = forms.ModelChoiceField(
+        queryset=User.objects.filter(status='active'),
+        widget=forms.Select(attrs={
+            'class': 'input-field w-full',
+        }),
+        label='User'
+    )
+
+    def __init__(self, *args, group=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if group:
+            # Exclude users already in the group
+            existing_user_ids = GroupMembership.objects.filter(group=group).values_list('user_id', flat=True)
+            self.fields['user'].queryset = User.objects.filter(status='active').exclude(id__in=existing_user_ids)
