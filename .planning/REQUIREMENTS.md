@@ -26,22 +26,22 @@ Requirements for MVP release. Complete end-to-end flow: Blueprint -> GitHub Acti
 
 ### Projects
 
-- [ ] **PROJ-01**: Admin can create projects with name and description
-- [ ] **PROJ-02**: Admin can assign groups to projects with project role (owner, contributor, viewer)
-- [ ] **PROJ-03**: Project owner can edit project settings
-- [ ] **PROJ-04**: Project owner can manage environment variables (key, value, lock)
-- [ ] **PROJ-05**: Project owner can attach SCM connections to project
-- [ ] **PROJ-06**: Contributors can view project details and services
-- [ ] **PROJ-07**: Viewers have read-only access to project
+- [x] **PROJ-01**: Admin can create projects with name and description
+- [x] **PROJ-02**: Admin can assign groups to projects with project role (owner, contributor, viewer)
+- [x] **PROJ-03**: Project owner can edit project settings
+- [x] **PROJ-04**: Project owner can manage environment variables (key, value, lock)
+- [ ] **PROJ-05**: Project owner can attach SCM connections to project (deferred to Phase 3)
+- [x] **PROJ-06**: Contributors can view project details and services
+- [x] **PROJ-07**: Viewers have read-only access to project
 
 ### Environments
 
-- [ ] **ENV-01**: Admin can create environments within a project (dev, staging, prod)
-- [ ] **ENV-02**: Admin can attach deploy connections to environments
-- [ ] **ENV-03**: Environment has is_production flag for safeguards
-- [ ] **ENV-04**: Environment has env_vars that inherit from project
-- [ ] **ENV-05**: Project owner can edit environment settings
-- [ ] **ENV-06**: First environment becomes default for project
+- [x] **ENV-01**: Admin can create environments within a project (dev, staging, prod)
+- [ ] **ENV-02**: Admin can attach deploy connections to environments (deferred to Phase 3)
+- [x] **ENV-03**: Environment has is_production flag for safeguards
+- [x] **ENV-04**: Environment has env_vars that inherit from project
+- [x] **ENV-05**: Project owner can edit environment settings
+- [x] **ENV-06**: First environment becomes default for project
 
 ### Integrations
 
@@ -100,9 +100,9 @@ Requirements for MVP release. Complete end-to-end flow: Blueprint -> GitHub Acti
 ### UI/UX
 
 - [x] **UIUX-01**: Navigation shows Projects, Blueprints, Connections based on permissions
-- [ ] **UIUX-02**: Project detail page has tabs: Services, Environments, Members, Settings
+- [x] **UIUX-02**: Project detail page has tabs: Services, Environments, Members, Settings
 - [ ] **UIUX-03**: Service detail page has tabs: Overview, Builds, Deployments
-- [ ] **UIUX-04**: HTMX-powered dynamic updates (no full page reloads for actions)
+- [x] **UIUX-04**: HTMX-powered dynamic updates (no full page reloads for actions)
 - [x] **UIUX-05**: Dark mode UI theme
 - [ ] **UIUX-06**: Form validation with inline error messages
 
@@ -169,20 +169,21 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FNDN-14 | Phase 1 | Pending |
 | UIUX-01 | Phase 1 | Pending |
 | UIUX-05 | Phase 1 | Pending |
-| PROJ-01 | Phase 2 | Pending |
-| PROJ-02 | Phase 2 | Pending |
-| PROJ-03 | Phase 2 | Pending |
-| PROJ-04 | Phase 2 | Pending |
-| PROJ-05 | Phase 2 | Pending |
-| PROJ-06 | Phase 2 | Pending |
-| PROJ-07 | Phase 2 | Pending |
-| ENV-01 | Phase 2 | Pending |
-| ENV-02 | Phase 2 | Pending |
-| ENV-03 | Phase 2 | Pending |
-| ENV-04 | Phase 2 | Pending |
-| ENV-05 | Phase 2 | Pending |
-| ENV-06 | Phase 2 | Pending |
-| UIUX-02 | Phase 2 | Pending |
+| PROJ-01 | Phase 2 | Complete |
+| PROJ-02 | Phase 2 | Complete |
+| PROJ-03 | Phase 2 | Complete |
+| PROJ-04 | Phase 2 | Complete |
+| PROJ-05 | Phase 3 | Pending |
+| PROJ-06 | Phase 2 | Complete |
+| PROJ-07 | Phase 2 | Complete |
+| ENV-01 | Phase 2 | Complete |
+| ENV-02 | Phase 3 | Pending |
+| ENV-03 | Phase 2 | Complete |
+| ENV-04 | Phase 2 | Complete |
+| ENV-05 | Phase 2 | Complete |
+| ENV-06 | Phase 2 | Complete |
+| UIUX-02 | Phase 2 | Complete |
+| UIUX-04 | Phase 2 | Complete |
 | INTG-01 | Phase 3 | Pending |
 | INTG-02 | Phase 3 | Pending |
 | INTG-03 | Phase 3 | Pending |
