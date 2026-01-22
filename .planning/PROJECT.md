@@ -110,6 +110,7 @@ Existing codebase and design documentation:
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
+| No permanent user registration URL | User creation is admin-only via /users/create/ or via AD/SSO integration. Initial admin created during one-time setup flow at /setup/unlock/. | Implemented |
 | Django auth + django-guardian | Leverage built-in user/group management, add object permissions | — Pending |
 | Support local + external auth | Flexibility for different org sizes; external defers access audit to AD | — Pending |
 | Infra Resources on Environment | Shared infrastructure provisioned by platform team, services just bind | — Pending |
