@@ -16,9 +16,28 @@ def get_unlock_token_path():
 def is_setup_complete():
     """Check if initial setup has been completed.
 
-    Setup is complete when unlock token no longer exists.
+    Setup is complete when:
+    - Token doesn't exist AND at least one admin user exists
+
+    Setup is incomplete when:
+    - Token exists (in progress)
+    - Token doesn't exist AND no admin users (fresh install)
     """
-    return not get_unlock_token_path().exists()
+    token_path = get_unlock_token_path()
+
+    if token_path.exists():
+        # Token exists means setup is in progress
+        return False
+
+    # Token doesn't exist - check if any admin users exist
+    # Import here to avoid circular imports
+    from core.models import Group, GroupMembership
+    admins_group = Group.objects.filter(name='admins', status='active').first()
+    if admins_group:
+        return GroupMembership.objects.filter(group=admins_group).exists()
+
+    # No token and no admin group = fresh install
+    return False
 
 
 def generate_unlock_token():
