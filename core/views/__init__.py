@@ -5,6 +5,7 @@ from .groups import (
     GroupListView, GroupDetailView, GroupCreateView, GroupEditView,
     GroupDeleteView, GroupAddMemberView, GroupRemoveMemberView,
 )
+from .audit import AuditLogView
 
 __all__ = [
     'UnlockView', 'AdminRegistrationView',
@@ -12,4 +13,5 @@ __all__ = [
     'UserListView', 'UserCreateView', 'UserEditView', 'UserDeleteView',
     'GroupListView', 'GroupDetailView', 'GroupCreateView', 'GroupEditView',
     'GroupDeleteView', 'GroupAddMemberView', 'GroupRemoveMemberView',
+    'AuditLogView',
 ]
