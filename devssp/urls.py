@@ -17,11 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from core.urls import setup_patterns, auth_patterns, users_patterns
+from core.urls import setup_patterns, auth_patterns, users_patterns, groups_patterns, audit_patterns
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('setup/', include((setup_patterns, 'setup'), namespace='setup')),
     path('auth/', include((auth_patterns, 'auth'), namespace='auth')),
     path('users/', include((users_patterns, 'users'), namespace='users')),
+    path('groups/', include((groups_patterns, 'groups'), namespace='groups')),
+    path('audit/', include((audit_patterns, 'audit'), namespace='audit')),
 ]

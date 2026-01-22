@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Groups - DevSSP{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Groups</h1>
+        <a href="{% url 'groups:create' %}" class="btn-primary">
+            Create Group
+        </a>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {% for group in groups %}
+        <a href="{% url 'groups:detail' group.uuid %}" class="card hover:border-dark-accent transition-colors">
+            <div class="flex justify-between items-start mb-2">
+                <h3 class="text-lg font-semibold">{{ group.name }}</h3>
+                <span class="px-2 py-1 text-xs rounded-full {% if group.status == 'active' %}bg-green-900/30 text-green-400{% else %}bg-red-900/30 text-red-400{% endif %}">
+                    {{ group.status|title }}
+                </span>
+            </div>
+
+            {% if group.description %}
+            <p class="text-dark-muted text-sm mb-3 line-clamp-2">{{ group.description }}</p>
+            {% endif %}
+
+            <div class="flex flex-wrap gap-1 mb-3">
+                {% for role in group.system_roles %}
+                <span class="px-2 py-0.5 text-xs bg-dark-accent/20 text-dark-accent rounded">
+                    {{ role }}
+                </span>
+                {% empty %}
+                <span class="text-dark-muted text-xs">No system roles</span>
+                {% endfor %}
+            </div>
+
+            <p class="text-dark-muted text-sm">
+                {{ group.memberships.count }} member{{ group.memberships.count|pluralize }}
+            </p>
+        </a>
+        {% empty %}
+        <div class="col-span-full card text-center py-8 text-dark-muted">
+            No groups found. <a href="{% url 'groups:create' %}" class="text-dark-accent hover:underline">Create one</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

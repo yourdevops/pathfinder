@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}{{ group.name }} - DevSSP{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <div class="mb-6">
+        <a href="{% url 'groups:list' %}" class="text-dark-accent hover:text-dark-accent-hover">
+            &larr; Back to Groups
+        </a>
+    </div>
+
+    <div class="flex justify-between items-start mb-6">
+        <div>
+            <h1 class="text-2xl font-bold">{{ group.name }}</h1>
+            <p class="text-dark-muted mt-1">{{ group.description|default:"No description" }}</p>
+        </div>
+        <div class="flex space-x-2">
+            <a href="{% url 'groups:edit' group.uuid %}" class="btn-secondary">Edit</a>
+            {% if group.name != 'admins' %}
+            <form method="post" action="{% url 'groups:delete' group.uuid %}" class="inline"
+                  onsubmit="return confirm('Are you sure you want to delete this group?');">
+                {% csrf_token %}
+                <button type="submit" class="btn-secondary text-red-400 hover:text-red-300">Delete</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-3">
+        <!-- Group Info -->
+        <div class="card">
+            <h2 class="text-lg font-semibold mb-4">Details</h2>
+
+            <dl class="space-y-3">
+                <div>
+                    <dt class="text-dark-muted text-sm">Status</dt>
+                    <dd>
+                        <span class="px-2 py-1 text-xs rounded-full {% if group.status == 'active' %}bg-green-900/30 text-green-400{% else %}bg-red-900/30 text-red-400{% endif %}">
+                            {{ group.status|title }}
+                        </span>
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-dark-muted text-sm">Source</dt>
+                    <dd>{{ group.source|title }}</dd>
+                </div>
+                <div>
+                    <dt class="text-dark-muted text-sm">System Roles</dt>
+                    <dd>
+                        {% for role in group.system_roles %}
+                        <span class="inline-block px-2 py-0.5 text-xs bg-dark-accent/20 text-dark-accent rounded mr-1">
+                            {{ role }}
+                        </span>
+                        {% empty %}
+                        <span class="text-dark-muted">None</span>
+                        {% endfor %}
+                    </dd>
+                </div>
+                <div>
+                    <dt class="text-dark-muted text-sm">Created</dt>
+                    <dd>{{ group.created_at|date:"M d, Y H:i" }}</dd>
+                </div>
+            </dl>
+        </div>
+
+        <!-- Members -->
+        <div class="card lg:col-span-2">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">Members ({{ members|length }})</h2>
+            </div>
+
+            <!-- Add Member Form -->
+            <form method="post" action="{% url 'groups:add_member' group.uuid %}" class="flex gap-2 mb-4">
+                {% csrf_token %}
+                {{ add_member_form.user }}
+                <button type="submit" class="btn-primary whitespace-nowrap">Add Member</button>
+            </form>
+
+            <!-- Member List -->
+            <div class="divide-y divide-dark-border">
+                {% for membership in members %}
+                <div class="flex items-center justify-between py-3">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 rounded-full bg-dark-accent flex items-center justify-center text-white font-medium mr-3">
+                            {{ membership.user.username|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <p class="font-medium">{{ membership.user.username }}</p>
+                            <p class="text-dark-muted text-sm">{{ membership.user.email }}</p>
+                        </div>
+                    </div>
+                    <form method="post" action="{% url 'groups:remove_member' group.uuid membership.user.uuid %}"
+                          onsubmit="return confirm('Remove {{ membership.user.username }} from this group?');">
+                        {% csrf_token %}
+                        <button type="submit" class="text-red-400 hover:text-red-300 text-sm">Remove</button>
+                    </form>
+                </div>
+                {% empty %}
+                <p class="py-4 text-dark-muted text-center">No members in this group</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
