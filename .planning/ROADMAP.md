@@ -45,10 +45,11 @@ Plans:
 ### Phase 2: Core Domain
 **Goal**: Platform engineers can organize work into Projects; developers have scoped access via group membership
 **Depends on**: Phase 1
-**Requirements**: PROJ-01, PROJ-02, PROJ-03, PROJ-04, PROJ-05, PROJ-06, PROJ-07, ENV-01, ENV-02, ENV-03, ENV-04, ENV-05, ENV-06, UIUX-02
+**Requirements**: PROJ-01, PROJ-02, PROJ-03, PROJ-04, PROJ-06, PROJ-07, ENV-01, ENV-03, ENV-04, ENV-05, ENV-06, UIUX-02
+**Deferred to Phase 3**: PROJ-05 (Attach SCM connections to project), ENV-02 (Attach deploy connections to environments) - these require the integration framework from Phase 3
 **Success Criteria** (what must be TRUE):
   1. Admin can create a Project and assign groups with owner/contributor/viewer roles
-  2. Project owner can edit settings, manage environment variables, and attach SCM connections
+  2. Project owner can edit settings and manage environment variables
   3. Admin can create Environments within a Project; first environment becomes default
   4. Environment settings include is_production flag and env_vars that inherit from Project
   5. Project detail page shows tabs: Services, Environments, Members, Settings
@@ -63,13 +64,15 @@ Plans:
 ### Phase 3: Integrations
 **Goal**: Platform engineers can register and health-check GitHub and Docker connections
 **Depends on**: Phase 2
-**Requirements**: INTG-01, INTG-02, INTG-03, INTG-04, INTG-05, INTG-06, INTG-07, INTG-08, INTG-09
+**Requirements**: INTG-01, INTG-02, INTG-03, INTG-04, INTG-05, INTG-06, INTG-07, INTG-08, INTG-09, PROJ-05, ENV-02
 **Success Criteria** (what must be TRUE):
   1. Operator can register a GitHub connection with App credentials; sensitive fields are encrypted
   2. Operator can register a Docker connection with socket path; health check shows container daemon status
   3. GitHub connection can create repositories, create branches/commits, and configure webhook secrets
   4. Docker connection can deploy a container and check its running status
   5. Connection list shows health status (healthy/unhealthy/unknown) for each connection
+  6. Projects can have SCM connections attached (PROJ-05)
+  7. Environments can have deploy connections attached (ENV-02)
 **Plans**: TBD
 
 Plans:
