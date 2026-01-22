@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom component classes */
+@layer components {
+  .btn-primary {
+    @apply bg-dark-accent hover:bg-dark-accent-hover text-white font-medium py-2 px-4 rounded-lg transition-colors;
+  }
+
+  .btn-secondary {
+    @apply bg-dark-surface hover:bg-dark-border text-dark-text font-medium py-2 px-4 rounded-lg border border-dark-border transition-colors;
+  }
+
+  .card {
+    @apply bg-dark-surface border border-dark-border rounded-lg p-4;
+  }
+
+  .input-field {
+    @apply bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-dark-text placeholder-dark-muted focus:outline-none focus:ring-2 focus:ring-dark-accent focus:border-transparent;
+  }
+
+  .table-row {
+    @apply border-b border-dark-border hover:bg-dark-surface/50;
+  }
+}

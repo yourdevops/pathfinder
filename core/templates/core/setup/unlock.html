@@ -1,0 +1,56 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unlock - DevSSP</title>
+    {% tailwind_css %}
+    <script>document.documentElement.classList.add('dark');</script>
+</head>
+<body class="bg-dark-bg text-dark-text min-h-screen flex items-center justify-center">
+    <div class="w-full max-w-md p-8">
+        <div class="card">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-dark-border flex items-center justify-center">
+                    <svg class="w-8 h-8 text-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+                <h1 class="text-2xl font-bold">DevSSP</h1>
+                <p class="text-dark-muted mt-2">Enter the unlock token to begin setup</p>
+            </div>
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="bg-red-900/20 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm">
+                    {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div>
+                    <label for="id_token" class="block text-sm font-medium text-dark-text mb-2">
+                        {{ form.token.label }}
+                    </label>
+                    {{ form.token }}
+                    {% if form.token.errors %}
+                    <p class="mt-1 text-sm text-red-400">{{ form.token.errors.0 }}</p>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn-primary w-full">
+                    Unlock
+                </button>
+            </form>
+
+            <p class="text-center text-dark-muted text-sm mt-6">
+                Token location: <code class="bg-dark-border px-2 py-1 rounded">secrets/initialUnlockToken</code>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
