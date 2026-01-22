@@ -17,7 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from core.urls import setup_patterns, auth_patterns, users_patterns, groups_patterns, audit_patterns
+from core.urls import (
+    setup_patterns, auth_patterns, users_patterns,
+    groups_patterns, audit_patterns,
+    blueprints_patterns, connections_patterns,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,4 +30,6 @@ urlpatterns = [
     path('users/', include((users_patterns, 'users'), namespace='users')),
     path('groups/', include((groups_patterns, 'groups'), namespace='groups')),
     path('audit/', include((audit_patterns, 'audit'), namespace='audit')),
+    path('blueprints/', include((blueprints_patterns, 'blueprints'), namespace='blueprints')),
+    path('connections/', include((connections_patterns, 'connections'), namespace='connections')),
 ]

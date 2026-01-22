@@ -6,6 +6,7 @@ from .views import (
     GroupListView, GroupDetailView, GroupCreateView, GroupEditView,
     GroupDeleteView, GroupAddMemberView, GroupRemoveMemberView,
     AuditLogView,
+    BlueprintsListView, ConnectionsListView,
 )
 
 # Setup URLs
@@ -42,4 +43,13 @@ groups_patterns = [
 # Audit log URLs
 audit_patterns = [
     path('', AuditLogView.as_view(), name='list'),
+]
+
+# Placeholder URLs (to be replaced in Phase 3-4)
+blueprints_patterns = [
+    path('', BlueprintsListView.as_view(), name='list'),
+]
+
+connections_patterns = [
+    path('', ConnectionsListView.as_view(), name='list'),
 ]
