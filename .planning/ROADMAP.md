@@ -52,11 +52,13 @@ Plans:
   3. Admin can create Environments within a Project; first environment becomes default
   4. Environment settings include is_production flag and env_vars that inherit from Project
   5. Project detail page shows tabs: Services, Environments, Members, Settings
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md - Project, Environment, ProjectMembership models with HTMX setup
+- [ ] 02-02-PLAN.md - Sidebar restructure and project list with create modal
+- [ ] 02-03-PLAN.md - Project detail with HTMX tabs and context-replacing sidebar
+- [ ] 02-04-PLAN.md - Membership management, environment CRUD, and environment variables
 
 ### Phase 3: Integrations
 **Goal**: Platform engineers can register and health-check GitHub and Docker connections
@@ -146,8 +148,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Security | 6/6 | ✓ Complete | 2026-01-22 |
-| 2. Core Domain | 0/2 | Not started | - |
+| 1. Foundation & Security | 6/6 | Complete | 2026-01-22 |
+| 2. Core Domain | 0/4 | Planning complete | - |
 | 3. Integrations | 0/2 | Not started | - |
 | 4. Blueprints | 0/2 | Not started | - |
 | 5. Services | 0/3 | Not started | - |
@@ -156,4 +158,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-22 (Phase 1 complete)*
+*Last updated: 2026-01-22 (Phase 2 planning complete)*
