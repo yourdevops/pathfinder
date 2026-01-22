@@ -9,20 +9,20 @@ Requirements for MVP release. Complete end-to-end flow: Blueprint -> GitHub Acti
 
 ### Foundation
 
-- [ ] **FNDN-01**: Fresh install generates unlock token at `secrets/initialUnlockToken`
-- [ ] **FNDN-02**: First visitor sees unlock page requiring token
-- [ ] **FNDN-03**: After unlock, user creates first admin account (username, email, password)
-- [ ] **FNDN-04**: System auto-creates "admins" group with admin SystemRole
-- [ ] **FNDN-05**: First user automatically added to admins group
-- [ ] **FNDN-06**: Unlock token deleted after successful initial setup
-- [ ] **FNDN-07**: Admin can create additional users with username, email, password
-- [ ] **FNDN-08**: Admin can create groups and assign users to groups
-- [ ] **FNDN-09**: Admin can assign SystemRoles (admin, operator, auditor) to groups
-- [ ] **FNDN-10**: User session persists across browser refresh
-- [ ] **FNDN-11**: User can log out from any page
-- [ ] **FNDN-12**: Authenticated users can view blueprints list (cards only)
-- [ ] **FNDN-13**: Authenticated users can view connections list (cards only)
-- [ ] **FNDN-14**: All entity changes are logged with actor, action, timestamp
+- [x] **FNDN-01**: Fresh install generates unlock token at `secrets/initialUnlockToken`
+- [x] **FNDN-02**: First visitor sees unlock page requiring token
+- [x] **FNDN-03**: After unlock, user creates first admin account (username, email, password)
+- [x] **FNDN-04**: System auto-creates "admins" group with admin SystemRole
+- [x] **FNDN-05**: First user automatically added to admins group
+- [x] **FNDN-06**: Unlock token deleted after successful initial setup
+- [x] **FNDN-07**: Admin can create additional users with username, email, password
+- [x] **FNDN-08**: Admin can create groups and assign users to groups
+- [x] **FNDN-09**: Admin can assign SystemRoles (admin, operator, auditor) to groups
+- [x] **FNDN-10**: User session persists across browser refresh
+- [x] **FNDN-11**: User can log out from any page
+- [x] **FNDN-12**: Authenticated users can view blueprints list (cards only)
+- [x] **FNDN-13**: Authenticated users can view connections list (cards only)
+- [x] **FNDN-14**: All entity changes are logged with actor, action, timestamp
 
 ### Projects
 
@@ -99,11 +99,11 @@ Requirements for MVP release. Complete end-to-end flow: Blueprint -> GitHub Acti
 
 ### UI/UX
 
-- [ ] **UIUX-01**: Navigation shows Projects, Blueprints, Connections based on permissions
+- [x] **UIUX-01**: Navigation shows Projects, Blueprints, Connections based on permissions
 - [ ] **UIUX-02**: Project detail page has tabs: Services, Environments, Members, Settings
 - [ ] **UIUX-03**: Service detail page has tabs: Overview, Builds, Deployments
 - [ ] **UIUX-04**: HTMX-powered dynamic updates (no full page reloads for actions)
-- [ ] **UIUX-05**: Dark mode UI theme
+- [x] **UIUX-05**: Dark mode UI theme
 - [ ] **UIUX-06**: Form validation with inline error messages
 
 ## v2 Requirements

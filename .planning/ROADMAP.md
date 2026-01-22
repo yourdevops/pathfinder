@@ -12,7 +12,7 @@ DevSSP delivers an internal developer platform control plane in 7 phases. Phase 
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation & Security** - User authentication, RBAC, groups, audit logging, base UI
+- [x] **Phase 1: Foundation & Security** - User authentication, RBAC, groups, audit logging, base UI
 - [ ] **Phase 2: Core Domain** - Projects with membership, Environments with deploy targets
 - [ ] **Phase 3: Integrations** - Plugin framework, GitHub and Docker connections
 - [ ] **Phase 4: Blueprints** - Template registration, versioning, availability filtering
@@ -36,11 +36,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md - Core models, dependencies, and settings configuration
-- [ ] 01-02-PLAN.md - Tailwind theme with dark mode and navigation component
-- [ ] 01-03-PLAN.md - Unlock flow, setup middleware, login/logout authentication
-- [ ] 01-04-PLAN.md - User management UI (list, create modal, edit)
-- [ ] 01-05-PLAN.md - Group management and audit log viewer
-- [ ] 01-06-PLAN.md - Placeholder pages for Blueprints and Connections
+- [x] 01-02-PLAN.md - Tailwind theme with dark mode and navigation component
+- [x] 01-03-PLAN.md - Unlock flow, setup middleware, login/logout authentication
+- [x] 01-04-PLAN.md - User management UI (list, create modal, edit)
+- [x] 01-05-PLAN.md - Group management and audit log viewer
+- [x] 01-06-PLAN.md - Placeholder pages for Blueprints and Connections
 
 ### Phase 2: Core Domain
 **Goal**: Platform engineers can organize work into Projects; developers have scoped access via group membership
@@ -146,7 +146,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Security | 1/6 | In progress | - |
+| 1. Foundation & Security | 6/6 | ✓ Complete | 2026-01-22 |
 | 2. Core Domain | 0/2 | Not started | - |
 | 3. Integrations | 0/2 | Not started | - |
 | 4. Blueprints | 0/2 | Not started | - |
@@ -156,4 +156,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-22 (01-01 complete)*
+*Last updated: 2026-01-22 (Phase 1 complete)*
