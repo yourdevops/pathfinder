@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Users - DevSSP{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Users</h1>
+        <button onclick="document.getElementById('createModal').classList.remove('hidden')"
+                class="btn-primary">
+            Create User
+        </button>
+    </div>
+
+    <div class="card overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-dark-border/30">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted uppercase tracking-wider">Username</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted uppercase tracking-wider">Email</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted uppercase tracking-wider">Status</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted uppercase tracking-wider">Groups</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-dark-border">
+                {% for user in users %}
+                <tr class="table-row">
+                    <td class="px-4 py-3">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 rounded-full bg-dark-accent flex items-center justify-center text-white font-medium mr-3">
+                                {{ user.username|slice:":1"|upper }}
+                            </div>
+                            <span class="font-medium">{{ user.username }}</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-dark-muted">{{ user.email }}</td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-1 text-xs rounded-full {% if user.status == 'active' %}bg-green-900/30 text-green-400{% else %}bg-red-900/30 text-red-400{% endif %}">
+                            {{ user.status|title }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3">
+                        {% for membership in user.group_memberships.all %}
+                        <span class="inline-block px-2 py-1 text-xs bg-dark-border rounded mr-1 mb-1">
+                            {{ membership.group.name }}
+                        </span>
+                        {% empty %}
+                        <span class="text-dark-muted text-sm">No groups</span>
+                        {% endfor %}
+                    </td>
+                    <td class="px-4 py-3">
+                        <div class="flex space-x-2">
+                            <a href="{% url 'users:edit' user.uuid %}" class="text-dark-accent hover:text-dark-accent-hover">
+                                Edit
+                            </a>
+                            {% if user != request.user %}
+                            <form method="post" action="{% url 'users:delete' user.uuid %}" class="inline"
+                                  onsubmit="return confirm('Are you sure you want to delete {{ user.username }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="text-red-400 hover:text-red-300">Delete</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-4 py-8 text-center text-dark-muted">
+                        No users found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Create User Modal -->
+<div id="createModal" class="fixed inset-0 bg-black/50 flex items-center justify-center {% if not show_modal %}hidden{% endif %} z-50">
+    <div class="card w-full max-w-md mx-4">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold">Create User</h2>
+            <button onclick="document.getElementById('createModal').classList.add('hidden')"
+                    class="text-dark-muted hover:text-dark-text">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <form method="post" action="{% url 'users:create' %}" class="space-y-4">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="bg-red-900/20 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm">
+                {% for error in form.non_field_errors %}
+                <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div>
+                <label for="id_username" class="block text-sm font-medium text-dark-text mb-2">
+                    {{ form.username.label }}
+                </label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                <p class="mt-1 text-sm text-red-400">{{ form.username.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="id_email" class="block text-sm font-medium text-dark-text mb-2">
+                    {{ form.email.label }}
+                </label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                <p class="mt-1 text-sm text-red-400">{{ form.email.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="id_password" class="block text-sm font-medium text-dark-text mb-2">
+                    {{ form.password.label }}
+                </label>
+                {{ form.password }}
+                {% if form.password.errors %}
+                <p class="mt-1 text-sm text-red-400">{{ form.password.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="id_status" class="block text-sm font-medium text-dark-text mb-2">
+                    {{ form.status.label }}
+                </label>
+                {{ form.status }}
+            </div>
+
+            <div class="flex justify-end space-x-3 pt-4">
+                <button type="button"
+                        onclick="document.getElementById('createModal').classList.add('hidden')"
+                        class="btn-secondary">
+                    Cancel
+                </button>
+                <button type="submit" class="btn-primary">
+                    Create User
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
