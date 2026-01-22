@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 6 plans
 
 Plans:
-- [ ] 01-01-PLAN.md - Core models, dependencies, and settings configuration
+- [x] 01-01-PLAN.md - Core models, dependencies, and settings configuration
 - [ ] 01-02-PLAN.md - Tailwind theme with dark mode and navigation component
 - [ ] 01-03-PLAN.md - Unlock flow, setup middleware, login/logout authentication
 - [ ] 01-04-PLAN.md - User management UI (list, create modal, edit)
@@ -146,7 +146,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Security | 0/6 | Planned | - |
+| 1. Foundation & Security | 1/6 | In progress | - |
 | 2. Core Domain | 0/2 | Not started | - |
 | 3. Integrations | 0/2 | Not started | - |
 | 4. Blueprints | 0/2 | Not started | - |
@@ -156,4 +156,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-22*
+*Last updated: 2026-01-22 (01-01 complete)*
