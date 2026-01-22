@@ -88,9 +88,10 @@ None yet.
 | 001 | Fix STATIC_ROOT setting for collectstatic | 2026-01-22 | 1cac75c | [001-fix-static-root-setting-for-collectstati](./quick/001-fix-static-root-setting-for-collectstati/) |
 | 002 | Fix input text color and merge unlock/register pages | 2026-01-22 | b24e5cd | [002-fix-input-text-color-and-merge-unlock-re](./quick/002-fix-input-text-color-and-merge-unlock-re/) |
 | 003 | Fix unlock token bypass security issue | 2026-01-22 | 92aae42 | [003-fix-unlock-token-bypass-security-issue](./quick/003-fix-unlock-token-bypass-security-issue/) |
+| 004 | Add root URL redirect to /projects/ | 2026-01-22 | 9c37520 | [004-add-root-url-redirect-to-projects](./quick/004-add-root-url-redirect-to-projects/) |
 
 ## Session Continuity
 
-Last session: 2026-01-22T13:18:00Z
-Stopped at: Completed 02-04-PLAN.md
+Last session: 2026-01-22T13:44:00Z
+Stopped at: Completed quick task 004
 Resume file: None
