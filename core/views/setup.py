@@ -4,7 +4,7 @@ from django.contrib.auth import login
 from django.urls import reverse, NoReverseMatch
 
 from ..forms import UnlockForm, AdminRegistrationForm
-from ..utils import verify_unlock_token, complete_setup
+from ..utils import verify_unlock_token, complete_setup, get_unlock_token_path
 from ..models import User, Group, GroupMembership
 
 
@@ -13,8 +13,17 @@ class UnlockView(View):
     template_name = 'core/setup/unlock.html'
 
     def get(self, request):
-        # Check if unlock already verified - show registration form
-        if request.session.get('unlock_verified'):
+        token_path = get_unlock_token_path()
+
+        # Security check: token must exist for session flag to be valid
+        # This prevents stale sessions from bypassing unlock after db reset
+        if not token_path.exists():
+            # Clear stale session flag if token is gone
+            if 'unlock_verified' in request.session:
+                del request.session['unlock_verified']
+
+        # Check if unlock verified AND token still exists - show registration form
+        if token_path.exists() and request.session.get('unlock_verified'):
             return render(request, self.template_name, {
                 'unlock_verified': True,
                 'form': AdminRegistrationForm(),
@@ -26,8 +35,15 @@ class UnlockView(View):
         })
 
     def post(self, request):
-        # Check if this is a registration submission (unlock already verified)
-        if request.session.get('unlock_verified'):
+        token_path = get_unlock_token_path()
+
+        # Security check: token must exist for session flag to be valid
+        if not token_path.exists():
+            if 'unlock_verified' in request.session:
+                del request.session['unlock_verified']
+
+        # Check if this is a registration submission (unlock verified AND token exists)
+        if token_path.exists() and request.session.get('unlock_verified'):
             return self._handle_registration(request)
         # Otherwise handle unlock token validation
         return self._handle_unlock(request)
