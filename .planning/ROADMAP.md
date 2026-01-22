@@ -32,12 +32,15 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can log in, session persists across browser refresh, user can log out from any page
   4. Authenticated user sees navigation with Blueprints and Connections (even if empty lists)
   5. All entity changes (user, group, role assignment) appear in audit log with actor and timestamp
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md - Core models, dependencies, and settings configuration
+- [ ] 01-02-PLAN.md - Tailwind theme with dark mode and navigation component
+- [ ] 01-03-PLAN.md - Unlock flow, setup middleware, login/logout authentication
+- [ ] 01-04-PLAN.md - User management UI (list, create modal, edit)
+- [ ] 01-05-PLAN.md - Group management and audit log viewer
+- [ ] 01-06-PLAN.md - Placeholder pages for Blueprints and Connections
 
 ### Phase 2: Core Domain
 **Goal**: Platform engineers can organize work into Projects; developers have scoped access via group membership
@@ -143,7 +146,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Security | 0/3 | Not started | - |
+| 1. Foundation & Security | 0/6 | Planned | - |
 | 2. Core Domain | 0/2 | Not started | - |
 | 3. Integrations | 0/2 | Not started | - |
 | 4. Blueprints | 0/2 | Not started | - |
