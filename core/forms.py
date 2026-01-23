@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from .models import User, Group, GroupMembership, Project, Environment
+from .models import User, Group, GroupMembership, Project, Environment, IntegrationConnection
 
 
 class UnlockForm(forms.Form):
@@ -449,3 +449,33 @@ class AddProjectMemberForm(forms.Form):
             self.fields['group'].queryset = Group.objects.filter(
                 status='active'
             ).exclude(id__in=existing_group_ids)
+
+
+class AttachConnectionForm(forms.Form):
+    """Form for attaching a connection to project or environment."""
+    connection = forms.ModelChoiceField(
+        queryset=IntegrationConnection.objects.none(),
+        label='Connection',
+        widget=forms.Select(attrs={
+            'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
+        })
+    )
+    is_default = forms.BooleanField(
+        required=False,
+        label='Set as default',
+        widget=forms.CheckboxInput(attrs={
+            'class': 'rounded border-dark-border bg-dark-bg text-dark-accent focus:ring-dark-accent',
+        })
+    )
+
+    def __init__(self, *args, category=None, exclude_ids=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        qs = IntegrationConnection.objects.filter(status='active')
+        if category:
+            # Filter by plugin category
+            from plugins.base import registry
+            plugin_names = [p.name for p in registry.all().values() if p.category == category]
+            qs = qs.filter(plugin_name__in=plugin_names)
+        if exclude_ids:
+            qs = qs.exclude(id__in=exclude_ids)
+        self.fields['connection'].queryset = qs

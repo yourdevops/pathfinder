@@ -21,6 +21,8 @@ from .projects import (
     AddMemberModalView, RemoveMemberView,
     ProjectEnvVarModalView, ProjectEnvVarSaveView, ProjectEnvVarDeleteView,
     EnvVarModalView, EnvVarSaveView, EnvVarDeleteView,
+    ProjectAttachConnectionView, ProjectDetachConnectionView,
+    EnvironmentAttachConnectionView, EnvironmentDetachConnectionView,
 )
 from .settings import (
     GeneralSettingsView, UserManagementView, AuditLogsSettingsView,
@@ -43,6 +45,8 @@ __all__ = [
     'AddMemberModalView', 'RemoveMemberView',
     'ProjectEnvVarModalView', 'ProjectEnvVarSaveView', 'ProjectEnvVarDeleteView',
     'EnvVarModalView', 'EnvVarSaveView', 'EnvVarDeleteView',
+    'ProjectAttachConnectionView', 'ProjectDetachConnectionView',
+    'EnvironmentAttachConnectionView', 'EnvironmentDetachConnectionView',
     'GeneralSettingsView', 'UserManagementView', 'AuditLogsSettingsView',
     'ApiTokensView', 'NotificationsView',
 ]

@@ -9,10 +9,10 @@ from django.views.decorators.vary import vary_on_headers
 from django.contrib import messages
 from django_htmx.http import HttpResponseClientRedirect
 
-from core.models import Project, Environment, ProjectMembership, Group
-from core.forms import ProjectCreateForm, ProjectUpdateForm, EnvironmentForm, AddProjectMemberForm
+from core.models import Project, Environment, ProjectMembership, Group, ProjectConnection, EnvironmentConnection
+from core.forms import ProjectCreateForm, ProjectUpdateForm, EnvironmentForm, AddProjectMemberForm, AttachConnectionForm
 from core.decorators import AdminRequiredMixin
-from core.permissions import ProjectViewerMixin, ProjectContributorMixin, ProjectOwnerMixin
+from core.permissions import ProjectViewerMixin, ProjectContributorMixin, ProjectOwnerMixin, can_access_project
 
 
 class ProjectListView(LoginRequiredMixin, ListView):
@@ -453,3 +453,131 @@ class EnvVarDeleteView(LoginRequiredMixin, ProjectContributorMixin, View):
         env.env_vars = env_vars
         env.save(update_fields=['env_vars', 'updated_at'])
         return HttpResponse(status=200)  # HTMX will remove the element
+
+
+# ============================================================================
+# Connection Attachment Views
+# ============================================================================
+
+class ProjectAttachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, View):
+    """Attach a connection to a project."""
+
+    def get(self, request, *args, **kwargs):
+        existing_ids = self.project.connections.values_list('connection_id', flat=True)
+        form = AttachConnectionForm(category='scm', exclude_ids=list(existing_ids))
+
+        return render(request, 'core/connections/_attach_modal.html', {
+            'form': form,
+            'project': self.project,
+            'title': 'Attach SCM Connection',
+            'action_url': request.path,
+        })
+
+    def post(self, request, *args, **kwargs):
+        existing_ids = self.project.connections.values_list('connection_id', flat=True)
+        form = AttachConnectionForm(request.POST, category='scm', exclude_ids=list(existing_ids))
+
+        if form.is_valid():
+            ProjectConnection.objects.create(
+                project=self.project,
+                connection=form.cleaned_data['connection'],
+                is_default=form.cleaned_data.get('is_default', False),
+                created_by=request.user.username,
+            )
+            messages.success(request, 'Connection attached successfully.')
+
+        if request.headers.get('HX-Request'):
+            # Return updated connections list partial
+            return render(request, 'core/projects/_connections_list.html', {
+                'project': self.project,
+                'connections': self.project.connections.select_related('connection').all(),
+                'user_project_role': self.user_project_role,
+            })
+
+        return redirect('projects:detail', project_uuid=self.project.uuid)
+
+
+class ProjectDetachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, View):
+    """Detach a connection from a project."""
+
+    def post(self, request, *args, **kwargs):
+        connection_id = kwargs.get('connection_id')
+        attachment = get_object_or_404(ProjectConnection, project=self.project, connection_id=connection_id)
+
+        # TODO: Check if any services use this connection (Phase 5+)
+        # For now, allow detachment
+
+        attachment.delete()
+        messages.success(request, 'Connection detached.')
+
+        if request.headers.get('HX-Request'):
+            return render(request, 'core/projects/_connections_list.html', {
+                'project': self.project,
+                'connections': self.project.connections.select_related('connection').all(),
+                'user_project_role': self.user_project_role,
+            })
+
+        return redirect('projects:detail', project_uuid=self.project.uuid)
+
+
+class EnvironmentAttachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, View):
+    """Attach a deploy connection to an environment."""
+
+    def get(self, request, *args, **kwargs):
+        environment = get_object_or_404(Environment, uuid=kwargs.get('env_uuid'), project=self.project)
+        existing_ids = environment.connections.values_list('connection_id', flat=True)
+        form = AttachConnectionForm(category='deploy', exclude_ids=list(existing_ids))
+
+        return render(request, 'core/connections/_attach_modal.html', {
+            'form': form,
+            'environment': environment,
+            'project': self.project,
+            'title': 'Attach Deploy Connection',
+            'action_url': request.path,
+        })
+
+    def post(self, request, *args, **kwargs):
+        environment = get_object_or_404(Environment, uuid=kwargs.get('env_uuid'), project=self.project)
+        existing_ids = environment.connections.values_list('connection_id', flat=True)
+        form = AttachConnectionForm(request.POST, category='deploy', exclude_ids=list(existing_ids))
+
+        if form.is_valid():
+            EnvironmentConnection.objects.create(
+                environment=environment,
+                connection=form.cleaned_data['connection'],
+                is_default=form.cleaned_data.get('is_default', False),
+                created_by=request.user.username,
+            )
+            messages.success(request, 'Connection attached successfully.')
+
+        if request.headers.get('HX-Request'):
+            return render(request, 'core/projects/_env_connections_list.html', {
+                'environment': environment,
+                'project': self.project,
+                'connections': environment.connections.select_related('connection').all(),
+                'user_project_role': self.user_project_role,
+            })
+
+        return redirect('projects:environment_detail', project_uuid=self.project.uuid, env_uuid=environment.uuid)
+
+
+class EnvironmentDetachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, View):
+    """Detach a connection from an environment."""
+
+    def post(self, request, *args, **kwargs):
+        environment = get_object_or_404(Environment, uuid=kwargs.get('env_uuid'), project=self.project)
+        connection_id = kwargs.get('connection_id')
+        attachment = get_object_or_404(EnvironmentConnection, environment=environment, connection_id=connection_id)
+
+        attachment.delete()
+        messages.success(request, 'Connection detached.')
+
+        if request.headers.get('HX-Request'):
+            return render(request, 'core/projects/_env_connections_list.html', {
+                'environment': environment,
+                'project': self.project,
+                'connections': environment.connections.select_related('connection').all(),
+                'user_project_role': self.user_project_role,
+            })
+
+        return redirect('projects:environment_detail', project_uuid=self.project.uuid, env_uuid=environment.uuid)

@@ -240,6 +240,79 @@ class IntegrationConnection(models.Model):
         return self.get_plugin() is None
 
 
+class ProjectConnection(models.Model):
+    """Links SCM/CI connections to Projects."""
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE,
+        related_name='connections'
+    )
+    connection = models.ForeignKey(
+        IntegrationConnection,
+        on_delete=models.CASCADE,
+        related_name='project_attachments'
+    )
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.CharField(max_length=150, blank=True)
+
+    class Meta:
+        db_table = 'core_project_connection'
+        unique_together = ['project', 'connection']
+
+    def __str__(self):
+        return f"{self.project.name} -> {self.connection.name}"
+
+    def save(self, *args, **kwargs):
+        # Ensure only one default per plugin type per project
+        if self.is_default:
+            plugin = self.connection.get_plugin()
+            if plugin:
+                ProjectConnection.objects.filter(
+                    project=self.project,
+                    connection__plugin_name=self.connection.plugin_name,
+                    is_default=True
+                ).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+
+
+class EnvironmentConnection(models.Model):
+    """Links deploy connections to Environments."""
+    environment = models.ForeignKey(
+        Environment,
+        on_delete=models.CASCADE,
+        related_name='connections'
+    )
+    connection = models.ForeignKey(
+        IntegrationConnection,
+        on_delete=models.CASCADE,
+        related_name='environment_attachments'
+    )
+    is_default = models.BooleanField(default=False)
+    config_override = models.JSONField(default=dict, blank=True)  # Environment-specific config
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.CharField(max_length=150, blank=True)
+
+    class Meta:
+        db_table = 'core_environment_connection'
+        unique_together = ['environment', 'connection']
+
+    def __str__(self):
+        return f"{self.environment} -> {self.connection.name}"
+
+    def save(self, *args, **kwargs):
+        # Ensure only one default per plugin type per environment
+        if self.is_default:
+            plugin = self.connection.get_plugin()
+            if plugin:
+                EnvironmentConnection.objects.filter(
+                    environment=self.environment,
+                    connection__plugin_name=self.connection.plugin_name,
+                    is_default=True
+                ).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+
+
 # Register models with auditlog
 from auditlog.registry import auditlog
 
@@ -250,3 +323,5 @@ auditlog.register(Project)
 auditlog.register(Environment)
 auditlog.register(ProjectMembership)
 auditlog.register(IntegrationConnection, exclude_fields=['config_encrypted'])
+auditlog.register(ProjectConnection)
+auditlog.register(EnvironmentConnection)

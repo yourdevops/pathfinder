@@ -15,6 +15,8 @@ from .views import (
     AddMemberModalView, RemoveMemberView,
     ProjectEnvVarModalView, ProjectEnvVarSaveView, ProjectEnvVarDeleteView,
     EnvVarModalView, EnvVarSaveView, EnvVarDeleteView,
+    ProjectAttachConnectionView, ProjectDetachConnectionView,
+    EnvironmentAttachConnectionView, EnvironmentDetachConnectionView,
     GeneralSettingsView, UserManagementView, AuditLogsSettingsView,
     ApiTokensView, NotificationsView,
 )
@@ -89,6 +91,12 @@ projects_patterns = [
     path('<uuid:project_uuid>/env-vars/', ProjectEnvVarModalView.as_view(), name='project_env_var_modal'),
     path('<uuid:project_uuid>/env-vars/save/', ProjectEnvVarSaveView.as_view(), name='project_env_var_save'),
     path('<uuid:project_uuid>/env-vars/<str:key>/delete/', ProjectEnvVarDeleteView.as_view(), name='project_env_var_delete'),
+    # Project connections
+    path('<uuid:project_uuid>/connections/attach/', ProjectAttachConnectionView.as_view(), name='project_attach_connection'),
+    path('<uuid:project_uuid>/connections/<int:connection_id>/detach/', ProjectDetachConnectionView.as_view(), name='project_detach_connection'),
+    # Environment connections
+    path('<uuid:project_uuid>/environments/<uuid:env_uuid>/connections/attach/', EnvironmentAttachConnectionView.as_view(), name='env_attach_connection'),
+    path('<uuid:project_uuid>/environments/<uuid:env_uuid>/connections/<int:connection_id>/detach/', EnvironmentDetachConnectionView.as_view(), name='env_detach_connection'),
 ]
 
 # Settings URLs

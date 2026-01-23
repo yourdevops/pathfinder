@@ -144,12 +144,53 @@
             </div>
             {% endif %}
 
-            <!-- Usage (placeholder for future) -->
+            <!-- Usage -->
             <div class="bg-dark-surface border border-dark-border rounded-lg p-6">
                 <h2 class="text-lg font-semibold text-dark-text mb-4">Usage</h2>
+                {% if connection.project_attachments.exists or connection.environment_attachments.exists %}
+                <div class="space-y-4">
+                    {% if connection.project_attachments.exists %}
+                    <div>
+                        <h3 class="text-sm font-medium text-dark-text mb-2">Projects</h3>
+                        <ul class="space-y-2">
+                            {% for attachment in connection.project_attachments.all %}
+                            <li class="flex items-center justify-between py-2 border-b border-dark-border last:border-0">
+                                <a href="{% url 'projects:detail' project_uuid=attachment.project.uuid %}?tab=settings"
+                                   class="text-dark-accent hover:underline">
+                                    {{ attachment.project.name }}
+                                </a>
+                                {% if attachment.is_default %}
+                                <span class="px-2 py-0.5 text-xs rounded bg-dark-accent/20 text-dark-accent">Default</span>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    {% if connection.environment_attachments.exists %}
+                    <div>
+                        <h3 class="text-sm font-medium text-dark-text mb-2">Environments</h3>
+                        <ul class="space-y-2">
+                            {% for attachment in connection.environment_attachments.all %}
+                            <li class="flex items-center justify-between py-2 border-b border-dark-border last:border-0">
+                                <a href="{% url 'projects:environment_detail' project_uuid=attachment.environment.project.uuid env_uuid=attachment.environment.uuid %}"
+                                   class="text-dark-accent hover:underline">
+                                    {{ attachment.environment.project.name }} / {{ attachment.environment.name }}
+                                </a>
+                                {% if attachment.is_default %}
+                                <span class="px-2 py-0.5 text-xs rounded bg-dark-accent/20 text-dark-accent">Default</span>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
                 <p class="text-dark-muted text-sm">
                     This connection is not attached to any projects or environments.
                 </p>
+                {% endif %}
             </div>
         </div>
 

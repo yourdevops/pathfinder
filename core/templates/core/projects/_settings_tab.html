@@ -116,6 +116,30 @@
         </div>
     </div>
 
+    <!-- SCM Connections Section -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg">
+        <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between">
+            <div>
+                <h2 class="text-lg font-semibold text-dark-text">SCM Connections</h2>
+                <p class="text-dark-muted text-sm mt-1">Source code management connections for this project (GitHub, GitLab, etc.).</p>
+            </div>
+            {% if user_project_role == 'owner' %}
+            <button hx-get="{% url 'projects:project_attach_connection' project_uuid=project.uuid %}"
+                    hx-target="body"
+                    hx-swap="beforeend"
+                    class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Connection
+            </button>
+            {% endif %}
+        </div>
+        <div class="p-6">
+            {% include "core/projects/_connections_list.html" with connections=project.connections.all %}
+        </div>
+    </div>
+
     <!-- Danger Zone -->
     <div class="bg-dark-surface border border-red-500/30 rounded-lg">
         <div class="px-6 py-4 border-b border-red-500/30">
