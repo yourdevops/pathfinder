@@ -48,23 +48,35 @@ class GitHubConnectionWizard(LoginRequiredMixin, OperatorRequiredMixin, SessionW
         auth_data = form_dict['auth'].cleaned_data
         webhook_data = form_dict['webhook'].cleaned_data
 
-        # Build full config
+        auth_type = auth_data['auth_type']
+
+        # Build config based on auth type
         config = {
-            'app_id': auth_data['app_id'],
-            'private_key': auth_data['private_key'],
-            'installation_id': auth_data['installation_id'],
-            'webhook_secret': webhook_data.get('webhook_secret', ''),
+            'auth_type': auth_type,
         }
+
+        if auth_type == 'app':
+            config.update({
+                'app_id': auth_data['app_id'],
+                'private_key': auth_data['private_key'],
+                'installation_id': auth_data['installation_id'],
+                'webhook_secret': webhook_data.get('webhook_secret', ''),
+            })
+        else:  # token
+            config['personal_token'] = auth_data['personal_token']
+
+        # Common optional fields
         if auth_data.get('base_url'):
             config['base_url'] = auth_data['base_url']
         if auth_data.get('organization'):
             config['organization'] = auth_data['organization']
 
         # Create connection
+        org_or_user = auth_data.get('organization') or 'personal'
         connection = IntegrationConnection(
             name=auth_data['name'],
             plugin_name='github',
-            description=f"GitHub App connection for {auth_data.get('organization') or 'personal'} repos",
+            description=f"GitHub {'App' if auth_type == 'app' else 'PAT'} connection for {org_or_user} repos",
             created_by=self.request.user.username,
         )
         connection.set_config(config)
