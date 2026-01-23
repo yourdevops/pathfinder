@@ -101,12 +101,26 @@ class ProjectOwnerMixin(ProjectPermissionMixin):
 
 
 class OperatorRequiredMixin:
-    """Mixin that requires user to have 'operator' system role."""
+    """Mixin that requires user to have 'operator' or 'admin' system role."""
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-        if not has_system_role(request.user, 'operator'):
+        if not (has_system_role(request.user, 'admin') or has_system_role(request.user, 'operator')):
             messages.error(request, 'You need operator permissions to access this page.')
             return redirect('projects:list')
+        return super().dispatch(request, *args, **kwargs)
+
+
+class IntegrationsReadMixin:
+    """Mixin for read-only integrations access (admin, operator, or auditor)."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        if not (has_system_role(request.user, 'admin') or
+                has_system_role(request.user, 'operator') or
+                has_system_role(request.user, 'auditor')):
+            messages.error(request, 'You need operator or auditor permissions to view connection details.')
+            return redirect('connections:list')
         return super().dispatch(request, *args, **kwargs)

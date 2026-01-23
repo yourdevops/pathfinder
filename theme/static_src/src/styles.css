@@ -23,4 +23,8 @@
   .table-row {
     @apply border-b border-dark-border hover:bg-dark-surface/50;
   }
+
+  .message-error {
+    @apply bg-red-500/20 border-red-500 text-red-400;
+  }
 }
