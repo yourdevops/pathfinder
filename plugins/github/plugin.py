@@ -28,9 +28,11 @@ class GitHubPlugin(BasePlugin):
     def get_config_schema(self) -> Dict[str, Any]:
         """Return the configuration schema for GitHub connections."""
         return {
-            'app_id': {'type': 'string', 'required': True, 'label': 'App ID'},
-            'private_key': {'type': 'string', 'required': True, 'sensitive': True, 'label': 'Private Key'},
-            'installation_id': {'type': 'string', 'required': True, 'label': 'Installation ID'},
+            'auth_type': {'type': 'string', 'required': True, 'label': 'Authentication Type'},
+            'app_id': {'type': 'string', 'required': False, 'label': 'App ID'},
+            'private_key': {'type': 'string', 'required': False, 'sensitive': True, 'label': 'Private Key'},
+            'installation_id': {'type': 'string', 'required': False, 'label': 'Installation ID'},
+            'personal_token': {'type': 'string', 'required': False, 'sensitive': True, 'label': 'Personal Access Token'},
             'webhook_secret': {'type': 'string', 'required': False, 'sensitive': True, 'label': 'Webhook Secret'},
             'base_url': {'type': 'string', 'required': False, 'label': 'GitHub Enterprise URL'},
             'organization': {'type': 'string', 'required': False, 'label': 'Organization'},
@@ -41,9 +43,25 @@ class GitHubPlugin(BasePlugin):
         from .forms import GitHubAuthForm, GitHubWebhookForm, GitHubConfirmForm
         return [GitHubAuthForm, GitHubWebhookForm, GitHubConfirmForm]
 
-    def _get_github_client(self, config: Dict[str, Any]) -> Github:
+    def _get_github_client_pat(self, config: Dict[str, Any]) -> Github:
         """
-        Get authenticated GitHub client for installation.
+        Get GitHub client using Personal Access Token.
+
+        Args:
+            config: The decrypted configuration dictionary.
+
+        Returns:
+            Authenticated Github client instance.
+        """
+        token = config['personal_token']
+        base_url = config.get('base_url')
+        if base_url:
+            return Github(auth=Auth.Token(token), base_url=base_url)
+        return Github(auth=Auth.Token(token))
+
+    def _get_github_client_app(self, config: Dict[str, Any]) -> Github:
+        """
+        Get authenticated GitHub client for GitHub App installation.
 
         Args:
             config: The decrypted configuration dictionary.
@@ -72,6 +90,23 @@ class GitHubPlugin(BasePlugin):
         if base_url:
             return Github(auth=Auth.Token(installation_auth.token), base_url=base_url)
         return Github(auth=Auth.Token(installation_auth.token))
+
+    def _get_github_client(self, config: Dict[str, Any]) -> Github:
+        """
+        Get authenticated GitHub client based on auth type.
+
+        Routes to PAT or GitHub App authentication based on config.
+
+        Args:
+            config: The decrypted configuration dictionary.
+
+        Returns:
+            Authenticated Github client instance.
+        """
+        auth_type = config.get('auth_type', 'app')
+        if auth_type == 'token':
+            return self._get_github_client_pat(config)
+        return self._get_github_client_app(config)
 
     def health_check(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -110,6 +145,39 @@ class GitHubPlugin(BasePlugin):
                 'message': str(e),
                 'details': {}
             }
+
+    def list_repositories(self, config: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """
+        List all accessible repositories.
+
+        Args:
+            config: The decrypted configuration dictionary.
+
+        Returns:
+            List of dicts with: name, full_name, description, html_url,
+            clone_url, private, default_branch, language, updated_at
+        """
+        g = self._get_github_client(config)
+        org_name = config.get('organization')
+
+        if org_name:
+            org = g.get_organization(org_name)
+            repos = org.get_repos()
+        else:
+            # For PAT, list user's repos; for App, use installation repos
+            repos = g.get_user().get_repos()
+
+        return [{
+            'name': r.name,
+            'full_name': r.full_name,
+            'description': r.description or '',
+            'html_url': r.html_url,
+            'clone_url': r.clone_url,
+            'private': r.private,
+            'default_branch': r.default_branch,
+            'language': r.language or 'Unknown',
+            'updated_at': r.updated_at.isoformat() if r.updated_at else None,
+        } for r in repos]
 
     def create_repository(self, config: Dict[str, Any], name: str,
                           description: str = '', private: bool = True) -> Dict[str, Any]:
