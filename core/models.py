@@ -150,6 +150,96 @@ class ProjectMembership(models.Model):
         return f"{self.group.name} -> {self.project.name} ({self.project_role})"
 
 
+class IntegrationConnection(models.Model):
+    """
+    Stores configuration for external integration connections.
+
+    Sensitive configuration fields (tokens, passwords, etc.) are stored
+    encrypted in config_encrypted. Non-sensitive fields are stored in config.
+    """
+    HEALTH_STATUS_CHOICES = [
+        ('healthy', 'Healthy'),
+        ('unhealthy', 'Unhealthy'),
+        ('unknown', 'Unknown'),
+    ]
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('disabled', 'Disabled'),
+    ]
+
+    id = models.BigAutoField(primary_key=True)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
+    name = models.CharField(max_length=63, unique=True)  # DNS-compatible
+    description = models.TextField(blank=True)
+    plugin_name = models.CharField(max_length=63)  # References plugin by name
+
+    # Configuration storage
+    config = models.JSONField(default=dict)  # Non-sensitive config
+    config_encrypted = models.BinaryField(null=True, blank=True)  # Encrypted sensitive fields
+
+    # Status fields
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    health_status = models.CharField(max_length=20, choices=HEALTH_STATUS_CHOICES, default='unknown')
+    last_health_check = models.DateTimeField(null=True, blank=True)
+    last_health_message = models.TextField(blank=True)
+
+    # Audit fields
+    created_by = models.CharField(max_length=150, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'core_integration_connection'
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} ({self.plugin_name})"
+
+    def set_config(self, full_config: dict):
+        """
+        Separate and store config, encrypting sensitive fields.
+
+        Sensitive fields are determined by the plugin's is_sensitive_field method.
+        """
+        from plugins.base import registry
+        plugin = registry.get(self.plugin_name)
+
+        sensitive = {}
+        non_sensitive = {}
+
+        for key, value in full_config.items():
+            if value and plugin and plugin.is_sensitive_field(key):
+                sensitive[key] = value
+            else:
+                non_sensitive[key] = value
+
+        self.config = non_sensitive
+        if sensitive:
+            from core.encryption import encrypt_config
+            self.config_encrypted = encrypt_config(sensitive)
+        else:
+            self.config_encrypted = None
+
+    def get_config(self) -> dict:
+        """Return merged config with decrypted sensitive fields."""
+        result = dict(self.config)
+        if self.config_encrypted:
+            from core.encryption import decrypt_config
+            decrypted = decrypt_config(self.config_encrypted)
+            result.update(decrypted)
+        return result
+
+    def get_plugin(self):
+        """Return the plugin instance for this connection."""
+        from plugins.base import registry
+        return registry.get(self.plugin_name)
+
+    @property
+    def plugin_missing(self) -> bool:
+        """Check if plugin is no longer available."""
+        return self.get_plugin() is None
+
+
 # Register models with auditlog
 from auditlog.registry import auditlog
 
@@ -159,3 +249,4 @@ auditlog.register(GroupMembership)
 auditlog.register(Project)
 auditlog.register(Environment)
 auditlog.register(ProjectMembership)
+auditlog.register(IntegrationConnection, exclude_fields=['config_encrypted'])
