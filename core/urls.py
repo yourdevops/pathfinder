@@ -6,7 +6,9 @@ from .views import (
     GroupListView, GroupDetailView, GroupCreateView, GroupEditView,
     GroupDeleteView, GroupAddMemberView, GroupRemoveMemberView,
     AuditLogView,
-    BlueprintsListView, ConnectionsListView,
+    BlueprintsListView,
+    ConnectionListView, ConnectionDetailView, ConnectionTestView,
+    ConnectionDeleteView, ConnectionCreateDispatchView,
     ProjectListView, ProjectCreateModalView, ProjectCreateView,
     ProjectDetailView, ProjectUpdateView, ProjectArchiveView,
     EnvironmentCreateView, EnvironmentDetailView, EnvironmentUpdateView, EnvironmentDeleteView,
@@ -52,13 +54,18 @@ audit_patterns = [
     path('', AuditLogView.as_view(), name='list'),
 ]
 
-# Placeholder URLs (to be replaced in Phase 3-4)
+# Placeholder URLs (blueprints to be replaced in Phase 4)
 blueprints_patterns = [
     path('', BlueprintsListView.as_view(), name='list'),
 ]
 
+# Connection URLs (real implementation)
 connections_patterns = [
-    path('', ConnectionsListView.as_view(), name='list'),
+    path('', ConnectionListView.as_view(), name='list'),
+    path('<uuid:uuid>/', ConnectionDetailView.as_view(), name='detail'),
+    path('<uuid:uuid>/test/', ConnectionTestView.as_view(), name='test'),
+    path('<uuid:uuid>/delete/', ConnectionDeleteView.as_view(), name='delete'),
+    path('create/<str:plugin_name>/', ConnectionCreateDispatchView.as_view(), name='create'),
 ]
 
 # Project management URLs

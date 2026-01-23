@@ -25,6 +25,12 @@ from core.urls import (
     projects_patterns, settings_patterns,
 )
 
+# Plugin autodiscovery
+from plugins import autodiscover
+from plugins.base import registry
+
+autodiscover()
+
 urlpatterns = [
     path('', RedirectView.as_view(url='/projects/', permanent=False), name='root'),
     path('admin/', admin.site.urls),
@@ -38,3 +44,11 @@ urlpatterns = [
     path('projects/', include((projects_patterns, 'projects'), namespace='projects')),
     path('settings/', include((settings_patterns, 'settings'), namespace='settings')),
 ]
+
+# Add plugin-specific URLs dynamically
+for plugin_name, plugin in registry.all().items():
+    patterns = plugin.get_urlpatterns()
+    if patterns:
+        urlpatterns.append(
+            path(f'integrations/{plugin_name}/', include((patterns, plugin_name), namespace=plugin_name))
+        )
