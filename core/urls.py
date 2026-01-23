@@ -8,7 +8,7 @@ from .views import (
     AuditLogView,
     BlueprintsListView,
     ConnectionListView, ConnectionDetailView, ConnectionTestView,
-    ConnectionDeleteView, ConnectionCreateDispatchView,
+    ConnectionDeleteView, ConnectionCreateDispatchView, PluginListView,
     ProjectListView, ProjectCreateModalView, ProjectCreateView,
     ProjectDetailView, ProjectUpdateView, ProjectArchiveView,
     EnvironmentCreateView, EnvironmentDetailView, EnvironmentUpdateView, EnvironmentDeleteView,
@@ -64,6 +64,7 @@ blueprints_patterns = [
 # Connection URLs (real implementation)
 connections_patterns = [
     path('', ConnectionListView.as_view(), name='list'),
+    path('plugins/', PluginListView.as_view(), name='plugins'),
     path('<uuid:uuid>/', ConnectionDetailView.as_view(), name='detail'),
     path('<uuid:uuid>/test/', ConnectionTestView.as_view(), name='test'),
     path('<uuid:uuid>/delete/', ConnectionDeleteView.as_view(), name='delete'),

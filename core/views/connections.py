@@ -129,3 +129,32 @@ class ConnectionCreateDispatchView(LoginRequiredMixin, OperatorRequiredMixin, Vi
 
         # Redirect to plugin-specific create URL
         return redirect(f'{plugin_name}:create')
+
+
+class PluginListView(LoginRequiredMixin, ListView):
+    """List all installed plugins with connection counts."""
+    template_name = 'core/connections/plugins.html'
+    context_object_name = 'plugins_list'
+
+    def get_queryset(self):
+        """Return list of plugin dicts with connection counts."""
+        plugins_data = []
+        for name, plugin in registry.all().items():
+            connection_count = IntegrationConnection.objects.filter(plugin_name=name).count()
+            plugins_data.append({
+                'name': name,
+                'display_name': plugin.display_name,
+                'category': plugin.category,
+                'connection_count': connection_count,
+                'can_remove': connection_count == 0,  # Only removable if no connections
+            })
+        return plugins_data
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categories'] = ['scm', 'deploy', 'ci']  # For filter dropdown
+        context['can_manage'] = (
+            has_system_role(self.request.user, 'admin') or
+            has_system_role(self.request.user, 'operator')
+        )
+        return context
