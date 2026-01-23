@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <div class="card" x-data="{ authType: '{{ form.auth_type.value|default:'app' }}' }">
+        <div class="card" x-data="{ authType: '{% if form.auth_type.value %}{{ form.auth_type.value }}{% else %}app{% endif %}' }">
             <h1 class="text-xl font-bold mb-6">Step 1: GitHub Authentication</h1>
             <p class="text-dark-muted mb-6">Choose your authentication method and enter the required credentials.</p>
 
