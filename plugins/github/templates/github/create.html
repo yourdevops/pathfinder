@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block title %}Create GitHub Connection{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <div class="mb-6">
+        <a href="{% url 'connections:list' %}" class="text-dark-accent hover:text-dark-accent-hover">
+            &larr; Back to Connections
+        </a>
+    </div>
+
+    <div class="max-w-2xl mx-auto" x-data="{
+        authType: '{{ form.auth_type.value|default:'app' }}',
+        setupMode: '{{ form.setup_mode.value|default:'automatic' }}',
+        externalUrlConfigured: {{ external_url_configured|yesno:'true,false' }},
+        organization: '{{ form.organization.value|default:'' }}',
+        appName: '{{ form.app_name.value|default:'' }}',
+        appNameTouched: false,
+        organizationTouched: false,
+        get defaultAppName() {
+            if (this.organization.trim()) {
+                return 'devssp-' + this.organization.trim().toLowerCase();
+            }
+            return '';
+        },
+        get organizationError() {
+            if (!this.organizationTouched) return '';
+            if (this.authType === 'app' && this.setupMode === 'automatic' && !this.organization.trim()) {
+                return 'Organization is required for automatic setup';
+            }
+            return '';
+        },
+        get canSubmit() {
+            if (this.authType === 'app' && this.setupMode === 'automatic') {
+                return this.organization.trim().length > 0;
+            }
+            return true;
+        },
+        updateAppName() {
+            if (!this.appNameTouched) {
+                this.appName = this.defaultAppName;
+            }
+        }
+    }">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Header Card -->
+            <div class="card">
+                <h1 class="text-xl font-bold mb-2">Create GitHub Connection</h1>
+                <p class="text-dark-muted">Connect DevSSP to GitHub to manage repositories and workflows.</p>
+            </div>
+
+            <!-- Connection Name -->
+            <div class="card">
+                <h2 class="text-lg font-semibold mb-4">Connection Details</h2>
+
+                <div>
+                    <label for="id_name" class="block text-sm font-medium text-dark-text mb-2">
+                        {{ form.name.label }} <span class="text-red-400">*</span>
+                    </label>
+                    <input type="text" name="{{ form.name.html_name }}" id="id_name"
+                           class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                           value="{{ form.name.value|default:'' }}"
+                           placeholder="github-myorg">
+                    {% if form.name.errors %}
+                    <p class="mt-1 text-sm text-red-400">{{ form.name.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-dark-muted">{{ form.name.help_text }}</p>
+                </div>
+            </div>
+
+            <!-- Authentication Method -->
+            <div class="card">
+                <h2 class="text-lg font-semibold mb-4">Authentication Method</h2>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- GitHub App Option -->
+                    <label class="relative flex cursor-pointer rounded-lg border p-4 focus:outline-none transition-all"
+                           :class="authType === 'app' ? 'border-dark-accent bg-dark-accent/10' : 'border-dark-border bg-dark-surface hover:border-dark-border-hover'">
+                        <input type="radio" name="{{ form.auth_type.html_name }}" value="app"
+                               x-model="authType"
+                               class="sr-only">
+                        <span class="flex flex-1">
+                            <span class="flex flex-col">
+                                <span class="block text-sm font-medium text-dark-text">GitHub App</span>
+                                <span class="mt-1 text-xs text-dark-muted">Recommended for organizations</span>
+                            </span>
+                        </span>
+                        <svg x-show="authType === 'app'" class="h-5 w-5 text-dark-accent flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                        </svg>
+                    </label>
+
+                    <!-- PAT Option -->
+                    <label class="relative flex cursor-pointer rounded-lg border p-4 focus:outline-none transition-all"
+                           :class="authType === 'token' ? 'border-dark-accent bg-dark-accent/10' : 'border-dark-border bg-dark-surface hover:border-dark-border-hover'">
+                        <input type="radio" name="{{ form.auth_type.html_name }}" value="token"
+                               x-model="authType"
+                               class="sr-only">
+                        <span class="flex flex-1">
+                            <span class="flex flex-col">
+                                <span class="block text-sm font-medium text-dark-text">Personal Access Token</span>
+                                <span class="mt-1 text-xs text-dark-muted">Quick setup for personal use</span>
+                            </span>
+                        </span>
+                        <svg x-show="authType === 'token'" class="h-5 w-5 text-dark-accent flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                        </svg>
+                    </label>
+                </div>
+                {% if form.auth_type.errors %}
+                <p class="mt-2 text-sm text-red-400">{{ form.auth_type.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- GitHub App Setup -->
+            <div x-show="authType === 'app'" x-cloak class="card">
+                <h2 class="text-lg font-semibold mb-4">GitHub App Setup</h2>
+
+                <!-- Setup Mode Selection -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-dark-text mb-3">Setup Method</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Automatic Option -->
+                        <label class="relative flex cursor-pointer rounded-lg border p-4 focus:outline-none transition-all"
+                               :class="{
+                                   'border-dark-accent bg-dark-accent/10': setupMode === 'automatic',
+                                   'border-dark-border bg-dark-surface hover:border-dark-border-hover': setupMode !== 'automatic',
+                                   'opacity-50 cursor-not-allowed': !externalUrlConfigured
+                               }">
+                            <input type="radio" name="{{ form.setup_mode.html_name }}" value="automatic"
+                                   x-model="setupMode"
+                                   :disabled="!externalUrlConfigured"
+                                   class="sr-only">
+                            <span class="flex flex-1">
+                                <span class="flex flex-col">
+                                    <span class="block text-sm font-medium text-dark-text">Automatic</span>
+                                    <span class="mt-1 text-xs text-dark-muted">One-click setup via GitHub</span>
+                                </span>
+                            </span>
+                            <svg x-show="setupMode === 'automatic'" class="h-5 w-5 text-dark-accent flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                            </svg>
+                        </label>
+
+                        <!-- Manual Option -->
+                        <label class="relative flex cursor-pointer rounded-lg border p-4 focus:outline-none transition-all"
+                               :class="setupMode === 'manual' ? 'border-dark-accent bg-dark-accent/10' : 'border-dark-border bg-dark-surface hover:border-dark-border-hover'">
+                            <input type="radio" name="{{ form.setup_mode.html_name }}" value="manual"
+                                   x-model="setupMode"
+                                   class="sr-only">
+                            <span class="flex flex-1">
+                                <span class="flex flex-col">
+                                    <span class="block text-sm font-medium text-dark-text">Manual</span>
+                                    <span class="mt-1 text-xs text-dark-muted">Enter credentials manually</span>
+                                </span>
+                            </span>
+                            <svg x-show="setupMode === 'manual'" class="h-5 w-5 text-dark-accent flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                            </svg>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- External URL Warning -->
+                <div x-show="!externalUrlConfigured && setupMode === 'automatic'" x-cloak class="mb-6 p-4 bg-amber-900/20 border border-amber-700 rounded-lg">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <div>
+                            <p class="text-sm text-amber-400 font-medium">External URL Required</p>
+                            <p class="text-xs text-dark-muted mt-1">
+                                Configure the public URL in General Settings to enable automatic GitHub App creation.
+                            </p>
+                            <a href="{% url 'settings:general' %}" class="inline-block mt-2 text-xs text-dark-accent hover:text-dark-accent-hover">
+                                Go to General Settings &rarr;
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Automatic Setup Fields -->
+                <div x-show="setupMode === 'automatic' && externalUrlConfigured" x-cloak class="space-y-4">
+                    <div>
+                        <label for="id_organization" class="block text-sm font-medium text-dark-text mb-2">
+                            {{ form.organization.label }} <span class="text-red-400">*</span>
+                        </label>
+                        <input type="text" name="{{ form.organization.html_name }}" id="id_organization"
+                               class="w-full px-3 py-2 bg-dark-surface border rounded-lg text-dark-text focus:outline-none focus:ring-2"
+                               :class="organizationError ? 'border-red-500 focus:ring-red-500' : 'border-dark-border focus:ring-dark-accent'"
+                               x-model="organization"
+                               @input="updateAppName()"
+                               @blur="organizationTouched = true"
+                               placeholder="my-organization"
+                               :disabled="!(authType === 'app' && setupMode === 'automatic')">
+                        <p x-show="organizationError" x-cloak class="mt-1 text-sm text-red-400" x-text="organizationError"></p>
+                        {% if form.organization.errors %}
+                        <p class="mt-1 text-sm text-red-400">{{ form.organization.errors.0 }}</p>
+                        {% endif %}
+                        <p x-show="!organizationError" class="mt-1 text-xs text-dark-muted">{{ form.organization.help_text }}</p>
+                    </div>
+
+                    <div>
+                        <label for="id_app_name" class="block text-sm font-medium text-dark-text mb-2">
+                            {{ form.app_name.label }}
+                        </label>
+                        <input type="text" name="{{ form.app_name.html_name }}" id="id_app_name"
+                               class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                               x-model="appName"
+                               @input="appNameTouched = true"
+                               placeholder="devssp-myorg">
+                        {% if form.app_name.errors %}
+                        <p class="mt-1 text-sm text-red-400">{{ form.app_name.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-dark-muted">Auto-generated from organization name, or customize</p>
+                    </div>
+
+                    <!-- What happens next -->
+                    <div class="mt-6 p-4 bg-dark-surface border border-dark-border rounded-lg">
+                        <h3 class="text-sm font-medium text-dark-text mb-2">What happens next:</h3>
+                        <ul class="text-xs text-dark-muted space-y-1">
+                            <li class="flex items-start gap-2">
+                                <span class="text-dark-accent">1.</span>
+                                You'll be redirected to GitHub to create the App
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-dark-accent">2.</span>
+                                Review the pre-filled settings and permissions
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-dark-accent">3.</span>
+                                Click "Create GitHub App" on GitHub
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-dark-accent">4.</span>
+                                Install the app on your organization
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span class="text-dark-accent">5.</span>
+                                You'll be redirected back here when complete
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Manual Setup Fields -->
+                <div x-show="setupMode === 'manual'" x-cloak class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="id_app_id" class="block text-sm font-medium text-dark-text mb-2">
+                                {{ form.app_id.label }} <span class="text-red-400">*</span>
+                            </label>
+                            <input type="text" name="{{ form.app_id.html_name }}" id="id_app_id"
+                                   class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                                   value="{{ form.app_id.value|default:'' }}"
+                                   placeholder="123456"
+                                   :disabled="!(authType === 'app' && setupMode === 'manual')">
+                            {% if form.app_id.errors %}
+                            <p class="mt-1 text-sm text-red-400">{{ form.app_id.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label for="id_installation_id" class="block text-sm font-medium text-dark-text mb-2">
+                                {{ form.installation_id.label }} <span class="text-red-400">*</span>
+                            </label>
+                            <input type="text" name="{{ form.installation_id.html_name }}" id="id_installation_id"
+                                   class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                                   value="{{ form.installation_id.value|default:'' }}"
+                                   placeholder="12345678"
+                                   :disabled="!(authType === 'app' && setupMode === 'manual')">
+                            {% if form.installation_id.errors %}
+                            <p class="mt-1 text-sm text-red-400">{{ form.installation_id.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="id_private_key" class="block text-sm font-medium text-dark-text mb-2">
+                            {{ form.private_key.label }} <span class="text-red-400">*</span>
+                        </label>
+                        <textarea name="{{ form.private_key.html_name }}" id="id_private_key" rows="6"
+                                  class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text font-mono text-xs focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                                  placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;...&#10;-----END RSA PRIVATE KEY-----"
+                                  :disabled="!(authType === 'app' && setupMode === 'manual')">{{ form.private_key.value|default:'' }}</textarea>
+                        {% if form.private_key.errors %}
+                        <p class="mt-1 text-sm text-red-400">{{ form.private_key.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-dark-muted">{{ form.private_key.help_text }}</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="id_base_url_app" class="block text-sm font-medium text-dark-text mb-2">
+                                {{ form.base_url.label }} <span class="text-dark-muted">(Optional)</span>
+                            </label>
+                            <input type="url" name="{{ form.base_url.html_name }}" id="id_base_url_app"
+                                   class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                                   value="{{ form.base_url.value|default:'' }}"
+                                   placeholder="https://github.example.com/api/v3"
+                                   :disabled="!(authType === 'app' && setupMode === 'manual')">
+                            <p class="mt-1 text-xs text-dark-muted">{{ form.base_url.help_text }}</p>
+                        </div>
+                        <div>
+                            <label for="id_organization_manual" class="block text-sm font-medium text-dark-text mb-2">
+                                Organization <span class="text-dark-muted">(Optional)</span>
+                            </label>
+                            <input type="text" name="{{ form.organization.html_name }}" id="id_organization_manual"
+                                   class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                                   value="{{ form.organization.value|default:'' }}"
+                                   placeholder="my-organization"
+                                   :disabled="!(authType === 'app' && setupMode === 'manual')">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAT Setup -->
+            <div x-show="authType === 'token'" x-cloak class="card">
+                <h2 class="text-lg font-semibold mb-4">Personal Access Token</h2>
+
+                <div class="space-y-4">
+                    <div>
+                        <label for="id_personal_token" class="block text-sm font-medium text-dark-text mb-2">
+                            {{ form.personal_token.label }} <span class="text-red-400">*</span>
+                        </label>
+                        <input type="password" name="{{ form.personal_token.html_name }}" id="id_personal_token"
+                               class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                               value="{{ form.personal_token.value|default:'' }}"
+                               placeholder="ghp_xxxx or github_pat_xxxx"
+                               :disabled="authType !== 'token'">
+                        {% if form.personal_token.errors %}
+                        <p class="mt-1 text-sm text-red-400">{{ form.personal_token.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-dark-muted">{{ form.personal_token.help_text }}</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="id_base_url_pat" class="block text-sm font-medium text-dark-text mb-2">
+                                {{ form.base_url.label }} <span class="text-dark-muted">(Optional)</span>
+                            </label>
+                            <input type="url" name="{{ form.base_url.html_name }}" id="id_base_url_pat"
+                                   class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                                   value="{{ form.base_url.value|default:'' }}"
+                                   placeholder="https://github.example.com/api/v3"
+                                   :disabled="authType !== 'token'">
+                            <p class="mt-1 text-xs text-dark-muted">{{ form.base_url.help_text }}</p>
+                        </div>
+                        <div>
+                            <label for="id_organization_pat" class="block text-sm font-medium text-dark-text mb-2">
+                                Organization <span class="text-dark-muted">(Optional)</span>
+                            </label>
+                            <input type="text" name="{{ form.organization.html_name }}" id="id_organization_pat"
+                                   class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                                   value="{{ form.organization.value|default:'' }}"
+                                   placeholder="my-organization"
+                                   :disabled="authType !== 'token'">
+                            <p class="mt-1 text-xs text-dark-muted">Scope token to a specific organization</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex justify-end gap-3">
+                <a href="{% url 'connections:list' %}" class="btn-secondary">Cancel</a>
+                <button type="submit"
+                        class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                        :disabled="!canSubmit"
+                        @click="organizationTouched = true">
+                    <span x-show="authType === 'app' && setupMode === 'automatic' && externalUrlConfigured">
+                        Continue to GitHub &rarr;
+                    </span>
+                    <span x-show="authType !== 'app' || setupMode !== 'automatic' || !externalUrlConfigured">
+                        Create Connection
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

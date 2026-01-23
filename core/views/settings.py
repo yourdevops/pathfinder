@@ -1,8 +1,11 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib import messages
 
 from ..decorators import AdminRequiredMixin
+from ..models import SiteConfiguration
+from ..forms import SiteConfigurationForm
 
 
 class GeneralSettingsView(LoginRequiredMixin, AdminRequiredMixin, View):
@@ -10,8 +13,25 @@ class GeneralSettingsView(LoginRequiredMixin, AdminRequiredMixin, View):
     template_name = 'core/settings/general.html'
 
     def get(self, request):
+        config = SiteConfiguration.get_instance()
+        form = SiteConfigurationForm(instance=config)
         return render(request, self.template_name, {
             'active_section': 'general',
+            'form': form,
+            'config': config,
+        })
+
+    def post(self, request):
+        config = SiteConfiguration.get_instance()
+        form = SiteConfigurationForm(request.POST, instance=config)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Settings saved successfully.')
+            return redirect('settings:general')
+        return render(request, self.template_name, {
+            'active_section': 'general',
+            'form': form,
+            'config': config,
         })
 
 

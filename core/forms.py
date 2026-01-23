@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from .models import User, Group, GroupMembership, Project, Environment, IntegrationConnection
+from .models import User, Group, GroupMembership, Project, Environment, IntegrationConnection, SiteConfiguration
 
 
 class UnlockForm(forms.Form):
@@ -479,3 +479,27 @@ class AttachConnectionForm(forms.Form):
         if exclude_ids:
             qs = qs.exclude(id__in=exclude_ids)
         self.fields['connection'].queryset = qs
+
+
+class SiteConfigurationForm(forms.ModelForm):
+    """Form for site-wide configuration settings."""
+
+    class Meta:
+        model = SiteConfiguration
+        fields = ['external_url']
+        widgets = {
+            'external_url': forms.URLInput(attrs={
+                'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
+                'placeholder': 'https://devssp.example.com',
+            }),
+        }
+        labels = {
+            'external_url': 'External URL',
+        }
+        help_texts = {
+            'external_url': 'Public URL where DevSSP is accessible. Required for OAuth callbacks and webhooks.',
+        }
+
+    def clean_external_url(self):
+        url = self.cleaned_data.get('external_url', '').rstrip('/')
+        return url

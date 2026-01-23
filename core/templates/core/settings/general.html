@@ -7,20 +7,47 @@
     <div class="max-w-4xl">
         <h1 class="text-2xl font-bold text-dark-text mb-6">General Settings</h1>
 
-        <div class="card">
-            <div class="p-6">
-                <h2 class="text-lg font-semibold text-dark-text mb-4">DevSSP URLs</h2>
-                <p class="text-dark-muted mb-6">Configure the internal and public URLs for your DevSSP instance.</p>
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
 
-                <div class="bg-dark-border/30 rounded-lg p-6 text-center">
-                    <svg class="w-12 h-12 mx-auto text-dark-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                    </svg>
-                    <p class="text-dark-muted">URL configuration coming soon</p>
-                    <p class="text-sm text-dark-muted mt-2">Internal URL and Public URL settings will be available here.</p>
+            <div class="card">
+                <div class="p-6">
+                    <h2 class="text-lg font-semibold text-dark-text mb-4">DevSSP URLs</h2>
+                    <p class="text-dark-muted mb-6">Configure the public URL for your DevSSP instance. This is required for OAuth callbacks and webhook integrations.</p>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label for="id_external_url" class="block text-sm font-medium text-dark-text mb-2">
+                                {{ form.external_url.label }}
+                            </label>
+                            {{ form.external_url }}
+                            {% if form.external_url.errors %}
+                            <p class="mt-1 text-sm text-red-400">{{ form.external_url.errors.0 }}</p>
+                            {% endif %}
+                            <p class="mt-1 text-xs text-dark-muted">{{ form.external_url.help_text }}</p>
+                        </div>
+
+                        {% if not config.external_url %}
+                        <div class="p-4 bg-amber-900/20 border border-amber-700 rounded-lg">
+                            <div class="flex items-start gap-3">
+                                <svg class="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <div>
+                                    <p class="text-sm text-amber-400 font-medium">External URL not configured</p>
+                                    <p class="text-xs text-dark-muted mt-1">Some features require an external URL to enable OAuth callbacks and webhooks.</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-        </div>
+
+            <div class="flex justify-end">
+                <button type="submit" class="btn-primary">Save Settings</button>
+            </div>
+        </form>
     </div>
 </div>
 {% endblock %}

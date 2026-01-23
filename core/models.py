@@ -150,6 +150,36 @@ class ProjectMembership(models.Model):
         return f"{self.group.name} -> {self.project.name} ({self.project_role})"
 
 
+class SiteConfiguration(models.Model):
+    """
+    Singleton model for site-wide configuration settings.
+
+    Use SiteConfiguration.get_instance() to access the configuration.
+    """
+    external_url = models.URLField(
+        blank=True,
+        help_text="Public URL for webhooks and OAuth callbacks (e.g., https://devssp.example.com)"
+    )
+
+    class Meta:
+        db_table = 'core_site_configuration'
+        verbose_name = "Site Configuration"
+
+    def __str__(self):
+        return "Site Configuration"
+
+    @classmethod
+    def get_instance(cls):
+        """Get or create the singleton configuration instance."""
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    def save(self, *args, **kwargs):
+        # Ensure only one instance exists
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+
 class IntegrationConnection(models.Model):
     """
     Stores configuration for external integration connections.
@@ -163,6 +193,7 @@ class IntegrationConnection(models.Model):
         ('unknown', 'Unknown'),
     ]
     STATUS_CHOICES = [
+        ('pending', 'Pending'),
         ('active', 'Active'),
         ('disabled', 'Disabled'),
     ]
@@ -322,6 +353,7 @@ auditlog.register(GroupMembership)
 auditlog.register(Project)
 auditlog.register(Environment)
 auditlog.register(ProjectMembership)
+auditlog.register(SiteConfiguration)
 auditlog.register(IntegrationConnection, exclude_fields=['config_encrypted'])
 auditlog.register(ProjectConnection)
 auditlog.register(EnvironmentConnection)

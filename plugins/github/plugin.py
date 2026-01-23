@@ -39,9 +39,9 @@ class GitHubPlugin(BasePlugin):
         }
 
     def get_wizard_forms(self) -> List:
-        """Return the wizard form classes for connection setup."""
-        from .forms import GitHubAuthForm, GitHubWebhookForm, GitHubConfirmForm
-        return [GitHubAuthForm, GitHubWebhookForm, GitHubConfirmForm]
+        """Return the form classes for connection setup."""
+        from .forms import GitHubConnectionForm
+        return [GitHubConnectionForm]
 
     def _get_github_client_pat(self, config: Dict[str, Any]) -> Github:
         """
