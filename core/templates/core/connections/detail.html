@@ -4,7 +4,7 @@
 {% block title %}{{ connection.name }} - Connections - DevSSP{% endblock %}
 
 {% block content %}
-<div class="p-8">
+<div class="p-8 max-w-4xl">
     <!-- Breadcrumb -->
     <nav class="mb-6">
         <ol class="flex items-center space-x-2 text-sm">
@@ -19,45 +19,21 @@
     </nav>
 
     <!-- Page Header -->
-    <div class="flex items-start justify-between mb-8">
-        <div class="flex items-center">
-            <div class="w-12 h-12 rounded-lg bg-dark-surface border border-dark-border flex items-center justify-center mr-4">
-                {% if connection.plugin_missing %}
-                <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                {% else %}
-                <svg class="w-6 h-6 text-dark-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                </svg>
-                {% endif %}
-            </div>
-            <div>
-                <h1 class="text-2xl font-bold text-dark-text">{{ connection.name }}</h1>
-                <p class="text-dark-muted">{{ connection.plugin_name }}</p>
-            </div>
+    <div class="flex items-center mb-8">
+        <div class="w-12 h-12 rounded-lg bg-dark-surface border border-dark-border flex items-center justify-center mr-4">
+            {% if connection.plugin_missing %}
+            <svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            {% else %}
+            <svg class="w-6 h-6 text-dark-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+            {% endif %}
         </div>
-        <div class="flex items-center gap-3">
-            <button hx-post="{% url 'connections:test' uuid=connection.uuid %}"
-                    hx-target="#health-status-detail"
-                    hx-swap="outerHTML"
-                    class="px-4 py-2 bg-dark-surface border border-dark-border hover:bg-dark-border/50 text-dark-text rounded-lg transition-colors flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                Test Connection
-            </button>
-            <form method="post" action="{% url 'connections:delete' uuid=connection.uuid %}" 
-                  onsubmit="return confirm('Are you sure you want to delete this connection?');">
-                {% csrf_token %}
-                <button type="submit" 
-                        class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors flex items-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    Delete
-                </button>
-            </form>
+        <div>
+            <h1 class="text-2xl font-bold text-dark-text">{{ connection.name }}</h1>
+            <p class="text-dark-muted">{{ connection.plugin_name }}</p>
         </div>
     </div>
 
@@ -76,174 +52,315 @@
     </div>
     {% endif %}
 
-    <div class="grid grid-cols-3 gap-6">
-        <!-- Main Content -->
-        <div class="col-span-2 space-y-6">
+    <!-- DETAILS SECTION -->
+    <section class="mb-8">
+        <h2 class="text-lg font-semibold text-dark-text mb-4 pb-2 border-b border-dark-border">Details</h2>
+
+        <dl class="divide-y divide-dark-border">
             <!-- Description -->
-            {% if connection.description %}
-            <div class="bg-dark-surface border border-dark-border rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-dark-text mb-3">Description</h2>
-                <p class="text-dark-muted">{{ connection.description }}</p>
+            <div class="py-3 grid grid-cols-3 gap-4">
+                <dt class="text-sm text-dark-muted">Description</dt>
+                <dd class="text-sm text-dark-text col-span-2">{{ connection.description|default:"No description" }}</dd>
+            </div>
+
+            <!-- Health Status -->
+            <div class="py-3 grid grid-cols-3 gap-4">
+                <dt class="text-sm text-dark-muted">Health Status</dt>
+                <dd class="col-span-2 flex items-center gap-3">
+                    <div id="health-status-detail">
+                        {% include "core/connections/_health_status.html" %}
+                    </div>
+                    {% if connection.last_health_check %}
+                    <span class="text-xs text-dark-muted">
+                        Last checked {{ connection.last_health_check|naturaltime }}
+                    </span>
+                    {% else %}
+                    <span class="text-xs text-dark-muted">Never checked</span>
+                    {% endif %}
+                    {% if not plugin_missing %}
+                    <button hx-post="{% url 'connections:test' uuid=connection.uuid %}"
+                            hx-target="#health-status-detail"
+                            hx-swap="outerHTML"
+                            class="px-3 py-1 text-xs bg-dark-surface border border-dark-border hover:bg-dark-border/50 text-dark-text rounded transition-colors flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        Test
+                    </button>
+                    {% endif %}
+                </dd>
+            </div>
+            {% if connection.last_health_message %}
+            <div class="py-3 grid grid-cols-3 gap-4">
+                <dt class="text-sm text-dark-muted"></dt>
+                <dd class="text-xs text-dark-muted col-span-2">{{ connection.last_health_message }}</dd>
             </div>
             {% endif %}
 
-            <!-- Configuration -->
-            <div class="bg-dark-surface border border-dark-border rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-dark-text mb-4">Configuration</h2>
-                {% if config %}
-                <div class="space-y-3">
-                    {% for key, value in config.items %}
-                    <div class="flex items-center justify-between py-2 border-b border-dark-border last:border-0">
-                        <span class="text-sm text-dark-muted">{{ key }}</span>
-                        <span class="text-sm text-dark-text font-mono">{{ value }}</span>
-                    </div>
-                    {% endfor %}
-                </div>
-                <p class="text-xs text-dark-muted mt-4">
-                    <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    Sensitive fields are not displayed
-                </p>
-                {% else %}
-                <p class="text-dark-muted text-sm">No configuration to display.</p>
-                {% endif %}
+            <!-- Status -->
+            <div class="py-3 grid grid-cols-3 gap-4">
+                <dt class="text-sm text-dark-muted">Status</dt>
+                <dd class="col-span-2">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                           {% if connection.status == 'active' %}bg-green-500/20 text-green-400{% else %}bg-gray-500/20 text-gray-400{% endif %}">
+                        {{ connection.status|title }}
+                    </span>
+                </dd>
+            </div>
+
+            <!-- Created -->
+            <div class="py-3 grid grid-cols-3 gap-4">
+                <dt class="text-sm text-dark-muted">Created</dt>
+                <dd class="text-sm text-dark-text col-span-2">{{ connection.created_at|date:"M d, Y" }}{% if connection.created_by %} by {{ connection.created_by }}{% endif %}</dd>
+            </div>
+
+            <!-- Updated -->
+            <div class="py-3 grid grid-cols-3 gap-4">
+                <dt class="text-sm text-dark-muted">Updated</dt>
+                <dd class="text-sm text-dark-text col-span-2">{{ connection.updated_at|naturaltime }}</dd>
             </div>
 
             <!-- Plugin Info -->
             {% if plugin %}
-            <div class="bg-dark-surface border border-dark-border rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-dark-text mb-4">Plugin Information</h2>
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between py-2 border-b border-dark-border">
-                        <span class="text-sm text-dark-muted">Name</span>
-                        <span class="text-sm text-dark-text">{{ plugin.display_name }}</span>
-                    </div>
-                    <div class="flex items-center justify-between py-2 border-b border-dark-border">
-                        <span class="text-sm text-dark-muted">Category</span>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-                               {% if plugin.category == 'scm' %}bg-blue-500/20 text-blue-400
-                               {% elif plugin.category == 'deploy' %}bg-green-500/20 text-green-400
-                               {% else %}bg-gray-500/20 text-gray-400{% endif %}">
-                            {{ plugin.category|title }}
-                        </span>
-                    </div>
-                    {% if plugin.capabilities %}
-                    <div class="flex items-center justify-between py-2">
-                        <span class="text-sm text-dark-muted">Capabilities</span>
-                        <div class="flex flex-wrap gap-1">
-                            {% for cap in plugin.capabilities %}
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-dark-bg text-dark-text">
-                                {{ cap }}
-                            </span>
-                            {% endfor %}
+            <div class="py-3 grid grid-cols-3 gap-4">
+                <dt class="text-sm text-dark-muted">Plugin</dt>
+                <dd class="text-sm text-dark-text col-span-2">{{ plugin.display_name }}</dd>
+            </div>
+
+            <div class="py-3 grid grid-cols-3 gap-4">
+                <dt class="text-sm text-dark-muted">Category</dt>
+                <dd class="col-span-2">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                           {% if plugin.category == 'scm' %}bg-blue-500/20 text-blue-400
+                           {% elif plugin.category == 'deploy' %}bg-green-500/20 text-green-400
+                           {% else %}bg-gray-500/20 text-gray-400{% endif %}">
+                        {{ plugin.category|title }}
+                    </span>
+                </dd>
+            </div>
+
+            {% if plugin.capabilities %}
+            <div class="py-3 grid grid-cols-3 gap-4">
+                <dt class="text-sm text-dark-muted">Capabilities</dt>
+                <dd class="col-span-2 flex flex-wrap gap-1">
+                    {% for cap in plugin.capabilities %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-dark-bg text-dark-text border border-dark-border">
+                        {{ cap }}
+                    </span>
+                    {% endfor %}
+                </dd>
+            </div>
+            {% endif %}
+            {% endif %}
+        </dl>
+    </section>
+
+    <!-- CONFIGURATION SECTION -->
+    <section class="mb-8">
+        <h2 class="text-lg font-semibold text-dark-text mb-4 pb-2 border-b border-dark-border">Configuration</h2>
+
+        <form method="post" action="{% url 'connections:update' uuid=connection.uuid %}"
+              x-data="{ hasChanges: false, patTouched: false, patValue: '', patError: '' }"
+              @input="hasChanges = true">
+            {% csrf_token %}
+
+            <dl class="divide-y divide-dark-border">
+                <!-- Display all config fields -->
+                {% for field_name, field_info in display_config.items %}
+                <div class="py-3 grid grid-cols-3 gap-4">
+                    <dt class="text-sm text-dark-muted pt-2">{{ field_info.label }}</dt>
+                    <dd class="col-span-2">
+                        {% if field_name == 'personal_token' and can_manage %}
+                        <!-- Editable PAT field -->
+                        <div>
+                            <input type="password"
+                                   name="personal_token"
+                                   x-model="patValue"
+                                   @input="patTouched = true; validatePat()"
+                                   @blur="if(patValue) validatePat()"
+                                   placeholder="{% if field_info.is_set %}••••••••{% else %}Not set{% endif %}"
+                                   class="w-full px-3 py-2 bg-dark-bg border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                                   :class="patError ? 'border-red-500' : 'border-dark-border'"
+                                   autocomplete="off">
+                            <p class="text-xs text-dark-muted mt-1">
+                                <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                                Leave empty to keep current value
+                            </p>
+                            <p x-show="patError" x-text="patError" class="text-xs text-red-400 mt-1"></p>
                         </div>
-                    </div>
-                    {% endif %}
+                        {% elif field_info.sensitive %}
+                        <!-- Non-editable sensitive field -->
+                        <div>
+                            <span class="text-sm font-mono {% if field_info.is_set %}text-dark-text{% else %}text-dark-muted{% endif %}">
+                                {{ field_info.value }}
+                            </span>
+                            <p class="text-xs text-dark-muted mt-1">
+                                <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                                Encrypted
+                            </p>
+                        </div>
+                        {% else %}
+                        <!-- Non-sensitive field -->
+                        <span class="text-sm text-dark-text font-mono">{{ field_info.value }}</span>
+                        {% endif %}
+                    </dd>
                 </div>
+                {% empty %}
+                <div class="py-3">
+                    <p class="text-sm text-dark-muted">No configuration to display.</p>
+                </div>
+                {% endfor %}
+
+                <!-- Description (always editable) -->
+                {% if can_manage %}
+                <div class="py-3 grid grid-cols-3 gap-4">
+                    <dt class="text-sm text-dark-muted pt-2">Description</dt>
+                    <dd class="col-span-2">
+                        <textarea name="description"
+                                  rows="2"
+                                  class="w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                                  placeholder="Optional description">{{ connection.description }}</textarea>
+                    </dd>
+                </div>
+
+                <!-- Save button -->
+                <div class="py-4 grid grid-cols-3 gap-4">
+                    <dt></dt>
+                    <dd class="col-span-2">
+                        <button type="submit"
+                                :disabled="patError && patTouched && patValue"
+                                class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 disabled:bg-dark-accent/50 disabled:cursor-not-allowed text-white rounded-lg transition-colors">
+                            Save Changes
+                        </button>
+                    </dd>
+                </div>
+                {% endif %}
+            </dl>
+        </form>
+    </section>
+
+    <!-- USAGE SECTION -->
+    <section class="mb-8">
+        <h2 class="text-lg font-semibold text-dark-text mb-4 pb-2 border-b border-dark-border">Usage</h2>
+
+        {% if connection.project_attachments.exists or connection.environment_attachments.exists %}
+        <dl class="divide-y divide-dark-border">
+            {% if connection.project_attachments.exists %}
+            <div class="py-3 grid grid-cols-3 gap-4">
+                <dt class="text-sm text-dark-muted">Projects</dt>
+                <dd class="col-span-2 space-y-2">
+                    {% for attachment in connection.project_attachments.all %}
+                    <div class="flex items-center justify-between">
+                        <a href="{% url 'projects:detail' project_uuid=attachment.project.uuid %}?tab=settings"
+                           class="text-dark-accent hover:underline text-sm">
+                            {{ attachment.project.name }}
+                        </a>
+                        {% if attachment.is_default %}
+                        <span class="px-2 py-0.5 text-xs rounded bg-dark-accent/20 text-dark-accent">Default</span>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </dd>
             </div>
             {% endif %}
 
-            <!-- Usage -->
-            <div class="bg-dark-surface border border-dark-border rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-dark-text mb-4">Usage</h2>
-                {% if connection.project_attachments.exists or connection.environment_attachments.exists %}
-                <div class="space-y-4">
-                    {% if connection.project_attachments.exists %}
-                    <div>
-                        <h3 class="text-sm font-medium text-dark-text mb-2">Projects</h3>
-                        <ul class="space-y-2">
-                            {% for attachment in connection.project_attachments.all %}
-                            <li class="flex items-center justify-between py-2 border-b border-dark-border last:border-0">
-                                <a href="{% url 'projects:detail' project_uuid=attachment.project.uuid %}?tab=settings"
-                                   class="text-dark-accent hover:underline">
-                                    {{ attachment.project.name }}
-                                </a>
-                                {% if attachment.is_default %}
-                                <span class="px-2 py-0.5 text-xs rounded bg-dark-accent/20 text-dark-accent">Default</span>
-                                {% endif %}
-                            </li>
-                            {% endfor %}
-                        </ul>
+            {% if connection.environment_attachments.exists %}
+            <div class="py-3 grid grid-cols-3 gap-4">
+                <dt class="text-sm text-dark-muted">Environments</dt>
+                <dd class="col-span-2 space-y-2">
+                    {% for attachment in connection.environment_attachments.all %}
+                    <div class="flex items-center justify-between">
+                        <a href="{% url 'projects:environment_detail' project_uuid=attachment.environment.project.uuid env_uuid=attachment.environment.uuid %}"
+                           class="text-dark-accent hover:underline text-sm">
+                            {{ attachment.environment.project.name }} / {{ attachment.environment.name }}
+                        </a>
+                        {% if attachment.is_default %}
+                        <span class="px-2 py-0.5 text-xs rounded bg-dark-accent/20 text-dark-accent">Default</span>
+                        {% endif %}
                     </div>
-                    {% endif %}
-                    {% if connection.environment_attachments.exists %}
-                    <div>
-                        <h3 class="text-sm font-medium text-dark-text mb-2">Environments</h3>
-                        <ul class="space-y-2">
-                            {% for attachment in connection.environment_attachments.all %}
-                            <li class="flex items-center justify-between py-2 border-b border-dark-border last:border-0">
-                                <a href="{% url 'projects:environment_detail' project_uuid=attachment.environment.project.uuid env_uuid=attachment.environment.uuid %}"
-                                   class="text-dark-accent hover:underline">
-                                    {{ attachment.environment.project.name }} / {{ attachment.environment.name }}
-                                </a>
-                                {% if attachment.is_default %}
-                                <span class="px-2 py-0.5 text-xs rounded bg-dark-accent/20 text-dark-accent">Default</span>
-                                {% endif %}
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    {% endif %}
-                </div>
-                {% else %}
-                <p class="text-dark-muted text-sm">
-                    This connection is not attached to any projects or environments.
-                </p>
-                {% endif %}
+                    {% endfor %}
+                </dd>
             </div>
-        </div>
+            {% endif %}
+        </dl>
+        {% else %}
+        <p class="text-sm text-dark-muted py-3">
+            This connection is not attached to any projects or environments.
+        </p>
+        {% endif %}
+    </section>
 
-        <!-- Sidebar -->
-        <div class="space-y-6">
-            <!-- Health Status Card -->
-            <div class="bg-dark-surface border border-dark-border rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-dark-text mb-4">Health Status</h2>
-                <div id="health-status-detail">
-                    {% include "core/connections/_health_status.html" %}
-                </div>
-                {% if connection.last_health_check %}
-                <p class="text-xs text-dark-muted mt-3">
-                    Last checked {{ connection.last_health_check|naturaltime }}
-                </p>
-                {% if connection.last_health_message %}
-                <p class="text-xs text-dark-muted mt-1">
-                    {{ connection.last_health_message }}
-                </p>
-                {% endif %}
-                {% else %}
-                <p class="text-xs text-dark-muted mt-3">Never checked</p>
-                {% endif %}
-            </div>
+    <!-- DANGER ZONE -->
+    {% if can_manage %}
+    <section class="mb-8">
+        <h2 class="text-lg font-semibold text-red-400 mb-4 pb-2 border-b border-red-500/30">Danger Zone</h2>
 
-            <!-- Metadata -->
-            <div class="bg-dark-surface border border-dark-border rounded-lg p-6">
-                <h2 class="text-lg font-semibold text-dark-text mb-4">Details</h2>
-                <div class="space-y-3 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-dark-muted">Status</span>
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium 
-                               {% if connection.status == 'active' %}bg-green-500/20 text-green-400{% else %}bg-gray-500/20 text-gray-400{% endif %}">
-                            {{ connection.status|title }}
-                        </span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-dark-muted">Created</span>
-                        <span class="text-dark-text">{{ connection.created_at|date:"M d, Y" }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-dark-muted">Updated</span>
-                        <span class="text-dark-text">{{ connection.updated_at|naturaltime }}</span>
-                    </div>
-                    {% if connection.created_by %}
-                    <div class="flex justify-between">
-                        <span class="text-dark-muted">Created by</span>
-                        <span class="text-dark-text">{{ connection.created_by }}</span>
-                    </div>
+        <div class="flex items-center justify-between py-4 px-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <div>
+                <p class="text-sm font-medium text-dark-text">Delete this connection</p>
+                <p class="text-xs text-dark-muted">
+                    {% if has_usage %}
+                    Cannot delete - this connection is attached to projects or environments
+                    {% else %}
+                    Once deleted, this connection cannot be recovered
                     {% endif %}
-                </div>
+                </p>
             </div>
+            <form method="post" action="{% url 'connections:delete' uuid=connection.uuid %}"
+                  onsubmit="return confirm('Are you sure you want to delete this connection? This action cannot be undone.');">
+                {% csrf_token %}
+                <button type="submit"
+                        {% if has_usage %}disabled{% endif %}
+                        class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 disabled:bg-red-500/10 disabled:text-red-400/50 disabled:cursor-not-allowed text-red-400 rounded-lg transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Delete
+                </button>
+            </form>
         </div>
-    </div>
+    </section>
+    {% endif %}
 </div>
+
+<script>
+function validatePat() {
+    const input = document.querySelector('input[name="personal_token"]');
+    const value = input ? input.value.trim() : '';
+
+    // Get Alpine component
+    const form = input.closest('[x-data]');
+    if (!form || !form.__x) return;
+
+    const $data = form.__x.$data;
+
+    if (!value) {
+        $data.patError = '';
+        return;
+    }
+
+    // Validate format
+    if (!value.startsWith('ghp_') && !value.startsWith('github_pat_')) {
+        $data.patError = 'Token should start with "ghp_" (classic) or "github_pat_" (fine-grained)';
+        return;
+    }
+
+    // Validate length
+    if (value.startsWith('ghp_') && value.length < 40) {
+        $data.patError = 'Classic PAT (ghp_) should be at least 40 characters';
+        return;
+    }
+
+    if (value.startsWith('github_pat_') && value.length < 80) {
+        $data.patError = 'Fine-grained PAT (github_pat_) should be at least 80 characters';
+        return;
+    }
+
+    $data.patError = '';
+}
+</script>
 {% endblock %}

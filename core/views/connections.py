@@ -51,18 +51,60 @@ class ConnectionDetailView(LoginRequiredMixin, IntegrationsReadMixin, DetailView
     slug_url_kwarg = 'uuid'
 
     def get_context_data(self, **kwargs):
+        from core.forms import ConnectionConfigUpdateForm
+
         context = super().get_context_data(**kwargs)
         connection = self.object
         plugin = connection.get_plugin()
         context['plugin'] = plugin
-
-        # Get config for display (non-sensitive only)
-        context['config'] = connection.config
         context['plugin_missing'] = connection.plugin_missing
 
-        # Get usage counts (for Phase 5+)
-        context['project_attachments'] = []  # Will be populated in Plan 06
-        context['environment_attachments'] = []
+        # Get config schema to know which fields are sensitive
+        config_schema = plugin.get_config_schema() if plugin else {}
+        context['config_schema'] = config_schema
+
+        # Build display config with all fields (sensitive ones masked)
+        # Decrypt once to check which sensitive fields are set
+        full_config = connection.get_config() if plugin else {}
+        stored_config = connection.config  # Non-sensitive stored values
+
+        display_config = {}
+        for field_name, field_info in config_schema.items():
+            if field_info.get('sensitive'):
+                # For sensitive fields, show masked value if set
+                is_set = bool(full_config.get(field_name))
+                display_config[field_name] = {
+                    'value': '••••••••' if is_set else 'Not set',
+                    'label': field_info.get('label', field_name),
+                    'sensitive': True,
+                    'is_set': is_set,
+                }
+            else:
+                value = stored_config.get(field_name, '')
+                if value:  # Only show non-empty values
+                    display_config[field_name] = {
+                        'value': value,
+                        'label': field_info.get('label', field_name),
+                        'sensitive': False,
+                        'is_set': bool(value),
+                    }
+        context['display_config'] = display_config
+
+        # Check for usage
+        has_usage = (
+            connection.project_attachments.exists() or
+            connection.environment_attachments.exists()
+        )
+        context['has_usage'] = has_usage
+
+        # Form for editing
+        context['config_form'] = ConnectionConfigUpdateForm(connection=connection)
+
+        # Check if user can manage (for edit/delete buttons)
+        context['can_manage'] = (
+            has_system_role(self.request.user, 'admin') or
+            has_system_role(self.request.user, 'operator')
+        )
 
         return context
 
@@ -109,13 +151,51 @@ class ConnectionDeleteView(LoginRequiredMixin, OperatorRequiredMixin, View):
     def post(self, request, uuid):
         connection = get_object_or_404(IntegrationConnection, uuid=uuid)
 
-        # Check for usage (will be expanded in Plan 06)
-        # For now, allow deletion
+        # Check for usage - prevent deletion if connection is in use
+        has_usage = (
+            connection.project_attachments.exists() or
+            connection.environment_attachments.exists()
+        )
+        if has_usage:
+            messages.error(request, f'Cannot delete "{connection.name}" - it is attached to projects or environments.')
+            return redirect('connections:detail', uuid=uuid)
 
         name = connection.name
         connection.delete()
         messages.success(request, f'Connection "{name}" deleted.')
         return redirect('connections:list')
+
+
+class ConnectionConfigUpdateView(LoginRequiredMixin, OperatorRequiredMixin, View):
+    """Update connection configuration (description + sensitive fields)."""
+
+    def post(self, request, uuid):
+        from core.forms import ConnectionConfigUpdateForm
+
+        connection = get_object_or_404(IntegrationConnection, uuid=uuid)
+        form = ConnectionConfigUpdateForm(request.POST, connection=connection)
+
+        if form.is_valid():
+            # Update description
+            connection.description = form.cleaned_data['description']
+
+            # Update PAT if provided (non-empty)
+            personal_token = form.cleaned_data.get('personal_token', '')
+            if personal_token:
+                # Get current config and update the token
+                config = connection.get_config()
+                config['personal_token'] = personal_token
+                connection.set_config(config)
+
+            connection.save()
+            messages.success(request, 'Connection updated successfully.')
+        else:
+            # Return errors via messages
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
+
+        return redirect('connections:detail', uuid=uuid)
 
 
 class ConnectionCreateDispatchView(LoginRequiredMixin, OperatorRequiredMixin, View):

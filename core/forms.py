@@ -481,6 +481,60 @@ class AttachConnectionForm(forms.Form):
         self.fields['connection'].queryset = qs
 
 
+class ConnectionConfigUpdateForm(forms.Form):
+    """Form for updating connection configuration (description + sensitive fields)."""
+    description = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
+            'rows': 2,
+            'placeholder': 'Optional description',
+        }),
+        label='Description'
+    )
+    personal_token = forms.CharField(
+        required=False,
+        widget=forms.PasswordInput(attrs={
+            'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
+            'placeholder': '••••••••',
+            'autocomplete': 'off',
+        }),
+        label='Personal Access Token'
+    )
+
+    def __init__(self, *args, connection=None, **kwargs):
+        self.connection = connection
+        super().__init__(*args, **kwargs)
+        # Set initial description from connection
+        if connection:
+            self.fields['description'].initial = connection.description
+            # Only show PAT field for token auth
+            config = connection.config
+            if config.get('auth_type') != 'token':
+                del self.fields['personal_token']
+
+    def clean_personal_token(self):
+        token = self.cleaned_data.get('personal_token', '').strip()
+        if not token:
+            # Empty = don't update
+            return ''
+        # Validate format: ghp_ (classic) or github_pat_ (fine-grained)
+        if not (token.startswith('ghp_') or token.startswith('github_pat_')):
+            raise forms.ValidationError(
+                'Invalid token format. GitHub PAT should start with "ghp_" (classic) or "github_pat_" (fine-grained).'
+            )
+        # Validate minimum length
+        if token.startswith('ghp_') and len(token) < 40:
+            raise forms.ValidationError(
+                'Classic PAT (ghp_) should be at least 40 characters.'
+            )
+        if token.startswith('github_pat_') and len(token) < 80:
+            raise forms.ValidationError(
+                'Fine-grained PAT (github_pat_) should be at least 80 characters.'
+            )
+        return token
+
+
 class SiteConfigurationForm(forms.ModelForm):
     """Form for site-wide configuration settings."""
 

@@ -12,6 +12,7 @@ from .connections import (
     ConnectionDetailView,
     ConnectionTestView,
     ConnectionDeleteView,
+    ConnectionConfigUpdateView,
     ConnectionCreateDispatchView,
     PluginListView,
 )
@@ -39,7 +40,7 @@ __all__ = [
     'AuditLogView',
     'BlueprintsListView',
     'ConnectionListView', 'ConnectionDetailView', 'ConnectionTestView',
-    'ConnectionDeleteView', 'ConnectionCreateDispatchView', 'PluginListView',
+    'ConnectionDeleteView', 'ConnectionConfigUpdateView', 'ConnectionCreateDispatchView', 'PluginListView',
     'ProjectListView', 'ProjectCreateModalView', 'ProjectCreateView',
     'ProjectDetailView', 'ProjectUpdateView', 'ProjectArchiveView',
     'EnvironmentCreateView', 'EnvironmentDetailView', 'EnvironmentUpdateView', 'EnvironmentDeleteView',
