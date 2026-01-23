@@ -7,6 +7,12 @@ DevSSP (Developer Self-Service Portal) is a Django web app for managing containe
 When running locally on the host, always activate venv first. 
 ```bash
 source venv/bin/activate
+
+# Rebuild UI
+python manage.py tailwind build
+
+# Collect static files
+python manage.py collectstatic
 ```
 **First run**: Navigate to http://localhost:8000/, paste unlock token from `secrets/initialUnlockToken`, create admin account with the following credentials:
 - **Username**: `admin`
