@@ -25,13 +25,31 @@
             Blueprints
         </a>
 
-        <!-- Integrations (all authenticated users, renamed from Connections) -->
-        <a href="{% url 'connections:list' %}" class="flex items-center px-3 py-2 rounded-lg text-dark-text hover:bg-dark-border/50 transition-colors {% if 'connections' in request.path %}bg-dark-border{% endif %}">
-            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-            </svg>
-            Integrations
-        </a>
+        <!-- Integrations (expandable, all authenticated users) -->
+        <div x-data="{ expanded: {% if 'connections' in request.path %}true{% else %}false{% endif %} }">
+            <!-- Parent toggle (not a link) -->
+            <button @click="expanded = !expanded"
+                    class="w-full flex items-center px-3 py-2 rounded-lg text-dark-text hover:bg-dark-border/50 transition-colors {% if 'connections' in request.path %}bg-dark-border{% endif %}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                Integrations
+                <svg class="w-4 h-4 ml-auto transition-transform" :class="{ 'rotate-90': expanded }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+            <!-- Sub-items -->
+            <div x-show="expanded" x-transition class="ml-2 mt-1 space-y-1">
+                <a href="{% url 'connections:list' %}"
+                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors {% if 'connections' in request.path and 'plugins' not in request.path %}bg-dark-border/50 text-dark-text{% else %}text-dark-muted hover:bg-dark-border/50 hover:text-dark-text{% endif %}">
+                    Connections
+                </a>
+                <a href="{% url 'connections:plugins' %}"
+                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors {% if 'plugins' in request.path %}bg-dark-border/50 text-dark-text{% else %}text-dark-muted hover:bg-dark-border/50 hover:text-dark-text{% endif %}">
+                    Plugins
+                </a>
+            </div>
+        </div>
 
         <!-- Settings (admin-only) -->
         {% if is_admin %}
