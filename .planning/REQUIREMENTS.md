@@ -30,14 +30,14 @@ Requirements for MVP release. Complete end-to-end flow: Blueprint -> GitHub Acti
 - [x] **PROJ-02**: Admin can assign groups to projects with project role (owner, contributor, viewer)
 - [x] **PROJ-03**: Project owner can edit project settings
 - [x] **PROJ-04**: Project owner can manage environment variables (key, value, lock)
-- [ ] **PROJ-05**: Project owner can attach SCM connections to project (deferred to Phase 3)
+- [x] **PROJ-05**: Project owner can attach SCM connections to project
 - [x] **PROJ-06**: Contributors can view project details and services
 - [x] **PROJ-07**: Viewers have read-only access to project
 
 ### Environments
 
 - [x] **ENV-01**: Admin can create environments within a project (dev, staging, prod)
-- [ ] **ENV-02**: Admin can attach deploy connections to environments (deferred to Phase 3)
+- [x] **ENV-02**: Admin can attach deploy connections to environments
 - [x] **ENV-03**: Environment has is_production flag for safeguards
 - [x] **ENV-04**: Environment has env_vars that inherit from project
 - [x] **ENV-05**: Project owner can edit environment settings
@@ -45,15 +45,15 @@ Requirements for MVP release. Complete end-to-end flow: Blueprint -> GitHub Acti
 
 ### Integrations
 
-- [ ] **INTG-01**: Operator can register GitHub connection with App credentials
-- [ ] **INTG-02**: Operator can register Docker connection with socket path
-- [ ] **INTG-03**: Connection stores sensitive fields encrypted (Fernet)
-- [ ] **INTG-04**: Connection health check shows status (healthy, unhealthy, unknown)
-- [ ] **INTG-05**: GitHub connection can create repositories
-- [ ] **INTG-06**: GitHub connection can create branches and commits
-- [ ] **INTG-07**: GitHub connection can configure webhook secrets
-- [ ] **INTG-08**: Docker connection can deploy containers
-- [ ] **INTG-09**: Docker connection can check container status
+- [x] **INTG-01**: Operator can register GitHub connection with App credentials
+- [x] **INTG-02**: Operator can register Docker connection with socket path
+- [x] **INTG-03**: Connection stores sensitive fields encrypted (Fernet)
+- [x] **INTG-04**: Connection health check shows status (healthy, unhealthy, unknown)
+- [x] **INTG-05**: GitHub connection can create repositories
+- [x] **INTG-06**: GitHub connection can create branches and commits
+- [x] **INTG-07**: GitHub connection can configure webhook secrets
+- [x] **INTG-08**: Docker connection can deploy containers
+- [x] **INTG-09**: Docker connection can check container status
 
 ### Blueprints
 
@@ -173,26 +173,26 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PROJ-02 | Phase 2 | Complete |
 | PROJ-03 | Phase 2 | Complete |
 | PROJ-04 | Phase 2 | Complete |
-| PROJ-05 | Phase 3 | Pending |
+| PROJ-05 | Phase 3 | Complete |
 | PROJ-06 | Phase 2 | Complete |
 | PROJ-07 | Phase 2 | Complete |
 | ENV-01 | Phase 2 | Complete |
-| ENV-02 | Phase 3 | Pending |
+| ENV-02 | Phase 3 | Complete |
 | ENV-03 | Phase 2 | Complete |
 | ENV-04 | Phase 2 | Complete |
 | ENV-05 | Phase 2 | Complete |
 | ENV-06 | Phase 2 | Complete |
 | UIUX-02 | Phase 2 | Complete |
 | UIUX-04 | Phase 2 | Complete |
-| INTG-01 | Phase 3 | Pending |
-| INTG-02 | Phase 3 | Pending |
-| INTG-03 | Phase 3 | Pending |
-| INTG-04 | Phase 3 | Pending |
-| INTG-05 | Phase 3 | Pending |
-| INTG-06 | Phase 3 | Pending |
-| INTG-07 | Phase 3 | Pending |
-| INTG-08 | Phase 3 | Pending |
-| INTG-09 | Phase 3 | Pending |
+| INTG-01 | Phase 3 | Complete |
+| INTG-02 | Phase 3 | Complete |
+| INTG-03 | Phase 3 | Complete |
+| INTG-04 | Phase 3 | Complete |
+| INTG-05 | Phase 3 | Complete |
+| INTG-06 | Phase 3 | Complete |
+| INTG-07 | Phase 3 | Complete |
+| INTG-08 | Phase 3 | Complete |
+| INTG-09 | Phase 3 | Complete |
 | BPRT-01 | Phase 4 | Pending |
 | BPRT-02 | Phase 4 | Pending |
 | BPRT-03 | Phase 4 | Pending |
@@ -234,4 +234,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-21*
-*Last updated: 2026-01-22 after roadmap creation*
+*Last updated: 2026-01-23 after Phase 3 completion*
