@@ -92,9 +92,10 @@ None yet.
 | 005 | Fix humanize and JSONField contains errors | 2026-01-22 | 413b55a | [005-fix-humanize-and-jsonfield-contains-errors](./quick/005-fix-humanize-and-jsonfield-contains-errors/) |
 | 006 | Consolidate has_system_role SQLite compat | 2026-01-22 | e09d598 | [006-consolidate-has-system-role-sqlite-compat](./quick/006-consolidate-has-system-role-sqlite-compat/) |
 | 007 | UI navigation items arrangement - Settings section | 2026-01-23 | 5ea4142 | [007-ui-navigation-items-arrangement](./quick/007-ui-navigation-items-arrangement/) |
+| 008 | Fix Settings and Projects UI sidebar replacement | 2026-01-23 | 22deebd | [008-fix-settings-and-projects-ui-sidebar-rep](./quick/008-fix-settings-and-projects-ui-sidebar-rep/) |
 
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed quick task 007
+Stopped at: Completed quick task 008
 Resume file: None
