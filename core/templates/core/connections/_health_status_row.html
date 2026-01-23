@@ -1,0 +1,24 @@
+{% load humanize %}
+<!-- Health Status Row Partial (for list view HTMX response) -->
+<div class="flex items-center gap-2">
+    <!-- Status Badge (fixed width for consistency) -->
+    <span class="w-20 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {% if connection.health_status == 'healthy' %}bg-green-500/20 text-green-400{% elif connection.health_status == 'unhealthy' %}bg-red-500/20 text-red-400{% else %}bg-gray-500/20 text-gray-400{% endif %}">
+        <span class="w-1.5 h-1.5 rounded-full {% if connection.health_status == 'healthy' %}bg-green-400{% elif connection.health_status == 'unhealthy' %}bg-red-400{% else %}bg-gray-400{% endif %} mr-1.5"></span>
+        {% if connection.health_status == 'healthy' %}Healthy{% elif connection.health_status == 'unhealthy' %}Unhealthy{% else %}Unknown{% endif %}
+    </span>
+    <!-- Time (fixed width) -->
+    <span class="w-24 text-xs text-dark-muted">
+        {% if connection.last_health_check %}{{ connection.last_health_check|naturaltime }}{% else %}Never checked{% endif %}
+    </span>
+    <!-- Test Button -->
+    {% if not connection.plugin_missing %}
+    <button hx-post="{% url 'connections:test' uuid=connection.uuid %}"
+            hx-target="#health-status-{{ connection.uuid }}"
+            hx-swap="innerHTML"
+            class="text-xs px-2 py-0.5 text-dark-muted hover:text-dark-text hover:bg-dark-border/50 rounded transition-colors">
+        Test
+    </button>
+    {% endif %}
+</div>
+<!-- Health message (fixed width, truncated with tooltip) -->
+<div class="text-xs text-dark-muted mt-1 h-4 w-64 truncate" {% if connection.last_health_message %}title="{{ connection.last_health_message }}"{% endif %}>{% if connection.last_health_message %}{{ connection.last_health_message }}{% else %}&nbsp;{% endif %}</div>

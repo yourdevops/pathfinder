@@ -22,10 +22,16 @@ class ConnectionListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['plugins'] = registry.all()
-        # Group connections by category
-        context['scm_connections'] = [c for c in context['connections'] if self._get_category(c) == 'scm']
-        context['deploy_connections'] = [c for c in context['connections'] if self._get_category(c) == 'deploy']
-        context['other_connections'] = [c for c in context['connections'] if self._get_category(c) not in ('scm', 'deploy')]
+
+        # Add category attribute to each connection for filtering
+        for connection in context['connections']:
+            plugin = connection.get_plugin()
+            category = plugin.category if plugin else 'unknown'
+            # Normalize to 'other' for unknown/unrecognized categories
+            if category not in ('scm', 'deploy'):
+                category = 'other'
+            connection.category = category
+
         # Add permission context
         context['can_manage'] = (
             has_system_role(self.request.user, 'admin') or
@@ -36,10 +42,6 @@ class ConnectionListView(LoginRequiredMixin, ListView):
             has_system_role(self.request.user, 'auditor')
         )
         return context
-
-    def _get_category(self, connection):
-        plugin = connection.get_plugin()
-        return plugin.category if plugin else 'unknown'
 
 
 class ConnectionDetailView(LoginRequiredMixin, IntegrationsReadMixin, DetailView):
@@ -132,9 +134,14 @@ class ConnectionTestView(LoginRequiredMixin, View):
 
         # Return result for HTMX or JSON
         if request.headers.get('HX-Request'):
-            # Return HTML partial for HTMX
             from django.template.loader import render_to_string
-            html = render_to_string('core/connections/_health_status.html', {
+            # Use different templates for list vs detail view
+            hx_target = request.headers.get('HX-Target', '')
+            if hx_target == 'health-status-detail':
+                template = 'core/connections/_health_status.html'
+            else:
+                template = 'core/connections/_health_status_row.html'
+            html = render_to_string(template, {
                 'connection': connection,
                 'result': result,
             }, request=request)

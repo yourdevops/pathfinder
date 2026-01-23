@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}Connections - DevSSP{% endblock %}
 
@@ -46,56 +47,95 @@
         </select>
     </div>
 
-    <!-- SCM Connections Section -->
-    {% if scm_connections %}
-    <div class="mb-8" x-show="category === '' || category === 'scm'">
-        <h2 class="text-lg font-semibold text-dark-text mb-4 flex items-center">
-            <span class="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
-            SCM Connections
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {% for connection in scm_connections %}
-            <div x-show="search === '' || '{{ connection.name|lower }}'.includes(search.toLowerCase())" x-transition>
-                {% include "core/connections/_connection_card.html" %}
-            </div>
-            {% endfor %}
-        </div>
+    <!-- Connections Table -->
+    <div class="card overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-dark-border/30">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted uppercase tracking-wider w-28">Category</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted uppercase tracking-wider">Name</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted uppercase tracking-wider w-72">Health</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-dark-border">
+                {% for connection in connections %}
+                <tr class="table-row align-top"
+                    x-show="(search === '' || '{{ connection.name|lower }}'.includes(search.toLowerCase())) && (category === '' || category === '{{ connection.category }}')"
+                    x-transition>
+                    <!-- Category -->
+                    <td class="px-4 py-3">
+                        {% if connection.category == 'scm' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-500/20 text-blue-400">
+                            SCM
+                        </span>
+                        {% elif connection.category == 'deploy' %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">
+                            Deploy
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-500/20 text-gray-400">
+                            Other
+                        </span>
+                        {% endif %}
+                    </td>
+                    <!-- Name + Plugin + Description -->
+                    <td class="px-4 py-3">
+                        <div>
+                            {% if can_view_details %}
+                            <a href="{% url 'connections:detail' uuid=connection.uuid %}"
+                               class="font-medium text-dark-text hover:text-dark-accent transition-colors"
+                               title="{{ connection.name }}">
+                                {{ connection.name }}
+                            </a>
+                            {% else %}
+                            <span class="font-medium text-dark-text" title="{{ connection.name }}">{{ connection.name }}</span>
+                            {% endif %}
+                            {% if connection.plugin_missing %}
+                            <svg class="w-4 h-4 text-yellow-500 inline ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="Plugin missing">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                            {% endif %}
+                        </div>
+                        <div class="text-sm text-dark-muted mt-0.5">
+                            <span>{{ connection.plugin_name }}</span>
+                            {% if connection.description %}
+                            <span class="mx-1">·</span>
+                            <span>{{ connection.description|truncatechars:60 }}</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <!-- Health Status -->
+                    <td class="px-4 py-3">
+                        <div id="health-status-{{ connection.uuid }}">
+                            <div class="flex items-center gap-2">
+                                <!-- Status Badge (fixed width for consistency) -->
+                                <span class="w-20 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {% if connection.health_status == 'healthy' %}bg-green-500/20 text-green-400{% elif connection.health_status == 'unhealthy' %}bg-red-500/20 text-red-400{% else %}bg-gray-500/20 text-gray-400{% endif %}">
+                                    <span class="w-1.5 h-1.5 rounded-full {% if connection.health_status == 'healthy' %}bg-green-400{% elif connection.health_status == 'unhealthy' %}bg-red-400{% else %}bg-gray-400{% endif %} mr-1.5"></span>
+                                    {% if connection.health_status == 'healthy' %}Healthy{% elif connection.health_status == 'unhealthy' %}Unhealthy{% else %}Unknown{% endif %}
+                                </span>
+                                <!-- Time (fixed width) -->
+                                <span class="w-24 text-xs text-dark-muted">
+                                    {% if connection.last_health_check %}{{ connection.last_health_check|naturaltime }}{% else %}Never checked{% endif %}
+                                </span>
+                                <!-- Test Button -->
+                                {% if not connection.plugin_missing %}
+                                <button hx-post="{% url 'connections:test' uuid=connection.uuid %}"
+                                        hx-target="#health-status-{{ connection.uuid }}"
+                                        hx-swap="innerHTML"
+                                        class="text-xs px-2 py-0.5 text-dark-muted hover:text-dark-text hover:bg-dark-border/50 rounded transition-colors">
+                                    Test
+                                </button>
+                                {% endif %}
+                            </div>
+                            <!-- Health message placeholder (fixed width, truncated) -->
+                            <div class="text-xs text-dark-muted mt-1 h-4 w-64 truncate">&nbsp;</div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-    {% endif %}
-
-    <!-- Deploy Connections Section -->
-    {% if deploy_connections %}
-    <div class="mb-8" x-show="category === '' || category === 'deploy'">
-        <h2 class="text-lg font-semibold text-dark-text mb-4 flex items-center">
-            <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
-            Deploy Connections
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {% for connection in deploy_connections %}
-            <div x-show="search === '' || '{{ connection.name|lower }}'.includes(search.toLowerCase())" x-transition>
-                {% include "core/connections/_connection_card.html" %}
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Other Connections Section -->
-    {% if other_connections %}
-    <div class="mb-8" x-show="category === '' || category === 'other'">
-        <h2 class="text-lg font-semibold text-dark-text mb-4 flex items-center">
-            <span class="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
-            Other Connections
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {% for connection in other_connections %}
-            <div x-show="search === '' || '{{ connection.name|lower }}'.includes(search.toLowerCase())" x-transition>
-                {% include "core/connections/_connection_card.html" %}
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
 
     {% else %}
     <!-- Empty State -->
