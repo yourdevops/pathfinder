@@ -1,0 +1,25 @@
+<!-- Health Status Partial -->
+<div id="health-status-{{ connection.uuid }}" class="relative group">
+    {% if connection.health_status == 'healthy' %}
+    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
+        <span class="w-1.5 h-1.5 rounded-full bg-green-400 mr-1.5"></span>
+        Healthy
+    </span>
+    {% elif connection.health_status == 'unhealthy' %}
+    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400">
+        <span class="w-1.5 h-1.5 rounded-full bg-red-400 mr-1.5"></span>
+        Unhealthy
+    </span>
+    {% else %}
+    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-500/20 text-gray-400">
+        <span class="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1.5"></span>
+        Unknown
+    </span>
+    {% endif %}
+    
+    {% if connection.last_health_message %}
+    <div class="hidden group-hover:block absolute right-0 top-full mt-1 p-2 bg-dark-surface border border-dark-border rounded shadow-lg z-10 text-xs text-dark-muted whitespace-nowrap">
+        {{ connection.last_health_message|truncatechars:100 }}
+    </div>
+    {% endif %}
+</div>

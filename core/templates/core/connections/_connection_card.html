@@ -1,0 +1,56 @@
+<!-- Connection Card Partial -->
+<div class="bg-dark-surface border border-dark-border rounded-lg p-4 hover:border-dark-accent/50 transition-colors">
+    <div class="flex items-start justify-between mb-3">
+        <div class="flex items-center">
+            <div class="w-10 h-10 rounded-lg bg-dark-bg flex items-center justify-center mr-3">
+                {% if connection.plugin_missing %}
+                <svg class="w-5 h-5 text-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                {% else %}
+                <svg class="w-5 h-5 text-dark-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                {% endif %}
+            </div>
+            <div>
+                <a href="{% url 'connections:detail' uuid=connection.uuid %}" class="font-medium text-dark-text hover:text-dark-accent transition-colors">
+                    {{ connection.name }}
+                </a>
+                <p class="text-xs text-dark-muted">{{ connection.plugin_name }}</p>
+            </div>
+        </div>
+        
+        <!-- Health Status -->
+        <div id="health-status-{{ connection.uuid }}">
+            {% include "core/connections/_health_status.html" %}
+        </div>
+    </div>
+
+    {% if connection.description %}
+    <p class="text-sm text-dark-muted mb-3 line-clamp-2">{{ connection.description }}</p>
+    {% endif %}
+
+    <div class="flex items-center justify-between pt-3 border-t border-dark-border">
+        <div class="text-xs text-dark-muted">
+            {% if connection.last_health_check %}
+            {% load humanize %}
+            Checked {{ connection.last_health_check|naturaltime }}
+            {% else %}
+            Never checked
+            {% endif %}
+        </div>
+        <div class="flex items-center gap-2">
+            <button hx-post="{% url 'connections:test' uuid=connection.uuid %}"
+                    hx-target="#health-status-{{ connection.uuid }}"
+                    hx-swap="outerHTML"
+                    class="text-xs px-2 py-1 text-dark-muted hover:text-dark-text hover:bg-dark-border/50 rounded transition-colors">
+                Test
+            </button>
+            <a href="{% url 'connections:detail' uuid=connection.uuid %}" 
+               class="text-xs px-2 py-1 text-dark-muted hover:text-dark-text hover:bg-dark-border/50 rounded transition-colors">
+                View
+            </a>
+        </div>
+    </div>
+</div>

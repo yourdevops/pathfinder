@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Connections - DevSSP{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-dark-text">Connections</h1>
+            <p class="text-dark-muted mt-1">Manage external service integrations</p>
+        </div>
+        {% if plugins %}
+        <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" 
+                    class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Connection
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            <div x-show="open" 
+                 @click.away="open = false"
+                 x-transition
+                 class="absolute right-0 mt-2 w-56 bg-dark-surface border border-dark-border rounded-lg shadow-lg py-2 z-50">
+                {% for name, plugin in plugins.items %}
+                <a href="{% url 'connections:create' plugin_name=name %}" 
+                   class="flex items-center px-4 py-2 text-dark-text hover:bg-dark-border/50 transition-colors">
+                    <span class="w-2 h-2 rounded-full mr-3 {% if plugin.category == 'scm' %}bg-blue-500{% elif plugin.category == 'deploy' %}bg-green-500{% else %}bg-gray-500{% endif %}"></span>
+                    {{ plugin.display_name }}
+                </a>
+                {% empty %}
+                <p class="px-4 py-2 text-dark-muted text-sm">No plugins available</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if connections %}
+    <!-- SCM Connections Section -->
+    {% if scm_connections %}
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-dark-text mb-4 flex items-center">
+            <span class="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
+            SCM Connections
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for connection in scm_connections %}
+            {% include "core/connections/_connection_card.html" %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Deploy Connections Section -->
+    {% if deploy_connections %}
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-dark-text mb-4 flex items-center">
+            <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+            Deploy Connections
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for connection in deploy_connections %}
+            {% include "core/connections/_connection_card.html" %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Other Connections Section -->
+    {% if other_connections %}
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-dark-text mb-4 flex items-center">
+            <span class="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
+            Other Connections
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {% for connection in other_connections %}
+            {% include "core/connections/_connection_card.html" %}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg p-12 text-center">
+        <svg class="w-12 h-12 mx-auto text-dark-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+        </svg>
+        <h2 class="text-xl font-semibold text-dark-text mb-2">No connections yet</h2>
+        <p class="text-dark-muted mb-6">Create your first connection to integrate with external services.</p>
+        {% if plugins %}
+        <div class="relative inline-block" x-data="{ open: false }">
+            <button @click="open = !open" 
+                    class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors inline-flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Connection
+            </button>
+            <div x-show="open" 
+                 @click.away="open = false"
+                 x-transition
+                 class="absolute left-1/2 transform -translate-x-1/2 mt-2 w-56 bg-dark-surface border border-dark-border rounded-lg shadow-lg py-2 z-50">
+                {% for name, plugin in plugins.items %}
+                <a href="{% url 'connections:create' plugin_name=name %}" 
+                   class="flex items-center px-4 py-2 text-dark-text hover:bg-dark-border/50 transition-colors">
+                    <span class="w-2 h-2 rounded-full mr-3 {% if plugin.category == 'scm' %}bg-blue-500{% elif plugin.category == 'deploy' %}bg-green-500{% else %}bg-gray-500{% endif %}"></span>
+                    {{ plugin.display_name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+{% endblock %}
