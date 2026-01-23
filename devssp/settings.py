@@ -71,10 +71,15 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'devssp.urls'
 
+# Plugin template directories (plugins are not Django apps, need explicit paths)
+PLUGIN_TEMPLATE_DIRS = [
+    d for d in (BASE_DIR / 'plugins').glob('*/templates') if d.is_dir()
+]
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': PLUGIN_TEMPLATE_DIRS,
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
