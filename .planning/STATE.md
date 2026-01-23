@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 Phase: 3 of 7 (External Integrations) - COMPLETE
 Plan: 6 of 6 in current phase
 Status: Complete
-Last activity: 2026-01-23 - Completed quick task 012 (GitHub PAT auth, list repos)
+Last activity: 2026-01-23 - Completed quick task 013 (Remove repos page, fix auth wizard)
 
 Progress: [================================] 100%
 
@@ -105,9 +105,10 @@ None yet.
 | 010 | Fix integrations page permissions and access control | 2026-01-23 | 342e6c6 | [010-fix-integrations-page-permissions-and-ac](./quick/010-fix-integrations-page-permissions-and-ac/) |
 | 011 | Integrations sidebar expansion with Plugins page | 2026-01-23 | 6f82061 | [011-integrations-sidebar-expansion-with-plug](./quick/011-integrations-sidebar-expansion-with-plug/) |
 | 012 | Add missing GitHub plugin functionality (PAT auth, list repos) | 2026-01-23 | 30993a6 | [012-add-missing-github-plugin-functionality](./quick/012-add-missing-github-plugin-functionality/) |
+| 013 | Remove list repos page and fix auth wizard | 2026-01-23 | 1f50cda | [013-remove-list-repos-page-and-fix-auth-wiza](./quick/013-remove-list-repos-page-and-fix-auth-wiza/) |
 
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed quick task 012 - GitHub PAT auth and repository listing
+Stopped at: Completed quick task 013 - Remove repos page, fix auth wizard
 Resume file: None
