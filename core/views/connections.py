@@ -6,11 +6,11 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from core.models import IntegrationConnection
-from core.permissions import OperatorRequiredMixin
+from core.permissions import OperatorRequiredMixin, IntegrationsReadMixin, has_system_role
 from plugins.base import registry
 
 
-class ConnectionListView(LoginRequiredMixin, OperatorRequiredMixin, ListView):
+class ConnectionListView(LoginRequiredMixin, ListView):
     """List all integration connections."""
     model = IntegrationConnection
     template_name = 'core/connections/list.html'
@@ -26,6 +26,15 @@ class ConnectionListView(LoginRequiredMixin, OperatorRequiredMixin, ListView):
         context['scm_connections'] = [c for c in context['connections'] if self._get_category(c) == 'scm']
         context['deploy_connections'] = [c for c in context['connections'] if self._get_category(c) == 'deploy']
         context['other_connections'] = [c for c in context['connections'] if self._get_category(c) not in ('scm', 'deploy')]
+        # Add permission context
+        context['can_manage'] = (
+            has_system_role(self.request.user, 'admin') or
+            has_system_role(self.request.user, 'operator')
+        )
+        context['can_view_details'] = (
+            context['can_manage'] or
+            has_system_role(self.request.user, 'auditor')
+        )
         return context
 
     def _get_category(self, connection):
@@ -33,7 +42,7 @@ class ConnectionListView(LoginRequiredMixin, OperatorRequiredMixin, ListView):
         return plugin.category if plugin else 'unknown'
 
 
-class ConnectionDetailView(LoginRequiredMixin, OperatorRequiredMixin, DetailView):
+class ConnectionDetailView(LoginRequiredMixin, IntegrationsReadMixin, DetailView):
     """Connection detail page."""
     model = IntegrationConnection
     template_name = 'core/connections/detail.html'

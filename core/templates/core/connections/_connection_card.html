@@ -14,9 +14,13 @@
                 {% endif %}
             </div>
             <div>
+                {% if can_view_details %}
                 <a href="{% url 'connections:detail' uuid=connection.uuid %}" class="font-medium text-dark-text hover:text-dark-accent transition-colors">
                     {{ connection.name }}
                 </a>
+                {% else %}
+                <span class="font-medium text-dark-text">{{ connection.name }}</span>
+                {% endif %}
                 <p class="text-xs text-dark-muted">{{ connection.plugin_name }}</p>
             </div>
         </div>
@@ -41,16 +45,20 @@
             {% endif %}
         </div>
         <div class="flex items-center gap-2">
+            {% if can_manage %}
             <button hx-post="{% url 'connections:test' uuid=connection.uuid %}"
                     hx-target="#health-status-{{ connection.uuid }}"
                     hx-swap="outerHTML"
                     class="text-xs px-2 py-1 text-dark-muted hover:text-dark-text hover:bg-dark-border/50 rounded transition-colors">
                 Test
             </button>
-            <a href="{% url 'connections:detail' uuid=connection.uuid %}" 
+            {% endif %}
+            {% if can_view_details %}
+            <a href="{% url 'connections:detail' uuid=connection.uuid %}"
                class="text-xs px-2 py-1 text-dark-muted hover:text-dark-text hover:bg-dark-border/50 rounded transition-colors">
                 View
             </a>
+            {% endif %}
         </div>
     </div>
 </div>

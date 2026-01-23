@@ -10,9 +10,9 @@
             <h1 class="text-2xl font-bold text-dark-text">Connections</h1>
             <p class="text-dark-muted mt-1">Manage external service integrations</p>
         </div>
-        {% if plugins %}
+        {% if plugins and can_manage %}
         <div class="relative" x-data="{ open: false }">
-            <button @click="open = !open" 
+            <button @click="open = !open"
                     class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -22,12 +22,12 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
             </button>
-            <div x-show="open" 
+            <div x-show="open"
                  @click.away="open = false"
                  x-transition
                  class="absolute right-0 mt-2 w-56 bg-dark-surface border border-dark-border rounded-lg shadow-lg py-2 z-50">
                 {% for name, plugin in plugins.items %}
-                <a href="{% url 'connections:create' plugin_name=name %}" 
+                <a href="{% url 'connections:create' plugin_name=name %}"
                    class="flex items-center px-4 py-2 text-dark-text hover:bg-dark-border/50 transition-colors">
                     <span class="w-2 h-2 rounded-full mr-3 {% if plugin.category == 'scm' %}bg-blue-500{% elif plugin.category == 'deploy' %}bg-green-500{% else %}bg-gray-500{% endif %}"></span>
                     {{ plugin.display_name }}
@@ -94,21 +94,21 @@
         </svg>
         <h2 class="text-xl font-semibold text-dark-text mb-2">No connections yet</h2>
         <p class="text-dark-muted mb-6">Create your first connection to integrate with external services.</p>
-        {% if plugins %}
+        {% if plugins and can_manage %}
         <div class="relative inline-block" x-data="{ open: false }">
-            <button @click="open = !open" 
+            <button @click="open = !open"
                     class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors inline-flex items-center gap-2">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                 </svg>
                 Add Connection
             </button>
-            <div x-show="open" 
+            <div x-show="open"
                  @click.away="open = false"
                  x-transition
                  class="absolute left-1/2 transform -translate-x-1/2 mt-2 w-56 bg-dark-surface border border-dark-border rounded-lg shadow-lg py-2 z-50">
                 {% for name, plugin in plugins.items %}
-                <a href="{% url 'connections:create' plugin_name=name %}" 
+                <a href="{% url 'connections:create' plugin_name=name %}"
                    class="flex items-center px-4 py-2 text-dark-text hover:bg-dark-border/50 transition-colors">
                     <span class="w-2 h-2 rounded-full mr-3 {% if plugin.category == 'scm' %}bg-blue-500{% elif plugin.category == 'deploy' %}bg-green-500{% else %}bg-gray-500{% endif %}"></span>
                     {{ plugin.display_name }}
