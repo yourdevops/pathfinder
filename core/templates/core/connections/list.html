@@ -3,7 +3,7 @@
 {% block title %}Connections - DevSSP{% endblock %}
 
 {% block content %}
-<div class="p-8">
+<div class="p-8" x-data="{ search: '', category: '' }">
     <!-- Page Header -->
     <div class="flex items-center justify-between mb-6">
         <div>
@@ -11,46 +11,53 @@
             <p class="text-dark-muted mt-1">Manage external service integrations</p>
         </div>
         {% if plugins and can_manage %}
-        <div class="relative" x-data="{ open: false }">
-            <button @click="open = !open"
-                    class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Add Connection
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-            </button>
-            <div x-show="open"
-                 @click.away="open = false"
-                 x-transition
-                 class="absolute right-0 mt-2 w-56 bg-dark-surface border border-dark-border rounded-lg shadow-lg py-2 z-50">
-                {% for name, plugin in plugins.items %}
-                <a href="{% url 'connections:create' plugin_name=name %}"
-                   class="flex items-center px-4 py-2 text-dark-text hover:bg-dark-border/50 transition-colors">
-                    <span class="w-2 h-2 rounded-full mr-3 {% if plugin.category == 'scm' %}bg-blue-500{% elif plugin.category == 'deploy' %}bg-green-500{% else %}bg-gray-500{% endif %}"></span>
-                    {{ plugin.display_name }}
-                </a>
-                {% empty %}
-                <p class="px-4 py-2 text-dark-muted text-sm">No plugins available</p>
-                {% endfor %}
-            </div>
-        </div>
+        <a href="{% url 'connections:plugins' %}"
+           class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2"
+           title="Select a plugin to add a new connection">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Connection
+        </a>
         {% endif %}
     </div>
 
     {% if connections %}
+    <!-- Search and Filter Bar -->
+    <div class="flex items-center gap-4 mb-6">
+        <!-- Search -->
+        <div class="relative">
+            <svg class="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input type="text"
+                   x-model="search"
+                   placeholder="Search connections..."
+                   class="w-64 pl-10 pr-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent">
+        </div>
+
+        <!-- Category Filter -->
+        <select x-model="category"
+                class="px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:border-dark-accent">
+            <option value="">All Categories</option>
+            <option value="scm">SCM</option>
+            <option value="deploy">Deploy</option>
+            <option value="other">Other</option>
+        </select>
+    </div>
+
     <!-- SCM Connections Section -->
     {% if scm_connections %}
-    <div class="mb-8">
+    <div class="mb-8" x-show="category === '' || category === 'scm'">
         <h2 class="text-lg font-semibold text-dark-text mb-4 flex items-center">
             <span class="w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
             SCM Connections
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for connection in scm_connections %}
-            {% include "core/connections/_connection_card.html" %}
+            <div x-show="search === '' || '{{ connection.name|lower }}'.includes(search.toLowerCase())" x-transition>
+                {% include "core/connections/_connection_card.html" %}
+            </div>
             {% endfor %}
         </div>
     </div>
@@ -58,14 +65,16 @@
 
     <!-- Deploy Connections Section -->
     {% if deploy_connections %}
-    <div class="mb-8">
+    <div class="mb-8" x-show="category === '' || category === 'deploy'">
         <h2 class="text-lg font-semibold text-dark-text mb-4 flex items-center">
             <span class="w-2 h-2 rounded-full bg-green-500 mr-2"></span>
             Deploy Connections
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for connection in deploy_connections %}
-            {% include "core/connections/_connection_card.html" %}
+            <div x-show="search === '' || '{{ connection.name|lower }}'.includes(search.toLowerCase())" x-transition>
+                {% include "core/connections/_connection_card.html" %}
+            </div>
             {% endfor %}
         </div>
     </div>
@@ -73,14 +82,16 @@
 
     <!-- Other Connections Section -->
     {% if other_connections %}
-    <div class="mb-8">
+    <div class="mb-8" x-show="category === '' || category === 'other'">
         <h2 class="text-lg font-semibold text-dark-text mb-4 flex items-center">
             <span class="w-2 h-2 rounded-full bg-gray-500 mr-2"></span>
             Other Connections
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for connection in other_connections %}
-            {% include "core/connections/_connection_card.html" %}
+            <div x-show="search === '' || '{{ connection.name|lower }}'.includes(search.toLowerCase())" x-transition>
+                {% include "core/connections/_connection_card.html" %}
+            </div>
             {% endfor %}
         </div>
     </div>
@@ -95,27 +106,13 @@
         <h2 class="text-xl font-semibold text-dark-text mb-2">No connections yet</h2>
         <p class="text-dark-muted mb-6">Create your first connection to integrate with external services.</p>
         {% if plugins and can_manage %}
-        <div class="relative inline-block" x-data="{ open: false }">
-            <button @click="open = !open"
-                    class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors inline-flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Add Connection
-            </button>
-            <div x-show="open"
-                 @click.away="open = false"
-                 x-transition
-                 class="absolute left-1/2 transform -translate-x-1/2 mt-2 w-56 bg-dark-surface border border-dark-border rounded-lg shadow-lg py-2 z-50">
-                {% for name, plugin in plugins.items %}
-                <a href="{% url 'connections:create' plugin_name=name %}"
-                   class="flex items-center px-4 py-2 text-dark-text hover:bg-dark-border/50 transition-colors">
-                    <span class="w-2 h-2 rounded-full mr-3 {% if plugin.category == 'scm' %}bg-blue-500{% elif plugin.category == 'deploy' %}bg-green-500{% else %}bg-gray-500{% endif %}"></span>
-                    {{ plugin.display_name }}
-                </a>
-                {% endfor %}
-            </div>
-        </div>
+        <a href="{% url 'connections:plugins' %}"
+           class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors inline-flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Connection
+        </a>
         {% endif %}
     </div>
     {% endif %}
