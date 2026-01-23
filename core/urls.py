@@ -13,6 +13,8 @@ from .views import (
     AddMemberModalView, RemoveMemberView,
     ProjectEnvVarModalView, ProjectEnvVarSaveView, ProjectEnvVarDeleteView,
     EnvVarModalView, EnvVarSaveView, EnvVarDeleteView,
+    GeneralSettingsView, UserManagementView, AuditLogsSettingsView,
+    ApiTokensView, NotificationsView,
 )
 
 # Setup URLs
@@ -80,4 +82,13 @@ projects_patterns = [
     path('<uuid:project_uuid>/env-vars/', ProjectEnvVarModalView.as_view(), name='project_env_var_modal'),
     path('<uuid:project_uuid>/env-vars/save/', ProjectEnvVarSaveView.as_view(), name='project_env_var_save'),
     path('<uuid:project_uuid>/env-vars/<str:key>/delete/', ProjectEnvVarDeleteView.as_view(), name='project_env_var_delete'),
+]
+
+# Settings URLs
+settings_patterns = [
+    path('', GeneralSettingsView.as_view(), name='general'),
+    path('user-management/', UserManagementView.as_view(), name='user_management'),
+    path('audit-logs/', AuditLogsSettingsView.as_view(), name='audit_logs'),
+    path('api-tokens/', ApiTokensView.as_view(), name='api_tokens'),
+    path('notifications/', NotificationsView.as_view(), name='notifications'),
 ]

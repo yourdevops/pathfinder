@@ -15,6 +15,10 @@ from .projects import (
     ProjectEnvVarModalView, ProjectEnvVarSaveView, ProjectEnvVarDeleteView,
     EnvVarModalView, EnvVarSaveView, EnvVarDeleteView,
 )
+from .settings import (
+    GeneralSettingsView, UserManagementView, AuditLogsSettingsView,
+    ApiTokensView, NotificationsView,
+)
 
 __all__ = [
     'UnlockView',
@@ -30,4 +34,6 @@ __all__ = [
     'AddMemberModalView', 'RemoveMemberView',
     'ProjectEnvVarModalView', 'ProjectEnvVarSaveView', 'ProjectEnvVarDeleteView',
     'EnvVarModalView', 'EnvVarSaveView', 'EnvVarDeleteView',
+    'GeneralSettingsView', 'UserManagementView', 'AuditLogsSettingsView',
+    'ApiTokensView', 'NotificationsView',
 ]
