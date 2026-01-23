@@ -22,7 +22,7 @@ from core.urls import (
     setup_patterns, auth_patterns, users_patterns,
     groups_patterns, audit_patterns,
     blueprints_patterns, connections_patterns,
-    projects_patterns,
+    projects_patterns, settings_patterns,
 )
 
 urlpatterns = [
@@ -36,4 +36,5 @@ urlpatterns = [
     path('blueprints/', include((blueprints_patterns, 'blueprints'), namespace='blueprints')),
     path('connections/', include((connections_patterns, 'connections'), namespace='connections')),
     path('projects/', include((projects_patterns, 'projects'), namespace='projects')),
+    path('settings/', include((settings_patterns, 'settings'), namespace='settings')),
 ]
