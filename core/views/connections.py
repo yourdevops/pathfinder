@@ -63,31 +63,28 @@ class ConnectionDetailView(LoginRequiredMixin, IntegrationsReadMixin, DetailView
         config_schema = plugin.get_config_schema() if plugin else {}
         context['config_schema'] = config_schema
 
-        # Build display config with all fields (sensitive ones masked)
-        # Decrypt once to check which sensitive fields are set
+        # Build display config from actual config (sensitive ones masked)
         full_config = connection.get_config() if plugin else {}
-        stored_config = connection.config  # Non-sensitive stored values
 
         display_config = {}
-        for field_name, field_info in config_schema.items():
-            if field_info.get('sensitive'):
-                # For sensitive fields, show masked value if set
-                is_set = bool(full_config.get(field_name))
+        for field_name, value in full_config.items():
+            field_info = config_schema.get(field_name, {})
+            is_sensitive = field_info.get('sensitive', False)
+
+            if is_sensitive:
                 display_config[field_name] = {
-                    'value': '••••••••' if is_set else 'Not set',
+                    'value': '••••••••' if value else 'Not set',
                     'label': field_info.get('label', field_name),
                     'sensitive': True,
-                    'is_set': is_set,
+                    'is_set': bool(value),
                 }
-            else:
-                value = stored_config.get(field_name, '')
-                if value:  # Only show non-empty values
-                    display_config[field_name] = {
-                        'value': value,
-                        'label': field_info.get('label', field_name),
-                        'sensitive': False,
-                        'is_set': bool(value),
-                    }
+            elif value:  # Only show non-empty non-sensitive values
+                display_config[field_name] = {
+                    'value': value,
+                    'label': field_info.get('label', field_name),
+                    'sensitive': False,
+                    'is_set': True,
+                }
         context['display_config'] = display_config
 
         # Check for usage
