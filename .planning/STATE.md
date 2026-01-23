@@ -104,9 +104,10 @@ None yet.
 | 009 | Fix projects page padding and icon sizing | 2026-01-23 | 6191121 | [009-fix-projects-page-padding-and-huge-icons](./quick/009-fix-projects-page-padding-and-huge-icons/) |
 | 010 | Fix integrations page permissions and access control | 2026-01-23 | 342e6c6 | [010-fix-integrations-page-permissions-and-ac](./quick/010-fix-integrations-page-permissions-and-ac/) |
 | 011 | Integrations sidebar expansion with Plugins page | 2026-01-23 | 6f82061 | [011-integrations-sidebar-expansion-with-plug](./quick/011-integrations-sidebar-expansion-with-plug/) |
+| 012 | Add missing GitHub plugin functionality (PAT auth, list repos) | 2026-01-23 | 30993a6 | [012-add-missing-github-plugin-functionality](./quick/012-add-missing-github-plugin-functionality/) |
 
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed quick task 011 - Integrations sidebar expansion
+Stopped at: Completed quick task 012 - GitHub PAT auth and repository listing
 Resume file: None
