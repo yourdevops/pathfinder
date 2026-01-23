@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 Phase: 3 of 7 (External Integrations) - COMPLETE
 Plan: 6 of 6 in current phase
 Status: Complete
-Last activity: 2026-01-23 - Completed 03-06-PLAN.md (Connection Attachments)
+Last activity: 2026-01-23 - Completed quick task 012 (GitHub PAT auth, list repos)
 
 Progress: [================================] 100%
 
