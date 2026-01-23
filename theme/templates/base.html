@@ -22,7 +22,9 @@
 </head>
 <body class="bg-dark-bg text-dark-text min-h-screen">
     {% if user.is_authenticated %}
-        {% if in_project_context and current_project %}
+        {% if in_settings_context %}
+            {% include "core/components/nav_settings.html" %}
+        {% elif in_project_context and current_project %}
             {% include "core/components/nav_project.html" %}
         {% else %}
             {% include "core/components/nav.html" %}

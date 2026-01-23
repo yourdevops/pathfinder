@@ -24,12 +24,13 @@ def user_roles(request):
 
 
 def navigation_context(request):
-    """Provide navigation context including active project.
+    """Provide navigation context including active project and settings.
 
     This context processor provides:
     - in_project_context: True when viewing a project-scoped page
     - current_project: The Project instance when in project context
     - current_project_role: User's role on the current project
+    - in_settings_context: True when viewing a settings page
     """
     from core.models import Project
     from core.permissions import get_user_project_role
@@ -38,7 +39,12 @@ def navigation_context(request):
         'in_project_context': False,
         'current_project': None,
         'current_project_role': None,
+        'in_settings_context': False,
     }
+
+    # Check if we're in a settings URL
+    if request.path.startswith('/settings/'):
+        context['in_settings_context'] = True
 
     # Check if we're in a project-scoped URL
     if hasattr(request, 'resolver_match') and request.resolver_match:
