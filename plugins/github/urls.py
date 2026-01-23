@@ -6,5 +6,4 @@ app_name = 'github'
 
 urlpatterns = [
     path('create/', views.GitHubConnectionWizard.as_view(), name='create'),
-    path('<uuid:uuid>/repositories/', views.RepositoryListView.as_view(), name='repositories'),
 ]

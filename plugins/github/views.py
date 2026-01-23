@@ -2,7 +2,6 @@
 from django.shortcuts import redirect
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import TemplateView
 from formtools.wizard.views import SessionWizardView
 from core.models import IntegrationConnection
 from core.permissions import OperatorRequiredMixin
@@ -84,28 +83,3 @@ class GitHubConnectionWizard(LoginRequiredMixin, OperatorRequiredMixin, SessionW
 
         messages.success(self.request, f'GitHub connection "{connection.name}" created successfully.')
         return redirect('connections:detail', uuid=connection.uuid)
-
-
-class RepositoryListView(LoginRequiredMixin, OperatorRequiredMixin, TemplateView):
-    """Display repositories for a GitHub connection."""
-    template_name = 'github/repositories.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        connection_uuid = self.kwargs.get('uuid')
-        connection = IntegrationConnection.objects.get(uuid=connection_uuid)
-
-        plugin = GitHubPlugin()
-        config = connection.get_config()
-
-        try:
-            repositories = plugin.list_repositories(config)
-            context['repositories'] = repositories
-            context['error'] = None
-        except Exception as e:
-            context['repositories'] = []
-            context['error'] = str(e)
-
-        context['connection'] = connection
-        context['plugin'] = plugin
-        return context
