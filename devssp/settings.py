@@ -34,6 +34,9 @@ INSTALLED_APPS = [
     'core.apps.CoreConfig',  # Must be first for custom User
     'auditlog',
     'django_htmx',
+    'django_tasks',
+    'django_tasks.backends.database',
+    'formtools',
     'tailwind',
     'theme',  # django-tailwind theme app
     'django.contrib.admin',
@@ -146,3 +149,13 @@ SESSION_SAVE_EVERY_REQUEST = True  # Reset expiry on activity
 LOGIN_URL = 'auth:login'
 LOGIN_REDIRECT_URL = 'projects:list'
 LOGOUT_REDIRECT_URL = 'auth:login'
+
+# Django Tasks configuration (background job processing)
+TASKS = {
+    "default": {
+        "BACKEND": "django_tasks.backends.database.DatabaseBackend",
+    }
+}
+
+# Integration health check interval (seconds)
+HEALTH_CHECK_INTERVAL = 900  # 15 minutes

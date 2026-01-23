@@ -7,3 +7,10 @@ pytailwindcss==0.3.0
 python-dateutil==2.9.0.post0
 six==1.17.0
 sqlparse==0.5.5
+
+# Phase 3: External Integrations
+cryptography>=44.0.0
+PyGithub>=2.5.0
+docker>=7.1.0
+django-tasks[database]>=0.4.0
+django-formtools>=2.5.0
