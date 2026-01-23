@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Create Docker Connection - DevSSP{% endblock %}
+
+{% block content %}
+<div class="p-8" x-data="{ tlsEnabled: false }">
+    <div class="mb-6">
+        <a href="{% url 'connections:list' %}" class="text-dark-accent hover:text-dark-accent-hover">
+            &larr; Back to Connections
+        </a>
+    </div>
+
+    <div class="max-w-2xl">
+        <h1 class="text-2xl font-bold mb-2">Create Docker Connection</h1>
+        <p class="text-dark-muted mb-6">Connect to a Docker daemon for container deployments.</p>
+
+        <div class="card">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <div>
+                    <label for="id_name" class="block text-sm font-medium text-dark-text mb-2">
+                        {{ form.name.label }}
+                    </label>
+                    <input type="text" name="{{ form.name.html_name }}" id="id_name"
+                           class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                           value="{{ form.name.value|default:'' }}"
+                           placeholder="e.g., docker-local">
+                    {% if form.name.errors %}
+                    <p class="mt-1 text-sm text-red-400">{{ form.name.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-dark-muted">{{ form.name.help_text }}</p>
+                </div>
+
+                <div>
+                    <label for="id_description" class="block text-sm font-medium text-dark-text mb-2">
+                        {{ form.description.label }} <span class="text-dark-muted">(Optional)</span>
+                    </label>
+                    <textarea name="{{ form.description.html_name }}" id="id_description" rows="2"
+                              class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                              placeholder="Optional description...">{{ form.description.value|default:'' }}</textarea>
+                </div>
+
+                <div>
+                    <label for="id_socket_path" class="block text-sm font-medium text-dark-text mb-2">
+                        {{ form.socket_path.label }}
+                    </label>
+                    <input type="text" name="{{ form.socket_path.html_name }}" id="id_socket_path"
+                           class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                           value="{{ form.socket_path.value|default:'/var/run/docker.sock' }}"
+                           placeholder="/var/run/docker.sock">
+                    {% if form.socket_path.errors %}
+                    <p class="mt-1 text-sm text-red-400">{{ form.socket_path.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-dark-muted">{{ form.socket_path.help_text }}</p>
+                </div>
+
+                <!-- TLS Section -->
+                <div class="border-t border-dark-border pt-6">
+                    <div class="flex items-center mb-4">
+                        <input type="checkbox" name="{{ form.tls_enabled.html_name }}" id="id_tls_enabled"
+                               class="rounded bg-dark-surface border-dark-border text-dark-accent focus:ring-dark-accent"
+                               x-model="tlsEnabled"
+                               {% if form.tls_enabled.value %}checked{% endif %}>
+                        <label for="id_tls_enabled" class="ml-2 text-sm text-dark-text">
+                            {{ form.tls_enabled.label }}
+                        </label>
+                    </div>
+                    <p class="text-xs text-dark-muted mb-4">{{ form.tls_enabled.help_text }}</p>
+
+                    <div x-show="tlsEnabled" x-transition class="space-y-4 pl-4 border-l-2 border-dark-border">
+                        <div>
+                            <label for="id_tls_ca_cert" class="block text-sm font-medium text-dark-text mb-2">
+                                {{ form.tls_ca_cert.label }}
+                            </label>
+                            <textarea name="{{ form.tls_ca_cert.html_name }}" id="id_tls_ca_cert" rows="4"
+                                      class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text font-mono text-xs focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                                      placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----">{{ form.tls_ca_cert.value|default:'' }}</textarea>
+                            {% if form.tls_ca_cert.errors %}
+                            <p class="mt-1 text-sm text-red-400">{{ form.tls_ca_cert.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="id_tls_client_cert" class="block text-sm font-medium text-dark-text mb-2">
+                                {{ form.tls_client_cert.label }}
+                            </label>
+                            <textarea name="{{ form.tls_client_cert.html_name }}" id="id_tls_client_cert" rows="4"
+                                      class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text font-mono text-xs focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                                      placeholder="-----BEGIN CERTIFICATE-----&#10;...&#10;-----END CERTIFICATE-----">{{ form.tls_client_cert.value|default:'' }}</textarea>
+                            {% if form.tls_client_cert.errors %}
+                            <p class="mt-1 text-sm text-red-400">{{ form.tls_client_cert.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <label for="id_tls_client_key" class="block text-sm font-medium text-dark-text mb-2">
+                                {{ form.tls_client_key.label }}
+                            </label>
+                            <textarea name="{{ form.tls_client_key.html_name }}" id="id_tls_client_key" rows="4"
+                                      class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text font-mono text-xs focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                                      placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;...&#10;-----END RSA PRIVATE KEY-----">{{ form.tls_client_key.value|default:'' }}</textarea>
+                            {% if form.tls_client_key.errors %}
+                            <p class="mt-1 text-sm text-red-400">{{ form.tls_client_key.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 pt-4 border-t border-dark-border">
+                    <a href="{% url 'connections:list' %}" class="btn-secondary">Cancel</a>
+                    <button type="submit" class="btn-primary">Create Connection</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+{% endblock %}
