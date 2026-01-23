@@ -73,11 +73,15 @@ Plans:
   5. Connection list shows health status (healthy/unhealthy/unknown) for each connection
   6. Projects can have SCM connections attached (PROJ-05)
   7. Environments can have deploy connections attached (ENV-02)
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md - Plugin foundation, encryption utilities, IntegrationConnection model
+- [ ] 03-02-PLAN.md - GitHub plugin with multi-step wizard and API operations
+- [ ] 03-03-PLAN.md - Docker plugin with single-page form and container operations
+- [ ] 03-04-PLAN.md - Connections management UI (list, detail, health status)
+- [ ] 03-05-PLAN.md - Background health checks with django-tasks
+- [ ] 03-06-PLAN.md - Connection attachments to projects and environments
 
 ### Phase 4: Blueprints
 **Goal**: Platform engineers can publish service templates; developers can browse available blueprints
@@ -153,7 +157,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Foundation & Security | 6/6 | Complete | 2026-01-22 |
 | 2. Core Domain | 4/4 | Complete | 2026-01-22 |
-| 3. Integrations | 0/2 | Not started | - |
+| 3. Integrations | 0/6 | Not started | - |
 | 4. Blueprints | 0/2 | Not started | - |
 | 5. Services | 0/3 | Not started | - |
 | 6. Builds | 0/2 | Not started | - |
@@ -161,4 +165,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-22 (Phase 2 complete)*
+*Last updated: 2026-01-23 (Phase 3 planned)*
