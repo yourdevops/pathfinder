@@ -35,7 +35,7 @@
         {% if messages %}
         <div class="p-4">
             {% for message in messages %}
-            <div class="card mb-2 {% if message.tags %}{{ message.tags }}{% endif %}">
+            <div class="card mb-2 {% if message.tags == 'error' %}message-error{% endif %}">
                 {{ message }}
             </div>
             {% endfor %}
