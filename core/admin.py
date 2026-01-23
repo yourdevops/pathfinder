@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Group, GroupMembership, Project, Environment, ProjectMembership
+from .models import User, Group, GroupMembership, Project, Environment, ProjectMembership, IntegrationConnection
 
 
 @admin.register(User)
@@ -56,3 +56,35 @@ class ProjectMembershipAdmin(admin.ModelAdmin):
     search_fields = ['project__name', 'group__name', 'added_by']
     readonly_fields = ['created_at']
     raw_id_fields = ['project', 'group']
+
+
+@admin.register(IntegrationConnection)
+class IntegrationConnectionAdmin(admin.ModelAdmin):
+    list_display = ['name', 'plugin_name', 'status', 'health_status', 'last_health_check', 'created_at']
+    list_filter = ['plugin_name', 'status', 'health_status']
+    search_fields = ['name', 'description']
+    readonly_fields = ['uuid', 'created_at', 'updated_at', 'last_health_check', 'last_health_message']
+    ordering = ['name']
+
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'description', 'plugin_name', 'status')
+        }),
+        ('Health', {
+            'fields': ('health_status', 'last_health_check', 'last_health_message'),
+            'classes': ('collapse',),
+        }),
+        ('Configuration', {
+            'fields': ('config',),
+            'classes': ('collapse',),
+            'description': 'Non-sensitive configuration. Encrypted fields are not shown here.'
+        }),
+        ('Metadata', {
+            'fields': ('uuid', 'created_by', 'created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+
+    def has_add_permission(self, request):
+        # Connections should be created via the wizard, not admin
+        return False
