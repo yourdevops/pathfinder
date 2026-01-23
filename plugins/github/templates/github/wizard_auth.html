@@ -31,14 +31,15 @@
             </div>
         </div>
 
-        <div class="card">
-            <h1 class="text-xl font-bold mb-6">Step 1: GitHub App Authentication</h1>
-            <p class="text-dark-muted mb-6">Enter your GitHub App credentials. You can find these in your GitHub App settings.</p>
+        <div class="card" x-data="{ authType: '{{ form.auth_type.value|default:'app' }}' }">
+            <h1 class="text-xl font-bold mb-6">Step 1: GitHub Authentication</h1>
+            <p class="text-dark-muted mb-6">Choose your authentication method and enter the required credentials.</p>
 
             <form method="post" class="space-y-6">
                 {% csrf_token %}
                 {{ wizard.management_form }}
 
+                <!-- Connection Name -->
                 <div>
                     <label for="id_auth-name" class="block text-sm font-medium text-dark-text mb-2">
                         {{ form.name.label }}
@@ -53,44 +54,105 @@
                     <p class="mt-1 text-xs text-dark-muted">{{ form.name.help_text }}</p>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label for="id_auth-app_id" class="block text-sm font-medium text-dark-text mb-2">
-                            {{ form.app_id.label }}
-                        </label>
-                        <input type="text" name="{{ form.app_id.html_name }}" id="id_auth-app_id"
-                               class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
-                               value="{{ form.app_id.value|default:'' }}">
-                        {% if form.app_id.errors %}
-                        <p class="mt-1 text-sm text-red-400">{{ form.app_id.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-                    <div>
-                        <label for="id_auth-installation_id" class="block text-sm font-medium text-dark-text mb-2">
-                            {{ form.installation_id.label }}
-                        </label>
-                        <input type="text" name="{{ form.installation_id.html_name }}" id="id_auth-installation_id"
-                               class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
-                               value="{{ form.installation_id.value|default:'' }}">
-                        {% if form.installation_id.errors %}
-                        <p class="mt-1 text-sm text-red-400">{{ form.installation_id.errors.0 }}</p>
-                        {% endif %}
-                    </div>
-                </div>
-
+                <!-- Authentication Type Selection -->
                 <div>
-                    <label for="id_auth-private_key" class="block text-sm font-medium text-dark-text mb-2">
-                        {{ form.private_key.label }}
+                    <label class="block text-sm font-medium text-dark-text mb-3">
+                        {{ form.auth_type.label }}
                     </label>
-                    <textarea name="{{ form.private_key.html_name }}" id="id_auth-private_key" rows="8"
-                              class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text font-mono text-xs focus:outline-none focus:ring-2 focus:ring-dark-accent"
-                              placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;...&#10;-----END RSA PRIVATE KEY-----">{{ form.private_key.value|default:'' }}</textarea>
-                    {% if form.private_key.errors %}
-                    <p class="mt-1 text-sm text-red-400">{{ form.private_key.errors.0 }}</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="relative flex cursor-pointer rounded-lg border p-4 focus:outline-none"
+                               :class="authType === 'app' ? 'border-dark-accent bg-dark-accent/10' : 'border-dark-border bg-dark-surface'">
+                            <input type="radio" name="{{ form.auth_type.html_name }}" value="app"
+                                   x-model="authType"
+                                   class="sr-only">
+                            <span class="flex flex-1">
+                                <span class="flex flex-col">
+                                    <span class="block text-sm font-medium text-dark-text">GitHub App</span>
+                                    <span class="mt-1 flex items-center text-sm text-dark-muted">Recommended for organizations</span>
+                                </span>
+                            </span>
+                            <svg x-show="authType === 'app'" class="h-5 w-5 text-dark-accent" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                            </svg>
+                        </label>
+                        <label class="relative flex cursor-pointer rounded-lg border p-4 focus:outline-none"
+                               :class="authType === 'token' ? 'border-dark-accent bg-dark-accent/10' : 'border-dark-border bg-dark-surface'">
+                            <input type="radio" name="{{ form.auth_type.html_name }}" value="token"
+                                   x-model="authType"
+                                   class="sr-only">
+                            <span class="flex flex-1">
+                                <span class="flex flex-col">
+                                    <span class="block text-sm font-medium text-dark-text">Personal Access Token</span>
+                                    <span class="mt-1 flex items-center text-sm text-dark-muted">Quick setup for personal use</span>
+                                </span>
+                            </span>
+                            <svg x-show="authType === 'token'" class="h-5 w-5 text-dark-accent" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                            </svg>
+                        </label>
+                    </div>
+                    {% if form.auth_type.errors %}
+                    <p class="mt-1 text-sm text-red-400">{{ form.auth_type.errors.0 }}</p>
                     {% endif %}
-                    <p class="mt-1 text-xs text-dark-muted">{{ form.private_key.help_text }}</p>
                 </div>
 
+                <!-- GitHub App Fields -->
+                <div x-show="authType === 'app'" x-cloak class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="id_auth-app_id" class="block text-sm font-medium text-dark-text mb-2">
+                                {{ form.app_id.label }}
+                            </label>
+                            <input type="text" name="{{ form.app_id.html_name }}" id="id_auth-app_id"
+                                   class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                                   value="{{ form.app_id.value|default:'' }}">
+                            {% if form.app_id.errors %}
+                            <p class="mt-1 text-sm text-red-400">{{ form.app_id.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label for="id_auth-installation_id" class="block text-sm font-medium text-dark-text mb-2">
+                                {{ form.installation_id.label }}
+                            </label>
+                            <input type="text" name="{{ form.installation_id.html_name }}" id="id_auth-installation_id"
+                                   class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                                   value="{{ form.installation_id.value|default:'' }}">
+                            {% if form.installation_id.errors %}
+                            <p class="mt-1 text-sm text-red-400">{{ form.installation_id.errors.0 }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="id_auth-private_key" class="block text-sm font-medium text-dark-text mb-2">
+                            {{ form.private_key.label }}
+                        </label>
+                        <textarea name="{{ form.private_key.html_name }}" id="id_auth-private_key" rows="8"
+                                  class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text font-mono text-xs focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                                  placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;...&#10;-----END RSA PRIVATE KEY-----">{{ form.private_key.value|default:'' }}</textarea>
+                        {% if form.private_key.errors %}
+                        <p class="mt-1 text-sm text-red-400">{{ form.private_key.errors.0 }}</p>
+                        {% endif %}
+                        <p class="mt-1 text-xs text-dark-muted">{{ form.private_key.help_text }}</p>
+                    </div>
+                </div>
+
+                <!-- PAT Field -->
+                <div x-show="authType === 'token'" x-cloak>
+                    <label for="id_auth-personal_token" class="block text-sm font-medium text-dark-text mb-2">
+                        {{ form.personal_token.label }}
+                    </label>
+                    <input type="password" name="{{ form.personal_token.html_name }}" id="id_auth-personal_token"
+                           class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                           value="{{ form.personal_token.value|default:'' }}"
+                           placeholder="ghp_xxxx or github_pat_xxxx">
+                    {% if form.personal_token.errors %}
+                    <p class="mt-1 text-sm text-red-400">{{ form.personal_token.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-dark-muted">{{ form.personal_token.help_text }}</p>
+                </div>
+
+                <!-- Common Optional Fields -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label for="id_auth-base_url" class="block text-sm font-medium text-dark-text mb-2">
