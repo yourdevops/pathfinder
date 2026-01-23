@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Create GitHub Connection - Step 2{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <div class="mb-6">
+        <a href="{% url 'connections:list' %}" class="text-dark-accent hover:text-dark-accent-hover">
+            &larr; Back to Connections
+        </a>
+    </div>
+
+    <div class="max-w-2xl mx-auto">
+        <!-- Progress indicator -->
+        <div class="mb-8">
+            <div class="flex items-center justify-center">
+                <div class="flex items-center">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-green-500 text-white font-medium">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                    </span>
+                    <span class="ml-2 text-dark-muted">Authentication</span>
+                </div>
+                <div class="w-16 h-0.5 bg-green-500 mx-4"></div>
+                <div class="flex items-center">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-dark-accent text-dark-bg font-medium">2</span>
+                    <span class="ml-2 text-dark-text font-medium">Webhook</span>
+                </div>
+                <div class="w-16 h-0.5 bg-dark-border mx-4"></div>
+                <div class="flex items-center">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-full bg-dark-border text-dark-muted font-medium">3</span>
+                    <span class="ml-2 text-dark-muted">Confirm</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h1 class="text-xl font-bold mb-6">Step 2: Webhook Configuration</h1>
+            <p class="text-dark-muted mb-6">Configure webhook settings for receiving GitHub events. This is optional but recommended for CI/CD workflows.</p>
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                {{ wizard.management_form }}
+
+                <div>
+                    <label for="id_webhook-webhook_secret" class="block text-sm font-medium text-dark-text mb-2">
+                        {{ form.webhook_secret.label }} <span class="text-dark-muted">(Optional)</span>
+                    </label>
+                    <input type="password" name="{{ form.webhook_secret.html_name }}" id="id_webhook-webhook_secret"
+                           class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                           value="{{ form.webhook_secret.value|default:'' }}"
+                           placeholder="Enter a secure secret for webhook verification">
+                    {% if form.webhook_secret.errors %}
+                    <p class="mt-1 text-sm text-red-400">{{ form.webhook_secret.errors.0 }}</p>
+                    {% endif %}
+                    <p class="mt-1 text-xs text-dark-muted">{{ form.webhook_secret.help_text }}</p>
+                </div>
+
+                <div class="bg-dark-surface border border-dark-border rounded-lg p-4">
+                    <h3 class="text-sm font-medium text-dark-text mb-2">Why use a webhook secret?</h3>
+                    <ul class="text-xs text-dark-muted space-y-1 list-disc list-inside">
+                        <li>Verifies that webhook payloads come from GitHub</li>
+                        <li>Prevents unauthorized requests from triggering builds</li>
+                        <li>Use a strong, random string (at least 32 characters)</li>
+                    </ul>
+                </div>
+
+                <div class="flex justify-between pt-4 border-t border-dark-border">
+                    <button type="submit" name="wizard_goto_step" value="auth" class="btn-secondary">&larr; Back</button>
+                    <button type="submit" class="btn-primary">Next &rarr;</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
