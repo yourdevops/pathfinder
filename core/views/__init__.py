@@ -6,7 +6,14 @@ from .groups import (
     GroupDeleteView, GroupAddMemberView, GroupRemoveMemberView,
 )
 from .audit import AuditLogView
-from .placeholders import BlueprintsListView, ConnectionsListView
+from .placeholders import BlueprintsListView
+from .connections import (
+    ConnectionListView,
+    ConnectionDetailView,
+    ConnectionTestView,
+    ConnectionDeleteView,
+    ConnectionCreateDispatchView,
+)
 from .projects import (
     ProjectListView, ProjectCreateModalView, ProjectCreateView,
     ProjectDetailView, ProjectUpdateView, ProjectArchiveView,
@@ -27,7 +34,9 @@ __all__ = [
     'GroupListView', 'GroupDetailView', 'GroupCreateView', 'GroupEditView',
     'GroupDeleteView', 'GroupAddMemberView', 'GroupRemoveMemberView',
     'AuditLogView',
-    'BlueprintsListView', 'ConnectionsListView',
+    'BlueprintsListView',
+    'ConnectionListView', 'ConnectionDetailView', 'ConnectionTestView',
+    'ConnectionDeleteView', 'ConnectionCreateDispatchView',
     'ProjectListView', 'ProjectCreateModalView', 'ProjectCreateView',
     'ProjectDetailView', 'ProjectUpdateView', 'ProjectArchiveView',
     'EnvironmentCreateView', 'EnvironmentDetailView', 'EnvironmentUpdateView', 'EnvironmentDeleteView',

@@ -97,3 +97,16 @@ class ProjectContributorMixin(ProjectPermissionMixin):
 class ProjectOwnerMixin(ProjectPermissionMixin):
     """Mixin for views requiring owner access (settings, membership management)."""
     required_role = 'owner'
+
+
+
+class OperatorRequiredMixin:
+    """Mixin that requires user to have 'operator' system role."""
+
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+        if not has_system_role(request.user, 'operator'):
+            messages.error(request, 'You need operator permissions to access this page.')
+            return redirect('projects:list')
+        return super().dispatch(request, *args, **kwargs)
