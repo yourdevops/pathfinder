@@ -482,7 +482,7 @@ class AttachConnectionForm(forms.Form):
 
 
 class ConnectionConfigUpdateForm(forms.Form):
-    """Form for updating connection configuration (description + sensitive fields)."""
+    """Form for updating connection configuration (description + editable sensitive fields)."""
     description = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={
@@ -492,47 +492,34 @@ class ConnectionConfigUpdateForm(forms.Form):
         }),
         label='Description'
     )
-    personal_token = forms.CharField(
-        required=False,
-        widget=forms.PasswordInput(attrs={
-            'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
-            'placeholder': '••••••••',
-            'autocomplete': 'off',
-        }),
-        label='Personal Access Token'
-    )
 
     def __init__(self, *args, connection=None, **kwargs):
+        from plugins.base import registry
         self.connection = connection
+        self.editable_fields = []
         super().__init__(*args, **kwargs)
-        # Set initial description from connection
+
         if connection:
             self.fields['description'].initial = connection.description
-            # Only show PAT field for token auth
-            config = connection.config
-            if config.get('auth_type') != 'token':
-                del self.fields['personal_token']
 
-    def clean_personal_token(self):
-        token = self.cleaned_data.get('personal_token', '').strip()
-        if not token:
-            # Empty = don't update
-            return ''
-        # Validate format: ghp_ (classic) or github_pat_ (fine-grained)
-        if not (token.startswith('ghp_') or token.startswith('github_pat_')):
-            raise forms.ValidationError(
-                'Invalid token format. GitHub PAT should start with "ghp_" (classic) or "github_pat_" (fine-grained).'
-            )
-        # Validate minimum length
-        if token.startswith('ghp_') and len(token) < 40:
-            raise forms.ValidationError(
-                'Classic PAT (ghp_) should be at least 40 characters.'
-            )
-        if token.startswith('github_pat_') and len(token) < 80:
-            raise forms.ValidationError(
-                'Fine-grained PAT (github_pat_) should be at least 80 characters.'
-            )
-        return token
+            # Dynamically add editable sensitive fields from plugin schema
+            plugin = registry.get(connection.plugin_name)
+            if plugin:
+                schema = plugin.get_config_schema()
+                config = connection.get_config()
+                for field_name, field_info in schema.items():
+                    # Only add fields that are editable, sensitive, and present in config
+                    if field_info.get('editable') and field_info.get('sensitive') and field_name in config:
+                        self.fields[field_name] = forms.CharField(
+                            required=False,
+                            widget=forms.PasswordInput(attrs={
+                                'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
+                                'placeholder': '••••••••',
+                                'autocomplete': 'off',
+                            }),
+                            label=field_info.get('label', field_name)
+                        )
+                        self.editable_fields.append(field_name)
 
 
 class SiteConfigurationForm(forms.ModelForm):

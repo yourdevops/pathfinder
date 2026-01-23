@@ -30,9 +30,9 @@ class GitHubPlugin(BasePlugin):
         return {
             'auth_type': {'type': 'string', 'required': True, 'label': 'Authentication Type'},
             'app_id': {'type': 'string', 'required': False, 'label': 'App ID'},
-            'private_key': {'type': 'string', 'required': False, 'sensitive': True, 'label': 'Private Key'},
+            'private_key': {'type': 'string', 'required': False, 'sensitive': True, 'editable': True, 'label': 'Private Key'},
             'installation_id': {'type': 'string', 'required': False, 'label': 'Installation ID'},
-            'personal_token': {'type': 'string', 'required': False, 'sensitive': True, 'label': 'Personal Access Token'},
+            'personal_token': {'type': 'string', 'required': False, 'sensitive': True, 'editable': True, 'label': 'Personal Access Token'},
             'webhook_secret': {'type': 'string', 'required': False, 'sensitive': True, 'label': 'Webhook Secret'},
             'base_url': {'type': 'string', 'required': False, 'label': 'GitHub Enterprise URL'},
             'organization': {'type': 'string', 'required': False, 'label': 'Organization'},
@@ -120,16 +120,18 @@ class GitHubPlugin(BasePlugin):
         """
         try:
             g = self._get_github_client(config)
-            # Get rate limit to verify connection
+            # Get authenticated user and rate limit to verify connection
+            user = g.get_user()
             rate = g.get_rate_limit()
 
             return {
                 'status': 'healthy',
-                'message': f'Connected - {rate.core.remaining}/{rate.core.limit} API calls remaining',
+                'message': f'Connected as {user.login} ({rate.rate.remaining}/{rate.rate.limit} API calls/hour remaining)',
                 'details': {
-                    'rate_limit_remaining': rate.core.remaining,
-                    'rate_limit_limit': rate.core.limit,
-                    'rate_limit_reset': rate.core.reset.isoformat() if rate.core.reset else None,
+                    'authenticated_user': user.login,
+                    'rate_limit_remaining': rate.rate.remaining,
+                    'rate_limit_limit': rate.rate.limit,
+                    'rate_limit_reset': rate.rate.reset.isoformat() if rate.rate.reset else None,
                 }
             }
         except GithubException as e:

@@ -76,6 +76,7 @@ class ConnectionDetailView(LoginRequiredMixin, IntegrationsReadMixin, DetailView
                     'value': '••••••••' if value else 'Not set',
                     'label': field_info.get('label', field_name),
                     'sensitive': True,
+                    'editable': field_info.get('editable', False),
                     'is_set': bool(value),
                 }
             elif value:  # Only show non-empty non-sensitive values
@@ -106,8 +107,8 @@ class ConnectionDetailView(LoginRequiredMixin, IntegrationsReadMixin, DetailView
         return context
 
 
-class ConnectionTestView(LoginRequiredMixin, OperatorRequiredMixin, View):
-    """Test connection health."""
+class ConnectionTestView(LoginRequiredMixin, View):
+    """Test connection health. Available to all authenticated users."""
 
     def post(self, request, uuid):
         connection = get_object_or_404(IntegrationConnection, uuid=uuid)
@@ -176,12 +177,16 @@ class ConnectionConfigUpdateView(LoginRequiredMixin, OperatorRequiredMixin, View
             # Update description
             connection.description = form.cleaned_data['description']
 
-            # Update PAT if provided (non-empty)
-            personal_token = form.cleaned_data.get('personal_token', '')
-            if personal_token:
-                # Get current config and update the token
-                config = connection.get_config()
-                config['personal_token'] = personal_token
+            # Update any editable sensitive fields that were provided
+            config = connection.get_config()
+            config_changed = False
+            for field_name in form.editable_fields:
+                value = form.cleaned_data.get(field_name, '').strip()
+                if value:
+                    config[field_name] = value
+                    config_changed = True
+
+            if config_changed:
                 connection.set_config(config)
 
             connection.save()
