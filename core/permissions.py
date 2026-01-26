@@ -5,13 +5,28 @@ from core.models import Project, ProjectMembership, GroupMembership
 
 
 def has_system_role(user, role):
-    """Check if user has a specific SystemRole through any group."""
+    """Check if user has a specific SystemRole through any group.
+
+    Args:
+        user: The user to check
+        role: Either a single role string or a list of roles to check
+
+    Returns:
+        True if user has any of the specified roles
+    """
     if not user.is_authenticated:
         return False
     memberships = GroupMembership.objects.filter(
         user=user,
         group__status='active'
     ).select_related('group')
+
+    # Support both single role string and list of roles
+    if isinstance(role, (list, tuple)):
+        return any(
+            any(r in m.group.system_roles for r in role)
+            for m in memberships
+        )
     return any(role in m.group.system_roles for m in memberships)
 
 
