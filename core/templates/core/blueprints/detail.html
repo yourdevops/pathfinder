@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ blueprint.name|default:"Blueprint" }} - DevSSP{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <a href="{% url 'blueprints:list' %}" class="text-dark-muted hover:text-dark-text transition-colors text-sm flex items-center gap-1 mb-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Blueprints
+        </a>
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-dark-text">{{ blueprint.name|default:"Unnamed Blueprint" }}</h1>
+                {% if blueprint.description %}
+                <p class="text-dark-muted mt-1">{{ blueprint.description }}</p>
+                {% endif %}
+            </div>
+            {% if can_manage and blueprint.sync_status != 'syncing' %}
+            <form method="post" action="{% url 'blueprints:sync' uuid=blueprint.uuid %}" class="inline">
+                {% csrf_token %}
+                <button type="submit"
+                        class="px-4 py-2 bg-dark-surface hover:bg-dark-border text-dark-text rounded-lg transition-colors flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Sync Now
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if not is_available %}
+    <!-- Availability Banner -->
+    <div class="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center gap-3">
+        <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div>
+            <p class="text-amber-400 font-medium">Connection Required</p>
+            <p class="text-sm text-dark-muted">Add a <strong>{{ required_plugin }}</strong> connection to use this blueprint for deployments.</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Metadata Section -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Blueprint Info Card -->
+            <div class="card p-6">
+                <h2 class="text-lg font-medium text-dark-text mb-4">Blueprint Information</h2>
+
+                <dl class="space-y-4">
+                    <!-- Tags -->
+                    <div class="flex">
+                        <dt class="w-32 text-dark-muted flex-shrink-0">Tags</dt>
+                        <dd>
+                            {% if blueprint.tags %}
+                            <div class="flex flex-wrap gap-1">
+                                {% for tag in blueprint.tags %}
+                                <span class="text-xs bg-dark-border rounded px-2 py-0.5">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <span class="text-dark-muted">None</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+
+                    <!-- CI Plugin -->
+                    <div class="flex">
+                        <dt class="w-32 text-dark-muted flex-shrink-0">CI Plugin</dt>
+                        <dd class="text-dark-text">{{ blueprint.ci_plugin|default:"None" }}</dd>
+                    </div>
+
+                    <!-- Deploy Plugin -->
+                    <div class="flex">
+                        <dt class="w-32 text-dark-muted flex-shrink-0">Deploy Plugin</dt>
+                        <dd class="text-dark-text">{{ blueprint.deploy_plugin|default:"None" }}</dd>
+                    </div>
+
+                    <!-- Git URL -->
+                    <div class="flex">
+                        <dt class="w-32 text-dark-muted flex-shrink-0">Repository</dt>
+                        <dd>
+                            <a href="{{ blueprint.git_url }}" target="_blank" rel="noopener"
+                               class="text-dark-accent hover:underline flex items-center gap-1">
+                                {{ blueprint.git_url }}
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                            </a>
+                        </dd>
+                    </div>
+
+                    <!-- SCM Connection -->
+                    <div class="flex">
+                        <dt class="w-32 text-dark-muted flex-shrink-0">SCM Connection</dt>
+                        <dd class="text-dark-text">
+                            {% if blueprint.connection %}
+                            {{ blueprint.connection.name }}
+                            {% else %}
+                            <span class="text-dark-muted">None (public)</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+
+            <!-- Sync Status Card -->
+            <div class="card p-6" id="sync-status-panel">
+                {% include "core/blueprints/_sync_status.html" %}
+            </div>
+        </div>
+
+        <!-- Versions Section -->
+        <div class="space-y-6">
+            <div class="card p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-medium text-dark-text">Versions</h2>
+                    <span class="text-sm text-dark-muted">{{ blueprint.version_count }} total</span>
+                </div>
+
+                <!-- Prerelease Toggle -->
+                {% if prerelease_count > 0 %}
+                <div class="mb-4">
+                    <label class="flex items-center gap-2 text-sm cursor-pointer">
+                        <input type="checkbox"
+                               {% if show_prereleases %}checked{% endif %}
+                               onchange="window.location.href='{% url 'blueprints:detail' uuid=blueprint.uuid %}?show_prereleases=' + (this.checked ? 'true' : 'false')"
+                               class="rounded border-dark-border bg-dark-surface text-dark-accent focus:ring-dark-accent">
+                        <span class="text-dark-muted">Show pre-releases ({{ prerelease_count }})</span>
+                    </label>
+                </div>
+                {% endif %}
+
+                <!-- Version List -->
+                {% if versions %}
+                <div class="space-y-2 max-h-96 overflow-y-auto">
+                    {% for version in versions %}
+                    <div class="p-3 rounded-lg {% if current_version and version.tag_name == current_version.tag_name %}bg-dark-accent/20 border border-dark-accent/30{% else %}bg-dark-surface hover:bg-dark-border/50{% endif %} transition-colors">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="font-medium text-dark-text">{{ version.tag_name }}</span>
+                                {% if version.is_prerelease %}
+                                <span class="ml-2 text-xs bg-amber-500/20 text-amber-400 rounded px-1.5 py-0.5">pre-release</span>
+                                {% endif %}
+                            </div>
+                            {% if blueprint.latest_version and version.tag_name == blueprint.latest_version.tag_name %}
+                            <span class="text-xs bg-green-500/20 text-green-400 rounded px-1.5 py-0.5">latest</span>
+                            {% endif %}
+                        </div>
+                        {% if version.commit_sha %}
+                        <div class="text-xs text-dark-muted mt-1 font-mono">
+                            {{ version.commit_sha|slice:":7" }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <svg class="w-8 h-8 mx-auto text-dark-muted mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    <p class="text-dark-muted text-sm">No versions found</p>
+                    <p class="text-dark-muted text-xs mt-1">Create git tags to publish versions</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
