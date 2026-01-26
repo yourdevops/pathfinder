@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 4 - Blueprints (Template System)
+**Current focus:** Phase 5 - Services (Service Creation from Blueprints)
 
 ## Current Position
 
-Phase: 4 of 7 (Blueprints)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-01-26 - Completed 04-02-PLAN.md (Blueprint Views)
+Phase: 4 of 7 (Blueprints) - COMPLETE
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-01-26 - Completed 04-03-PLAN.md (Blueprint UI Filtering)
 
-Progress: [======================-----------] 65%
+Progress: [========================---------] 70%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 22
+- Total plans completed: 23
 - Average duration: 4 min
-- Total execution time: 1.52 hours
+- Total execution time: 1.57 hours
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: [======================-----------] 65%
 | 02-core-domain | 4 | 20 min | 5 min |
 | 03-integrations | 6 | 23 min | 4 min |
 | 03.1-unified-sidebar | 3 | 9 min | 3 min |
-| 04-blueprints | 2 | 7 min | 3.5 min |
+| 04-blueprints | 3 | 10 min | 3.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 03.1-01 (3 min), 03.1-03 (2 min), 03.1-02 (4 min), 04-01 (3 min), 04-02 (4 min)
+- Last 5 plans: 03.1-03 (2 min), 03.1-02 (4 min), 04-01 (3 min), 04-02 (4 min), 04-03 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -92,6 +92,9 @@ Recent decisions affecting current work:
 | 04-02 | SCM connection dropdown for private repos | "None" option for public repos, GitHub connections for private |
 | 04-02 | HTMX live preview validates manifest | Registration blocked until valid manifest previewed |
 | 04-02 | Redirect to detail after registration | Per CONTEXT.md decision, not to list page |
+| 04-03 | Show unavailable toggle default unchecked | Per CONTEXT.md, unavailable blueprints hidden by default |
+| 04-03 | HTMX auto-poll every 3s while syncing | Stops polling when sync_status changes from 'syncing' |
+| 04-03 | Unavailable blueprints remain clickable | Link to detail page where setup hint banner appears |
 
 ### Roadmap Evolution
 
@@ -103,8 +106,8 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 4 Plan 02 complete - Blueprint views and templates ready
-- Ready for Plan 03 (Blueprint testing and polish)
+- Phase 4 complete - Blueprint catalog fully functional
+- Ready for Phase 5 (Service Creation from Blueprints)
 
 ### Quick Tasks Completed
 
@@ -127,5 +130,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed 04-02-PLAN.md - Blueprint Views (Plan 02 complete)
+Stopped at: Completed 04-03-PLAN.md - Blueprint UI Filtering (Phase 4 complete)
 Resume file: None
