@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 Phase: 4.1 of 7 (Replace UUID URLs with Slugs) - COMPLETE
 Plan: 4 of 4 in current phase - COMPLETED
 Status: Ready for Phase 5
-Last activity: 2026-01-26 - Completed quick task 016: Fix sidebar context replacement
+Last activity: 2026-01-26 - Completed quick task 017: Consolidate project pages and update nav
 
 Progress: [==============================----] 86%
 
@@ -84,8 +84,8 @@ Recent decisions affecting current work:
 | 03.1-01 | Expandable sidebar with $persist() | localStorage state persistence for nav sections |
 | 03.1-01 | Settings in main nav not separate sidebar | nav_settings.html deprecated, settings in expandable section |
 | 03.1-01 | active_settings_section context variable | Nav highlighting for settings sub-pages |
-| 03.1-03 | Details as first nav item in project sidebar | Default landing page for projects |
-| 03.1-03 | Settings not in project sidebar nav | Accessible via ?tab=settings URL, not in nav |
+| quick-017 | Services as default project landing page | Consolidated nav: Services, Environments, Settings |
+| quick-017 | Members section in Settings tab | Reduces nav items, keeps related config together |
 | 03.1-03 | Back button in DevSSP logo position | Consistent styling with text-xl font-bold |
 | 04-01 | GitPython for SCM abstraction (not GitHub API) | Supports any Git server (GitHub, GitLab, Bitbucket, self-hosted) |
 | 04-01 | Sort key format for versions | {major:05d}.{minor:05d}.{patch:05d}.{prerelease or 'zzzz'} |
@@ -137,6 +137,7 @@ None - Phase 4.1 complete, ready for Phase 5
 | 014 | Create example python-helloworld blueprint | 2026-01-26 | 329ccf0 | [014-create-example-helloworld-blueprint-with](./quick/014-create-example-helloworld-blueprint-with/) |
 | 015 | Support multiple deploy plugins in blueprints | 2026-01-26 | 9c0fe11 | [015-support-multiple-deploy-plugins-in-bluep](./quick/015-support-multiple-deploy-plugins-in-bluep/) |
 | 016 | Fix sidebar context replacement for project navigation | 2026-01-26 | 9a120cf | [016-fix-sidebar-context-replacement-for-proj](./quick/016-fix-sidebar-context-replacement-for-proj/) |
+| 017 | Consolidate project pages and update nav | 2026-01-26 | 69ced86 | [017-consolidate-project-pages-and-update-nav](./quick/017-consolidate-project-pages-and-update-nav/) |
 
 ## Session Continuity
 
