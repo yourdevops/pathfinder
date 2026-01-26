@@ -1,9 +1,11 @@
 """Service views including creation wizard and detail pages."""
 from django.http import HttpResponse
-from django.views.generic import View
+from django.views.generic import View, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
+from django.utils.decorators import method_decorator
+from django.views.decorators.vary import vary_on_headers
 
 from formtools.wizard.views import SessionWizardView
 
@@ -230,5 +232,129 @@ class BlueprintVersionsView(LoginRequiredMixin, View):
         html = '<option value="">Select version...</option>'
         for v in versions:
             html += f'<option value="{v.id}">{v.display_name}</option>'
+
+        return HttpResponse(html)
+
+
+@method_decorator(vary_on_headers("HX-Request"), name='dispatch')
+class ServiceDetailView(LoginRequiredMixin, TemplateView):
+    """Service detail with HTMX tab navigation."""
+
+    def dispatch(self, request, *args, **kwargs):
+        # Get project and service from URL
+        project_name = kwargs.get('project_name')
+        service_name = kwargs.get('service_name')
+
+        self.project = get_object_or_404(Project, name=project_name, status='active')
+        self.service = get_object_or_404(
+            Service, project=self.project, name=service_name
+        )
+
+        # Check viewer permission
+        self.user_project_role = can_access_project(request.user, self.project)
+        if not self.user_project_role:
+            messages.error(request, "You don't have permission to view this service.")
+            return redirect('projects:list')
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_template_names(self):
+        tab = self.request.GET.get('tab', 'details')
+        valid_tabs = ['details', 'builds', 'environments']
+        if tab not in valid_tabs:
+            tab = 'details'
+
+        if self.request.htmx:
+            return [f'core/services/_{tab}_tab.html']
+        return ['core/services/detail.html']
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        tab = self.request.GET.get('tab', 'details')
+        valid_tabs = ['details', 'builds', 'environments']
+        if tab not in valid_tabs:
+            tab = 'details'
+
+        context['project'] = self.project
+        context['service'] = self.service
+        context['active_tab'] = tab
+        context['user_project_role'] = self.user_project_role
+        # Pass tab template path for include (avoids invalid Django filter concatenation)
+        context['tab_template'] = f'core/services/_{tab}_tab.html'
+
+        # Tab-specific context
+        if tab == 'details':
+            # Get merged env vars for display
+            context['merged_env_vars'] = self.service.get_merged_env_vars()
+            # Can edit if contributor or owner
+            context['can_edit'] = self.user_project_role in ('contributor', 'owner')
+
+        elif tab == 'builds':
+            # Placeholder for Phase 6
+            context['builds'] = []  # Will be populated in Phase 6
+
+        elif tab == 'environments':
+            # Show environments with deployment info (placeholder for Phase 7)
+            context['environments'] = self.project.environments.filter(status='active').order_by('order', 'name')
+
+        return context
+
+
+class ServiceDeleteView(LoginRequiredMixin, View):
+    """Delete a service (owner only)."""
+
+    def dispatch(self, request, *args, **kwargs):
+        project_name = kwargs.get('project_name')
+        service_name = kwargs.get('service_name')
+
+        self.project = get_object_or_404(Project, name=project_name, status='active')
+        self.service = get_object_or_404(
+            Service, project=self.project, name=service_name
+        )
+
+        # Check owner permission
+        role = can_access_project(request.user, self.project)
+        if role != 'owner':
+            messages.error(request, "Only project owners can delete services.")
+            return redirect('services:detail', project_name=project_name, service_name=service_name)
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        service_name = self.service.name
+        project_name = self.project.name
+
+        # TODO: Consider cleanup of repository if we created it (future enhancement)
+        self.service.delete()
+
+        messages.success(request, f'Service "{service_name}" has been deleted.')
+        return redirect('projects:detail', project_name=project_name)
+
+
+class ServiceScaffoldStatusView(LoginRequiredMixin, View):
+    """HTMX endpoint to poll scaffold status."""
+
+    def get(self, request, project_name, service_name):
+        project = get_object_or_404(Project, name=project_name)
+        service = get_object_or_404(Service, project=project, name=service_name)
+
+        # Return status badge HTML
+        status_classes = {
+            'pending': 'bg-gray-500/20 text-gray-300',
+            'running': 'bg-blue-500/20 text-blue-300',
+            'success': 'bg-green-500/20 text-green-300',
+            'failed': 'bg-red-500/20 text-red-300',
+        }
+
+        status_class = status_classes.get(service.scaffold_status, 'bg-gray-500/20 text-gray-300')
+        status_label = service.get_scaffold_status_display()
+
+        if service.scaffold_status in ('pending', 'running'):
+            html = f'''<span class="px-2 py-1 text-xs rounded {status_class}"
+                      hx-get="{request.path}"
+                      hx-trigger="every 3s"
+                      hx-swap="outerHTML">Scaffold: {status_label}</span>'''
+        else:
+            html = f'<span class="px-2 py-1 text-xs rounded {status_class}">Scaffold: {status_label}</span>'
 
         return HttpResponse(html)
