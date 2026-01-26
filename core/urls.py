@@ -69,9 +69,9 @@ blueprints_patterns = [
     path('', BlueprintsListView.as_view(), name='list'),
     path('register/', BlueprintRegisterView.as_view(), name='register'),
     path('preview/', BlueprintPreviewView.as_view(), name='preview'),
-    path('<uuid:uuid>/', BlueprintDetailView.as_view(), name='detail'),
-    path('<uuid:uuid>/sync/', BlueprintSyncView.as_view(), name='sync'),
-    path('<uuid:uuid>/sync-status/', BlueprintSyncStatusView.as_view(), name='sync_status'),
+    path('<dns:blueprint_name>/', BlueprintDetailView.as_view(), name='detail'),
+    path('<dns:blueprint_name>/sync/', BlueprintSyncView.as_view(), name='sync'),
+    path('<dns:blueprint_name>/sync-status/', BlueprintSyncStatusView.as_view(), name='sync_status'),
 ]
 
 # Services placeholder URLs (to be replaced in Phase 5)

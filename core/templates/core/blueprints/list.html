@@ -98,7 +98,7 @@
                     <!-- Name + Description -->
                     <td class="px-4 py-3">
                         <div>
-                            <a href="{% url 'blueprints:detail' uuid=item.blueprint.uuid %}"
+                            <a href="{% url 'blueprints:detail' blueprint_name=item.blueprint.name %}"
                                class="font-medium text-dark-text hover:text-dark-accent transition-colors"
                                {% if not item.is_available %}title="Requires {{ item.required_plugins|join:', ' }} connection"{% endif %}>
                                 {{ item.blueprint.name|default:"Unnamed Blueprint" }}

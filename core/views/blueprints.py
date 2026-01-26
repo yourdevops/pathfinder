@@ -229,7 +229,7 @@ class BlueprintRegisterView(OperatorRequiredMixin, View):
         sync_blueprint.enqueue(blueprint_id=blueprint.id)
 
         messages.success(request, f'Blueprint registered. Syncing from repository...')
-        return redirect('blueprints:detail', uuid=blueprint.uuid)
+        return redirect('blueprints:detail', blueprint_name=blueprint.name)
 
     def _render_form(self, request, git_url='', connection_id=''):
         """Re-render form with current values."""
@@ -249,8 +249,8 @@ class BlueprintDetailView(LoginRequiredMixin, View):
     """Display blueprint details and versions."""
     template_name = 'core/blueprints/detail.html'
 
-    def get(self, request, uuid):
-        blueprint = get_object_or_404(Blueprint, uuid=uuid)
+    def get(self, request, blueprint_name):
+        blueprint = get_object_or_404(Blueprint, name=blueprint_name)
 
         # Check for prerelease toggle
         show_prereleases = request.GET.get('show_prereleases') == 'true'
@@ -297,8 +297,8 @@ class BlueprintDetailView(LoginRequiredMixin, View):
 class BlueprintSyncView(OperatorRequiredMixin, View):
     """Trigger manual sync of a blueprint."""
 
-    def post(self, request, uuid):
-        blueprint = get_object_or_404(Blueprint, uuid=uuid)
+    def post(self, request, blueprint_name):
+        blueprint = get_object_or_404(Blueprint, name=blueprint_name)
 
         if blueprint.sync_status != 'syncing':
             blueprint.sync_status = 'syncing'
@@ -314,14 +314,14 @@ class BlueprintSyncView(OperatorRequiredMixin, View):
             }, request=request)
             return HttpResponse(html)
 
-        return redirect('blueprints:detail', uuid=blueprint.uuid)
+        return redirect('blueprints:detail', blueprint_name=blueprint.name)
 
 
 class BlueprintSyncStatusView(LoginRequiredMixin, View):
     """Return sync status partial for HTMX polling."""
 
-    def get(self, request, uuid):
-        blueprint = get_object_or_404(Blueprint, uuid=uuid)
+    def get(self, request, blueprint_name):
+        blueprint = get_object_or_404(Blueprint, name=blueprint_name)
 
         html = render_to_string('core/blueprints/_sync_status.html', {
             'blueprint': blueprint,

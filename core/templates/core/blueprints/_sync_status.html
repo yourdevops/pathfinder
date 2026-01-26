@@ -2,7 +2,7 @@
 
 <div id="sync-status-content"
      {% if blueprint.sync_status == 'syncing' %}
-     hx-get="{% url 'blueprints:sync_status' uuid=blueprint.uuid %}"
+     hx-get="{% url 'blueprints:sync_status' blueprint_name=blueprint.name %}"
      hx-target="#sync-status-panel"
      hx-swap="innerHTML"
      hx-trigger="every 3s"
@@ -59,8 +59,8 @@
 
         <!-- Sync Button (inline for HTMX response) -->
         {% if can_manage and blueprint.sync_status != 'syncing' %}
-        <form method="post" action="{% url 'blueprints:sync' uuid=blueprint.uuid %}"
-              hx-post="{% url 'blueprints:sync' uuid=blueprint.uuid %}"
+        <form method="post" action="{% url 'blueprints:sync' blueprint_name=blueprint.name %}"
+              hx-post="{% url 'blueprints:sync' blueprint_name=blueprint.name %}"
               hx-target="#sync-status-panel"
               hx-swap="innerHTML">
             {% csrf_token %}

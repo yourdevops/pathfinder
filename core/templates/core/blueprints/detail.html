@@ -126,7 +126,7 @@
                     <label class="flex items-center gap-2 text-sm cursor-pointer">
                         <input type="checkbox"
                                {% if show_prereleases %}checked{% endif %}
-                               onchange="window.location.href='{% url 'blueprints:detail' uuid=blueprint.uuid %}?show_prereleases=' + (this.checked ? 'true' : 'false')"
+                               onchange="window.location.href='{% url 'blueprints:detail' blueprint_name=blueprint.name %}?show_prereleases=' + (this.checked ? 'true' : 'false')"
                                class="rounded border-dark-border bg-dark-surface text-dark-accent focus:ring-dark-accent">
                         <span class="text-dark-muted">Show pre-releases ({{ prerelease_count }})</span>
                     </label>
