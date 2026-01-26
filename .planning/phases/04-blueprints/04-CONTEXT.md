@@ -13,27 +13,31 @@ Platform engineers can publish service templates (blueprints) from git URLs; dev
 <decisions>
 ## Implementation Decisions
 
-### Blueprint listing
+### SCM Abstraction
+- SCM operations abstract from specific plugins — use Git protocol, not plugin-specific APIs
+- At registration: select SCM provider if repository requires auth, "None" option for public repos
+- Admins can edit SCM provider and URL after blueprint creation (supports migration scenarios like Bitbucket → GitHub)
+
+### Registration Flow
+- Immediate fetch + preview when operator enters git URL — show parsed manifest before committing
+- Block registration if ssp-template.yaml is invalid or missing — cannot proceed without valid manifest
+- Single page form layout with URL, SCM provider selection, and live preview panel
+- After successful registration, redirect to blueprint detail page
+
+### Blueprint Listing
 - Compact list layout (table-style rows with columns), not cards
 - Flat list with filter controls, not grouped by plugin or category
 - Full details visible: name, description, tags, ci.plugin, deploy.plugin, version count, last synced
 - Filter by tags and deploy plugin via controls (not grouped sections)
 
-### Registration flow
-- Single URL field entry — paste git URL, click register
-- Save blueprint record immediately, sync runs in background (async)
-- Blueprint shows "Syncing..." status until complete
-- Sync errors shown as status badge on detail page with expandable error message
-- Auto-detect GitHub connection — use first available, prompt if none exist
-
-### Version management
+### Version Management
 - Dropdown selector on blueprint detail page for choosing version
 - Latest semantic version auto-selected as default (v1.2.3 > v1.2.2)
 - Pre-release versions (alpha, beta, rc) hidden by default
 - Toggle to reveal pre-releases when needed
 - Any version (including betas) selectable during service creation (Phase 5)
 
-### Availability filtering
+### Availability Filtering
 - Unavailable blueprints (no matching deploy connection) shown but dimmed in list
 - Tooltip on dimmed items: "Requires [plugin] connection"
 - Global catalog view: filters based on any connection in the system
@@ -44,22 +48,24 @@ Platform engineers can publish service templates (blueprints) from git URLs; dev
 ### Claude's Discretion
 - Tags display style (badges vs text)
 - Exact filter UI placement and controls
-- Loading states during sync
+- Loading states during fetch/preview
 - Column sorting behavior
+- Error state handling and retry patterns
 
 </decisions>
 
 <specifics>
 ## Specific Ideas
 
-No specific requirements — open to standard approaches
+- Git only (no Mercurial or other VCS) — simplifies implementation
+- Preview should show parsed manifest fields (name, description, tags, plugins) before committing
 
 </specifics>
 
 <deferred>
 ## Deferred Ideas
 
-None — discussion stayed within phase scope
+- Bitbucket plugin support — future phase (architecture supports multiple SCM providers)
 
 </deferred>
 
