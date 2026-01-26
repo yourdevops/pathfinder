@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 5 of 7 (Services)
-Plan: 1 of 3 in current phase - COMPLETED
+Plan: 3 of 3 in current phase - COMPLETED
 Status: In progress
-Last activity: 2026-01-26 - Completed 05-01-PLAN.md (Service Model)
+Last activity: 2026-01-26 - Completed 05-03-PLAN.md (Repository Scaffolding)
 
-Progress: [===============================-----] 89%
+Progress: [=================================---] 93%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 28
+- Total plans completed: 29
 - Average duration: 4 min
-- Total execution time: 1.97 hours
+- Total execution time: 2.03 hours
 
 **By Phase:**
 
@@ -33,10 +33,10 @@ Progress: [===============================-----] 89%
 | 03.1-unified-sidebar | 3 | 9 min | 3 min |
 | 04-blueprints | 3 | 10 min | 3.3 min |
 | 04.1-replace-uuid-urls-with-slugs | 4 | 19 min | 4.75 min |
-| 05-services | 1 | 1 min | 1 min |
+| 05-services | 2 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 04.1-02 (6 min), 04.1-03 (5 min), 04.1-04 (5 min), 05-01 (1 min)
+- Last 5 plans: 04.1-03 (5 min), 04.1-04 (5 min), 05-01 (1 min), 05-03 (4 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -107,6 +107,8 @@ Recent decisions affecting current work:
 | 05-01 | PROTECT on_delete for blueprint ForeignKeys | Prevents orphan services when blueprints deleted |
 | 05-01 | Service status: draft, active, error | draft=not built, active=successful build, error=failed |
 | 05-01 | Env var merge: project first, service overrides | Locked project vars cannot be overridden at service level |
+| 05-03 | Jinja2 for template substitution | StrictUndefined mode to catch missing variables early |
+| 05-03 | Feature branch naming: feature/{service-name} | Consistent convention for scaffolding into existing repos |
 
 ### Roadmap Evolution
 
@@ -119,7 +121,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Service model ready for wizard implementation
+None - Repository scaffolding task ready for service wizard integration
 
 ### Quick Tasks Completed
 
@@ -146,5 +148,5 @@ None - Service model ready for wizard implementation
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed 05-01-PLAN.md (Service Model)
+Stopped at: Completed 05-03-PLAN.md (Repository Scaffolding)
 Resume file: None
