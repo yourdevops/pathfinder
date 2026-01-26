@@ -66,16 +66,16 @@ Requirements for MVP release. Complete end-to-end flow: Blueprint -> GitHub Acti
 
 ### Services
 
-- [ ] **SRVC-01**: Contributor can create service via wizard
-- [ ] **SRVC-02**: Wizard Page 1: select project, select blueprint, enter service name
-- [ ] **SRVC-03**: Wizard Page 2: select SCM connection, choose new/existing repo, configure branch
-- [ ] **SRVC-04**: Wizard Page 3: configure container settings (port, resources, health check)
-- [ ] **SRVC-05**: Wizard Page 4: review and create
-- [ ] **SRVC-06**: Service creation scaffolds repository from blueprint
-- [ ] **SRVC-07**: Service handler computed as {project-name}-{service-name}
-- [ ] **SRVC-08**: Service tracks current build and artifact reference
-- [ ] **SRVC-09**: Contributor can view service details (overview, builds, deployments)
-- [ ] **SRVC-10**: Project owner can delete service
+- [x] **SRVC-01**: Contributor can create service via wizard
+- [x] **SRVC-02**: Wizard Page 1: select project, select blueprint, enter service name
+- [x] **SRVC-03**: Wizard Page 2: select SCM connection, choose new/existing repo, configure branch
+- [x] **SRVC-04**: Wizard Page 3: configure container settings (port, resources, health check)
+- [x] **SRVC-05**: Wizard Page 4: review and create
+- [x] **SRVC-06**: Service creation scaffolds repository from blueprint
+- [x] **SRVC-07**: Service handler computed as {project-name}-{service-name}
+- [x] **SRVC-08**: Service tracks current build and artifact reference
+- [x] **SRVC-09**: Contributor can view service details (overview, builds, deployments)
+- [x] **SRVC-10**: Project owner can delete service
 
 ### Builds
 
@@ -101,10 +101,10 @@ Requirements for MVP release. Complete end-to-end flow: Blueprint -> GitHub Acti
 
 - [x] **UIUX-01**: Navigation shows Projects, Blueprints, Connections based on permissions
 - [x] **UIUX-02**: Project detail page has tabs: Services, Environments, Members, Settings
-- [ ] **UIUX-03**: Service detail page has tabs: Overview, Builds, Deployments
+- [x] **UIUX-03**: Service detail page has tabs: Overview, Builds, Deployments
 - [x] **UIUX-04**: HTMX-powered dynamic updates (no full page reloads for actions)
 - [x] **UIUX-05**: Dark mode UI theme
-- [ ] **UIUX-06**: Form validation with inline error messages
+- [x] **UIUX-06**: Form validation with inline error messages
 
 ## v2 Requirements
 
@@ -199,19 +199,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BPRT-04 | Phase 4 | Complete |
 | BPRT-05 | Phase 4 | Complete |
 | BPRT-06 | Phase 4 | Complete |
-| SRVC-01 | Phase 5 | Pending |
-| SRVC-02 | Phase 5 | Pending |
-| SRVC-03 | Phase 5 | Pending |
-| SRVC-04 | Phase 5 | Pending |
-| SRVC-05 | Phase 5 | Pending |
-| SRVC-06 | Phase 5 | Pending |
-| SRVC-07 | Phase 5 | Pending |
-| SRVC-08 | Phase 5 | Pending |
-| SRVC-09 | Phase 5 | Pending |
-| SRVC-10 | Phase 5 | Pending |
-| UIUX-03 | Phase 5 | Pending |
-| UIUX-04 | Phase 5 | Pending |
-| UIUX-06 | Phase 5 | Pending |
+| SRVC-01 | Phase 5 | Complete |
+| SRVC-02 | Phase 5 | Complete |
+| SRVC-03 | Phase 5 | Complete |
+| SRVC-04 | Phase 5 | Complete |
+| SRVC-05 | Phase 5 | Complete |
+| SRVC-06 | Phase 5 | Complete |
+| SRVC-07 | Phase 5 | Complete |
+| SRVC-08 | Phase 5 | Complete |
+| SRVC-09 | Phase 5 | Complete |
+| SRVC-10 | Phase 5 | Complete |
+| UIUX-03 | Phase 5 | Complete |
+| UIUX-04 | Phase 5 | Complete |
+| UIUX-06 | Phase 5 | Complete |
 | BILD-01 | Phase 6 | Pending |
 | BILD-02 | Phase 6 | Pending |
 | BILD-03 | Phase 6 | Pending |
@@ -234,4 +234,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-21*
-*Last updated: 2026-01-26 after Phase 4 completion*
+*Last updated: 2026-01-26 after Phase 5 completion*

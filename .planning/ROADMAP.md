@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3.1: Unified Sidebar Navigation** (INSERTED) - Expandable sidebar with Home, Service Catalog, Blueprints, Integrations, Settings
 - [x] **Phase 4: Blueprints** - Template registration, versioning, availability filtering
 - [x] **Phase 4.1: Replace UUID URLs with Slugs** (INSERTED) - Use name-based slugs in URLs instead of UUIDs
-- [ ] **Phase 5: Services** - Creation wizard, repository scaffolding, service management
+- [x] **Phase 5: Services** - Creation wizard, repository scaffolding, service management
 - [ ] **Phase 6: Builds** - Webhook ingestion, build tracking, service activation
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
@@ -156,10 +156,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Service model with handler property and migrations
-- [ ] 05-02-PLAN.md — Service creation wizard (SessionWizardView, 4 steps)
-- [ ] 05-03-PLAN.md — Repository scaffolding background task
-- [ ] 05-04-PLAN.md — Service list and detail pages with sidebar
+- [x] 05-01-PLAN.md — Service model with handler property and migrations
+- [x] 05-02-PLAN.md — Service creation wizard (SessionWizardView, 4 steps)
+- [x] 05-03-PLAN.md — Repository scaffolding background task
+- [x] 05-04-PLAN.md — Service list and detail pages with sidebar
 
 ### Phase 6: Builds
 **Goal**: GitHub Actions can report build status; services transition from draft to active on first successful build
@@ -206,10 +206,10 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 6 -> 7
 | 3.1 Unified Sidebar Navigation (INSERTED) | 3/3 | Complete | 2026-01-26 |
 | 4. Blueprints | 3/3 | Complete | 2026-01-26 |
 | 4.1 Replace UUID URLs with Slugs (INSERTED) | 4/4 | Complete | 2026-01-26 |
-| 5. Services | 0/4 | Not started | - |
+| 5. Services | 4/4 | Complete | 2026-01-26 |
 | 6. Builds | 0/2 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-26 (Phase 4.1 complete - slug URLs for all entities)*
+*Last updated: 2026-01-26 (Phase 5 complete - service creation wizard and scaffolding)*
