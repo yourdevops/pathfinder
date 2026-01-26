@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation & Security** - User authentication, RBAC, groups, audit logging, base UI
 - [x] **Phase 2: Core Domain** - Projects with membership, Environments with deploy targets
 - [x] **Phase 3: Integrations** - Plugin framework, GitHub and Docker connections
-- [ ] **Phase 3.1: Unified Sidebar Navigation** (INSERTED) - Expandable sidebar with Home, Service Catalog, Blueprints, Integrations, Settings
+- [x] **Phase 3.1: Unified Sidebar Navigation** (INSERTED) - Expandable sidebar with Home, Service Catalog, Blueprints, Integrations, Settings
 - [ ] **Phase 4: Blueprints** - Template registration, versioning, availability filtering
 - [ ] **Phase 5: Services** - Creation wizard, repository scaffolding, service management
 - [ ] **Phase 6: Builds** - Webhook ingestion, build tracking, service activation
@@ -100,9 +100,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 03.1-01-PLAN.md — Expandable sidebar sections with Alpine.js Persist
-- [ ] 03.1-02-PLAN.md — Home dashboard with stats and activity feed
-- [ ] 03.1-03-PLAN.md — Project sidebar refinements (Details first, back button)
+- [x] 03.1-01-PLAN.md — Expandable sidebar sections with Alpine.js Persist
+- [x] 03.1-02-PLAN.md — Home dashboard with stats and activity feed
+- [x] 03.1-03-PLAN.md — Project sidebar refinements (Details first, back button)
 
 ### Phase 4: Blueprints
 **Goal**: Platform engineers can publish service templates; developers can browse available blueprints
@@ -114,11 +114,12 @@ Plans:
   3. Blueprint shows available git tags as selectable versions
   4. Operator can manually trigger sync to refresh versions
   5. Blueprint availability is filtered based on project environment connections (matching deploy.plugin)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
+- [ ] 04-01-PLAN.md — Blueprint and BlueprintVersion models with sync task
+- [ ] 04-02-PLAN.md — Blueprint views, URLs, and templates (list, register, detail)
+- [ ] 04-03-PLAN.md — Availability filtering and HTMX sync updates
 
 ### Phase 5: Services
 **Goal**: Developers can create services via wizard and see repositories scaffolded from blueprints
@@ -172,19 +173,19 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Security | 6/6 | Complete | 2026-01-22 |
 | 2. Core Domain | 4/4 | Complete | 2026-01-22 |
 | 3. Integrations | 6/6 | Complete | 2026-01-23 |
-| 3.1 Unified Sidebar Navigation (INSERTED) | 0/3 | Not started | - |
-| 4. Blueprints | 0/2 | Not started | - |
+| 3.1 Unified Sidebar Navigation (INSERTED) | 3/3 | Complete | 2026-01-26 |
+| 4. Blueprints | 0/3 | Planned | - |
 | 5. Services | 0/3 | Not started | - |
 | 6. Builds | 0/2 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-26 (Phase 3.1 planned)*
+*Last updated: 2026-01-26 (Phase 4 planned)*
