@@ -13,7 +13,7 @@
             </li>
             <li class="text-dark-muted">/</li>
             <li>
-                <a href="{% url 'projects:detail' project_uuid=project.uuid %}?tab=environments" class="text-dark-muted hover:text-dark-text transition-colors">{{ project.name }}</a>
+                <a href="{% url 'projects:detail' project_name=project.name %}?tab=environments" class="text-dark-muted hover:text-dark-text transition-colors">{{ project.name }}</a>
             </li>
             <li class="text-dark-muted">/</li>
             <li class="text-dark-text">{{ environment.name }}</li>
@@ -42,7 +42,7 @@
             <h2 class="text-lg font-semibold text-dark-text">Environment Settings</h2>
         </div>
         {% if user_project_role == 'owner' or user_project_role == 'contributor' %}
-        <form method="post" action="{% url 'projects:environment_update' project_uuid=project.uuid env_uuid=environment.uuid %}" class="p-6 space-y-4">
+        <form method="post" action="{% url 'projects:environment_update' project_name=project.name env_name=environment.name %}" class="p-6 space-y-4">
             {% csrf_token %}
 
             <div>
@@ -127,7 +127,7 @@
                 <p class="text-dark-muted text-sm mt-1">Variables for this environment. Inherited variables from the project can be overridden unless locked.</p>
             </div>
             {% if user_project_role == 'owner' or user_project_role == 'contributor' %}
-            <button hx-get="{% url 'projects:env_var_modal' project_uuid=project.uuid env_uuid=environment.uuid %}"
+            <button hx-get="{% url 'projects:env_var_modal' project_name=project.name env_name=environment.name %}"
                     hx-target="body"
                     hx-swap="beforeend"
                     class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
@@ -173,7 +173,7 @@
                             </td>
                             <td class="px-4 py-3 text-right">
                                 {% if not var.inherited and user_project_role != 'viewer' %}
-                                <button hx-delete="{% url 'projects:env_var_delete' project_uuid=project.uuid env_uuid=environment.uuid key=var.key %}"
+                                <button hx-delete="{% url 'projects:env_var_delete' project_name=project.name env_name=environment.name key=var.key %}"
                                         hx-confirm="Delete variable {{ var.key }}?"
                                         hx-target="closest tr"
                                         hx-swap="outerHTML"
@@ -212,7 +212,7 @@
                 <p class="text-dark-muted text-sm mt-1">Container runtime connections for this environment (Docker, Kubernetes, etc.).</p>
             </div>
             {% if user_project_role == 'owner' %}
-            <button hx-get="{% url 'projects:env_attach_connection' project_uuid=project.uuid env_uuid=environment.uuid %}"
+            <button hx-get="{% url 'projects:env_attach_connection' project_name=project.name env_name=environment.name %}"
                     hx-target="body"
                     hx-swap="beforeend"
                     class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
@@ -240,7 +240,7 @@
                     <h3 class="text-dark-text font-medium">Delete this environment</h3>
                     <p class="text-dark-muted text-sm">Once deleted, all services in this environment will be removed.</p>
                 </div>
-                <form method="post" action="{% url 'projects:environment_delete' project_uuid=project.uuid env_uuid=environment.uuid %}"
+                <form method="post" action="{% url 'projects:environment_delete' project_name=project.name env_name=environment.name %}"
                       onsubmit="return confirm('Are you sure you want to delete this environment? This action cannot be undone.');">
                     {% csrf_token %}
                     <button type="submit" class="px-4 py-2 border border-red-500/50 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
@@ -254,7 +254,7 @@
 
     <!-- Back link -->
     <div class="mt-6">
-        <a href="{% url 'projects:detail' project_uuid=project.uuid %}?tab=environments"
+        <a href="{% url 'projects:detail' project_name=project.name %}?tab=environments"
            class="text-dark-muted hover:text-dark-text transition-colors flex items-center gap-2">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />

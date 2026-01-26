@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between">
         <h2 class="text-lg font-semibold text-dark-text">Environments</h2>
         {% if user_project_role == 'owner' or user_project_role == 'contributor' %}
-        <a href="{% url 'projects:environment_create' project_uuid=project.uuid %}"
+        <a href="{% url 'projects:environment_create' project_name=project.name %}"
            class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -30,7 +30,7 @@
                 {% for env in environments %}
                 <tr class="{% if env.is_production %}bg-amber-500/5 hover:bg-amber-500/10{% else %}hover:bg-dark-border/30{% endif %} transition-colors">
                     <td class="px-6 py-4">
-                        <a href="{% url 'projects:environment_detail' project_uuid=project.uuid env_uuid=env.uuid %}"
+                        <a href="{% url 'projects:environment_detail' project_name=project.name env_name=env.name %}"
                            class="text-dark-text hover:text-dark-accent font-medium transition-colors">
                             {{ env.name }}
                         </a>
@@ -65,7 +65,7 @@
         <h2 class="text-xl font-semibold text-dark-text mb-2">No environments yet</h2>
         <p class="text-dark-muted mb-6">Add your first environment to start deploying services.</p>
         {% if user_project_role == 'owner' or user_project_role == 'contributor' %}
-        <a href="{% url 'projects:environment_create' project_uuid=project.uuid %}"
+        <a href="{% url 'projects:environment_create' project_name=project.name %}"
            class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors inline-flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />

@@ -39,7 +39,7 @@
                 {% for project in projects %}
                 <tr class="hover:bg-dark-border/30 transition-colors">
                     <td class="px-6 py-4">
-                        <a href="{% url 'projects:detail' project_uuid=project.uuid %}" class="text-dark-text hover:text-dark-accent font-medium transition-colors">
+                        <a href="{% url 'projects:detail' project_name=project.name %}" class="text-dark-text hover:text-dark-accent font-medium transition-colors">
                             {{ project.name }}
                         </a>
                         {% if project.status == 'inactive' %}

@@ -17,7 +17,7 @@
             </div>
 
             <!-- Form -->
-            <form method="post" hx-post="{% url 'projects:add_member_modal' project_uuid=project.uuid %}" hx-swap="outerHTML">
+            <form method="post" hx-post="{% url 'projects:add_member_modal' project_name=project.name %}" hx-swap="outerHTML">
                 {% csrf_token %}
                 <div class="p-6 space-y-4">
                     <!-- Group Select -->

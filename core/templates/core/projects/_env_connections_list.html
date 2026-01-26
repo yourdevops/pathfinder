@@ -16,7 +16,7 @@
                 {% for attachment in connections %}
                 <tr class="hover:bg-dark-border/30">
                     <td class="px-4 py-3">
-                        <a href="{% url 'connections:detail' uuid=attachment.connection.uuid %}"
+                        <a href="{% url 'connections:detail' connection_name=attachment.connection.name %}"
                            class="text-dark-text hover:text-dark-accent transition-colors font-medium">
                             {{ attachment.connection.name }}
                         </a>
@@ -54,8 +54,8 @@
                     <td class="px-4 py-3 text-right">
                         {% if user_project_role == 'owner' %}
                         <form method="post"
-                              action="{% url 'projects:env_detach_connection' project_uuid=project.uuid env_uuid=environment.uuid connection_id=attachment.connection.id %}"
-                              hx-post="{% url 'projects:env_detach_connection' project_uuid=project.uuid env_uuid=environment.uuid connection_id=attachment.connection.id %}"
+                              action="{% url 'projects:env_detach_connection' project_name=project.name env_name=environment.name connection_id=attachment.connection.id %}"
+                              hx-post="{% url 'projects:env_detach_connection' project_name=project.name env_name=environment.name connection_id=attachment.connection.id %}"
                               hx-target="#env-connections-list"
                               hx-swap="outerHTML"
                               hx-confirm="Detach this connection from the environment?"

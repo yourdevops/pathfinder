@@ -6,7 +6,7 @@
             <h2 class="text-lg font-semibold text-dark-text">Project Information</h2>
             <p class="text-dark-muted text-sm mt-1">Update your project's basic information.</p>
         </div>
-        <form method="post" action="{% url 'projects:update' project_uuid=project.uuid %}" class="p-6 space-y-4">
+        <form method="post" action="{% url 'projects:update' project_name=project.name %}" class="p-6 space-y-4">
             {% csrf_token %}
             <div>
                 <label class="block text-sm font-medium text-dark-text mb-1">Name</label>
@@ -44,7 +44,7 @@
                 <p class="text-dark-muted text-sm mt-1">Variables set here are inherited by all environments. Lock variables to prevent override.</p>
             </div>
             {% if user_project_role == 'owner' %}
-            <button hx-get="{% url 'projects:project_env_var_modal' project_uuid=project.uuid %}"
+            <button hx-get="{% url 'projects:project_env_var_modal' project_name=project.name %}"
                     hx-target="body"
                     hx-swap="beforeend"
                     class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
@@ -87,7 +87,7 @@
                             </td>
                             <td class="px-4 py-3 text-right">
                                 {% if user_project_role == 'owner' %}
-                                <button hx-delete="{% url 'projects:project_env_var_delete' project_uuid=project.uuid key=var.key %}"
+                                <button hx-delete="{% url 'projects:project_env_var_delete' project_name=project.name key=var.key %}"
                                         hx-confirm="Delete variable {{ var.key }}?"
                                         hx-target="closest tr"
                                         hx-swap="outerHTML"
@@ -124,7 +124,7 @@
                 <p class="text-dark-muted text-sm mt-1">Source code management connections for this project (GitHub, GitLab, etc.).</p>
             </div>
             {% if user_project_role == 'owner' %}
-            <button hx-get="{% url 'projects:project_attach_connection' project_uuid=project.uuid %}"
+            <button hx-get="{% url 'projects:project_attach_connection' project_name=project.name %}"
                     hx-target="body"
                     hx-swap="beforeend"
                     class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
@@ -152,7 +152,7 @@
                     <h3 class="text-dark-text font-medium">Archive this project</h3>
                     <p class="text-dark-muted text-sm">Mark the project as archived. It will be hidden from the project list.</p>
                 </div>
-                <form method="post" action="{% url 'projects:archive' project_uuid=project.uuid %}"
+                <form method="post" action="{% url 'projects:archive' project_name=project.name %}"
                       onsubmit="return confirm('Are you sure you want to archive this project? This action can be undone by an administrator.');">
                     {% csrf_token %}
                     <button type="submit" class="px-4 py-2 border border-red-500/50 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">

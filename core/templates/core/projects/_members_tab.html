@@ -4,7 +4,7 @@
     <div class="flex items-center justify-between">
         <h2 class="text-lg font-semibold text-dark-text">Project Members</h2>
         {% if user_project_role == 'owner' %}
-        <button hx-get="{% url 'projects:add_member_modal' project_uuid=project.uuid %}"
+        <button hx-get="{% url 'projects:add_member_modal' project_name=project.name %}"
                 hx-target="body"
                 hx-swap="beforeend"
                 class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
@@ -38,7 +38,7 @@
                     </div>
                 </div>
                 {% if user_project_role == 'owner' %}
-                <form method="post" action="{% url 'projects:remove_member' project_uuid=project.uuid group_uuid=membership.group.uuid %}"
+                <form method="post" action="{% url 'projects:remove_member' project_name=project.name group_name=membership.group.name %}"
                       onsubmit="return confirm('Remove {{ membership.group.name }} from this project?');">
                     {% csrf_token %}
                     <button type="submit" class="text-dark-muted hover:text-red-400 transition-colors" title="Remove">
@@ -75,7 +75,7 @@
                     </div>
                 </div>
                 {% if user_project_role == 'owner' %}
-                <form method="post" action="{% url 'projects:remove_member' project_uuid=project.uuid group_uuid=membership.group.uuid %}"
+                <form method="post" action="{% url 'projects:remove_member' project_name=project.name group_name=membership.group.name %}"
                       onsubmit="return confirm('Remove {{ membership.group.name }} from this project?');">
                     {% csrf_token %}
                     <button type="submit" class="text-dark-muted hover:text-red-400 transition-colors" title="Remove">
@@ -112,7 +112,7 @@
                     </div>
                 </div>
                 {% if user_project_role == 'owner' %}
-                <form method="post" action="{% url 'projects:remove_member' project_uuid=project.uuid group_uuid=membership.group.uuid %}"
+                <form method="post" action="{% url 'projects:remove_member' project_name=project.name group_name=membership.group.name %}"
                       onsubmit="return confirm('Remove {{ membership.group.name }} from this project?');">
                     {% csrf_token %}
                     <button type="submit" class="text-dark-muted hover:text-red-400 transition-colors" title="Remove">
@@ -137,7 +137,7 @@
         <h2 class="text-xl font-semibold text-dark-text mb-2">No groups assigned</h2>
         <p class="text-dark-muted mb-6">Add groups to give users access to this project.</p>
         {% if user_project_role == 'owner' %}
-        <button hx-get="{% url 'projects:add_member_modal' project_uuid=project.uuid %}"
+        <button hx-get="{% url 'projects:add_member_modal' project_name=project.name %}"
                 hx-target="body"
                 hx-swap="beforeend"
                 class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors inline-flex items-center gap-2">
