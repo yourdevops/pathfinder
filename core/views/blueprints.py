@@ -34,8 +34,8 @@ class BlueprintListView(LoginRequiredMixin, View):
         for bp in blueprints_qs:
             if bp.tags:
                 all_tags.update(bp.tags)
-            if bp.deploy_plugin:
-                deploy_plugins.add(bp.deploy_plugin)
+            if bp.deploy_plugins:
+                deploy_plugins.update(bp.deploy_plugins)
 
         # Build blueprint data with availability info
         blueprint_data = []
@@ -44,7 +44,7 @@ class BlueprintListView(LoginRequiredMixin, View):
             blueprint_data.append({
                 'blueprint': bp,
                 'is_available': is_available,
-                'required_plugin': bp.deploy_plugin if not is_available else None,
+                'required_plugins': bp.deploy_plugins if not is_available else [],
             })
 
         # Check if user can manage blueprints
@@ -103,7 +103,7 @@ class BlueprintPreviewView(OperatorRequiredMixin, View):
                 'description': manifest.get('description', ''),
                 'tags': manifest.get('tags', []),
                 'ci_plugin': manifest.get('ci', {}).get('type', ''),
-                'deploy_plugin': self._get_deploy_plugin(manifest),
+                'deploy_plugins': self._get_deploy_plugins(manifest),
             }
 
             return self._render_success(request, preview_data)
@@ -126,13 +126,14 @@ class BlueprintPreviewView(OperatorRequiredMixin, View):
             if repo and temp_dir:
                 cleanup_repo(repo, temp_dir)
 
-    def _get_deploy_plugin(self, manifest):
-        """Extract deploy plugin from manifest."""
+    def _get_deploy_plugins(self, manifest):
+        """Extract deploy plugins list from manifest."""
         deploy_config = manifest.get('deploy', {})
         required_plugins = deploy_config.get('required_plugins', [])
         if required_plugins:
-            return required_plugins[0]
-        return deploy_config.get('type', '')
+            return required_plugins
+        deploy_type = deploy_config.get('type', '')
+        return [deploy_type] if deploy_type else []
 
     def _render_success(self, request, preview_data):
         """Render successful preview partial."""
@@ -276,7 +277,7 @@ class BlueprintDetailView(LoginRequiredMixin, View):
 
         # Check availability
         is_available = blueprint.is_available_globally()
-        required_plugin = blueprint.deploy_plugin if not is_available else None
+        required_plugins = blueprint.deploy_plugins if not is_available else []
 
         # Check permissions
         can_manage = has_system_role(request.user, ['admin', 'operator'])
@@ -288,7 +289,7 @@ class BlueprintDetailView(LoginRequiredMixin, View):
             'show_prereleases': show_prereleases,
             'prerelease_count': prerelease_count,
             'is_available': is_available,
-            'required_plugin': required_plugin,
+            'required_plugins': required_plugins,
             'can_manage': can_manage,
         })
 

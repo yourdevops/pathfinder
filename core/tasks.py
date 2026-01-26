@@ -169,13 +169,14 @@ def sync_blueprint(blueprint_id: int) -> dict:
         blueprint.tags = manifest.get('tags', [])
         blueprint.ci_plugin = manifest.get('ci', {}).get('type', '')
 
-        # Get deploy plugin from required_plugins or type
+        # Get deploy plugins from required_plugins or fallback to type
         deploy_config = manifest.get('deploy', {})
         required_plugins = deploy_config.get('required_plugins', [])
         if required_plugins:
-            blueprint.deploy_plugin = required_plugins[0]
+            blueprint.deploy_plugins = required_plugins  # Store full list
         else:
-            blueprint.deploy_plugin = deploy_config.get('type', '')
+            deploy_type = deploy_config.get('type', '')
+            blueprint.deploy_plugins = [deploy_type] if deploy_type else []
 
         blueprint.manifest = manifest
 
