@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 4 of 7 (Blueprints)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-26 - Completed 04-01-PLAN.md (Blueprint Models)
+Last activity: 2026-01-26 - Completed 04-02-PLAN.md (Blueprint Views)
 
-Progress: [====================------------] 62%
+Progress: [======================-----------] 65%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 21
+- Total plans completed: 22
 - Average duration: 4 min
-- Total execution time: 1.45 hours
+- Total execution time: 1.52 hours
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: [====================------------] 62%
 | 02-core-domain | 4 | 20 min | 5 min |
 | 03-integrations | 6 | 23 min | 4 min |
 | 03.1-unified-sidebar | 3 | 9 min | 3 min |
-| 04-blueprints | 1 | 3 min | 3 min |
+| 04-blueprints | 2 | 7 min | 3.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-06 (5 min), 03.1-01 (3 min), 03.1-03 (2 min), 03.1-02 (4 min), 04-01 (3 min)
+- Last 5 plans: 03.1-01 (3 min), 03.1-03 (2 min), 03.1-02 (4 min), 04-01 (3 min), 04-02 (4 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -89,6 +89,9 @@ Recent decisions affecting current work:
 | 04-01 | GitPython for SCM abstraction (not GitHub API) | Supports any Git server (GitHub, GitLab, Bitbucket, self-hosted) |
 | 04-01 | Sort key format for versions | {major:05d}.{minor:05d}.{patch:05d}.{prerelease or 'zzzz'} |
 | 04-01 | Manifest file names | Primary: ssp-template.yaml, fallback: devssp-template.yaml |
+| 04-02 | SCM connection dropdown for private repos | "None" option for public repos, GitHub connections for private |
+| 04-02 | HTMX live preview validates manifest | Registration blocked until valid manifest previewed |
+| 04-02 | Redirect to detail after registration | Per CONTEXT.md decision, not to list page |
 
 ### Roadmap Evolution
 
@@ -100,8 +103,8 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 4 Plan 01 complete - Blueprint models and sync task ready
-- Ready for Plan 02 (Blueprint views and registration UI)
+- Phase 4 Plan 02 complete - Blueprint views and templates ready
+- Ready for Plan 03 (Blueprint testing and polish)
 
 ### Quick Tasks Completed
 
@@ -124,5 +127,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed 04-01-PLAN.md - Blueprint Models (Plan 01 complete)
+Stopped at: Completed 04-02-PLAN.md - Blueprint Views (Plan 02 complete)
 Resume file: None
