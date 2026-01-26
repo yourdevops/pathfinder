@@ -114,6 +114,7 @@ projects_patterns = [
     path('<dns:project_name>/members/<dns:group_name>/remove/', RemoveMemberView.as_view(), name='remove_member'),
     # Project-level env vars
     path('<dns:project_name>/env-vars/', ProjectEnvVarModalView.as_view(), name='project_env_var_modal'),
+    path('<dns:project_name>/env-vars/<str:key>/edit/', ProjectEnvVarModalView.as_view(), name='project_env_var_edit'),
     path('<dns:project_name>/env-vars/save/', ProjectEnvVarSaveView.as_view(), name='project_env_var_save'),
     path('<dns:project_name>/env-vars/<str:key>/delete/', ProjectEnvVarDeleteView.as_view(), name='project_env_var_delete'),
     # Project connections

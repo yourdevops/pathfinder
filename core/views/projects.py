@@ -305,6 +305,17 @@ class ProjectEnvVarModalView(LoginRequiredMixin, ProjectOwnerMixin, TemplateView
         context['target'] = 'project'
         context['action_url'] = reverse('projects:project_env_var_save',
                                         kwargs={'project_name': self.project.name})
+        # Check if editing existing variable
+        key = self.kwargs.get('key')
+        if key:
+            context['editing'] = True
+            context['edit_key'] = key
+            # Find existing variable
+            for var in (self.project.env_vars or []):
+                if var['key'] == key:
+                    context['edit_value'] = var.get('value', '')
+                    context['edit_lock'] = var.get('lock', False)
+                    break
         return context
 
 
