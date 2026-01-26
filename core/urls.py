@@ -8,7 +8,7 @@ from .views import (
     GroupDeleteView, GroupAddMemberView, GroupRemoveMemberView,
     AuditLogView,
     BlueprintsListView, BlueprintDetailView, BlueprintRegisterView,
-    BlueprintPreviewView, BlueprintSyncView,
+    BlueprintPreviewView, BlueprintSyncView, BlueprintSyncStatusView,
     ServicesPlaceholderView, ResourcesPlaceholderView,
     ConnectionListView, ConnectionDetailView, ConnectionTestView,
     ConnectionDeleteView, ConnectionConfigUpdateView, ConnectionCreateDispatchView, PluginListView,
@@ -71,6 +71,7 @@ blueprints_patterns = [
     path('preview/', BlueprintPreviewView.as_view(), name='preview'),
     path('<uuid:uuid>/', BlueprintDetailView.as_view(), name='detail'),
     path('<uuid:uuid>/sync/', BlueprintSyncView.as_view(), name='sync'),
+    path('<uuid:uuid>/sync-status/', BlueprintSyncStatusView.as_view(), name='sync_status'),
 ]
 
 # Services placeholder URLs (to be replaced in Phase 5)

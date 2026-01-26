@@ -316,5 +316,18 @@ class BlueprintSyncView(OperatorRequiredMixin, View):
         return redirect('blueprints:detail', uuid=blueprint.uuid)
 
 
+class BlueprintSyncStatusView(LoginRequiredMixin, View):
+    """Return sync status partial for HTMX polling."""
+
+    def get(self, request, uuid):
+        blueprint = get_object_or_404(Blueprint, uuid=uuid)
+
+        html = render_to_string('core/blueprints/_sync_status.html', {
+            'blueprint': blueprint,
+            'can_manage': has_system_role(request.user, ['admin', 'operator']),
+        }, request=request)
+        return HttpResponse(html)
+
+
 # Alias for backwards compatibility with URL patterns
 BlueprintsListView = BlueprintListView
