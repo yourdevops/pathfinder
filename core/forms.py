@@ -274,11 +274,11 @@ class GroupCreateForm(forms.Form):
         name = self.cleaned_data.get('name', '').lower()
         if not re.match(r'^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$', name):
             raise forms.ValidationError(
-                'Name must be DNS-compatible: lowercase letters, numbers, and hyphens. '
-                'Must start and end with a letter or number.'
+                'Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. '
+                'Max 63 characters, no leading/trailing hyphens.'
             )
         if Group.objects.filter(name=name).exists():
-            raise forms.ValidationError('A group with this name already exists.')
+            raise forms.ValidationError("A group named '{}' already exists. Choose a different name.".format(name))
         return name
 
 
@@ -349,13 +349,14 @@ class ProjectCreateForm(forms.ModelForm):
 
     def clean_name(self):
         name = self.cleaned_data['name'].lower()
-        # DNS-compatible validation
-        if not name or len(name) > 20:
-            raise forms.ValidationError('Name must be 1-20 characters')
+        # DNS-compatible validation (RFC 1123 label format)
         if not re.match(r'^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$', name):
-            raise forms.ValidationError('Must be lowercase alphanumeric with optional hyphens (not at start/end)')
+            raise forms.ValidationError(
+                'Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. '
+                'Max 63 characters, no leading/trailing hyphens.'
+            )
         if Project.objects.filter(name=name).exists():
-            raise forms.ValidationError('A project with this name already exists.')
+            raise forms.ValidationError("A project named '{}' already exists. Choose a different name.".format(name))
         return name
 
 
@@ -411,10 +412,12 @@ class EnvironmentForm(forms.ModelForm):
 
     def clean_name(self):
         name = self.cleaned_data['name'].lower()
-        if not name or len(name) > 20:
-            raise forms.ValidationError('Name must be 1-20 characters')
+        # DNS-compatible validation (RFC 1123 label format)
         if not re.match(r'^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$', name):
-            raise forms.ValidationError('Must be lowercase alphanumeric with optional hyphens (not at start/end)')
+            raise forms.ValidationError(
+                'Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. '
+                'Max 63 characters, no leading/trailing hyphens.'
+            )
         return name
 
 
