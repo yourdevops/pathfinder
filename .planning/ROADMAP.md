@@ -15,6 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Foundation & Security** - User authentication, RBAC, groups, audit logging, base UI
 - [x] **Phase 2: Core Domain** - Projects with membership, Environments with deploy targets
 - [x] **Phase 3: Integrations** - Plugin framework, GitHub and Docker connections
+- [ ] **Phase 3.1: Unified Sidebar Navigation** (INSERTED) - Expandable sidebar with Home, Service Catalog, Blueprints, Integrations, Settings
 - [ ] **Phase 4: Blueprints** - Template registration, versioning, availability filtering
 - [ ] **Phase 5: Services** - Creation wizard, repository scaffolding, service management
 - [ ] **Phase 6: Builds** - Webhook ingestion, build tracking, service activation
@@ -82,6 +83,26 @@ Plans:
 - [x] 03-04-PLAN.md - Connections management UI (list, detail, health status)
 - [x] 03-05-PLAN.md - Background health checks with django-tasks
 - [x] 03-06-PLAN.md - Connection attachments to projects and environments
+
+### Phase 3.1: Unified Sidebar Navigation (INSERTED)
+**Goal**: Developers see a consistent, expandable sidebar with all platform sections; context-switching maintains navigation state
+**Depends on**: Phase 3
+**Requirements**: UIUX-01, UIUX-02 (navigation restructure)
+**Success Criteria** (what must be TRUE):
+  1. Home page shows dashboard with welcome message, "+ Create Service" button, and recent activity feed
+  2. Service Catalog section expands to show Services and Projects links
+  3. Blueprints section expands to show Services (Phase 4 placeholder) and Resources (placeholder)
+  4. Integrations section shows Connections and Plugins (existing functionality)
+  5. Settings section expands to show General (placeholder), Users & Groups, Audit Log, Notifications (placeholder)
+  6. All top-level sections use consistent expandable pattern with remembered state
+  7. Project/Service context-switching replaces sidebar with context-specific navigation
+  8. Breadcrumbs show context-only format (e.g., "MyApp > Services > api-gateway")
+**Plans**: 3 plans
+
+Plans:
+- [ ] 03.1-01-PLAN.md — Expandable sidebar sections with Alpine.js Persist
+- [ ] 03.1-02-PLAN.md — Home dashboard with stats and activity feed
+- [ ] 03.1-03-PLAN.md — Project sidebar refinements (Details first, back button)
 
 ### Phase 4: Blueprints
 **Goal**: Platform engineers can publish service templates; developers can browse available blueprints
@@ -158,6 +179,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Foundation & Security | 6/6 | Complete | 2026-01-22 |
 | 2. Core Domain | 4/4 | Complete | 2026-01-22 |
 | 3. Integrations | 6/6 | Complete | 2026-01-23 |
+| 3.1 Unified Sidebar Navigation (INSERTED) | 0/3 | Not started | - |
 | 4. Blueprints | 0/2 | Not started | - |
 | 5. Services | 0/3 | Not started | - |
 | 6. Builds | 0/2 | Not started | - |
@@ -165,4 +187,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-23 (Phase 3 complete)*
+*Last updated: 2026-01-26 (Phase 3.1 planned)*
