@@ -9,7 +9,7 @@ from django.views.decorators.vary import vary_on_headers
 from django.contrib import messages
 from django_htmx.http import HttpResponseClientRedirect
 
-from core.models import Project, Environment, ProjectMembership, Group, ProjectConnection, EnvironmentConnection
+from core.models import Project, Environment, ProjectMembership, Group, ProjectConnection, EnvironmentConnection, Service
 from core.forms import ProjectCreateForm, ProjectUpdateForm, EnvironmentForm, AddProjectMemberForm, AttachConnectionForm
 from core.decorators import AdminRequiredMixin
 from core.permissions import ProjectViewerMixin, ProjectContributorMixin, ProjectOwnerMixin, can_access_project
@@ -84,7 +84,11 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
         context['active_tab'] = tab
 
         # Tab-specific data
-        if tab == 'environments':
+        if tab == 'services':
+            context['services'] = self.project.services.select_related(
+                'blueprint', 'blueprint_version'
+            ).order_by('name')
+        elif tab == 'environments':
             context['environments'] = self.project.environments.filter(
                 status='active'
             ).order_by('order', 'name')
@@ -96,7 +100,6 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
             context['owners'] = [m for m in memberships if m.project_role == 'owner']
             context['contributors'] = [m for m in memberships if m.project_role == 'contributor']
             context['viewers'] = [m for m in memberships if m.project_role == 'viewer']
-        # services tab will be empty until Phase 5
 
         return context
 

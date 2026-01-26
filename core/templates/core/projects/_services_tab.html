@@ -1,14 +1,87 @@
 <!-- Services Tab Content -->
-<div class="bg-dark-surface border border-dark-border rounded-lg p-12 text-center">
-    <svg class="w-12 h-12 mx-auto text-dark-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-    </svg>
-    <h2 class="text-xl font-semibold text-dark-text mb-2">No services yet</h2>
-    <p class="text-dark-muted mb-6">Services will be available in a future release.<br>Use the Blueprints catalog to deploy services to this project.</p>
-    <a href="{% url 'blueprints:list' %}" class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors inline-flex items-center gap-2">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-dark-text">Services</h1>
+        {% if user_project_role == 'contributor' or user_project_role == 'owner' %}
+        <a href="{% url 'projects:service_create' project_name=project.name %}"
+           class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors inline-flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create Service
+        </a>
+        {% endif %}
+    </div>
+
+    {% if services %}
+    <!-- Services Table -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-dark-bg border-b border-dark-border">
+                <tr>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-dark-muted">Name</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-dark-muted">Status</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-dark-muted">Blueprint</th>
+                    <th class="px-4 py-3 text-left text-sm font-medium text-dark-muted">Last Activity</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-dark-border">
+                {% for service in services %}
+                <tr class="hover:bg-dark-border/30 cursor-pointer"
+                    onclick="window.location='{% url 'projects:service_detail' project_name=project.name service_name=service.name %}'">
+                    <td class="px-4 py-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-dark-text font-medium">{{ service.name }}</span>
+                            {% if service.scaffold_status == 'running' %}
+                            <span class="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-300 rounded animate-pulse">
+                                Scaffolding...
+                            </span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-1 text-xs rounded
+                            {% if service.status == 'draft' %}bg-gray-500/20 text-gray-300
+                            {% elif service.status == 'active' %}bg-green-500/20 text-green-300
+                            {% elif service.status == 'error' %}bg-red-500/20 text-red-300
+                            {% endif %}">
+                            {{ service.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-dark-muted">
+                        {{ service.blueprint.name }}
+                        <span class="text-dark-muted/70">{{ service.blueprint_version.tag_name }}</span>
+                    </td>
+                    <td class="px-4 py-3 text-dark-muted text-sm">
+                        {{ service.updated_at|timesince }} ago
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg p-12 text-center">
+        <svg class="w-12 h-12 mx-auto text-dark-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
         </svg>
-        Browse Blueprints
-    </a>
+        <h2 class="text-xl font-semibold text-dark-text mb-2">No services yet</h2>
+        <p class="text-dark-muted mb-6">Create your first service using a blueprint template.</p>
+        {% if user_project_role == 'contributor' or user_project_role == 'owner' %}
+        <a href="{% url 'projects:service_create' project_name=project.name %}"
+           class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors inline-flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create Service
+        </a>
+        {% else %}
+        <a href="{% url 'blueprints:list' %}"
+           class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors inline-flex items-center gap-2">
+            Browse Blueprints
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
