@@ -127,9 +127,10 @@ None yet.
 | 012 | Add missing GitHub plugin functionality (PAT auth, list repos) | 2026-01-23 | 30993a6 | [012-add-missing-github-plugin-functionality](./quick/012-add-missing-github-plugin-functionality/) |
 | 013 | Remove list repos page and fix auth wizard | 2026-01-23 | 1f50cda | [013-remove-list-repos-page-and-fix-auth-wiza](./quick/013-remove-list-repos-page-and-fix-auth-wiza/) |
 | 014 | Create example python-helloworld blueprint | 2026-01-26 | 329ccf0 | [014-create-example-helloworld-blueprint-with](./quick/014-create-example-helloworld-blueprint-with/) |
+| 015 | Support multiple deploy plugins in blueprints | 2026-01-26 | 9c0fe11 | [015-support-multiple-deploy-plugins-in-bluep](./quick/015-support-multiple-deploy-plugins-in-bluep/) |
 
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed quick task 014 - Python Helloworld Blueprint
+Stopped at: Completed quick task 015 - Multiple Deploy Plugins
 Resume file: None
