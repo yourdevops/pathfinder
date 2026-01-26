@@ -112,7 +112,7 @@ class ProjectUpdateView(LoginRequiredMixin, ProjectOwnerMixin, UpdateView):
         return self.project
 
     def get_success_url(self):
-        return reverse('projects:detail', kwargs={'project_uuid': self.project.uuid}) + '?tab=settings'
+        return reverse('projects:detail', kwargs={'project_name': self.project.name}) + '?tab=settings'
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -149,7 +149,7 @@ class EnvironmentCreateView(LoginRequiredMixin, ProjectContributorMixin, Templat
                 env.is_default = True
             env.save()
             messages.success(request, f'Environment "{env.name}" created.')
-            return redirect('projects:detail', project_uuid=self.project.uuid)
+            return redirect('projects:detail', project_name=self.project.name)
         return self.render_to_response(self.get_context_data(form=form))
 
 
@@ -160,7 +160,7 @@ class EnvironmentDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         env = get_object_or_404(
-            Environment, uuid=kwargs.get('env_uuid'), project=self.project
+            Environment, name=kwargs.get('env_name'), project=self.project
         )
         context['environment'] = env
         context['form'] = EnvironmentForm(instance=env)
@@ -205,7 +205,7 @@ class EnvironmentUpdateView(LoginRequiredMixin, ProjectContributorMixin, View):
 
     def post(self, request, *args, **kwargs):
         env = get_object_or_404(
-            Environment, uuid=kwargs.get('env_uuid'), project=self.project
+            Environment, name=kwargs.get('env_name'), project=self.project
         )
         form = EnvironmentForm(request.POST, instance=env)
         if form.is_valid():
@@ -218,7 +218,7 @@ class EnvironmentUpdateView(LoginRequiredMixin, ProjectContributorMixin, View):
             form.save()
             messages.success(request, f'Environment "{env.name}" updated.')
             return redirect('projects:environment_detail',
-                          project_uuid=self.project.uuid, env_uuid=env.uuid)
+                          project_name=self.project.name, env_name=env.name)
         # Re-render with errors
         return render(request, 'core/projects/environment_detail.html', {
             'project': self.project,
@@ -233,7 +233,7 @@ class EnvironmentDeleteView(LoginRequiredMixin, ProjectOwnerMixin, View):
 
     def post(self, request, *args, **kwargs):
         env = get_object_or_404(
-            Environment, uuid=kwargs.get('env_uuid'), project=self.project
+            Environment, name=kwargs.get('env_name'), project=self.project
         )
         env_name = env.name
         was_default = env.is_default
@@ -247,7 +247,7 @@ class EnvironmentDeleteView(LoginRequiredMixin, ProjectOwnerMixin, View):
                 next_env.save()
 
         messages.success(request, f'Environment "{env_name}" deleted.')
-        return redirect('projects:detail', project_uuid=self.project.uuid)
+        return redirect('projects:detail', project_name=self.project.name)
 
 
 class AddMemberModalView(LoginRequiredMixin, ProjectOwnerMixin, TemplateView):
@@ -275,7 +275,7 @@ class AddMemberModalView(LoginRequiredMixin, ProjectOwnerMixin, TemplateView):
             )
             messages.success(request, f'Group "{form.cleaned_data["group"].name}" added to project.')
             response = HttpResponse(status=204)
-            response['HX-Redirect'] = reverse('projects:detail', kwargs={'project_uuid': self.project.uuid}) + '?tab=members'
+            response['HX-Redirect'] = reverse('projects:detail', kwargs={'project_name': self.project.name}) + '?tab=members'
             return response
         return self.render_to_response(self.get_context_data(form=form))
 
@@ -284,13 +284,13 @@ class RemoveMemberView(LoginRequiredMixin, ProjectOwnerMixin, View):
     """Remove a group from project."""
 
     def post(self, request, *args, **kwargs):
-        group = get_object_or_404(Group, uuid=kwargs.get('group_uuid'))
+        group = get_object_or_404(Group, name=kwargs.get('group_name'))
         membership = get_object_or_404(
             ProjectMembership, project=self.project, group=group
         )
         membership.delete()
         messages.success(request, f'Group "{group.name}" removed from project.')
-        return redirect('projects:detail', project_uuid=self.project.uuid)
+        return redirect('projects:detail', project_name=self.project.name)
 
 
 # ============================================================================
@@ -305,7 +305,7 @@ class ProjectEnvVarModalView(LoginRequiredMixin, ProjectOwnerMixin, TemplateView
         context = super().get_context_data(**kwargs)
         context['target'] = 'project'
         context['action_url'] = reverse('projects:project_env_var_save',
-                                        kwargs={'project_uuid': self.project.uuid})
+                                        kwargs={'project_name': self.project.name})
         return context
 
 
@@ -321,11 +321,11 @@ class ProjectEnvVarSaveView(LoginRequiredMixin, ProjectOwnerMixin, View):
         # Validate key
         if not key:
             messages.error(request, 'Key is required.')
-            return redirect('projects:detail', project_uuid=self.project.uuid)
+            return redirect('projects:detail', project_name=self.project.name)
 
         if not re.match(r'^[A-Z][A-Z0-9_]*$', key):
             messages.error(request, 'Key must start with a letter and contain only uppercase letters, numbers, and underscores.')
-            return redirect('projects:detail', project_uuid=self.project.uuid)
+            return redirect('projects:detail', project_name=self.project.name)
 
         # Update or add env var
         env_vars = list(self.project.env_vars or [])
@@ -347,7 +347,7 @@ class ProjectEnvVarSaveView(LoginRequiredMixin, ProjectOwnerMixin, View):
         # Return to settings tab
         response = HttpResponse(status=204)
         response['HX-Redirect'] = reverse('projects:detail',
-                                          kwargs={'project_uuid': self.project.uuid}) + '?tab=settings'
+                                          kwargs={'project_name': self.project.name}) + '?tab=settings'
         return response
 
 
@@ -373,13 +373,13 @@ class EnvVarModalView(LoginRequiredMixin, ProjectContributorMixin, TemplateView)
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         env = get_object_or_404(
-            Environment, uuid=kwargs.get('env_uuid'), project=self.project
+            Environment, name=kwargs.get('env_name'), project=self.project
         )
         context['environment'] = env
         context['target'] = 'environment'
         context['action_url'] = reverse('projects:env_var_save',
-                                        kwargs={'project_uuid': self.project.uuid,
-                                               'env_uuid': env.uuid})
+                                        kwargs={'project_name': self.project.name,
+                                               'env_name': env.name})
         # Pass locked keys from project for validation hint
         context['locked_keys'] = [v['key'] for v in (self.project.env_vars or [])
                                   if v.get('lock')]
@@ -392,7 +392,7 @@ class EnvVarSaveView(LoginRequiredMixin, ProjectContributorMixin, View):
     def post(self, request, *args, **kwargs):
         import re
         env = get_object_or_404(
-            Environment, uuid=kwargs.get('env_uuid'), project=self.project
+            Environment, name=kwargs.get('env_name'), project=self.project
         )
 
         key = request.POST.get('key', '').strip().upper()
@@ -402,12 +402,12 @@ class EnvVarSaveView(LoginRequiredMixin, ProjectContributorMixin, View):
         if not key:
             messages.error(request, 'Key is required.')
             return redirect('projects:environment_detail',
-                          project_uuid=self.project.uuid, env_uuid=env.uuid)
+                          project_name=self.project.name, env_name=env.name)
 
         if not re.match(r'^[A-Z][A-Z0-9_]*$', key):
             messages.error(request, 'Key must start with a letter and contain only uppercase letters, numbers, and underscores.')
             return redirect('projects:environment_detail',
-                          project_uuid=self.project.uuid, env_uuid=env.uuid)
+                          project_name=self.project.name, env_name=env.name)
 
         # Check if key is locked at project level
         locked_keys = [v['key'] for v in (self.project.env_vars or [])
@@ -415,7 +415,7 @@ class EnvVarSaveView(LoginRequiredMixin, ProjectContributorMixin, View):
         if key in locked_keys:
             messages.error(request, f'Variable "{key}" is locked at project level and cannot be overridden.')
             return redirect('projects:environment_detail',
-                          project_uuid=self.project.uuid, env_uuid=env.uuid)
+                          project_name=self.project.name, env_name=env.name)
 
         # Update or add env var
         env_vars = list(env.env_vars or [])
@@ -436,8 +436,8 @@ class EnvVarSaveView(LoginRequiredMixin, ProjectContributorMixin, View):
         # Return to environment detail
         response = HttpResponse(status=204)
         response['HX-Redirect'] = reverse('projects:environment_detail',
-                                          kwargs={'project_uuid': self.project.uuid,
-                                                 'env_uuid': env.uuid})
+                                          kwargs={'project_name': self.project.name,
+                                                 'env_name': env.name})
         return response
 
 
@@ -446,7 +446,7 @@ class EnvVarDeleteView(LoginRequiredMixin, ProjectContributorMixin, View):
 
     def delete(self, request, *args, **kwargs):
         env = get_object_or_404(
-            Environment, uuid=kwargs.get('env_uuid'), project=self.project
+            Environment, name=kwargs.get('env_name'), project=self.project
         )
         key = kwargs.get('key')
         env_vars = [v for v in (env.env_vars or []) if v['key'] != key]
@@ -494,7 +494,7 @@ class ProjectAttachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, View):
                 'user_project_role': self.user_project_role,
             })
 
-        return redirect('projects:detail', project_uuid=self.project.uuid)
+        return redirect('projects:detail', project_name=self.project.name)
 
 
 class ProjectDetachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, View):
@@ -517,14 +517,14 @@ class ProjectDetachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, View):
                 'user_project_role': self.user_project_role,
             })
 
-        return redirect('projects:detail', project_uuid=self.project.uuid)
+        return redirect('projects:detail', project_name=self.project.name)
 
 
 class EnvironmentAttachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, View):
     """Attach a deploy connection to an environment."""
 
     def get(self, request, *args, **kwargs):
-        environment = get_object_or_404(Environment, uuid=kwargs.get('env_uuid'), project=self.project)
+        environment = get_object_or_404(Environment, name=kwargs.get('env_name'), project=self.project)
         existing_ids = environment.connections.values_list('connection_id', flat=True)
         form = AttachConnectionForm(category='deploy', exclude_ids=list(existing_ids))
 
@@ -537,7 +537,7 @@ class EnvironmentAttachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, Vie
         })
 
     def post(self, request, *args, **kwargs):
-        environment = get_object_or_404(Environment, uuid=kwargs.get('env_uuid'), project=self.project)
+        environment = get_object_or_404(Environment, name=kwargs.get('env_name'), project=self.project)
         existing_ids = environment.connections.values_list('connection_id', flat=True)
         form = AttachConnectionForm(request.POST, category='deploy', exclude_ids=list(existing_ids))
 
@@ -558,14 +558,14 @@ class EnvironmentAttachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, Vie
                 'user_project_role': self.user_project_role,
             })
 
-        return redirect('projects:environment_detail', project_uuid=self.project.uuid, env_uuid=environment.uuid)
+        return redirect('projects:environment_detail', project_name=self.project.name, env_name=environment.name)
 
 
 class EnvironmentDetachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, View):
     """Detach a connection from an environment."""
 
     def post(self, request, *args, **kwargs):
-        environment = get_object_or_404(Environment, uuid=kwargs.get('env_uuid'), project=self.project)
+        environment = get_object_or_404(Environment, name=kwargs.get('env_name'), project=self.project)
         connection_id = kwargs.get('connection_id')
         attachment = get_object_or_404(EnvironmentConnection, environment=environment, connection_id=connection_id)
 
@@ -580,4 +580,4 @@ class EnvironmentDetachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, Vie
                 'user_project_role': self.user_project_role,
             })
 
-        return redirect('projects:environment_detail', project_uuid=self.project.uuid, env_uuid=environment.uuid)
+        return redirect('projects:environment_detail', project_name=self.project.name, env_name=environment.name)
