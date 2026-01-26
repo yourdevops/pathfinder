@@ -15,8 +15,12 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, register_converter
 from django.views.generic import RedirectView
+
+from core.converters import DnsLabelConverter
+
+register_converter(DnsLabelConverter, 'dns')
 
 from core.urls import (
     setup_patterns, auth_patterns, dashboard_patterns, users_patterns,

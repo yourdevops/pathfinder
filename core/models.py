@@ -3,6 +3,8 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from core.validators import dns_label_validator
+
 
 class User(AbstractUser):
     """Custom user model with UUID for external references."""
@@ -31,7 +33,12 @@ class Group(models.Model):
     """Custom group model with SystemRole support."""
     id = models.BigAutoField(primary_key=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
-    name = models.CharField(max_length=63, unique=True)  # DNS-compatible
+    name = models.CharField(
+        max_length=63,
+        unique=True,
+        validators=[dns_label_validator],
+        help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.'
+    )
     description = models.TextField(blank=True)
     source = models.CharField(
         max_length=20,
@@ -83,7 +90,12 @@ class Project(models.Model):
 
     id = models.BigAutoField(primary_key=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
-    name = models.CharField(max_length=20, unique=True)  # DNS-compatible
+    name = models.CharField(
+        max_length=63,
+        unique=True,
+        validators=[dns_label_validator],
+        help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.'
+    )
     description = models.TextField(blank=True)
     env_vars = models.JSONField(default=list)  # [{"key": "X", "value": "Y", "lock": false}]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
@@ -109,7 +121,11 @@ class Environment(models.Model):
     id = models.BigAutoField(primary_key=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='environments')
-    name = models.CharField(max_length=20)  # DNS-compatible, unique within project
+    name = models.CharField(
+        max_length=63,
+        validators=[dns_label_validator],
+        help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.'
+    )  # unique within project via unique_together
     description = models.TextField(blank=True)
     env_vars = models.JSONField(default=list)  # override/extend project env_vars
     is_production = models.BooleanField(default=False)
@@ -200,7 +216,12 @@ class IntegrationConnection(models.Model):
 
     id = models.BigAutoField(primary_key=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
-    name = models.CharField(max_length=63, unique=True)  # DNS-compatible
+    name = models.CharField(
+        max_length=63,
+        unique=True,
+        validators=[dns_label_validator],
+        help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.'
+    )
     description = models.TextField(blank=True)
     plugin_name = models.CharField(max_length=63)  # References plugin by name
 
@@ -364,7 +385,12 @@ class Blueprint(models.Model):
     default_branch = models.CharField(max_length=100, default='main')
 
     # Synced from manifest
-    name = models.CharField(max_length=100, blank=True)
+    name = models.CharField(
+        max_length=63,
+        blank=True,
+        validators=[dns_label_validator],
+        help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.'
+    )
     description = models.TextField(blank=True)
     tags = models.JSONField(default=list)  # e.g., ['python', 'kubernetes']
     ci_plugin = models.CharField(max_length=63, blank=True)  # from manifest ci.type
