@@ -7,7 +7,8 @@ from .views import (
     GroupListView, GroupDetailView, GroupCreateView, GroupEditView,
     GroupDeleteView, GroupAddMemberView, GroupRemoveMemberView,
     AuditLogView,
-    BlueprintsListView,
+    BlueprintsListView, BlueprintDetailView, BlueprintRegisterView,
+    BlueprintPreviewView, BlueprintSyncView,
     ServicesPlaceholderView, ResourcesPlaceholderView,
     ConnectionListView, ConnectionDetailView, ConnectionTestView,
     ConnectionDeleteView, ConnectionConfigUpdateView, ConnectionCreateDispatchView, PluginListView,
@@ -63,9 +64,13 @@ audit_patterns = [
     path('', AuditLogView.as_view(), name='list'),
 ]
 
-# Placeholder URLs (blueprints to be replaced in Phase 4)
+# Blueprint URLs
 blueprints_patterns = [
     path('', BlueprintsListView.as_view(), name='list'),
+    path('register/', BlueprintRegisterView.as_view(), name='register'),
+    path('preview/', BlueprintPreviewView.as_view(), name='preview'),
+    path('<uuid:uuid>/', BlueprintDetailView.as_view(), name='detail'),
+    path('<uuid:uuid>/sync/', BlueprintSyncView.as_view(), name='sync'),
 ]
 
 # Services placeholder URLs (to be replaced in Phase 5)
