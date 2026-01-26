@@ -135,12 +135,13 @@ Plans:
   6. User URLs keep UUID (privacy): `/users/<uuid>/edit/`
   7. All name fields have proper slug generation and uniqueness constraints
   8. Existing data migrated to have valid slugs
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
 - [ ] 04.1-01-PLAN.md — DNS label validator, URL path converter, model validators
 - [ ] 04.1-02-PLAN.md — Project and Environment URL refactoring
-- [ ] 04.1-03-PLAN.md — Group, Blueprint, and Connection URL refactoring
+- [ ] 04.1-03-PLAN.md — Group and Blueprint URL refactoring
+- [ ] 04.1-04-PLAN.md — Connection URL refactoring and plugin redirects
 
 ### Phase 5: Services
 **Goal**: Developers can create services via wizard and see repositories scaffolded from blueprints
@@ -203,11 +204,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 6 -> 7
 | 3. Integrations | 6/6 | Complete | 2026-01-23 |
 | 3.1 Unified Sidebar Navigation (INSERTED) | 3/3 | Complete | 2026-01-26 |
 | 4. Blueprints | 3/3 | Complete | 2026-01-26 |
-| 4.1 Replace UUID URLs with Slugs (INSERTED) | 0/3 | Not started | - |
+| 4.1 Replace UUID URLs with Slugs (INSERTED) | 0/4 | Not started | - |
 | 5. Services | 0/3 | Not started | - |
 | 6. Builds | 0/2 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-26 (Phase 4.1 planned)*
+*Last updated: 2026-01-26 (Phase 4.1 plans revised - split Plan 03 into 03+04)*
