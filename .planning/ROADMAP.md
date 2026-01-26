@@ -150,15 +150,16 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Contributor can start service creation wizard; Page 1 selects project, blueprint, and service name
   2. Wizard Page 2 configures SCM: select connection, choose new/existing repo, configure branch
-  3. Wizard Page 3 configures container: port, resources, health check endpoint
+  3. Wizard Page 3 configures service-level environment variables (port/resources deferred)
   4. Wizard Page 4 shows review summary; clicking Create scaffolds repository from blueprint
-  5. Service detail page shows tabs: Overview, Builds, Deployments with HTMX dynamic updates
-**Plans**: TBD
+  5. Service detail page shows tabs: Details, Builds, Environments with HTMX dynamic updates
+**Plans**: 4 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
-- [ ] 05-03: TBD
+- [ ] 05-01-PLAN.md — Service model with handler property and migrations
+- [ ] 05-02-PLAN.md — Service creation wizard (SessionWizardView, 4 steps)
+- [ ] 05-03-PLAN.md — Repository scaffolding background task
+- [ ] 05-04-PLAN.md — Service list and detail pages with sidebar
 
 ### Phase 6: Builds
 **Goal**: GitHub Actions can report build status; services transition from draft to active on first successful build
@@ -205,7 +206,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 6 -> 7
 | 3.1 Unified Sidebar Navigation (INSERTED) | 3/3 | Complete | 2026-01-26 |
 | 4. Blueprints | 3/3 | Complete | 2026-01-26 |
 | 4.1 Replace UUID URLs with Slugs (INSERTED) | 4/4 | Complete | 2026-01-26 |
-| 5. Services | 0/3 | Not started | - |
+| 5. Services | 0/4 | Not started | - |
 | 6. Builds | 0/2 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
