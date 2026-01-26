@@ -368,7 +368,7 @@ class Blueprint(models.Model):
     description = models.TextField(blank=True)
     tags = models.JSONField(default=list)  # e.g., ['python', 'kubernetes']
     ci_plugin = models.CharField(max_length=63, blank=True)  # from manifest ci.type
-    deploy_plugin = models.CharField(max_length=63, blank=True)  # from manifest deploy.required_plugins[0] or deploy.type
+    deploy_plugins = models.JSONField(default=list)  # List of required deploy plugin names
     manifest = models.JSONField(default=dict)  # Full manifest stored for reference
 
     # Sync status
@@ -412,31 +412,38 @@ class Blueprint(models.Model):
         Check if blueprint can be used in a project.
 
         Returns True if any environment in project has a connection
-        matching the blueprint's deploy_plugin.
+        matching ANY of the blueprint's deploy_plugins.
         """
-        if not self.deploy_plugin:
+        if not self.deploy_plugins:
             return True  # No deploy plugin requirement
 
-        # Check environment connections
-        return EnvironmentConnection.objects.filter(
-            environment__project=project,
-            connection__plugin_name=self.deploy_plugin,
-            connection__status='active'
-        ).exists()
+        # Check if ANY of the deploy_plugins has an active environment connection
+        for plugin in self.deploy_plugins:
+            if EnvironmentConnection.objects.filter(
+                environment__project=project,
+                connection__plugin_name=plugin,
+                connection__status='active'
+            ).exists():
+                return True
+        return False
 
     def is_available_globally(self):
         """
         Check if blueprint can be used with any active connection.
 
-        Returns True if any active connection matches the deploy_plugin.
+        Returns True if any active connection matches ANY of the deploy_plugins.
         """
-        if not self.deploy_plugin:
+        if not self.deploy_plugins:
             return True  # No deploy plugin requirement
 
-        return IntegrationConnection.objects.filter(
-            plugin_name=self.deploy_plugin,
-            status='active'
-        ).exists()
+        # Check if ANY of the deploy_plugins has an active connection
+        for plugin in self.deploy_plugins:
+            if IntegrationConnection.objects.filter(
+                plugin_name=plugin,
+                status='active'
+            ).exists():
+                return True
+        return False
 
 
 class BlueprintVersion(models.Model):
