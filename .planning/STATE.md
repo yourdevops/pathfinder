@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 5 of 7 (Services)
-Plan: 3 of 3 in current phase - COMPLETED
-Status: In progress
-Last activity: 2026-01-26 - Completed 05-03-PLAN.md (Repository Scaffolding)
+Plan: 3 of 3 in current phase - COMPLETED (all plans)
+Status: Phase complete
+Last activity: 2026-01-26 - Completed 05-02-PLAN.md (Service Creation Wizard)
 
-Progress: [=================================---] 93%
+Progress: [====================================] 100% (Phase 5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 29
+- Total plans completed: 30
 - Average duration: 4 min
-- Total execution time: 2.03 hours
+- Total execution time: 2.17 hours
 
 **By Phase:**
 
@@ -33,10 +33,10 @@ Progress: [=================================---] 93%
 | 03.1-unified-sidebar | 3 | 9 min | 3 min |
 | 04-blueprints | 3 | 10 min | 3.3 min |
 | 04.1-replace-uuid-urls-with-slugs | 4 | 19 min | 4.75 min |
-| 05-services | 2 | 5 min | 2.5 min |
+| 05-services | 3 | 13 min | 4.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 04.1-03 (5 min), 04.1-04 (5 min), 05-01 (1 min), 05-03 (4 min)
+- Last 5 plans: 04.1-04 (5 min), 05-01 (1 min), 05-03 (4 min), 05-02 (8 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -107,6 +107,10 @@ Recent decisions affecting current work:
 | 05-01 | PROTECT on_delete for blueprint ForeignKeys | Prevents orphan services when blueprints deleted |
 | 05-01 | Service status: draft, active, error | draft=not built, active=successful build, error=failed |
 | 05-01 | Env var merge: project first, service overrides | Locked project vars cannot be overridden at service level |
+| 05-02 | forms.py converted to forms/ package | Better organization as forms modules grow |
+| 05-02 | SessionWizardView for service creation | Multi-step state management from django-formtools |
+| 05-02 | HTMX for dynamic blueprint versions | Clean UX without page reload |
+| 05-02 | JavaScript env var editor with JSON field | Dynamic add/remove with JSON serialization |
 | 05-03 | Jinja2 for template substitution | StrictUndefined mode to catch missing variables early |
 | 05-03 | Feature branch naming: feature/{service-name} | Consistent convention for scaffolding into existing repos |
 
@@ -121,7 +125,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Repository scaffolding task ready for service wizard integration
+None - Phase 5 complete, wizard and scaffolding ready for URL wiring
 
 ### Quick Tasks Completed
 
@@ -148,5 +152,5 @@ None - Repository scaffolding task ready for service wizard integration
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed 05-03-PLAN.md (Repository Scaffolding)
+Stopped at: Completed 05-02-PLAN.md (Service Creation Wizard) - Phase 5 complete
 Resume file: None
