@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
-from .models import User, Group, GroupMembership, Project, Environment, IntegrationConnection, SiteConfiguration
+from core.models import User, Group, GroupMembership, Project, Environment, IntegrationConnection, SiteConfiguration
 
 
 class UnlockForm(forms.Form):
