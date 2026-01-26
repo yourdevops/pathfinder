@@ -5,7 +5,7 @@
 {% block content %}
 <div class="p-8">
     <div class="mb-6">
-        <a href="{% url 'groups:detail' group.uuid %}" class="text-dark-accent hover:text-dark-accent-hover">
+        <a href="{% url 'groups:detail' group_name=group.name %}" class="text-dark-accent hover:text-dark-accent-hover">
             &larr; Back to {{ group.name }}
         </a>
     </div>
@@ -55,7 +55,7 @@
                 </div>
 
                 <div class="flex justify-end space-x-3 pt-4 border-t border-dark-border">
-                    <a href="{% url 'groups:detail' group.uuid %}" class="btn-secondary">Cancel</a>
+                    <a href="{% url 'groups:detail' group_name=group.name %}" class="btn-secondary">Cancel</a>
                     <button type="submit" class="btn-primary">Save Changes</button>
                 </div>
             </form>

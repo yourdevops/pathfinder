@@ -20,8 +20,8 @@ class GroupDetailView(AdminRequiredMixin, View):
     """Display group detail with members."""
     template_name = 'core/groups/detail.html'
 
-    def get(self, request, uuid):
-        group = get_object_or_404(Group, uuid=uuid)
+    def get(self, request, group_name):
+        group = get_object_or_404(Group, name=group_name)
         members = GroupMembership.objects.filter(group=group).select_related('user')
         add_member_form = GroupAddMemberForm(group=group)
 
@@ -50,7 +50,7 @@ class GroupCreateView(AdminRequiredMixin, View):
                 source='local',
             )
             messages.success(request, f'Group "{group.name}" created successfully.')
-            return redirect('groups:detail', uuid=group.uuid)
+            return redirect('groups:detail', group_name=group.name)
 
         return render(request, self.template_name, {'form': form})
 
@@ -59,8 +59,8 @@ class GroupEditView(AdminRequiredMixin, View):
     """Edit group settings."""
     template_name = 'core/groups/edit.html'
 
-    def get(self, request, uuid):
-        group = get_object_or_404(Group, uuid=uuid)
+    def get(self, request, group_name):
+        group = get_object_or_404(Group, name=group_name)
         form = GroupEditForm(initial={
             'description': group.description,
             'status': group.status,
@@ -68,8 +68,8 @@ class GroupEditView(AdminRequiredMixin, View):
         })
         return render(request, self.template_name, {'group': group, 'form': form})
 
-    def post(self, request, uuid):
-        group = get_object_or_404(Group, uuid=uuid)
+    def post(self, request, group_name):
+        group = get_object_or_404(Group, name=group_name)
         form = GroupEditForm(request.POST)
 
         if form.is_valid():
@@ -79,7 +79,7 @@ class GroupEditView(AdminRequiredMixin, View):
             group.save()
 
             messages.success(request, f'Group "{group.name}" updated successfully.')
-            return redirect('groups:detail', uuid=group.uuid)
+            return redirect('groups:detail', group_name=group.name)
 
         return render(request, self.template_name, {'group': group, 'form': form})
 
@@ -87,8 +87,8 @@ class GroupEditView(AdminRequiredMixin, View):
 class GroupDeleteView(AdminRequiredMixin, View):
     """Delete a group."""
 
-    def post(self, request, uuid):
-        group = get_object_or_404(Group, uuid=uuid)
+    def post(self, request, group_name):
+        group = get_object_or_404(Group, name=group_name)
 
         # Prevent deletion of admins group
         if group.name == 'admins':
@@ -104,8 +104,8 @@ class GroupDeleteView(AdminRequiredMixin, View):
 class GroupAddMemberView(AdminRequiredMixin, View):
     """Add a user to a group."""
 
-    def post(self, request, uuid):
-        group = get_object_or_404(Group, uuid=uuid)
+    def post(self, request, group_name):
+        group = get_object_or_404(Group, name=group_name)
         form = GroupAddMemberForm(request.POST, group=group)
 
         if form.is_valid():
@@ -115,14 +115,14 @@ class GroupAddMemberView(AdminRequiredMixin, View):
         else:
             messages.error(request, 'Could not add user to group.')
 
-        return redirect('groups:detail', uuid=group.uuid)
+        return redirect('groups:detail', group_name=group.name)
 
 
 class GroupRemoveMemberView(AdminRequiredMixin, View):
     """Remove a user from a group."""
 
-    def post(self, request, uuid, user_uuid):
-        group = get_object_or_404(Group, uuid=uuid)
+    def post(self, request, group_name, user_uuid):
+        group = get_object_or_404(Group, name=group_name)
         user = get_object_or_404(User, uuid=user_uuid)
 
         membership = GroupMembership.objects.filter(group=group, user=user).first()
@@ -132,4 +132,4 @@ class GroupRemoveMemberView(AdminRequiredMixin, View):
         else:
             messages.error(request, 'User is not a member of this group.')
 
-        return redirect('groups:detail', uuid=group.uuid)
+        return redirect('groups:detail', group_name=group.name)

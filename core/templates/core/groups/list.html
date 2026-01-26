@@ -13,7 +13,7 @@
 
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {% for group in groups %}
-        <a href="{% url 'groups:detail' group.uuid %}" class="card hover:border-dark-accent transition-colors">
+        <a href="{% url 'groups:detail' group_name=group.name %}" class="card hover:border-dark-accent transition-colors">
             <div class="flex justify-between items-start mb-2">
                 <h3 class="text-lg font-semibold">{{ group.name }}</h3>
                 <span class="px-2 py-1 text-xs rounded-full {% if group.status == 'active' %}bg-green-900/30 text-green-400{% else %}bg-red-900/30 text-red-400{% endif %}">
