@@ -60,10 +60,10 @@ def navigation_context(request):
 
     # Check if we're in a project-scoped URL
     if hasattr(request, 'resolver_match') and request.resolver_match:
-        if 'project_uuid' in request.resolver_match.kwargs:
+        if 'project_name' in request.resolver_match.kwargs:
             try:
                 project = Project.objects.get(
-                    uuid=request.resolver_match.kwargs['project_uuid']
+                    name=request.resolver_match.kwargs['project_name']
                 )
                 context['in_project_context'] = True
                 context['current_project'] = project
