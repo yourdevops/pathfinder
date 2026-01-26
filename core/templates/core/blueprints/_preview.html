@@ -35,8 +35,8 @@
             <dd class="text-dark-text">{{ preview_data.ci_plugin|default:"None" }}</dd>
         </div>
         <div class="flex">
-            <dt class="w-28 text-dark-muted flex-shrink-0">Deploy Plugin</dt>
-            <dd class="text-dark-text">{{ preview_data.deploy_plugin|default:"None" }}</dd>
+            <dt class="w-28 text-dark-muted flex-shrink-0">Deploy Plugins</dt>
+            <dd class="text-dark-text">{{ preview_data.deploy_plugins|join:", "|default:"None" }}</dd>
         </div>
     </dl>
 </div>

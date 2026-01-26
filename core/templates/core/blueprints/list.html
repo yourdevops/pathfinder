@@ -76,7 +76,7 @@
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted uppercase tracking-wider">Name</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted uppercase tracking-wider">Tags</th>
-                    <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted uppercase tracking-wider w-32">Deploy Plugin</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted uppercase tracking-wider w-32">Deploy Plugins</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted uppercase tracking-wider w-24">Versions</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted uppercase tracking-wider w-32">Last Synced</th>
                     <th class="px-4 py-3 text-left text-xs font-medium text-dark-muted uppercase tracking-wider w-24">Status</th>
@@ -86,12 +86,12 @@
                 {% for item in blueprints %}
                 <tr class="table-row align-top {% if not item.is_available %}opacity-50{% endif %}"
                     data-tags="{{ item.blueprint.tags|join:',' }}"
-                    data-plugin="{{ item.blueprint.deploy_plugin }}"
+                    data-plugin="{{ item.blueprint.deploy_plugins|join:',' }}"
                     data-available="{{ item.is_available|yesno:'true,false' }}"
                     x-show="
                         (search === '' || '{{ item.blueprint.name|lower }}'.includes(search.toLowerCase()) || '{{ item.blueprint.description|lower }}'.includes(search.toLowerCase())) &&
                         (filterTag === '' || $el.dataset.tags.split(',').includes(filterTag)) &&
-                        (filterPlugin === '' || $el.dataset.plugin === filterPlugin) &&
+                        (filterPlugin === '' || $el.dataset.plugin.split(',').includes(filterPlugin)) &&
                         (showUnavailable || $el.dataset.available === 'true')
                     "
                     x-transition>
@@ -100,7 +100,7 @@
                         <div>
                             <a href="{% url 'blueprints:detail' uuid=item.blueprint.uuid %}"
                                class="font-medium text-dark-text hover:text-dark-accent transition-colors"
-                               {% if not item.is_available %}title="Requires {{ item.required_plugin }} connection"{% endif %}>
+                               {% if not item.is_available %}title="Requires {{ item.required_plugins|join:', ' }} connection"{% endif %}>
                                 {{ item.blueprint.name|default:"Unnamed Blueprint" }}
                             </a>
                         </div>
@@ -120,9 +120,9 @@
                             {% endfor %}
                         </div>
                     </td>
-                    <!-- Deploy Plugin -->
+                    <!-- Deploy Plugins -->
                     <td class="px-4 py-3">
-                        <span class="text-sm">{{ item.blueprint.deploy_plugin|default:"-" }}</span>
+                        <span class="text-sm">{{ item.blueprint.deploy_plugins|join:", "|default:"-" }}</span>
                     </td>
                     <!-- Version Count -->
                     <td class="px-4 py-3">
