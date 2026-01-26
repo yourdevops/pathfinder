@@ -10,9 +10,9 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 4.1 of 7 (Replace UUID URLs with Slugs) - IN PROGRESS
-Plan: 4 of 4 in current phase
+Plan: 2 of 4 in current phase - COMPLETED
 Status: Executing plans
-Last activity: 2026-01-26 - Completed 04.1-03-PLAN.md (Groups and Blueprints slug URLs)
+Last activity: 2026-01-26 - Completed 04.1-02-PLAN.md (Project and Environment URLs)
 
 Progress: [============================------] 82%
 
@@ -32,10 +32,10 @@ Progress: [============================------] 82%
 | 03-integrations | 6 | 23 min | 4 min |
 | 03.1-unified-sidebar | 3 | 9 min | 3 min |
 | 04-blueprints | 3 | 10 min | 3.3 min |
-| 04.1-replace-uuid-urls-with-slugs | 3 | 13 min | 4.3 min |
+| 04.1-replace-uuid-urls-with-slugs | 3 | 16 min | 5.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-02 (4 min), 04-03 (3 min), 04.1-01 (3 min), 04.1-03 (5 min), 04.1-04 (5 min)
+- Last 5 plans: 04-03 (3 min), 04.1-01 (3 min), 04.1-02 (6 min), 04.1-03 (5 min), 04.1-04 (5 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -99,6 +99,7 @@ Recent decisions affecting current work:
 | 04.1-01 | RFC 1123 label format allows starting with digit | Relaxed from RFC 952 letter-only requirement |
 | 04.1-01 | Custom 'dns' path converter | Built-in 'slug' allows uppercase/underscores, not DNS-compatible |
 | 04.1-01 | max_length=63 for name fields | DNS subdomain limit |
+| 04.1-02 | Environment lookups include project scope | Environment names are unique within a project |
 | 04.1-04 | Connection names used as URL slug | Human-readable URLs like /connections/github-main/ |
 | 04.1-03 | User URLs remain UUID-based for privacy | Group remove_member keeps user_uuid for the user being removed |
 | 04.1-03 | Blueprint name lookup uses exact match | Already enforced by model validator |
@@ -116,7 +117,6 @@ None yet.
 
 - Phase 4.1 inserted - Architectural refactoring to use slugs instead of UUIDs
 - Must complete Phase 4.1 before Phase 5 (Services) to avoid technical debt
-- Plan 02 still has uncommitted changes (project templates)
 
 ### Quick Tasks Completed
 
@@ -141,5 +141,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed 04.1-03-PLAN.md
-Resume file: None (Plan 02 has uncommitted changes that need to be addressed)
+Stopped at: Completed 04.1-02-PLAN.md
+Resume file: .planning/phases/04.1-replace-uuid-urls-with-slugs/04.1-03-PLAN.md
