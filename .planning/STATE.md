@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 5 - Services (Service Creation from Blueprints)
+**Current focus:** Phase 4.1 - Replace UUID URLs with Slugs
 
 ## Current Position
 
-Phase: 4 of 7 (Blueprints) - COMPLETE
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-01-26 - Completed 04-03-PLAN.md (Blueprint UI Filtering)
+Phase: 4.1 of 7 (Replace UUID URLs with Slugs) - NOT STARTED
+Plan: 0 of 1 in current phase
+Status: Planning needed
+Last activity: 2026-01-26 - Inserted Phase 4.1 (architectural refactoring)
 
 Progress: [========================---------] 70%
 
@@ -99,6 +99,7 @@ Recent decisions affecting current work:
 ### Roadmap Evolution
 
 - Phase 3.1 inserted after Phase 3: Unified sidebar navigation structure (URGENT) - 2026-01-26
+- Phase 4.1 inserted after Phase 4: Replace UUID URLs with Slugs - Use human-readable slugs instead of UUIDs in all URLs (URGENT) - 2026-01-26
 
 ### Pending Todos
 
@@ -106,8 +107,8 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 4 complete - Blueprint catalog fully functional
-- Ready for Phase 5 (Service Creation from Blueprints)
+- Phase 4.1 inserted - Architectural refactoring to use slugs instead of UUIDs
+- Must complete Phase 4.1 before Phase 5 (Services) to avoid technical debt
 
 ### Quick Tasks Completed
 
@@ -132,5 +133,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed quick task 015 - Multiple Deploy Plugins
+Stopped at: Inserted Phase 4.1 - Replace UUID URLs with Slugs
 Resume file: None
