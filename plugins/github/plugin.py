@@ -301,6 +301,47 @@ class GitHubPlugin(BasePlugin):
             'events': hook.events,
         }
 
+    def create_pull_request(self, config: Dict[str, Any], repo_url: str,
+                             title: str, body: str, head: str, base: str) -> Dict[str, Any]:
+        """
+        Create a pull request.
+
+        Args:
+            config: The decrypted configuration dictionary.
+            repo_url: Repository URL (to extract owner/repo).
+            title: Pull request title.
+            body: Pull request description.
+            head: Source branch name.
+            base: Target branch name.
+
+        Returns:
+            Dictionary with PR details including html_url.
+        """
+        from core.git_utils import parse_git_url
+
+        # Parse repo URL to get owner/repo
+        parsed = parse_git_url(repo_url)
+        if not parsed:
+            raise ValueError(f"Invalid repository URL: {repo_url}")
+
+        repo_name = f"{parsed['owner']}/{parsed['repo']}"
+
+        g = self._get_github_client(config)
+        repo = g.get_repo(repo_name)
+
+        pr = repo.create_pull(
+            title=title,
+            body=body,
+            head=head,
+            base=base,
+        )
+
+        return {
+            'number': pr.number,
+            'html_url': pr.html_url,
+            'state': pr.state,
+        }
+
     def get_urlpatterns(self) -> List:
         """Return URL patterns for this plugin's views."""
         from . import urls

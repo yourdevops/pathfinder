@@ -11,6 +11,7 @@ from typing import Optional
 from urllib.parse import urlparse, urlunparse
 
 import git
+import jinja2
 import semver
 import yaml
 
@@ -316,3 +317,248 @@ def parse_version_tag(tag_name: str) -> dict:
             'is_prerelease': True,
             'sort_key': compute_version_sort_key(0, 0, 0, tag_name)
         }
+
+
+def get_template_variables(service) -> dict:
+    """
+    Get template variables for blueprint substitution.
+
+    Args:
+        service: Service model instance
+
+    Returns:
+        Dict of variables: service_name, project_name, service_handler
+    """
+    return {
+        'service_name': service.name,
+        'project_name': service.project.name,
+        'service_handler': service.handler,
+    }
+
+
+def apply_template_to_directory(src_dir: str, dest_dir: str, variables: dict, exclude_files: list = None):
+    """
+    Copy blueprint files and apply variable substitution.
+
+    Args:
+        src_dir: Source directory (cloned blueprint)
+        dest_dir: Destination directory (target repo)
+        variables: Dict of template variables for substitution
+        exclude_files: Files to skip (e.g., manifest files)
+    """
+    import os
+
+    if exclude_files is None:
+        exclude_files = ['ssp-template.yaml', 'devssp-template.yaml', '.git']
+
+    # Copy all files except excluded
+    for item in os.listdir(src_dir):
+        if item in exclude_files:
+            continue
+
+        src_path = os.path.join(src_dir, item)
+        dest_path = os.path.join(dest_dir, item)
+
+        if os.path.isdir(src_path):
+            shutil.copytree(src_path, dest_path, dirs_exist_ok=True)
+        else:
+            shutil.copy2(src_path, dest_path)
+
+    # Apply variable substitution to text files
+    text_extensions = {'.yaml', '.yml', '.json', '.md', '.txt', '.py', '.js', '.ts',
+                       '.html', '.css', '.sh', '.dockerfile', '.toml', '.ini', '.cfg',
+                       '.env', '.env.example'}
+
+    for root, dirs, files in os.walk(dest_dir):
+        # Skip .git directory
+        if '.git' in dirs:
+            dirs.remove('.git')
+
+        for filename in files:
+            _, ext = os.path.splitext(filename.lower())
+            if ext in text_extensions or filename.lower() in {'dockerfile', 'makefile', 'readme'}:
+                filepath = os.path.join(root, filename)
+                try:
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        content = f.read()
+
+                    # Use Jinja2 for substitution (handles {{ var }} syntax)
+                    template = jinja2.Template(content, undefined=jinja2.StrictUndefined)
+                    rendered = template.render(**variables)
+
+                    with open(filepath, 'w', encoding='utf-8') as f:
+                        f.write(rendered)
+                except (UnicodeDecodeError, jinja2.TemplateError) as e:
+                    # Skip binary files or files with template errors
+                    logger.warning(f"Skipping template substitution for {filepath}: {e}")
+
+
+def scaffold_new_repository(
+    service,
+    connection,
+    blueprint_temp_dir: str,
+    variables: dict
+) -> dict:
+    """
+    Scaffold a new repository from blueprint template.
+
+    1. Create empty repo via SCM plugin
+    2. Clone the new repo
+    3. Apply blueprint template with variable substitution
+    4. Commit and push to main branch
+
+    Args:
+        service: Service model instance
+        connection: IntegrationConnection for SCM
+        blueprint_temp_dir: Path to cloned blueprint
+        variables: Template variables
+
+    Returns:
+        Dict with repo_url and status
+    """
+    plugin = connection.get_plugin()
+    config = connection.get_config()
+
+    # Determine repository name (project-service)
+    repo_name = service.handler
+
+    # Create repository via plugin
+    logger.info(f"Creating repository: {repo_name}")
+    create_result = plugin.create_repository(config, repo_name, private=True)
+    repo_url = create_result.get('clone_url') or create_result.get('html_url')
+
+    if not repo_url:
+        raise ValueError("Failed to get repository URL from create_repository response")
+
+    # Build authenticated URL for pushing
+    auth_url = build_authenticated_git_url(repo_url, connection)
+
+    # Create temp directory for the new repo
+    repo_temp_dir = tempfile.mkdtemp(prefix='ssp_scaffold_')
+
+    try:
+        # Initialize git repo
+        repo = git.Repo.init(repo_temp_dir)
+
+        # Apply blueprint template
+        apply_template_to_directory(blueprint_temp_dir, repo_temp_dir, variables)
+
+        # Git add all files
+        repo.index.add('*')
+
+        # Commit
+        repo.index.commit(
+            f"Initial commit from blueprint {service.blueprint.name} {service.blueprint_version.tag_name}",
+            author=git.Actor("DevSSP", "devssp@localhost"),
+            committer=git.Actor("DevSSP", "devssp@localhost"),
+        )
+
+        # Add remote and push
+        origin = repo.create_remote('origin', auth_url)
+
+        # Rename branch to match target (usually 'main')
+        if repo.active_branch.name != service.repo_branch:
+            repo.active_branch.rename(service.repo_branch)
+
+        origin.push(service.repo_branch)
+
+        logger.info(f"Successfully scaffolded new repository: {repo_url}")
+
+        return {
+            'status': 'success',
+            'repo_url': repo_url,
+        }
+
+    finally:
+        # Cleanup
+        shutil.rmtree(repo_temp_dir, ignore_errors=True)
+
+
+def scaffold_existing_repository(
+    service,
+    connection,
+    blueprint_temp_dir: str,
+    variables: dict
+) -> dict:
+    """
+    Scaffold into existing repository with feature branch and PR.
+
+    1. Clone existing repo
+    2. Create feature/{service-name} branch
+    3. Apply blueprint template with variable substitution
+    4. Commit and push feature branch
+    5. Create PR to base branch
+
+    Args:
+        service: Service model instance
+        connection: IntegrationConnection for SCM
+        blueprint_temp_dir: Path to cloned blueprint
+        variables: Template variables
+
+    Returns:
+        Dict with pr_url and status
+    """
+    plugin = connection.get_plugin()
+    config = connection.get_config()
+
+    # Build authenticated URL
+    auth_url = build_authenticated_git_url(service.repo_url, connection)
+
+    # Clone existing repo
+    repo_temp_dir = tempfile.mkdtemp(prefix='ssp_scaffold_existing_')
+
+    try:
+        logger.info(f"Cloning existing repository: {service.repo_url}")
+        repo = git.Repo.clone_from(auth_url, repo_temp_dir, branch=service.repo_branch)
+
+        # Create feature branch
+        feature_branch = f"feature/{service.name}"
+        repo.create_head(feature_branch)
+        repo.heads[feature_branch].checkout()
+
+        # Apply blueprint template
+        apply_template_to_directory(blueprint_temp_dir, repo_temp_dir, variables)
+
+        # Check if there are changes
+        if not repo.is_dirty() and not repo.untracked_files:
+            logger.warning("No changes to commit after applying template")
+            return {
+                'status': 'success',
+                'message': 'No changes - template already applied',
+            }
+
+        # Git add and commit
+        repo.index.add('*')
+        repo.index.commit(
+            f"Add service scaffold from blueprint {service.blueprint.name} {service.blueprint_version.tag_name}",
+            author=git.Actor("DevSSP", "devssp@localhost"),
+            committer=git.Actor("DevSSP", "devssp@localhost"),
+        )
+
+        # Push feature branch
+        origin = repo.remote('origin')
+        origin.push(feature_branch)
+
+        # Create PR via plugin
+        logger.info(f"Creating pull request for {feature_branch}")
+        pr_result = plugin.create_pull_request(
+            config,
+            service.repo_url,
+            title=f"Add {service.name} service scaffold",
+            body=f"Scaffolded from blueprint: {service.blueprint.name} {service.blueprint_version.tag_name}",
+            head=feature_branch,
+            base=service.repo_branch,
+        )
+
+        pr_url = pr_result.get('html_url', '')
+
+        logger.info(f"Successfully created PR: {pr_url}")
+
+        return {
+            'status': 'success',
+            'pr_url': pr_url,
+        }
+
+    finally:
+        # Cleanup
+        shutil.rmtree(repo_temp_dir, ignore_errors=True)
