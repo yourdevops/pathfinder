@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 4.1 of 7 (Replace UUID URLs with Slugs) - IN PROGRESS
-Plan: 1 of 4 in current phase
+Plan: 4 of 4 in current phase
 Status: Executing plans
-Last activity: 2026-01-26 - Completed 04.1-01-PLAN.md (DNS label validator and URL converter)
+Last activity: 2026-01-26 - Completed 04.1-04-PLAN.md (Connection URLs with name-based routing)
 
-Progress: [=========================---------] 71%
+Progress: [===========================-------] 79%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 24
+- Total plans completed: 25
 - Average duration: 4 min
-- Total execution time: 1.62 hours
+- Total execution time: 1.70 hours
 
 **By Phase:**
 
@@ -32,10 +32,10 @@ Progress: [=========================---------] 71%
 | 03-integrations | 6 | 23 min | 4 min |
 | 03.1-unified-sidebar | 3 | 9 min | 3 min |
 | 04-blueprints | 3 | 10 min | 3.3 min |
-| 04.1-replace-uuid-urls-with-slugs | 1 | 3 min | 3 min |
+| 04.1-replace-uuid-urls-with-slugs | 2 | 8 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 03.1-02 (4 min), 04-01 (3 min), 04-02 (4 min), 04-03 (3 min), 04.1-01 (3 min)
+- Last 5 plans: 04-01 (3 min), 04-02 (4 min), 04-03 (3 min), 04.1-01 (3 min), 04.1-04 (5 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -99,6 +99,7 @@ Recent decisions affecting current work:
 | 04.1-01 | RFC 1123 label format allows starting with digit | Relaxed from RFC 952 letter-only requirement |
 | 04.1-01 | Custom 'dns' path converter | Built-in 'slug' allows uppercase/underscores, not DNS-compatible |
 | 04.1-01 | max_length=63 for name fields | DNS subdomain limit |
+| 04.1-04 | Connection names used as URL slug | Human-readable URLs like /connections/github-main/ |
 
 ### Roadmap Evolution
 
@@ -113,6 +114,7 @@ None yet.
 
 - Phase 4.1 inserted - Architectural refactoring to use slugs instead of UUIDs
 - Must complete Phase 4.1 before Phase 5 (Services) to avoid technical debt
+- Plans 02 and 03 have uncommitted changes that need to be completed
 
 ### Quick Tasks Completed
 
@@ -137,5 +139,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed 04.1-01-PLAN.md
-Resume file: .planning/phases/04.1-replace-uuid-urls-with-slugs/04.1-02-PLAN.md
+Stopped at: Completed 04.1-04-PLAN.md
+Resume file: None (Plans 02 and 03 have uncommitted changes that need to be addressed)
