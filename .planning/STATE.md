@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 
 ## Current Position
 
-Phase: 3 of 7 (External Integrations) - COMPLETE
-Plan: 6 of 6 in current phase
-Status: Complete
-Last activity: 2026-01-23 - Completed quick task 013 (Remove repos page, fix auth wizard)
+Phase: 3.1 of 7 (Unified Sidebar Navigation) - IN PROGRESS
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-01-26 - Completed 03.1-01-PLAN.md (Unified Expandable Sidebar)
 
-Progress: [================================] 100%
+Progress: [=================---------------] 53%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 16
+- Total plans completed: 17
 - Average duration: 4 min
-- Total execution time: 1.1 hours
+- Total execution time: 1.2 hours
 
 **By Phase:**
 
@@ -30,9 +30,10 @@ Progress: [================================] 100%
 | 01-foundation-security | 6 | 25 min | 4 min |
 | 02-core-domain | 4 | 20 min | 5 min |
 | 03-integrations | 6 | 23 min | 4 min |
+| 03.1-unified-sidebar | 1 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-02 (4 min), 03-03 (3 min), 03-04 (11 min), 03-05 (4 min), 03-06 (5 min)
+- Last 5 plans: 03-03 (3 min), 03-04 (11 min), 03-05 (4 min), 03-06 (5 min), 03.1-01 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -78,6 +79,9 @@ Recent decisions affecting current work:
 | 03-04 | OperatorRequiredMixin for system-level access | Uses existing has_system_role helper |
 | 03-04 | Connections grouped by plugin category | SCM, Deploy, Other sections in list view |
 | 03-04 | Plugin URL autodiscovery | Dynamic registration at /integrations/<plugin>/ |
+| 03.1-01 | Expandable sidebar with $persist() | localStorage state persistence for nav sections |
+| 03.1-01 | Settings in main nav not separate sidebar | nav_settings.html deprecated, settings in expandable section |
+| 03.1-01 | active_settings_section context variable | Nav highlighting for settings sub-pages |
 
 ### Roadmap Evolution
 
@@ -89,9 +93,8 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 3 complete
-- All integration infrastructure in place
-- Phase 3.1 (Unified Sidebar Navigation) inserted as urgent work before Phase 4
+- Phase 3.1 Plan 01 complete - unified expandable sidebar implemented
+- Plan 02 (Project Context Sidebar) ready to execute
 
 ### Quick Tasks Completed
 
@@ -113,6 +116,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-23
-Stopped at: Completed quick task 013 - Remove repos page, fix auth wizard
+Last session: 2026-01-26
+Stopped at: Completed 03.1-01-PLAN.md - Unified Expandable Sidebar Navigation
 Resume file: None
