@@ -1,0 +1,90 @@
+<!-- Service-scoped Sidebar Navigation -->
+<aside class="fixed left-0 top-0 h-full w-64 bg-dark-surface border-r border-dark-border flex flex-col">
+    <!-- Back to Project -->
+    <div class="p-4 border-b border-dark-border">
+        <a href="{% url 'projects:detail' project_name=project.name %}"
+           class="flex items-center text-dark-text hover:text-dark-accent transition-colors group">
+            <svg class="w-5 h-5 mr-2 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span class="text-xl font-bold">{{ project.name }}</span>
+        </a>
+    </div>
+
+    <!-- Service Header -->
+    <div class="p-4 border-b border-dark-border">
+        <div class="flex items-center gap-2">
+            <h2 class="text-lg font-bold text-dark-text truncate" title="{{ service.name }}">
+                {{ service.name }}
+            </h2>
+            <!-- Status Badge -->
+            <span class="px-2 py-0.5 text-xs rounded
+                {% if service.status == 'draft' %}bg-gray-500/20 text-gray-300
+                {% elif service.status == 'active' %}bg-green-500/20 text-green-300
+                {% elif service.status == 'error' %}bg-red-500/20 text-red-300
+                {% endif %}">
+                {{ service.get_status_display }}
+            </span>
+        </div>
+        <p class="text-dark-muted text-sm mt-1 font-mono">{{ service.handler }}</p>
+    </div>
+
+    <!-- Service Navigation -->
+    <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+        <!-- Details -->
+        <a href="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}"
+           hx-get="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}"
+           hx-target="#tab-content"
+           hx-push-url="true"
+           class="flex items-center px-3 py-2 rounded-lg text-dark-text hover:bg-dark-border/50 transition-colors {% if not request.GET.tab or request.GET.tab == 'details' %}bg-dark-border{% endif %}">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Details
+        </a>
+
+        <!-- Builds -->
+        <a href="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}?tab=builds"
+           hx-get="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}?tab=builds"
+           hx-target="#tab-content"
+           hx-push-url="true"
+           class="flex items-center px-3 py-2 rounded-lg text-dark-text hover:bg-dark-border/50 transition-colors {% if request.GET.tab == 'builds' %}bg-dark-border{% endif %}">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            Builds
+        </a>
+
+        <!-- Environments -->
+        <a href="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}?tab=environments"
+           hx-get="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}?tab=environments"
+           hx-target="#tab-content"
+           hx-push-url="true"
+           class="flex items-center px-3 py-2 rounded-lg text-dark-text hover:bg-dark-border/50 transition-colors {% if request.GET.tab == 'environments' %}bg-dark-border{% endif %}">
+            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+            </svg>
+            Environments
+        </a>
+    </nav>
+
+    <!-- User Section -->
+    <div class="p-4 border-t border-dark-border">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <div class="w-8 h-8 rounded-full bg-dark-accent flex items-center justify-center text-white font-medium">
+                    {{ user.username|slice:":1"|upper }}
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-dark-text">{{ user.username }}</p>
+                    <p class="text-xs text-dark-muted">{{ user.email }}</p>
+                </div>
+            </div>
+            <a href="{% url 'auth:logout' %}" class="text-dark-muted hover:text-dark-text transition-colors" title="Logout">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+            </a>
+        </div>
+    </div>
+</aside>

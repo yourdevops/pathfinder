@@ -1,0 +1,51 @@
+<div class="space-y-6">
+    <h1 class="text-2xl font-bold text-dark-text">Environments</h1>
+
+    {% if environments %}
+    <div class="space-y-4">
+        {% for env in environments %}
+        <div class="bg-dark-surface border border-dark-border rounded-lg p-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <h3 class="text-lg font-semibold text-dark-text">{{ env.name }}</h3>
+                    {% if env.is_production %}
+                    <span class="px-2 py-0.5 text-xs bg-amber-500/20 text-amber-300 rounded">Production</span>
+                    {% endif %}
+                    {% if env.is_default %}
+                    <span class="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-300 rounded">Default</span>
+                    {% endif %}
+                </div>
+                <div class="flex items-center gap-2">
+                    <!-- Deployment status placeholder -->
+                    <span class="px-2 py-1 text-xs bg-gray-500/20 text-gray-300 rounded">
+                        Not deployed
+                    </span>
+                </div>
+            </div>
+            {% if env.description %}
+            <p class="text-dark-muted text-sm mt-2">{{ env.description }}</p>
+            {% endif %}
+
+            <!-- Deploy button placeholder -->
+            <div class="mt-4 pt-4 border-t border-dark-border">
+                <button disabled class="px-4 py-2 bg-dark-border text-dark-muted rounded-lg cursor-not-allowed">
+                    Deploy (Coming Soon)
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-dark-surface border border-dark-border rounded-lg p-12 text-center">
+        <svg class="w-12 h-12 mx-auto text-dark-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+        </svg>
+        <h2 class="text-xl font-semibold text-dark-text mb-2">No environments</h2>
+        <p class="text-dark-muted">Create environments in the project to deploy this service.</p>
+        <a href="{% url 'projects:detail' project_name=project.name %}?tab=environments"
+           class="mt-4 inline-block px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors">
+            Manage Environments
+        </a>
+    </div>
+    {% endif %}
+</div>

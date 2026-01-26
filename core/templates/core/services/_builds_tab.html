@@ -1,0 +1,25 @@
+<div class="space-y-6">
+    <h1 class="text-2xl font-bold text-dark-text">Builds</h1>
+
+    {% if builds %}
+    <!-- Build list will be populated in Phase 6 -->
+    {% else %}
+    <div class="bg-dark-surface border border-dark-border rounded-lg p-12 text-center">
+        <svg class="w-12 h-12 mx-auto text-dark-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        <h2 class="text-xl font-semibold text-dark-text mb-2">No builds yet</h2>
+        <p class="text-dark-muted">Builds will appear here once the CI pipeline runs.</p>
+
+        {% if service.scaffold_status == 'success' and service.repo_url %}
+        <p class="text-dark-muted mt-4">
+            Push changes to
+            <a href="{{ service.repo_url }}" target="_blank" class="text-dark-accent hover:underline">
+                the repository
+            </a>
+            to trigger a build.
+        </p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
