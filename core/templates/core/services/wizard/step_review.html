@@ -1,0 +1,100 @@
+{% extends "core/services/wizard/base.html" %}
+
+{% block wizard_content %}
+<div class="space-y-6">
+    <!-- Summary -->
+    <div class="grid grid-cols-2 gap-4">
+        <!-- Project -->
+        <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">
+            <p class="text-sm text-dark-muted">Project</p>
+            <p class="text-dark-text font-medium mt-1">{{ review_data.project.name }}</p>
+        </div>
+
+        <!-- Service Name -->
+        <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">
+            <p class="text-sm text-dark-muted">Service Name</p>
+            <p class="text-dark-text font-medium mt-1">{{ review_data.service_name }}</p>
+        </div>
+
+        <!-- Handler -->
+        <div class="p-4 bg-dark-bg border border-dark-border rounded-lg col-span-2">
+            <p class="text-sm text-dark-muted">Service Handler</p>
+            <p class="text-dark-text font-mono mt-1">{{ review_data.handler }}</p>
+        </div>
+
+        <!-- Blueprint -->
+        <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">
+            <p class="text-sm text-dark-muted">Blueprint</p>
+            <p class="text-dark-text font-medium mt-1">{{ review_data.blueprint.name }}</p>
+        </div>
+
+        <!-- Version -->
+        <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">
+            <p class="text-sm text-dark-muted">Version</p>
+            <p class="text-dark-text font-medium mt-1">{{ review_data.blueprint_version.tag_name }}</p>
+        </div>
+
+        <!-- Repository Mode -->
+        <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">
+            <p class="text-sm text-dark-muted">Repository</p>
+            <p class="text-dark-text font-medium mt-1">{{ review_data.repo_mode_display }}</p>
+        </div>
+
+        <!-- Branch -->
+        <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">
+            <p class="text-sm text-dark-muted">Branch</p>
+            <p class="text-dark-text font-mono mt-1">{{ review_data.branch }}</p>
+        </div>
+
+        {% if review_data.existing_repo_url %}
+        <!-- Existing Repo URL -->
+        <div class="p-4 bg-dark-bg border border-dark-border rounded-lg col-span-2">
+            <p class="text-sm text-dark-muted">Repository URL</p>
+            <p class="text-dark-text font-mono mt-1 truncate">{{ review_data.existing_repo_url }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Environment Variables -->
+    {% if review_data.env_vars %}
+    <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">
+        <p class="text-sm text-dark-muted mb-3">Service Environment Variables</p>
+        <div class="space-y-1">
+            {% for var in review_data.env_vars %}
+            <div class="flex items-center gap-2 text-sm">
+                <span class="font-mono text-dark-text">{{ var.key }}</span>
+                <span class="text-dark-muted">=</span>
+                <span class="text-dark-muted truncate">{{ var.value|truncatechars:40 }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Confirmation -->
+    <div class="flex items-start gap-3 p-4 bg-dark-bg border border-dark-border rounded-lg">
+        {{ wizard.form.confirm }}
+        <label for="id_review-confirm" class="text-sm text-dark-text cursor-pointer">
+            {{ wizard.form.confirm.label }}
+        </label>
+    </div>
+    {% if wizard.form.confirm.errors %}
+    <p class="text-sm text-red-400">{{ wizard.form.confirm.errors.0 }}</p>
+    {% endif %}
+
+    <!-- What happens next -->
+    <div class="p-4 border border-dark-border rounded-lg bg-blue-900/10">
+        <p class="text-sm font-medium text-dark-text mb-2">What happens next:</p>
+        <ul class="text-sm text-dark-muted space-y-1 list-disc list-inside">
+            {% if review_data.repo_mode == 'new' %}
+            <li>A new repository <code class="text-dark-text">{{ review_data.handler }}</code> will be created</li>
+            <li>Blueprint template will be pushed to the <code class="text-dark-text">{{ review_data.branch }}</code> branch</li>
+            {% else %}
+            <li>A feature branch <code class="text-dark-text">feature/{{ review_data.service_name }}</code> will be created</li>
+            <li>Blueprint template will be applied and a PR opened to <code class="text-dark-text">{{ review_data.branch }}</code></li>
+            {% endif %}
+            <li>Service status will update when scaffolding completes</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

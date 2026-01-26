@@ -1,0 +1,126 @@
+{% extends "core/services/wizard/base.html" %}
+
+{% block wizard_content %}
+<div class="space-y-6">
+    <!-- Default SERVICE_NAME variable -->
+    <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm font-medium text-dark-text">SERVICE_NAME</p>
+                <p class="text-sm text-dark-muted mt-1">{{ service_name }}</p>
+            </div>
+            <span class="px-2 py-1 text-xs bg-amber-500/20 text-amber-300 rounded">Locked</span>
+        </div>
+    </div>
+
+    <!-- Inherited Project Variables (collapsed by default) -->
+    {% if project_env_vars %}
+    <details class="border border-dark-border rounded-lg">
+        <summary class="px-4 py-3 cursor-pointer text-dark-text hover:bg-dark-border/30">
+            Inherited from Project ({{ project_env_vars|length }} variable{{ project_env_vars|pluralize }})
+        </summary>
+        <div class="px-4 pb-4 space-y-2">
+            {% for var in project_env_vars %}
+            <div class="flex items-center justify-between p-2 bg-dark-bg rounded">
+                <div>
+                    <span class="text-sm font-mono text-dark-text">{{ var.key }}</span>
+                    <span class="text-dark-muted">=</span>
+                    <span class="text-sm text-dark-muted">{{ var.value|truncatechars:30 }}</span>
+                </div>
+                {% if var.lock %}
+                <span class="px-2 py-0.5 text-xs bg-amber-500/20 text-amber-300 rounded">Locked</span>
+                {% else %}
+                <span class="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-300 rounded">Inherited</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </details>
+    {% endif %}
+
+    <!-- Service Environment Variables -->
+    <div>
+        <div class="flex items-center justify-between mb-3">
+            <label class="text-sm font-medium text-dark-text">Service Variables</label>
+            <button type="button" id="add-env-var-btn"
+                    class="px-3 py-1 text-sm border border-dark-border rounded hover:bg-dark-border/50 transition-colors text-dark-text">
+                + Add Variable
+            </button>
+        </div>
+
+        <div id="env-vars-container" class="space-y-2">
+            <!-- Variables added via JavaScript -->
+        </div>
+
+        <p class="mt-2 text-sm text-dark-muted">
+            Service-level variables override inherited project variables (unless locked).
+        </p>
+    </div>
+
+    {{ wizard.form.env_vars_json }}
+</div>
+
+<script>
+let envVars = [];
+
+function renderEnvVars() {
+    const container = document.getElementById('env-vars-container');
+    container.innerHTML = '';
+
+    envVars.forEach((v, i) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2 p-2 bg-dark-bg border border-dark-border rounded';
+        row.innerHTML = `
+            <input type="text" value="${v.key}" placeholder="KEY"
+                   class="flex-1 px-2 py-1 bg-dark-surface border border-dark-border rounded text-dark-text text-sm font-mono"
+                   onchange="updateEnvVar(${i}, 'key', this.value)">
+            <span class="text-dark-muted">=</span>
+            <input type="text" value="${v.value}" placeholder="value"
+                   class="flex-1 px-2 py-1 bg-dark-surface border border-dark-border rounded text-dark-text text-sm"
+                   onchange="updateEnvVar(${i}, 'value', this.value)">
+            <button type="button" onclick="removeEnvVar(${i})"
+                    class="p-1 text-dark-muted hover:text-red-400 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        `;
+        container.appendChild(row);
+    });
+
+    document.getElementById('id_configuration-env_vars_json').value = JSON.stringify(envVars);
+}
+
+function addEnvVar() {
+    envVars.push({ key: '', value: '', lock: false });
+    renderEnvVars();
+}
+
+function updateEnvVar(index, field, value) {
+    if (field === 'key') {
+        envVars[index].key = value.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+    } else {
+        envVars[index].value = value;
+    }
+    renderEnvVars();
+}
+
+function removeEnvVar(index) {
+    envVars.splice(index, 1);
+    renderEnvVars();
+}
+
+document.getElementById('add-env-var-btn').addEventListener('click', addEnvVar);
+
+// Initialize from existing data
+document.addEventListener('DOMContentLoaded', function() {
+    const existing = document.getElementById('id_configuration-env_vars_json').value;
+    if (existing && existing !== '[]') {
+        try {
+            envVars = JSON.parse(existing);
+            renderEnvVars();
+        } catch (e) {}
+    }
+});
+</script>
+{% endblock %}

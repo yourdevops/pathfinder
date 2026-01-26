@@ -1,0 +1,72 @@
+{% extends "core/services/wizard/base.html" %}
+
+{% block wizard_content %}
+<div class="space-y-6">
+    <!-- Project -->
+    <div>
+        <label class="block text-sm font-medium text-dark-text mb-2">Project</label>
+        {{ wizard.form.project }}
+        {% if wizard.form.project.help_text %}
+        <p class="mt-1 text-sm text-dark-muted">{{ wizard.form.project.help_text }}</p>
+        {% endif %}
+        {% if wizard.form.project.errors %}
+        <p class="mt-1 text-sm text-red-400">{{ wizard.form.project.errors.0 }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Blueprint -->
+    <div>
+        <label class="block text-sm font-medium text-dark-text mb-2">Blueprint</label>
+        <select name="blueprint-blueprint" id="id_blueprint-blueprint"
+                class="w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                hx-get="{% url 'services:blueprint_versions' blueprint_id=0 %}"
+                hx-trigger="change"
+                hx-target="#id_blueprint-blueprint_version"
+                hx-swap="innerHTML"
+                onchange="this.setAttribute('hx-get', this.getAttribute('hx-get').replace('/0/', '/' + this.value + '/'))">
+            <option value="">Select blueprint...</option>
+            {% for bp in wizard.form.blueprint.field.queryset %}
+            <option value="{{ bp.id }}" {% if wizard.form.blueprint.value == bp.id|stringformat:"s" %}selected{% endif %}>
+                {{ bp.name }}{% if bp.description %} - {{ bp.description|truncatewords:10 }}{% endif %}
+            </option>
+            {% endfor %}
+        </select>
+        {% if wizard.form.blueprint.errors %}
+        <p class="mt-1 text-sm text-red-400">{{ wizard.form.blueprint.errors.0 }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Blueprint Version -->
+    <div>
+        <label class="block text-sm font-medium text-dark-text mb-2">Version</label>
+        <select name="blueprint-blueprint_version" id="id_blueprint-blueprint_version"
+                class="w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent">
+            <option value="">Select version...</option>
+            {% for version in wizard.form.blueprint_version.field.queryset %}
+            <option value="{{ version.id }}" {% if wizard.form.blueprint_version.value == version.id|stringformat:"s" %}selected{% endif %}>
+                {{ version.display_name }}
+            </option>
+            {% endfor %}
+        </select>
+        {% if wizard.form.blueprint_version.errors %}
+        <p class="mt-1 text-sm text-red-400">{{ wizard.form.blueprint_version.errors.0 }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Service Name -->
+    <div>
+        <label class="block text-sm font-medium text-dark-text mb-2">Service Name</label>
+        {{ wizard.form.name }}
+        <p class="mt-1 text-sm text-dark-muted">{{ wizard.form.name.help_text }}</p>
+        {% if wizard.form.name.errors %}
+        <p class="mt-1 text-sm text-red-400">{{ wizard.form.name.errors.0 }}</p>
+        {% endif %}
+    </div>
+</div>
+
+{% if wizard.form.non_field_errors %}
+<div class="mt-4 p-3 bg-red-900/20 border border-red-500/50 rounded-lg">
+    <p class="text-sm text-red-400">{{ wizard.form.non_field_errors.0 }}</p>
+</div>
+{% endif %}
+{% endblock %}
