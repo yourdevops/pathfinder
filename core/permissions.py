@@ -78,7 +78,8 @@ class ProjectPermissionMixin:
     required_role = 'viewer'  # Override in subclass
 
     def dispatch(self, request, *args, **kwargs):
-        self.project = get_object_or_404(Project, uuid=kwargs.get('project_uuid'))
+        # Changed: lookup by name instead of uuid
+        self.project = get_object_or_404(Project, name=kwargs.get('project_name'))
         self.user_project_role = get_user_project_role(request.user, self.project)
 
         if not self.user_project_role:
@@ -88,7 +89,8 @@ class ProjectPermissionMixin:
         ROLE_HIERARCHY = ['viewer', 'contributor', 'owner']
         if ROLE_HIERARCHY.index(self.user_project_role) < ROLE_HIERARCHY.index(self.required_role):
             messages.error(request, 'You do not have permission for this action.')
-            return redirect('projects:detail', project_uuid=self.project.uuid)
+            # Changed: use name instead of uuid
+            return redirect('projects:detail', project_name=self.project.name)
 
         return super().dispatch(request, *args, **kwargs)
 

@@ -52,11 +52,11 @@ users_patterns = [
 groups_patterns = [
     path('', GroupListView.as_view(), name='list'),
     path('create/', GroupCreateView.as_view(), name='create'),
-    path('<uuid:uuid>/', GroupDetailView.as_view(), name='detail'),
-    path('<uuid:uuid>/edit/', GroupEditView.as_view(), name='edit'),
-    path('<uuid:uuid>/delete/', GroupDeleteView.as_view(), name='delete'),
-    path('<uuid:uuid>/add-member/', GroupAddMemberView.as_view(), name='add_member'),
-    path('<uuid:uuid>/remove-member/<uuid:user_uuid>/', GroupRemoveMemberView.as_view(), name='remove_member'),
+    path('<dns:group_name>/', GroupDetailView.as_view(), name='detail'),
+    path('<dns:group_name>/edit/', GroupEditView.as_view(), name='edit'),
+    path('<dns:group_name>/delete/', GroupDeleteView.as_view(), name='delete'),
+    path('<dns:group_name>/add-member/', GroupAddMemberView.as_view(), name='add_member'),
+    path('<dns:group_name>/remove-member/<uuid:user_uuid>/', GroupRemoveMemberView.as_view(), name='remove_member'),
 ]
 
 # Audit log URLs
@@ -88,10 +88,10 @@ resources_patterns = [
 connections_patterns = [
     path('', ConnectionListView.as_view(), name='list'),
     path('plugins/', PluginListView.as_view(), name='plugins'),
-    path('<uuid:uuid>/', ConnectionDetailView.as_view(), name='detail'),
-    path('<uuid:uuid>/test/', ConnectionTestView.as_view(), name='test'),
-    path('<uuid:uuid>/update/', ConnectionConfigUpdateView.as_view(), name='update'),
-    path('<uuid:uuid>/delete/', ConnectionDeleteView.as_view(), name='delete'),
+    path('<dns:connection_name>/', ConnectionDetailView.as_view(), name='detail'),
+    path('<dns:connection_name>/test/', ConnectionTestView.as_view(), name='test'),
+    path('<dns:connection_name>/update/', ConnectionConfigUpdateView.as_view(), name='update'),
+    path('<dns:connection_name>/delete/', ConnectionDeleteView.as_view(), name='delete'),
     path('create/<str:plugin_name>/', ConnectionCreateDispatchView.as_view(), name='create'),
 ]
 
@@ -100,28 +100,28 @@ projects_patterns = [
     path('', ProjectListView.as_view(), name='list'),
     path('create/', ProjectCreateModalView.as_view(), name='create_modal'),
     path('create/submit/', ProjectCreateView.as_view(), name='create'),
-    path('<uuid:project_uuid>/', ProjectDetailView.as_view(), name='detail'),
-    path('<uuid:project_uuid>/update/', ProjectUpdateView.as_view(), name='update'),
-    path('<uuid:project_uuid>/archive/', ProjectArchiveView.as_view(), name='archive'),
-    path('<uuid:project_uuid>/environments/create/', EnvironmentCreateView.as_view(), name='environment_create'),
-    path('<uuid:project_uuid>/environments/<uuid:env_uuid>/', EnvironmentDetailView.as_view(), name='environment_detail'),
-    path('<uuid:project_uuid>/environments/<uuid:env_uuid>/update/', EnvironmentUpdateView.as_view(), name='environment_update'),
-    path('<uuid:project_uuid>/environments/<uuid:env_uuid>/delete/', EnvironmentDeleteView.as_view(), name='environment_delete'),
-    path('<uuid:project_uuid>/environments/<uuid:env_uuid>/env-vars/', EnvVarModalView.as_view(), name='env_var_modal'),
-    path('<uuid:project_uuid>/environments/<uuid:env_uuid>/env-vars/save/', EnvVarSaveView.as_view(), name='env_var_save'),
-    path('<uuid:project_uuid>/environments/<uuid:env_uuid>/env-vars/<str:key>/delete/', EnvVarDeleteView.as_view(), name='env_var_delete'),
-    path('<uuid:project_uuid>/members/add/', AddMemberModalView.as_view(), name='add_member_modal'),
-    path('<uuid:project_uuid>/members/<uuid:group_uuid>/remove/', RemoveMemberView.as_view(), name='remove_member'),
+    path('<dns:project_name>/', ProjectDetailView.as_view(), name='detail'),
+    path('<dns:project_name>/update/', ProjectUpdateView.as_view(), name='update'),
+    path('<dns:project_name>/archive/', ProjectArchiveView.as_view(), name='archive'),
+    path('<dns:project_name>/environments/create/', EnvironmentCreateView.as_view(), name='environment_create'),
+    path('<dns:project_name>/environments/<dns:env_name>/', EnvironmentDetailView.as_view(), name='environment_detail'),
+    path('<dns:project_name>/environments/<dns:env_name>/update/', EnvironmentUpdateView.as_view(), name='environment_update'),
+    path('<dns:project_name>/environments/<dns:env_name>/delete/', EnvironmentDeleteView.as_view(), name='environment_delete'),
+    path('<dns:project_name>/environments/<dns:env_name>/env-vars/', EnvVarModalView.as_view(), name='env_var_modal'),
+    path('<dns:project_name>/environments/<dns:env_name>/env-vars/save/', EnvVarSaveView.as_view(), name='env_var_save'),
+    path('<dns:project_name>/environments/<dns:env_name>/env-vars/<str:key>/delete/', EnvVarDeleteView.as_view(), name='env_var_delete'),
+    path('<dns:project_name>/members/add/', AddMemberModalView.as_view(), name='add_member_modal'),
+    path('<dns:project_name>/members/<dns:group_name>/remove/', RemoveMemberView.as_view(), name='remove_member'),
     # Project-level env vars
-    path('<uuid:project_uuid>/env-vars/', ProjectEnvVarModalView.as_view(), name='project_env_var_modal'),
-    path('<uuid:project_uuid>/env-vars/save/', ProjectEnvVarSaveView.as_view(), name='project_env_var_save'),
-    path('<uuid:project_uuid>/env-vars/<str:key>/delete/', ProjectEnvVarDeleteView.as_view(), name='project_env_var_delete'),
+    path('<dns:project_name>/env-vars/', ProjectEnvVarModalView.as_view(), name='project_env_var_modal'),
+    path('<dns:project_name>/env-vars/save/', ProjectEnvVarSaveView.as_view(), name='project_env_var_save'),
+    path('<dns:project_name>/env-vars/<str:key>/delete/', ProjectEnvVarDeleteView.as_view(), name='project_env_var_delete'),
     # Project connections
-    path('<uuid:project_uuid>/connections/attach/', ProjectAttachConnectionView.as_view(), name='project_attach_connection'),
-    path('<uuid:project_uuid>/connections/<int:connection_id>/detach/', ProjectDetachConnectionView.as_view(), name='project_detach_connection'),
+    path('<dns:project_name>/connections/attach/', ProjectAttachConnectionView.as_view(), name='project_attach_connection'),
+    path('<dns:project_name>/connections/<int:connection_id>/detach/', ProjectDetachConnectionView.as_view(), name='project_detach_connection'),
     # Environment connections
-    path('<uuid:project_uuid>/environments/<uuid:env_uuid>/connections/attach/', EnvironmentAttachConnectionView.as_view(), name='env_attach_connection'),
-    path('<uuid:project_uuid>/environments/<uuid:env_uuid>/connections/<int:connection_id>/detach/', EnvironmentDetachConnectionView.as_view(), name='env_detach_connection'),
+    path('<dns:project_name>/environments/<dns:env_name>/connections/attach/', EnvironmentAttachConnectionView.as_view(), name='env_attach_connection'),
+    path('<dns:project_name>/environments/<dns:env_name>/connections/<int:connection_id>/detach/', EnvironmentDetachConnectionView.as_view(), name='env_detach_connection'),
 ]
 
 # Settings URLs
