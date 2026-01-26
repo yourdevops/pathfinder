@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 3.1 of 7 (Unified Sidebar Navigation) - IN PROGRESS
-Plan: 1 of 2 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-26 - Completed 03.1-01-PLAN.md (Unified Expandable Sidebar)
+Last activity: 2026-01-26 - Completed 03.1-03-PLAN.md (Refine Project Sidebar)
 
-Progress: [=================---------------] 53%
+Progress: [==================--------------] 56%
 
 ## Performance Metrics
 
@@ -30,10 +30,10 @@ Progress: [=================---------------] 53%
 | 01-foundation-security | 6 | 25 min | 4 min |
 | 02-core-domain | 4 | 20 min | 5 min |
 | 03-integrations | 6 | 23 min | 4 min |
-| 03.1-unified-sidebar | 1 | 3 min | 3 min |
+| 03.1-unified-sidebar | 2 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-03 (3 min), 03-04 (11 min), 03-05 (4 min), 03-06 (5 min), 03.1-01 (3 min)
+- Last 5 plans: 03-04 (11 min), 03-05 (4 min), 03-06 (5 min), 03.1-01 (3 min), 03.1-03 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -82,6 +82,9 @@ Recent decisions affecting current work:
 | 03.1-01 | Expandable sidebar with $persist() | localStorage state persistence for nav sections |
 | 03.1-01 | Settings in main nav not separate sidebar | nav_settings.html deprecated, settings in expandable section |
 | 03.1-01 | active_settings_section context variable | Nav highlighting for settings sub-pages |
+| 03.1-03 | Details as first nav item in project sidebar | Default landing page for projects |
+| 03.1-03 | Settings not in project sidebar nav | Accessible via ?tab=settings URL, not in nav |
+| 03.1-03 | Back button in DevSSP logo position | Consistent styling with text-xl font-bold |
 
 ### Roadmap Evolution
 
@@ -94,6 +97,7 @@ None yet.
 ### Blockers/Concerns
 
 - Phase 3.1 Plan 01 complete - unified expandable sidebar implemented
+- Phase 3.1 Plan 03 complete - project sidebar refined with Details first
 - Plan 02 (Project Context Sidebar) ready to execute
 
 ### Quick Tasks Completed
@@ -117,5 +121,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed 03.1-01-PLAN.md - Unified Expandable Sidebar Navigation
+Stopped at: Completed 03.1-03-PLAN.md - Refine Project Sidebar Navigation
 Resume file: None
