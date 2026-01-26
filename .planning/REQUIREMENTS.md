@@ -57,12 +57,12 @@ Requirements for MVP release. Complete end-to-end flow: Blueprint -> GitHub Acti
 
 ### Blueprints
 
-- [ ] **BPRT-01**: Operator can register blueprint from git URL
-- [ ] **BPRT-02**: Blueprint syncs metadata from ssp-template.yaml manifest
-- [ ] **BPRT-03**: Blueprint shows available git tags as versions
-- [ ] **BPRT-04**: Blueprint displays name, description, tags, ci.plugin, deploy.plugin
-- [ ] **BPRT-05**: Operator can manually sync blueprint to refresh versions
-- [ ] **BPRT-06**: Blueprint availability filtered by project's environment connections
+- [x] **BPRT-01**: Operator can register blueprint from git URL
+- [x] **BPRT-02**: Blueprint syncs metadata from ssp-template.yaml manifest
+- [x] **BPRT-03**: Blueprint shows available git tags as versions
+- [x] **BPRT-04**: Blueprint displays name, description, tags, ci.plugin, deploy.plugin
+- [x] **BPRT-05**: Operator can manually sync blueprint to refresh versions
+- [x] **BPRT-06**: Blueprint availability filtered by project's environment connections
 
 ### Services
 
@@ -193,12 +193,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INTG-07 | Phase 3 | Complete |
 | INTG-08 | Phase 3 | Complete |
 | INTG-09 | Phase 3 | Complete |
-| BPRT-01 | Phase 4 | Pending |
-| BPRT-02 | Phase 4 | Pending |
-| BPRT-03 | Phase 4 | Pending |
-| BPRT-04 | Phase 4 | Pending |
-| BPRT-05 | Phase 4 | Pending |
-| BPRT-06 | Phase 4 | Pending |
+| BPRT-01 | Phase 4 | Complete |
+| BPRT-02 | Phase 4 | Complete |
+| BPRT-03 | Phase 4 | Complete |
+| BPRT-04 | Phase 4 | Complete |
+| BPRT-05 | Phase 4 | Complete |
+| BPRT-06 | Phase 4 | Complete |
 | SRVC-01 | Phase 5 | Pending |
 | SRVC-02 | Phase 5 | Pending |
 | SRVC-03 | Phase 5 | Pending |
@@ -234,4 +234,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-21*
-*Last updated: 2026-01-23 after Phase 3 completion*
+*Last updated: 2026-01-26 after Phase 4 completion*

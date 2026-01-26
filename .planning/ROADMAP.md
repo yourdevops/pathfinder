@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Core Domain** - Projects with membership, Environments with deploy targets
 - [x] **Phase 3: Integrations** - Plugin framework, GitHub and Docker connections
 - [x] **Phase 3.1: Unified Sidebar Navigation** (INSERTED) - Expandable sidebar with Home, Service Catalog, Blueprints, Integrations, Settings
-- [ ] **Phase 4: Blueprints** - Template registration, versioning, availability filtering
+- [x] **Phase 4: Blueprints** - Template registration, versioning, availability filtering
 - [ ] **Phase 5: Services** - Creation wizard, repository scaffolding, service management
 - [ ] **Phase 6: Builds** - Webhook ingestion, build tracking, service activation
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
@@ -117,9 +117,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Blueprint and BlueprintVersion models with sync task
-- [ ] 04-02-PLAN.md — Blueprint views, URLs, and templates (list, register, detail)
-- [ ] 04-03-PLAN.md — Availability filtering and HTMX sync updates
+- [x] 04-01-PLAN.md — Blueprint and BlueprintVersion models with sync task
+- [x] 04-02-PLAN.md — Blueprint views, URLs, and templates (list, register, detail)
+- [x] 04-03-PLAN.md — Availability filtering and HTMX sync updates
 
 ### Phase 5: Services
 **Goal**: Developers can create services via wizard and see repositories scaffolded from blueprints
@@ -181,11 +181,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 5 -> 6 -> 7
 | 2. Core Domain | 4/4 | Complete | 2026-01-22 |
 | 3. Integrations | 6/6 | Complete | 2026-01-23 |
 | 3.1 Unified Sidebar Navigation (INSERTED) | 3/3 | Complete | 2026-01-26 |
-| 4. Blueprints | 0/3 | Planned | - |
+| 4. Blueprints | 3/3 | Complete | 2026-01-26 |
 | 5. Services | 0/3 | Not started | - |
 | 6. Builds | 0/2 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-26 (Phase 4 planned)*
+*Last updated: 2026-01-26 (Phase 4 complete)*
