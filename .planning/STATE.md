@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 
 ## Current Position
 
-Phase: 4.1 of 7 (Replace UUID URLs with Slugs) - COMPLETE
-Plan: 4 of 4 in current phase - COMPLETED
-Status: Ready for Phase 5
-Last activity: 2026-01-26 - Completed quick task 017: Consolidate project pages and update nav
+Phase: 5 of 7 (Services)
+Plan: 1 of 3 in current phase - COMPLETED
+Status: In progress
+Last activity: 2026-01-26 - Completed 05-01-PLAN.md (Service Model)
 
-Progress: [==============================----] 86%
+Progress: [===============================-----] 89%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 27
+- Total plans completed: 28
 - Average duration: 4 min
-- Total execution time: 1.95 hours
+- Total execution time: 1.97 hours
 
 **By Phase:**
 
@@ -33,9 +33,10 @@ Progress: [==============================----] 86%
 | 03.1-unified-sidebar | 3 | 9 min | 3 min |
 | 04-blueprints | 3 | 10 min | 3.3 min |
 | 04.1-replace-uuid-urls-with-slugs | 4 | 19 min | 4.75 min |
+| 05-services | 1 | 1 min | 1 min |
 
 **Recent Trend:**
-- Last 5 plans: 04.1-01 (3 min), 04.1-02 (6 min), 04.1-03 (5 min), 04.1-04 (5 min)
+- Last 5 plans: 04.1-02 (6 min), 04.1-03 (5 min), 04.1-04 (5 min), 05-01 (1 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -103,6 +104,9 @@ Recent decisions affecting current work:
 | 04.1-04 | Connection names used as URL slug | Human-readable URLs like /connections/github-main/ |
 | 04.1-03 | User URLs remain UUID-based for privacy | Group remove_member keeps user_uuid for the user being removed |
 | 04.1-03 | Blueprint name lookup uses exact match | Already enforced by model validator |
+| 05-01 | PROTECT on_delete for blueprint ForeignKeys | Prevents orphan services when blueprints deleted |
+| 05-01 | Service status: draft, active, error | draft=not built, active=successful build, error=failed |
+| 05-01 | Env var merge: project first, service overrides | Locked project vars cannot be overridden at service level |
 
 ### Roadmap Evolution
 
@@ -115,7 +119,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Phase 4.1 complete, ready for Phase 5
+None - Service model ready for wizard implementation
 
 ### Quick Tasks Completed
 
@@ -142,5 +146,5 @@ None - Phase 4.1 complete, ready for Phase 5
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed Phase 4.1 - Slug URLs
+Stopped at: Completed 05-01-PLAN.md (Service Model)
 Resume file: None
