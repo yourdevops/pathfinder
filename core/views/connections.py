@@ -49,8 +49,8 @@ class ConnectionDetailView(LoginRequiredMixin, IntegrationsReadMixin, DetailView
     model = IntegrationConnection
     template_name = 'core/connections/detail.html'
     context_object_name = 'connection'
-    slug_field = 'uuid'
-    slug_url_kwarg = 'uuid'
+    slug_field = 'name'
+    slug_url_kwarg = 'connection_name'
 
     def get_context_data(self, **kwargs):
         from core.forms import ConnectionConfigUpdateForm
@@ -112,8 +112,8 @@ class ConnectionDetailView(LoginRequiredMixin, IntegrationsReadMixin, DetailView
 class ConnectionTestView(LoginRequiredMixin, View):
     """Test connection health. Available to all authenticated users."""
 
-    def post(self, request, uuid):
-        connection = get_object_or_404(IntegrationConnection, uuid=uuid)
+    def post(self, request, connection_name):
+        connection = get_object_or_404(IntegrationConnection, name=connection_name)
         plugin = connection.get_plugin()
 
         if not plugin:
@@ -153,8 +153,8 @@ class ConnectionTestView(LoginRequiredMixin, View):
 class ConnectionDeleteView(LoginRequiredMixin, OperatorRequiredMixin, View):
     """Delete a connection."""
 
-    def post(self, request, uuid):
-        connection = get_object_or_404(IntegrationConnection, uuid=uuid)
+    def post(self, request, connection_name):
+        connection = get_object_or_404(IntegrationConnection, name=connection_name)
 
         # Check for usage - prevent deletion if connection is in use
         has_usage = (
@@ -163,7 +163,7 @@ class ConnectionDeleteView(LoginRequiredMixin, OperatorRequiredMixin, View):
         )
         if has_usage:
             messages.error(request, f'Cannot delete "{connection.name}" - it is attached to projects or environments.')
-            return redirect('connections:detail', uuid=uuid)
+            return redirect('connections:detail', connection_name=connection_name)
 
         name = connection.name
         connection.delete()
@@ -174,10 +174,10 @@ class ConnectionDeleteView(LoginRequiredMixin, OperatorRequiredMixin, View):
 class ConnectionConfigUpdateView(LoginRequiredMixin, OperatorRequiredMixin, View):
     """Update connection configuration (description + sensitive fields)."""
 
-    def post(self, request, uuid):
+    def post(self, request, connection_name):
         from core.forms import ConnectionConfigUpdateForm
 
-        connection = get_object_or_404(IntegrationConnection, uuid=uuid)
+        connection = get_object_or_404(IntegrationConnection, name=connection_name)
         form = ConnectionConfigUpdateForm(request.POST, connection=connection)
 
         if form.is_valid():
@@ -204,7 +204,7 @@ class ConnectionConfigUpdateView(LoginRequiredMixin, OperatorRequiredMixin, View
                 for error in errors:
                     messages.error(request, f'{field}: {error}')
 
-        return redirect('connections:detail', uuid=uuid)
+        return redirect('connections:detail', connection_name=connection_name)
 
 
 class ConnectionCreateDispatchView(LoginRequiredMixin, OperatorRequiredMixin, View):
