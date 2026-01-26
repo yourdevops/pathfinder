@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 
 ## Current Position
 
-Phase: 4.1 of 7 (Replace UUID URLs with Slugs) - NOT STARTED
-Plan: 0 of 1 in current phase
-Status: Planning needed
-Last activity: 2026-01-26 - Inserted Phase 4.1 (architectural refactoring)
+Phase: 4.1 of 7 (Replace UUID URLs with Slugs) - IN PROGRESS
+Plan: 1 of 4 in current phase
+Status: Executing plans
+Last activity: 2026-01-26 - Completed 04.1-01-PLAN.md (DNS label validator and URL converter)
 
-Progress: [========================---------] 70%
+Progress: [=========================---------] 71%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 23
+- Total plans completed: 24
 - Average duration: 4 min
-- Total execution time: 1.57 hours
+- Total execution time: 1.62 hours
 
 **By Phase:**
 
@@ -32,9 +32,10 @@ Progress: [========================---------] 70%
 | 03-integrations | 6 | 23 min | 4 min |
 | 03.1-unified-sidebar | 3 | 9 min | 3 min |
 | 04-blueprints | 3 | 10 min | 3.3 min |
+| 04.1-replace-uuid-urls-with-slugs | 1 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 03.1-03 (2 min), 03.1-02 (4 min), 04-01 (3 min), 04-02 (4 min), 04-03 (3 min)
+- Last 5 plans: 03.1-02 (4 min), 04-01 (3 min), 04-02 (4 min), 04-03 (3 min), 04.1-01 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -95,6 +96,9 @@ Recent decisions affecting current work:
 | 04-03 | Show unavailable toggle default unchecked | Per CONTEXT.md, unavailable blueprints hidden by default |
 | 04-03 | HTMX auto-poll every 3s while syncing | Stops polling when sync_status changes from 'syncing' |
 | 04-03 | Unavailable blueprints remain clickable | Link to detail page where setup hint banner appears |
+| 04.1-01 | RFC 1123 label format allows starting with digit | Relaxed from RFC 952 letter-only requirement |
+| 04.1-01 | Custom 'dns' path converter | Built-in 'slug' allows uppercase/underscores, not DNS-compatible |
+| 04.1-01 | max_length=63 for name fields | DNS subdomain limit |
 
 ### Roadmap Evolution
 
@@ -133,5 +137,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Inserted Phase 4.1 - Replace UUID URLs with Slugs
-Resume file: None
+Stopped at: Completed 04.1-01-PLAN.md
+Resume file: .planning/phases/04.1-replace-uuid-urls-with-slugs/04.1-02-PLAN.md
