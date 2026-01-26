@@ -159,6 +159,7 @@ LOGOUT_REDIRECT_URL = 'auth:login'
 TASKS = {
     "default": {
         "BACKEND": "django_tasks.backends.database.DatabaseBackend",
+        "QUEUES": ["default", "health_checks", "blueprint_sync"],
     }
 }
 
