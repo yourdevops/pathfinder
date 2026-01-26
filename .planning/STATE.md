@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 Phase: 4.1 of 7 (Replace UUID URLs with Slugs) - COMPLETE
 Plan: 4 of 4 in current phase - COMPLETED
 Status: Ready for Phase 5
-Last activity: 2026-01-26 - Completed Phase 4.1 (all slug URL refactoring)
+Last activity: 2026-01-26 - Completed quick task 016: Fix sidebar context replacement
 
 Progress: [==============================----] 86%
 
