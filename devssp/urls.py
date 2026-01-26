@@ -19,7 +19,7 @@ from django.urls import path, include
 from django.views.generic import RedirectView
 
 from core.urls import (
-    setup_patterns, auth_patterns, users_patterns,
+    setup_patterns, auth_patterns, dashboard_patterns, users_patterns,
     groups_patterns, audit_patterns,
     blueprints_patterns, connections_patterns,
     projects_patterns, settings_patterns,
@@ -33,10 +33,11 @@ from plugins.base import registry
 autodiscover()
 
 urlpatterns = [
-    path('', RedirectView.as_view(url='/projects/', permanent=False), name='root'),
+    path('', RedirectView.as_view(url='/dashboard/', permanent=False), name='root'),
     path('admin/', admin.site.urls),
     path('setup/', include((setup_patterns, 'setup'), namespace='setup')),
     path('auth/', include((auth_patterns, 'auth'), namespace='auth')),
+    path('dashboard/', include((dashboard_patterns, 'dashboard'), namespace='dashboard')),
     path('users/', include((users_patterns, 'users'), namespace='users')),
     path('groups/', include((groups_patterns, 'groups'), namespace='groups')),
     path('audit/', include((audit_patterns, 'audit'), namespace='audit')),

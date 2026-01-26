@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     UnlockView,
     LoginView, LogoutView,
+    DashboardView,
     UserListView, UserCreateView, UserEditView, UserDeleteView,
     GroupListView, GroupDetailView, GroupCreateView, GroupEditView,
     GroupDeleteView, GroupAddMemberView, GroupRemoveMemberView,
@@ -31,6 +32,11 @@ setup_patterns = [
 auth_patterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
+]
+
+# Dashboard URLs
+dashboard_patterns = [
+    path('', DashboardView.as_view(), name='home'),
 ]
 
 # User management URLs
