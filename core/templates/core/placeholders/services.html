@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Services - DevSSP{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold">Services</h1>
+    </div>
+
+    <div class="card text-center py-16">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-dark-border flex items-center justify-center">
+            <svg class="w-8 h-8 text-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+            </svg>
+        </div>
+        <h2 class="text-xl font-semibold mb-2">Coming Soon</h2>
+        <p class="text-dark-muted max-w-md mx-auto">
+            Service management will be available in Phase 5.
+            This is where you'll view and manage your deployed services from the Service Catalog.
+        </p>
+    </div>
+</div>
+{% endblock %}

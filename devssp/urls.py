@@ -23,6 +23,7 @@ from core.urls import (
     groups_patterns, audit_patterns,
     blueprints_patterns, connections_patterns,
     projects_patterns, settings_patterns,
+    services_patterns, resources_patterns,
 )
 
 # Plugin autodiscovery
@@ -43,6 +44,8 @@ urlpatterns = [
     path('connections/', include((connections_patterns, 'connections'), namespace='connections')),
     path('projects/', include((projects_patterns, 'projects'), namespace='projects')),
     path('settings/', include((settings_patterns, 'settings'), namespace='settings')),
+    path('services/', include((services_patterns, 'services'), namespace='services')),
+    path('resources/', include((resources_patterns, 'resources'), namespace='resources')),
 ]
 
 # Add plugin-specific URLs dynamically
