@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 3.1 - Unified Sidebar Navigation (INSERTED - urgent)
+**Current focus:** Phase 4 - Blueprints (Template System)
 
 ## Current Position
 
-Phase: 3.1 of 7 (Unified Sidebar Navigation) - COMPLETE
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-01-26 - Completed 03.1-02-PLAN.md (Home Dashboard Landing Page)
+Phase: 4 of 7 (Blueprints)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-01-26 - Completed 04-01-PLAN.md (Blueprint Models)
 
-Progress: [===================-------------] 58%
+Progress: [====================------------] 62%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 20
+- Total plans completed: 21
 - Average duration: 4 min
-- Total execution time: 1.4 hours
+- Total execution time: 1.45 hours
 
 **By Phase:**
 
@@ -31,9 +31,10 @@ Progress: [===================-------------] 58%
 | 02-core-domain | 4 | 20 min | 5 min |
 | 03-integrations | 6 | 23 min | 4 min |
 | 03.1-unified-sidebar | 3 | 9 min | 3 min |
+| 04-blueprints | 1 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-05 (4 min), 03-06 (5 min), 03.1-01 (3 min), 03.1-03 (2 min), 03.1-02 (4 min)
+- Last 5 plans: 03-06 (5 min), 03.1-01 (3 min), 03.1-03 (2 min), 03.1-02 (4 min), 04-01 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -85,6 +86,9 @@ Recent decisions affecting current work:
 | 03.1-03 | Details as first nav item in project sidebar | Default landing page for projects |
 | 03.1-03 | Settings not in project sidebar nav | Accessible via ?tab=settings URL, not in nav |
 | 03.1-03 | Back button in DevSSP logo position | Consistent styling with text-xl font-bold |
+| 04-01 | GitPython for SCM abstraction (not GitHub API) | Supports any Git server (GitHub, GitLab, Bitbucket, self-hosted) |
+| 04-01 | Sort key format for versions | {major:05d}.{minor:05d}.{patch:05d}.{prerelease or 'zzzz'} |
+| 04-01 | Manifest file names | Primary: ssp-template.yaml, fallback: devssp-template.yaml |
 
 ### Roadmap Evolution
 
@@ -96,8 +100,8 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 3.1 complete - all plans executed
-- Ready for Phase 4 (Blueprint System) or Phase 5 (Service Wizard)
+- Phase 4 Plan 01 complete - Blueprint models and sync task ready
+- Ready for Plan 02 (Blueprint views and registration UI)
 
 ### Quick Tasks Completed
 
@@ -120,5 +124,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed 03.1-02-PLAN.md - Home Dashboard Landing Page (Phase 3.1 complete)
+Stopped at: Completed 04-01-PLAN.md - Blueprint Models (Plan 01 complete)
 Resume file: None
