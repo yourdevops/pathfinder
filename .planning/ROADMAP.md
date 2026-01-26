@@ -96,7 +96,7 @@ Plans:
   5. Settings section expands to show General (placeholder), Users & Groups, Audit Log, Notifications (placeholder)
   6. All top-level sections use consistent expandable pattern with remembered state
   7. Project/Service context-switching replaces sidebar with context-specific navigation
-  8. Breadcrumbs show context-only format (e.g., "MyApp > Services > api-gateway")
+  8. No breadcrumbs in the application - sidebar is source of truth for location (per CONTEXT.md)
 **Plans**: 3 plans
 
 Plans:

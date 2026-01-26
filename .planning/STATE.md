@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 4 - Blueprints (Ready to plan)
+**Current focus:** Phase 3.1 - Unified Sidebar Navigation (INSERTED - urgent)
 
 ## Current Position
 
@@ -79,6 +79,10 @@ Recent decisions affecting current work:
 | 03-04 | Connections grouped by plugin category | SCM, Deploy, Other sections in list view |
 | 03-04 | Plugin URL autodiscovery | Dynamic registration at /integrations/<plugin>/ |
 
+### Roadmap Evolution
+
+- Phase 3.1 inserted after Phase 3: Unified sidebar navigation structure (URGENT) - 2026-01-26
+
 ### Pending Todos
 
 None yet.
@@ -87,7 +91,7 @@ None yet.
 
 - Phase 3 complete
 - All integration infrastructure in place
-- Ready for Phase 4 (Blueprints)
+- Phase 3.1 (Unified Sidebar Navigation) inserted as urgent work before Phase 4
 
 ### Quick Tasks Completed
 

@@ -30,7 +30,8 @@ def navigation_context(request):
     - in_project_context: True when viewing a project-scoped page
     - current_project: The Project instance when in project context
     - current_project_role: User's role on the current project
-    - in_settings_context: True when viewing a settings page
+    - in_settings_context: Always False (settings use main nav now)
+    - active_settings_section: The specific settings section name when on settings URL
     """
     from core.models import Project
     from core.permissions import get_user_project_role
@@ -39,12 +40,23 @@ def navigation_context(request):
         'in_project_context': False,
         'current_project': None,
         'current_project_role': None,
-        'in_settings_context': False,
+        'in_settings_context': False,  # Keep for backwards compatibility
+        'active_settings_section': None,
     }
 
-    # Check if we're in a settings URL
-    if request.path.startswith('/settings/'):
-        context['in_settings_context'] = True
+    # Detect active settings section for nav highlighting
+    path = request.path
+    if path.startswith('/settings/'):
+        if path == '/settings/' or path == '/settings':
+            context['active_settings_section'] = 'general'
+        elif '/user-management/' in path:
+            context['active_settings_section'] = 'user_management'
+        elif '/audit-logs/' in path:
+            context['active_settings_section'] = 'audit_logs'
+        elif '/api-tokens/' in path:
+            context['active_settings_section'] = 'api_tokens'
+        elif '/notifications/' in path:
+            context['active_settings_section'] = 'notifications'
 
     # Check if we're in a project-scoped URL
     if hasattr(request, 'resolver_match') and request.resolver_match:

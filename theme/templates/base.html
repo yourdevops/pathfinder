@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}DevSSP{% endblock %}</title>
     {% tailwind_css %}
+    <!-- Alpine.js Persist -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
     <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>[x-cloak] { display: none !important; }</style>
@@ -25,9 +27,7 @@
 </head>
 <body class="bg-dark-bg text-dark-text min-h-screen">
     {% if user.is_authenticated %}
-        {% if in_settings_context %}
-            {% include "core/components/nav_settings.html" %}
-        {% elif in_project_context and current_project %}
+        {% if in_project_context and current_project %}
             {% include "core/components/nav_project.html" %}
         {% else %}
             {% include "core/components/nav.html" %}
