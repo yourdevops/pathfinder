@@ -45,4 +45,4 @@ class DockerConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, Form
         connection.save()
 
         messages.success(self.request, f'Docker connection "{connection.name}" created successfully.')
-        return redirect('connections:detail', uuid=connection.uuid)
+        return redirect('connections:detail', connection_name=connection.name)

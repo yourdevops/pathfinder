@@ -12,7 +12,7 @@
     </span>
     <!-- Test Button -->
     {% if not connection.plugin_missing %}
-    <button hx-post="{% url 'connections:test' uuid=connection.uuid %}"
+    <button hx-post="{% url 'connections:test' connection_name=connection.name %}"
             hx-target="#health-status-{{ connection.uuid }}"
             hx-swap="innerHTML"
             class="text-xs px-2 py-0.5 text-dark-muted hover:text-dark-text hover:bg-dark-border/50 rounded transition-colors">

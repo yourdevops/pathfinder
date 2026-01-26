@@ -190,7 +190,7 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
         connection.save()
 
         messages.success(request, f'GitHub connection "{connection.name}" created successfully.')
-        return redirect('connections:detail', uuid=connection.uuid)
+        return redirect('connections:detail', connection_name=connection.name)
 
 
 class GitHubManifestCallbackView(LoginRequiredMixin, OperatorRequiredMixin, View):
@@ -294,7 +294,7 @@ class GitHubManifestCallbackView(LoginRequiredMixin, OperatorRequiredMixin, View
         else:
             messages.success(request, 'GitHub App created successfully. Please install it on your organization.')
 
-        return redirect('connections:detail', uuid=connection.uuid)
+        return redirect('connections:detail', connection_name=connection.name)
 
 
 class GitHubInstallationCallbackView(LoginRequiredMixin, OperatorRequiredMixin, View):
@@ -324,7 +324,7 @@ class GitHubInstallationCallbackView(LoginRequiredMixin, OperatorRequiredMixin, 
                 connection.status = 'active'
                 connection.save()
                 messages.success(request, f'GitHub App installed successfully on your organization!')
-                return redirect('connections:detail', uuid=connection.uuid)
+                return redirect('connections:detail', connection_name=connection.name)
         except Exception as e:
             messages.error(request, f'Error completing installation: {e}')
 
