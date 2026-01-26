@@ -17,6 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Integrations** - Plugin framework, GitHub and Docker connections
 - [x] **Phase 3.1: Unified Sidebar Navigation** (INSERTED) - Expandable sidebar with Home, Service Catalog, Blueprints, Integrations, Settings
 - [x] **Phase 4: Blueprints** - Template registration, versioning, availability filtering
+- [ ] **Phase 4.1: Replace UUID URLs with Slugs** (INSERTED) - Use name-based slugs in URLs instead of UUIDs
 - [ ] **Phase 5: Services** - Creation wizard, repository scaffolding, service management
 - [ ] **Phase 6: Builds** - Webhook ingestion, build tracking, service activation
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
@@ -121,6 +122,26 @@ Plans:
 - [x] 04-02-PLAN.md — Blueprint views, URLs, and templates (list, register, detail)
 - [x] 04-03-PLAN.md — Availability filtering and HTMX sync updates
 
+### Phase 4.1: Replace UUID URLs with Slugs (INSERTED)
+**Goal**: All URLs use human-readable name-based slugs instead of UUIDs; naming uniqueness enforced at model level
+**Depends on**: Phase 4
+**Requirements**: None (architectural refactoring)
+**Success Criteria** (what must be TRUE):
+  1. Project URLs use slug: `/projects/my-project/` instead of `/projects/<uuid>/`
+  2. Environment URLs use nested slugs: `/projects/my-project/environments/production/`
+  3. Blueprint URLs use slug: `/blueprints/python-fastapi/`
+  4. Group URLs use slug: `/groups/platform-team/`
+  5. Connection URLs use slug: `/connections/github-main/`
+  6. User URLs keep UUID (privacy): `/users/<uuid>/edit/`
+  7. All name fields have proper slug generation and uniqueness constraints
+  8. Existing data migrated to have valid slugs
+**Plans**: 3 plans
+
+Plans:
+- [ ] 04.1-01-PLAN.md — DNS label validator, URL path converter, model validators
+- [ ] 04.1-02-PLAN.md — Project and Environment URL refactoring
+- [ ] 04.1-03-PLAN.md — Group, Blueprint, and Connection URL refactoring
+
 ### Phase 5: Services
 **Goal**: Developers can create services via wizard and see repositories scaffolded from blueprints
 **Depends on**: Phase 4
@@ -173,7 +194,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 5 -> 6 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -182,10 +203,11 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 5 -> 6 -> 7
 | 3. Integrations | 6/6 | Complete | 2026-01-23 |
 | 3.1 Unified Sidebar Navigation (INSERTED) | 3/3 | Complete | 2026-01-26 |
 | 4. Blueprints | 3/3 | Complete | 2026-01-26 |
+| 4.1 Replace UUID URLs with Slugs (INSERTED) | 0/3 | Not started | - |
 | 5. Services | 0/3 | Not started | - |
 | 6. Builds | 0/2 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-26 (Phase 4 complete)*
+*Last updated: 2026-01-26 (Phase 4.1 planned)*
