@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 5 of 7 (Services)
-Plan: 3 of 3 in current phase - COMPLETED (all plans)
+Plan: 4 of 4 in current phase - COMPLETED (all plans)
 Status: Phase complete
-Last activity: 2026-01-26 - Completed 05-02-PLAN.md (Service Creation Wizard)
+Last activity: 2026-01-26 - Completed 05-04-PLAN.md (Service List and Detail)
 
 Progress: [====================================] 100% (Phase 5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 30
+- Total plans completed: 31
 - Average duration: 4 min
-- Total execution time: 2.17 hours
+- Total execution time: 2.25 hours
 
 **By Phase:**
 
@@ -33,10 +33,10 @@ Progress: [====================================] 100% (Phase 5)
 | 03.1-unified-sidebar | 3 | 9 min | 3 min |
 | 04-blueprints | 3 | 10 min | 3.3 min |
 | 04.1-replace-uuid-urls-with-slugs | 4 | 19 min | 4.75 min |
-| 05-services | 3 | 13 min | 4.3 min |
+| 05-services | 4 | 18 min | 4.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 04.1-04 (5 min), 05-01 (1 min), 05-03 (4 min), 05-02 (8 min)
+- Last 5 plans: 05-01 (1 min), 05-03 (4 min), 05-02 (8 min), 05-04 (5 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -113,6 +113,9 @@ Recent decisions affecting current work:
 | 05-02 | JavaScript env var editor with JSON field | Dynamic add/remove with JSON serialization |
 | 05-03 | Jinja2 for template substitution | StrictUndefined mode to catch missing variables early |
 | 05-03 | Feature branch naming: feature/{service-name} | Consistent convention for scaffolding into existing repos |
+| 05-04 | Service URLs under projects namespace | URLs follow /projects/<project_name>/services/<service_name>/ pattern |
+| 05-04 | Wizard redirect to project detail | After service creation, redirects to projects:detail (services tab) |
+| 05-04 | Service sidebar navigation pattern | Details, Builds, Environments tabs with HTMX switching |
 
 ### Roadmap Evolution
 
@@ -125,7 +128,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Phase 5 complete, wizard and scaffolding ready for URL wiring
+None - Phase 5 complete with service creation, scaffolding, list and detail pages
 
 ### Quick Tasks Completed
 
@@ -152,5 +155,5 @@ None - Phase 5 complete, wizard and scaffolding ready for URL wiring
 ## Session Continuity
 
 Last session: 2026-01-26
-Stopped at: Completed 05-02-PLAN.md (Service Creation Wizard) - Phase 5 complete
+Stopped at: Completed 05-04-PLAN.md (Service List and Detail) - Phase 5 complete
 Resume file: None
