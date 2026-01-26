@@ -1,5 +1,6 @@
 from .setup import UnlockView
 from .auth import LoginView, LogoutView
+from .dashboard import DashboardView
 from .users import UserListView, UserCreateView, UserEditView, UserDeleteView
 from .groups import (
     GroupListView, GroupDetailView, GroupCreateView, GroupEditView,
@@ -34,6 +35,7 @@ from .settings import (
 __all__ = [
     'UnlockView',
     'LoginView', 'LogoutView',
+    'DashboardView',
     'UserListView', 'UserCreateView', 'UserEditView', 'UserDeleteView',
     'GroupListView', 'GroupDetailView', 'GroupCreateView', 'GroupEditView',
     'GroupDeleteView', 'GroupAddMemberView', 'GroupRemoveMemberView',
