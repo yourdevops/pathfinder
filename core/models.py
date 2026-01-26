@@ -512,6 +512,103 @@ class BlueprintVersion(models.Model):
         return self.tag_name
 
 
+class Service(models.Model):
+    """Service represents a deployed application within a project."""
+    STATUS_CHOICES = [
+        ('draft', 'Draft'),      # Created but not built yet
+        ('active', 'Active'),    # Has successful build
+        ('error', 'Error'),      # Scaffolding or build failed
+    ]
+
+    id = models.BigAutoField(primary_key=True)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='services')
+    name = models.CharField(
+        max_length=63,
+        validators=[dns_label_validator],
+        help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.'
+    )
+    description = models.TextField(blank=True)
+
+    # Blueprint reference - both for traceability
+    blueprint = models.ForeignKey(
+        Blueprint,
+        on_delete=models.PROTECT,  # Don't allow deleting blueprints with services
+        related_name='services'
+    )
+    blueprint_version = models.ForeignKey(
+        BlueprintVersion,
+        on_delete=models.PROTECT,
+        related_name='services'
+    )
+
+    # Repository configuration
+    repo_url = models.URLField(max_length=500, blank=True)
+    repo_branch = models.CharField(max_length=100, default='main')
+    repo_is_new = models.BooleanField(default=True)  # True if we created the repo
+
+    # Service-level environment variables (merged with project vars at deploy time)
+    env_vars = models.JSONField(default=list)  # [{"key": "X", "value": "Y", "lock": bool}]
+
+    # Status tracking
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
+    scaffold_status = models.CharField(
+        max_length=20,
+        choices=[('pending', 'Pending'), ('running', 'Running'), ('success', 'Success'), ('failed', 'Failed')],
+        default='pending'
+    )
+    scaffold_error = models.TextField(blank=True)
+
+    # Build tracking (updated by Phase 6)
+    current_build_id = models.IntegerField(null=True, blank=True)  # Will be FK to Build in Phase 6
+    current_artifact_ref = models.CharField(max_length=255, blank=True)  # e.g., "registry.io/image:tag"
+
+    # Audit fields
+    created_by = models.CharField(max_length=150, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'core_service'
+        unique_together = ['project', 'name']
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.project.name}/{self.name}"
+
+    @property
+    def handler(self):
+        """Return service handler: {project-name}-{service-name}."""
+        return f"{self.project.name}-{self.name}"
+
+    def get_merged_env_vars(self):
+        """Return service env vars merged with project vars."""
+        merged = {}
+
+        # Project-level vars first
+        for var in (self.project.env_vars or []):
+            merged[var['key']] = {
+                'key': var['key'],
+                'value': var['value'],
+                'lock': var.get('lock', False),
+                'source': 'project',
+            }
+
+        # Service-level vars override (unless locked)
+        for var in (self.env_vars or []):
+            key = var['key']
+            if key in merged and merged[key]['lock']:
+                continue  # Can't override locked project vars
+            merged[key] = {
+                'key': var['key'],
+                'value': var['value'],
+                'lock': var.get('lock', False),
+                'source': 'service',
+            }
+
+        return list(merged.values())
+
+
 # Register models with auditlog
 from auditlog.registry import auditlog
 
@@ -527,3 +624,4 @@ auditlog.register(ProjectConnection)
 auditlog.register(EnvironmentConnection)
 auditlog.register(Blueprint, exclude_fields=['manifest'])  # Exclude manifest for performance
 auditlog.register(BlueprintVersion)
+auditlog.register(Service)
