@@ -68,7 +68,7 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
     def get_template_names(self):
         tab = self.request.GET.get('tab', 'services')
         # Validate tab name to prevent path traversal
-        valid_tabs = ['services', 'environments', 'members', 'settings']
+        valid_tabs = ['services', 'environments', 'settings']
         if tab not in valid_tabs:
             tab = 'services'
         if self.request.htmx:
@@ -78,7 +78,7 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         tab = self.request.GET.get('tab', 'services')
-        valid_tabs = ['services', 'environments', 'members', 'settings']
+        valid_tabs = ['services', 'environments', 'settings']
         if tab not in valid_tabs:
             tab = 'services'
         context['active_tab'] = tab
@@ -88,15 +88,14 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
             context['environments'] = self.project.environments.filter(
                 status='active'
             ).order_by('order', 'name')
-        elif tab == 'members':
+        elif tab == 'settings':
+            context['form'] = ProjectUpdateForm(instance=self.project)
+            # Members context (merged from members tab)
             memberships = self.project.memberships.select_related('group').order_by('project_role')
-            # Group memberships by role
             context['memberships'] = memberships
             context['owners'] = [m for m in memberships if m.project_role == 'owner']
             context['contributors'] = [m for m in memberships if m.project_role == 'contributor']
             context['viewers'] = [m for m in memberships if m.project_role == 'viewer']
-        elif tab == 'settings':
-            context['form'] = ProjectUpdateForm(instance=self.project)
         # services tab will be empty until Phase 5
 
         return context
@@ -275,7 +274,7 @@ class AddMemberModalView(LoginRequiredMixin, ProjectOwnerMixin, TemplateView):
             )
             messages.success(request, f'Group "{form.cleaned_data["group"].name}" added to project.')
             response = HttpResponse(status=204)
-            response['HX-Redirect'] = reverse('projects:detail', kwargs={'project_name': self.project.name}) + '?tab=members'
+            response['HX-Redirect'] = reverse('projects:detail', kwargs={'project_name': self.project.name}) + '?tab=settings'
             return response
         return self.render_to_response(self.get_context_data(form=form))
 
@@ -290,7 +289,7 @@ class RemoveMemberView(LoginRequiredMixin, ProjectOwnerMixin, View):
         )
         membership.delete()
         messages.success(request, f'Group "{group.name}" removed from project.')
-        return redirect('projects:detail', project_name=self.project.name)
+        return redirect(reverse('projects:detail', kwargs={'project_name': self.project.name}) + '?tab=settings')
 
 
 # ============================================================================
