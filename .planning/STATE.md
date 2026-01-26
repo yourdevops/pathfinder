@@ -136,6 +136,7 @@ None - Phase 4.1 complete, ready for Phase 5
 | 013 | Remove list repos page and fix auth wizard | 2026-01-23 | 1f50cda | [013-remove-list-repos-page-and-fix-auth-wiza](./quick/013-remove-list-repos-page-and-fix-auth-wiza/) |
 | 014 | Create example python-helloworld blueprint | 2026-01-26 | 329ccf0 | [014-create-example-helloworld-blueprint-with](./quick/014-create-example-helloworld-blueprint-with/) |
 | 015 | Support multiple deploy plugins in blueprints | 2026-01-26 | 9c0fe11 | [015-support-multiple-deploy-plugins-in-bluep](./quick/015-support-multiple-deploy-plugins-in-bluep/) |
+| 016 | Fix sidebar context replacement for project navigation | 2026-01-26 | 9a120cf | [016-fix-sidebar-context-replacement-for-proj](./quick/016-fix-sidebar-context-replacement-for-proj/) |
 
 ## Session Continuity
 
