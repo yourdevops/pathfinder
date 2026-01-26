@@ -218,7 +218,7 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
             f'Service "{service_name}" created. Repository scaffolding in progress...'
         )
 
-        return redirect('projects:services', project_name=project.name)
+        return redirect('projects:detail', project_name=project.name)
 
 
 class BlueprintVersionsView(LoginRequiredMixin, View):

@@ -9,7 +9,7 @@ from .views import (
     AuditLogView,
     BlueprintsListView, BlueprintDetailView, BlueprintRegisterView,
     BlueprintPreviewView, BlueprintSyncView, BlueprintSyncStatusView,
-    ServicesPlaceholderView, ResourcesPlaceholderView,
+    ResourcesPlaceholderView,
     ConnectionListView, ConnectionDetailView, ConnectionTestView,
     ConnectionDeleteView, ConnectionConfigUpdateView, ConnectionCreateDispatchView, PluginListView,
     ProjectListView, ProjectCreateModalView, ProjectCreateView,
@@ -22,6 +22,10 @@ from .views import (
     EnvironmentAttachConnectionView, EnvironmentDetachConnectionView,
     GeneralSettingsView, UserManagementView, AuditLogsSettingsView,
     ApiTokensView, NotificationsView,
+)
+from .views.services import (
+    ServiceCreateWizard, ServiceDetailView, ServiceDeleteView,
+    ServiceScaffoldStatusView, BlueprintVersionsView,
 )
 
 # Setup URLs
@@ -74,9 +78,9 @@ blueprints_patterns = [
     path('<dns:blueprint_name>/sync-status/', BlueprintSyncStatusView.as_view(), name='sync_status'),
 ]
 
-# Services placeholder URLs (to be replaced in Phase 5)
+# Services URLs (global helper endpoints)
 services_patterns = [
-    path('', ServicesPlaceholderView.as_view(), name='list'),
+    path('blueprint-versions/<int:blueprint_id>/', BlueprintVersionsView.as_view(), name='blueprint_versions'),
 ]
 
 # Resources placeholder URLs (to be replaced in future version)
@@ -123,6 +127,11 @@ projects_patterns = [
     # Environment connections
     path('<dns:project_name>/environments/<dns:env_name>/connections/attach/', EnvironmentAttachConnectionView.as_view(), name='env_attach_connection'),
     path('<dns:project_name>/environments/<dns:env_name>/connections/<int:connection_id>/detach/', EnvironmentDetachConnectionView.as_view(), name='env_detach_connection'),
+    # Services (project-scoped)
+    path('<dns:project_name>/services/create/', ServiceCreateWizard.as_view(), name='service_create'),
+    path('<dns:project_name>/services/<dns:service_name>/', ServiceDetailView.as_view(), name='service_detail'),
+    path('<dns:project_name>/services/<dns:service_name>/delete/', ServiceDeleteView.as_view(), name='service_delete'),
+    path('<dns:project_name>/services/<dns:service_name>/scaffold-status/', ServiceScaffoldStatusView.as_view(), name='service_scaffold_status'),
 ]
 
 # Settings URLs
