@@ -5,11 +5,15 @@ Run the worker with: python manage.py db_worker
 For periodic health checks, set up a cron job or systemd timer to call
 schedule_health_checks periodically.
 """
-from django_tasks import task
-from django.utils import timezone
-from django.conf import settings
-from datetime import timedelta
 import logging
+import tempfile
+
+import git
+from datetime import timedelta
+
+from django.conf import settings
+from django.utils import timezone
+from django_tasks import task
 
 logger = logging.getLogger(__name__)
 
@@ -258,3 +262,118 @@ def sync_blueprint(blueprint_id: int) -> dict:
         # Always clean up temp directory
         if repo and temp_dir:
             cleanup_repo(repo, temp_dir)
+
+
+@task(queue_name='repository_scaffolding')
+def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
+    """
+    Scaffold repository from blueprint template.
+
+    For new repos: Create repo, push template to main branch.
+    For existing repos: Create feature branch, apply template, open PR.
+
+    Args:
+        service_id: ID of the Service to scaffold
+        scm_connection_id: ID of the IntegrationConnection for SCM
+
+    Returns:
+        Dict with status and repo/PR URLs
+    """
+    from core.models import Service, IntegrationConnection
+    from core.git_utils import (
+        build_authenticated_git_url,
+        cleanup_repo,
+        get_template_variables,
+        scaffold_new_repository,
+        scaffold_existing_repository,
+    )
+
+    # Get service and connection
+    try:
+        service = Service.objects.select_related('project', 'blueprint', 'blueprint_version').get(id=service_id)
+    except Service.DoesNotExist:
+        logger.error(f'Service {service_id} not found for scaffolding')
+        return {'error': 'Service not found'}
+
+    try:
+        connection = IntegrationConnection.objects.get(id=scm_connection_id)
+    except IntegrationConnection.DoesNotExist:
+        logger.error(f'Connection {scm_connection_id} not found for scaffolding')
+        service.scaffold_status = 'failed'
+        service.scaffold_error = 'SCM connection not found'
+        service.save(update_fields=['scaffold_status', 'scaffold_error'])
+        return {'error': 'Connection not found'}
+
+    # Mark as running
+    service.scaffold_status = 'running'
+    service.scaffold_error = ''
+    service.save(update_fields=['scaffold_status', 'scaffold_error'])
+
+    blueprint = service.blueprint
+    blueprint_version = service.blueprint_version
+    blueprint_repo = None
+    blueprint_temp_dir = None
+
+    try:
+        # Clone blueprint repository at specific version
+        logger.info(f'Cloning blueprint {blueprint.name} at {blueprint_version.tag_name}')
+
+        # Build authenticated URL if blueprint has connection
+        if blueprint.connection:
+            auth_url = build_authenticated_git_url(blueprint.git_url, blueprint.connection)
+        else:
+            auth_url = None
+
+        # Clone at the specific tag/version
+        blueprint_temp_dir = tempfile.mkdtemp(prefix='ssp_blueprint_')
+        blueprint_repo = git.Repo.clone_from(
+            auth_url or blueprint.git_url,
+            blueprint_temp_dir,
+            depth=1,
+        )
+
+        # Checkout the specific tag
+        blueprint_repo.git.checkout(blueprint_version.tag_name)
+
+        # Get template variables
+        variables = get_template_variables(service)
+
+        # Scaffold based on mode
+        if service.repo_is_new:
+            result = scaffold_new_repository(
+                service=service,
+                connection=connection,
+                blueprint_temp_dir=blueprint_temp_dir,
+                variables=variables,
+            )
+            # Update service with repo URL
+            service.repo_url = result.get('repo_url', '')
+        else:
+            result = scaffold_existing_repository(
+                service=service,
+                connection=connection,
+                blueprint_temp_dir=blueprint_temp_dir,
+                variables=variables,
+            )
+
+        # Mark as success
+        service.scaffold_status = 'success'
+        service.scaffold_error = ''
+        service.save(update_fields=['scaffold_status', 'scaffold_error', 'repo_url'])
+
+        logger.info(f'Successfully scaffolded service {service.id}: {service.name}')
+        return result
+
+    except Exception as e:
+        # Mark as failed
+        error_msg = str(e)
+        logger.exception(f'Failed to scaffold service {service_id}')
+        service.scaffold_status = 'failed'
+        service.scaffold_error = error_msg
+        service.save(update_fields=['scaffold_status', 'scaffold_error'])
+        return {'status': 'failed', 'error': error_msg}
+
+    finally:
+        # Cleanup blueprint temp directory
+        if blueprint_repo and blueprint_temp_dir:
+            cleanup_repo(blueprint_repo, blueprint_temp_dir)
