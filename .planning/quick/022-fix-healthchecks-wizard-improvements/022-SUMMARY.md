@@ -52,5 +52,5 @@ The original behavior of showing all synced blueprints when no project context w
 - Explains that blueprints require matching deploy connections (e.g., Docker) attached to the project
 
 ## Commit
-- Hash: 77d7051
+- Hash: 27f64f1
 - Message: fix(quick-022): wizard improvements and helper text
