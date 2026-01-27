@@ -152,9 +152,10 @@ None - Phase 5 complete with service creation, scaffolding, list and detail page
 | 016 | Fix sidebar context replacement for project navigation | 2026-01-26 | 9a120cf | [016-fix-sidebar-context-replacement-for-proj](./quick/016-fix-sidebar-context-replacement-for-proj/) |
 | 017 | Consolidate project pages and update nav | 2026-01-26 | 69ced86 | [017-consolidate-project-pages-and-update-nav](./quick/017-consolidate-project-pages-and-update-nav/) |
 | 018 | Fix blueprint registration name error | 2026-01-27 | b4a723c | [018-fix-blueprint-registration-name-error](./quick/018-fix-blueprint-registration-name-error/) |
+| 019 | Show pending blueprints in list view | 2026-01-27 | 679ec3f | [019-show-pending-blueprints-in-list](./quick/019-show-pending-blueprints-in-list/) |
 
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed quick-018 (Fix blueprint registration name error)
+Stopped at: Completed quick-019 (Show pending blueprints in list view)
 Resume file: None
