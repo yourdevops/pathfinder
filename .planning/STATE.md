@@ -153,9 +153,10 @@ None - Phase 5 complete with service creation, scaffolding, list and detail page
 | 017 | Consolidate project pages and update nav | 2026-01-26 | 69ced86 | [017-consolidate-project-pages-and-update-nav](./quick/017-consolidate-project-pages-and-update-nav/) |
 | 018 | Fix blueprint registration name error | 2026-01-27 | b4a723c | [018-fix-blueprint-registration-name-error](./quick/018-fix-blueprint-registration-name-error/) |
 | 019 | Show pending blueprints in list view | 2026-01-27 | 679ec3f | [019-show-pending-blueprints-in-list](./quick/019-show-pending-blueprints-in-list/) |
+| 020 | ASGI docker-compose with worker | 2026-01-27 | 1552dd8 | [020-asgi-docker-compose-worker](./quick/020-asgi-docker-compose-worker/) |
 
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed quick-019 (Show pending blueprints in list view)
+Stopped at: Completed quick-020 (ASGI docker-compose with worker)
 Resume file: None
