@@ -82,6 +82,7 @@ blueprints_patterns = [
 # Services URLs (global service list and helper endpoints)
 services_patterns = [
     path('', ServiceListView.as_view(), name='list'),
+    path('create/', ServiceCreateWizard.as_view(), name='create'),
     path('blueprint-versions/<int:blueprint_id>/', BlueprintVersionsView.as_view(), name='blueprint_versions'),
 ]
 

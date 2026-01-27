@@ -56,6 +56,9 @@ class BlueprintStepForm(forms.Form):
             self.fields['project'].widget.attrs['disabled'] = True
             # Filter blueprints available for this project
             self._filter_blueprints_for_project(project)
+        else:
+            # Global wizard (no project context) - show blueprints available globally
+            self._filter_blueprints_globally()
 
         # Handle blueprint version dynamic loading (will be populated via HTMX)
         if 'blueprint' in self.data:
@@ -81,6 +84,14 @@ class BlueprintStepForm(forms.Form):
         available_blueprints = []
         for blueprint in Blueprint.objects.filter(sync_status='synced'):
             if blueprint.is_available_for_project(project):
+                available_blueprints.append(blueprint.pk)
+        self.fields['blueprint'].queryset = Blueprint.objects.filter(pk__in=available_blueprints)
+
+    def _filter_blueprints_globally(self):
+        """Filter blueprints to those available globally (have at least one matching connection)."""
+        available_blueprints = []
+        for blueprint in Blueprint.objects.filter(sync_status='synced'):
+            if blueprint.is_available_globally():
                 available_blueprints.append(blueprint.pk)
         self.fields['blueprint'].queryset = Blueprint.objects.filter(pk__in=available_blueprints)
 
