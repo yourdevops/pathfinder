@@ -1,10 +1,14 @@
 """Connection management views."""
+from datetime import timedelta
+
 from django.shortcuts import redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
+from django.conf import settings
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
+from django.db.models import Q
 from core.models import IntegrationConnection
 from core.permissions import OperatorRequiredMixin, IntegrationsReadMixin, has_system_role
 from plugins.base import registry
@@ -41,7 +45,36 @@ class ConnectionListView(LoginRequiredMixin, ListView):
             context['can_manage'] or
             has_system_role(self.request.user, 'auditor')
         )
+
+        # Lazy health check scheduling: enqueue checks for stale connections
+        self._schedule_stale_health_checks()
+
         return context
+
+    def _schedule_stale_health_checks(self):
+        """Enqueue health checks for connections that need them.
+
+        This provides lazy scheduling without needing cron/periodic tasks.
+        Checks are enqueued when:
+        - Connection has never been checked (last_health_check is None)
+        - Last check was more than HEALTH_CHECK_INTERVAL seconds ago
+        """
+        from core.tasks import check_connection_health
+
+        interval_seconds = getattr(settings, 'HEALTH_CHECK_INTERVAL', 900)  # 15 min default
+        stale_threshold = timezone.now() - timedelta(seconds=interval_seconds)
+
+        # Find connections needing health check (limit to 5 to avoid flooding)
+        stale_connections = IntegrationConnection.objects.filter(
+            status='active'
+        ).filter(
+            # Never checked OR checked before threshold
+            Q(last_health_check__isnull=True) |
+            Q(last_health_check__lt=stale_threshold)
+        )[:5]
+
+        for connection in stale_connections:
+            check_connection_health.enqueue(connection_id=connection.id)
 
 
 class ConnectionDetailView(LoginRequiredMixin, IntegrationsReadMixin, DetailView):
@@ -51,6 +84,7 @@ class ConnectionDetailView(LoginRequiredMixin, IntegrationsReadMixin, DetailView
     context_object_name = 'connection'
     slug_field = 'name'
     slug_url_kwarg = 'connection_name'
+    object: IntegrationConnection  # Type hint for Pylance
 
     def get_context_data(self, **kwargs):
         from core.forms import ConnectionConfigUpdateForm
@@ -81,12 +115,13 @@ class ConnectionDetailView(LoginRequiredMixin, IntegrationsReadMixin, DetailView
                     'editable': field_info.get('editable', False),
                     'is_set': bool(value),
                 }
-            elif value:  # Only show non-empty non-sensitive values
+            elif value or field_info.get('editable'):  # Show non-sensitive values or editable fields
                 display_config[field_name] = {
-                    'value': value,
+                    'value': value if value else '',
                     'label': field_info.get('label', field_name),
                     'sensitive': False,
-                    'is_set': True,
+                    'editable': field_info.get('editable', False),
+                    'is_set': bool(value),
                 }
         context['display_config'] = display_config
 
@@ -184,14 +219,16 @@ class ConnectionConfigUpdateView(LoginRequiredMixin, OperatorRequiredMixin, View
             # Update description
             connection.description = form.cleaned_data['description']
 
-            # Update any editable sensitive fields that were provided
+            # Update any editable fields that were provided
             config = connection.get_config()
             config_changed = False
             for field_name in form.editable_fields:
                 value = form.cleaned_data.get(field_name, '').strip()
                 if value:
-                    config[field_name] = value
-                    config_changed = True
+                    # Update if value provided (for sensitive fields, empty means keep current)
+                    if config.get(field_name) != value:
+                        config[field_name] = value
+                        config_changed = True
 
             if config_changed:
                 connection.set_config(config)

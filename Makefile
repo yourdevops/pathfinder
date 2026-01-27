@@ -39,13 +39,15 @@ build: venv
 stop:
 	@if [ -f "$(WEB_PID)" ] && kill -0 $$(cat $(WEB_PID)) 2>/dev/null; then \
 		echo "Stopping web server..."; \
-		kill $$(cat $(WEB_PID)) 2>/dev/null || true; \
+		kill -- -$$(cat $(WEB_PID)) 2>/dev/null || kill $$(cat $(WEB_PID)) 2>/dev/null || true; \
 	fi
 	@if [ -f "$(WORKER_PID)" ] && kill -0 $$(cat $(WORKER_PID)) 2>/dev/null; then \
 		echo "Stopping worker..."; \
-		kill $$(cat $(WORKER_PID)) 2>/dev/null || true; \
+		kill -- -$$(cat $(WORKER_PID)) 2>/dev/null || kill $$(cat $(WORKER_PID)) 2>/dev/null || true; \
 	fi
 	@rm -f $(WEB_PID) $(WORKER_PID)
+	@# Also kill any orphaned Django processes on port 8000
+	@lsof -ti:8000 | xargs kill 2>/dev/null || true
 
 clean: stop
 	@rm -rf $(PID_DIR)

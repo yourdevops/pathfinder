@@ -19,6 +19,9 @@ python manage.py tailwind build
 # Collect static files
 python manage.py collectstatic
 ```
+
+**USE Makefile** commands to run/restart app locally
+
 **First run**: Navigate to http://localhost:8000/, paste unlock token from `secrets/initialUnlockToken`, create admin account with the following credentials:
 - **Username**: `admin`
 - **Password**: `AdminPass123!`

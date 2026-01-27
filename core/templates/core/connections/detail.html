@@ -157,12 +157,21 @@
               x-data="{
                   hasChanges: false,
                   originalDescription: '{{ connection.description|escapejs }}',
+                  originalValues: {},
+                  init() {
+                      // Store original values of editable text inputs
+                      this.$el.querySelectorAll('input[type=text]').forEach(input => {
+                          this.originalValues[input.name] = input.value;
+                      });
+                  },
                   checkChanges() {
                       const desc = this.$refs.description ? this.$refs.description.value : '';
                       const descChanged = desc !== this.originalDescription;
                       const sensitiveInputs = this.$el.querySelectorAll('input[type=password]');
                       const sensitiveChanged = Array.from(sensitiveInputs).some(input => input.value.trim() !== '');
-                      this.hasChanges = descChanged || sensitiveChanged;
+                      const textInputs = this.$el.querySelectorAll('input[type=text]');
+                      const textChanged = Array.from(textInputs).some(input => input.value !== this.originalValues[input.name]);
+                      this.hasChanges = descChanged || sensitiveChanged || textChanged;
                   }
               }"
               @input="checkChanges()">
@@ -175,8 +184,9 @@
                     <dt class="text-sm text-dark-muted pt-2">{{ field_info.label }}</dt>
                     <dd class="col-span-2">
                         {% if field_info.editable and can_manage %}
-                        <!-- Editable sensitive field -->
+                        <!-- Editable field -->
                         <div>
+                            {% if field_info.sensitive %}
                             <input type="password"
                                    name="{{ field_name }}"
                                    placeholder="{% if field_info.is_set %}••••••••{% else %}Not set{% endif %}"
@@ -188,6 +198,12 @@
                                 </svg>
                                 Leave empty to keep current value
                             </p>
+                            {% else %}
+                            <input type="text"
+                                   name="{{ field_name }}"
+                                   value="{{ field_info.value }}"
+                                   class="w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent">
+                            {% endif %}
                         </div>
                         {% elif field_info.sensitive %}
                         <!-- Non-editable sensitive field -->

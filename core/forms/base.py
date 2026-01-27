@@ -505,14 +505,20 @@ class ConnectionConfigUpdateForm(forms.Form):
         if connection:
             self.fields['description'].initial = connection.description
 
-            # Dynamically add editable sensitive fields from plugin schema
+            # Dynamically add editable fields from plugin schema
             plugin = registry.get(connection.plugin_name)
             if plugin:
                 schema = plugin.get_config_schema()
                 config = connection.get_config()
                 for field_name, field_info in schema.items():
-                    # Only add fields that are editable, sensitive, and present in config
-                    if field_info.get('editable') and field_info.get('sensitive') and field_name in config:
+                    if not field_info.get('editable'):
+                        continue
+                    is_sensitive = field_info.get('sensitive', False)
+                    # Sensitive fields must be present in config; non-sensitive can be added anytime
+                    if is_sensitive and field_name not in config:
+                        continue
+                    if is_sensitive:
+                        # Sensitive field - use password input
                         self.fields[field_name] = forms.CharField(
                             required=False,
                             widget=forms.PasswordInput(attrs={
@@ -522,7 +528,17 @@ class ConnectionConfigUpdateForm(forms.Form):
                             }),
                             label=field_info.get('label', field_name)
                         )
-                        self.editable_fields.append(field_name)
+                    else:
+                        # Non-sensitive field - use text input with current value
+                        self.fields[field_name] = forms.CharField(
+                            required=False,
+                            initial=config.get(field_name, ''),
+                            widget=forms.TextInput(attrs={
+                                'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
+                            }),
+                            label=field_info.get('label', field_name)
+                        )
+                    self.editable_fields.append(field_name)
 
 
 class SiteConfigurationForm(forms.ModelForm):

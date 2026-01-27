@@ -30,7 +30,8 @@ class DockerPlugin(BasePlugin):
                 'type': 'string',
                 'required': True,
                 'default': '/var/run/docker.sock',
-                'label': 'Docker Socket Path'
+                'label': 'Docker Socket Path',
+                'editable': True,
             },
             'tls_enabled': {
                 'type': 'boolean',
