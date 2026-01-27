@@ -31,6 +31,9 @@ media/
 # Data directory (SQLite database lives here)
 data/
 
+# Development PID files
+.pids/
+
 # IDE
 .idea/
 .vscode/
