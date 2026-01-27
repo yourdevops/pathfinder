@@ -24,7 +24,7 @@ from .views import (
     ApiTokensView, NotificationsView,
 )
 from .views.services import (
-    ServiceCreateWizard, ServiceDetailView, ServiceDeleteView,
+    ServiceListView, ServiceCreateWizard, ServiceDetailView, ServiceDeleteView,
     ServiceScaffoldStatusView, BlueprintVersionsView,
 )
 
@@ -78,8 +78,9 @@ blueprints_patterns = [
     path('<dns:blueprint_name>/sync-status/', BlueprintSyncStatusView.as_view(), name='sync_status'),
 ]
 
-# Services URLs (global helper endpoints)
+# Services URLs (global service list and helper endpoints)
 services_patterns = [
+    path('', ServiceListView.as_view(), name='list'),
     path('blueprint-versions/<int:blueprint_id>/', BlueprintVersionsView.as_view(), name='blueprint_versions'),
 ]
 

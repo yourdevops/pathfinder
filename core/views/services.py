@@ -1,20 +1,54 @@
 """Service views including creation wizard and detail pages."""
 from django.http import HttpResponse
-from django.views.generic import View, TemplateView
+from django.views.generic import View, TemplateView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
 from django.utils.decorators import method_decorator
 from django.views.decorators.vary import vary_on_headers
+from django.db.models import Q
 
 from formtools.wizard.views import SessionWizardView
 
-from core.models import Project, Service, BlueprintVersion
+from core.models import Project, Service, BlueprintVersion, GroupMembership, ProjectMembership
 from core.forms.services import (
     BlueprintStepForm, RepositoryStepForm, ConfigurationStepForm, ReviewStepForm
 )
-from core.permissions import can_access_project
+from core.permissions import can_access_project, has_system_role
 from core.tasks import scaffold_repository
+
+
+class ServiceListView(LoginRequiredMixin, ListView):
+    """List all services the user has access to."""
+    model = Service
+    template_name = 'core/services/list.html'
+    context_object_name = 'services'
+
+    def get_queryset(self):
+        user = self.request.user
+        # Admin/superusers or system admins/operators see all services
+        if user.is_superuser or user.is_staff or has_system_role(user, ['admin', 'operator']):
+            return Service.objects.select_related(
+                'project', 'blueprint', 'blueprint_version'
+            ).order_by('-created_at')
+
+        # Regular users see services from projects they have access to
+        # Get user's group IDs
+        user_group_ids = GroupMembership.objects.filter(
+            user=user,
+            group__status='active'
+        ).values_list('group_id', flat=True)
+
+        # Get project IDs where user has membership via their groups
+        accessible_project_ids = ProjectMembership.objects.filter(
+            group_id__in=user_group_ids
+        ).values_list('project_id', flat=True)
+
+        return Service.objects.filter(
+            project_id__in=accessible_project_ids
+        ).select_related(
+            'project', 'blueprint', 'blueprint_version'
+        ).order_by('-created_at')
 
 
 WIZARD_FORMS = [
