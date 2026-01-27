@@ -154,9 +154,10 @@ None - Phase 5 complete with service creation, scaffolding, list and detail page
 | 018 | Fix blueprint registration name error | 2026-01-27 | b4a723c | [018-fix-blueprint-registration-name-error](./quick/018-fix-blueprint-registration-name-error/) |
 | 019 | Show pending blueprints in list view | 2026-01-27 | 679ec3f | [019-show-pending-blueprints-in-list](./quick/019-show-pending-blueprints-in-list/) |
 | 020 | ASGI docker-compose with worker | 2026-01-27 | 1552dd8 | [020-asgi-docker-compose-worker](./quick/020-asgi-docker-compose-worker/) |
+| 021 | Fix connection detail URL and worker queues | 2026-01-27 | c65a4b3 | [021-fix-connection-detail-url-and-investigat](./quick/021-fix-connection-detail-url-and-investigat/) |
 
 ## Session Continuity
 
 Last session: 2026-01-27
-Stopped at: Completed quick-020 (ASGI docker-compose with worker)
+Stopped at: Completed quick-021 (Fix connection detail URL and worker queues)
 Resume file: None
