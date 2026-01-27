@@ -13,6 +13,6 @@ python manage.py migrate --noinput
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
-# Start gunicorn
-echo "Starting gunicorn server..."
-exec gunicorn --bind 0.0.0.0:8000 --workers 2 --threads 4 ssp.wsgi:application
+# Start uvicorn (ASGI server)
+echo "Starting uvicorn server..."
+exec uvicorn devssp.asgi:application --host 0.0.0.0 --port 8000 --workers 2
