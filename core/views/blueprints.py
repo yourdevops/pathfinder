@@ -23,10 +23,8 @@ class BlueprintListView(LoginRequiredMixin, View):
     template_name = 'core/blueprints/list.html'
 
     def get(self, request):
-        # Query blueprints excluding pending (not yet synced)
-        blueprints_qs = Blueprint.objects.exclude(
-            sync_status='pending'
-        ).select_related('connection').order_by('name', 'created_at')
+        # Query all blueprints (including pending for visibility of stuck registrations)
+        blueprints_qs = Blueprint.objects.select_related('connection').order_by('name', 'created_at')
 
         # Collect unique tags and deploy plugins for filtering
         all_tags = set()
@@ -329,6 +327,17 @@ class BlueprintSyncStatusView(LoginRequiredMixin, View):
             'can_manage': has_system_role(request.user, ['admin', 'operator']),
         }, request=request)
         return HttpResponse(html)
+
+
+class BlueprintDeleteView(OperatorRequiredMixin, View):
+    """Delete a blueprint (used for stuck pending registrations)."""
+
+    def post(self, request, pk):
+        blueprint = get_object_or_404(Blueprint, pk=pk)
+        blueprint_name = blueprint.name or blueprint.git_url
+        blueprint.delete()
+        messages.success(request, f'Blueprint "{blueprint_name}" deleted.')
+        return redirect('blueprints:list')
 
 
 # Alias for backwards compatibility with URL patterns

@@ -11,7 +11,7 @@ from .placeholders import ServicesPlaceholderView, ResourcesPlaceholderView
 from .blueprints import (
     BlueprintListView, BlueprintsListView,
     BlueprintDetailView, BlueprintRegisterView,
-    BlueprintPreviewView, BlueprintSyncView, BlueprintSyncStatusView,
+    BlueprintPreviewView, BlueprintSyncView, BlueprintSyncStatusView, BlueprintDeleteView,
 )
 from .connections import (
     ConnectionListView,
@@ -46,7 +46,7 @@ __all__ = [
     'GroupDeleteView', 'GroupAddMemberView', 'GroupRemoveMemberView',
     'AuditLogView',
     'BlueprintListView', 'BlueprintsListView', 'BlueprintDetailView',
-    'BlueprintRegisterView', 'BlueprintPreviewView', 'BlueprintSyncView', 'BlueprintSyncStatusView',
+    'BlueprintRegisterView', 'BlueprintPreviewView', 'BlueprintSyncView', 'BlueprintSyncStatusView', 'BlueprintDeleteView',
     'ServicesPlaceholderView', 'ResourcesPlaceholderView',
     'ConnectionListView', 'ConnectionDetailView', 'ConnectionTestView',
     'ConnectionDeleteView', 'ConnectionConfigUpdateView', 'ConnectionCreateDispatchView', 'PluginListView',
