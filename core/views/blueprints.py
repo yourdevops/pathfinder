@@ -219,6 +219,7 @@ class BlueprintRegisterView(OperatorRequiredMixin, View):
 
         # Create blueprint
         blueprint = Blueprint.objects.create(
+            name=manifest.get('name', ''),
             git_url=git_url,
             connection=connection,
             sync_status='pending',
