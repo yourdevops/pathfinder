@@ -47,7 +47,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: ssp-worker
-    command: python manage.py db_worker
+    command: python manage.py db_worker --queue-name "*"
     environment:
       - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
