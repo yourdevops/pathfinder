@@ -2,7 +2,7 @@
 # Compatible with both Docker Compose and Podman Compose
 
 services:
-  ssp:
+  web:
     labels:
       - traefik.enable=true
       - traefik.http.routers.ssp.rule=Host(`ssp.yourdevops.me`)
@@ -21,17 +21,20 @@ services:
       - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}
       - SSP_DATA_DIR=${SSP_DATA_DIR:-/app/data}
       - SSP_PUBLIC_URL=${SSP_PUBLIC_URL}
+      - SSP_ENCRYPTION_KEY=${SSP_ENCRYPTION_KEY}
     volumes:
       # Mount manifests directory for persistence
       - ./manifests:/app/manifests
-      # Use named volume for data persistence
-      - ssp-data:/app/data
+      # Mount data directory for SQLite persistence
+      - ./data:/app/data
       # Mount Docker socket for container management (optional)
       - /var/run/docker.sock:/var/run/docker.sock:ro
     # Required for Docker socket access - set DOCKER_GID to your host's docker group ID
     group_add:
       - ${DOCKER_GID:-999}
     restart: unless-stopped
+    depends_on:
+      - worker
     networks:
       - yourdevops_public
     healthcheck:
@@ -41,8 +44,23 @@ services:
       retries: 3
       start_period: 10s
 
-volumes:
-  ssp-data:
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ssp-worker
+    command: python manage.py db_worker
+    environment:
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
+      - SSP_DATA_DIR=${SSP_DATA_DIR:-/app/data}
+      - SSP_ENCRYPTION_KEY=${SSP_ENCRYPTION_KEY}
+    volumes:
+      # Mount data directory for SQLite persistence (shared with web)
+      - ./data:/app/data
+    restart: unless-stopped
+    networks:
+      - yourdevops_public
 
 networks:
   yourdevops_public:
