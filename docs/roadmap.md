@@ -17,7 +17,7 @@ External identity provider integration with single source of truth model.
 - `external`: OIDC/LDAP as single source of truth
 
 **Unlock Token Lifecycle:**
-- Generated on fresh install at `$SSP_DATA_DIR/secrets/initialUnlockToken`
+- Generated on fresh install at `secrets/initialUnlockToken`
 - **Deleted immediately** after initial unlock is completed
 - Never reused - single-use security mechanism
 

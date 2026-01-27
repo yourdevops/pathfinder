@@ -254,7 +254,7 @@
                 <dd class="col-span-2 space-y-2">
                     {% for attachment in connection.project_attachments.all %}
                     <div class="flex items-center justify-between">
-                        <a href="{% url 'projects:detail' project_uuid=attachment.project.uuid %}?tab=settings"
+                        <a href="{% url 'projects:detail' project_name=attachment.project.name %}?tab=settings"
                            class="text-dark-accent hover:underline text-sm">
                             {{ attachment.project.name }}
                         </a>
@@ -273,7 +273,7 @@
                 <dd class="col-span-2 space-y-2">
                     {% for attachment in connection.environment_attachments.all %}
                     <div class="flex items-center justify-between">
-                        <a href="{% url 'projects:environment_detail' project_uuid=attachment.environment.project.uuid env_uuid=attachment.environment.uuid %}"
+                        <a href="{% url 'projects:environment_detail' project_name=attachment.environment.project.name env_name=attachment.environment.name %}"
                            class="text-dark-accent hover:underline text-sm">
                             {{ attachment.environment.project.name }} / {{ attachment.environment.name }}
                         </a>

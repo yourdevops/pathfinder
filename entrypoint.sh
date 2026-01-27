@@ -3,7 +3,7 @@
 
 set -e
 
-echo "Starting Self-Service Portal..."
+echo "Starting Developer Self-Service Portal..."
 
 # Run migrations
 echo "Running database migrations..."

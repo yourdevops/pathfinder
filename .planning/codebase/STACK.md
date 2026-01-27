@@ -61,8 +61,6 @@
   - `DJANGO_SECRET_KEY` - Secret key for cryptographic operations
   - `DJANGO_ALLOWED_HOSTS` - Comma-separated allowed hostnames
   - `CSRF_TRUSTED_ORIGINS` - CSRF-exempt origins (comma-separated)
-  - `SSP_DATA_DIR` - Data persistence directory (default: /app/data)
-  - `SSP_PUBLIC_URL` - Public-facing URL for the portal
   - `DOCKER_GID` - Docker group ID for socket access
 
 **Build:**

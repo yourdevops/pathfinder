@@ -96,9 +96,6 @@
 - `SSP_PUBLIC_URL` - Public-facing URL for the portal
 - `DOCKER_GID` - Docker group ID if using container management features
 
-**Optional env vars:**
-- `SSP_DATA_DIR` - Data directory (default: /app/data)
-
 **Secrets location:**
 - Secrets directory: `secrets/` (git-ignored)
   - Initial unlock token: `secrets/initialUnlockToken` (referenced in CLAUDE.md)

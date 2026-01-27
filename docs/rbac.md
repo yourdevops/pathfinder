@@ -45,7 +45,7 @@ SSP uses a group-based permission model designed for enterprise compliance (SOX,
 
 When DevSSP is first installed:
 
-1. **Unlock**: First user enters the unlock token from `$SSP_DATA_DIR/secrets/initialUnlockToken`
+1. **Unlock**: First user enters the unlock token from `secrets/initialUnlockToken`
 2. **Create Account**: User creates their account (username, email, password)
 3. **Automatic Setup**: DevSSP automatically:
    - Creates a local group called `admins`

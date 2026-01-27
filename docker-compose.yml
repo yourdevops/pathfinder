@@ -19,8 +19,6 @@ services:
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
       - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
       - CSRF_TRUSTED_ORIGINS=${CSRF_TRUSTED_ORIGINS:-http://localhost:8000,http://127.0.0.1:8000}
-      - SSP_DATA_DIR=${SSP_DATA_DIR:-/app/data}
-      - SSP_PUBLIC_URL=${SSP_PUBLIC_URL}
       - SSP_ENCRYPTION_KEY=${SSP_ENCRYPTION_KEY}
     volumes:
       # Mount manifests directory for persistence
@@ -53,7 +51,6 @@ services:
     environment:
       - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
-      - SSP_DATA_DIR=${SSP_DATA_DIR:-/app/data}
       - SSP_ENCRYPTION_KEY=${SSP_ENCRYPTION_KEY}
     volumes:
       # Mount data directory for SQLite persistence (shared with web)
