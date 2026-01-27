@@ -84,7 +84,7 @@
             </thead>
             <tbody class="divide-y divide-dark-border" x-ref="tbody">
                 {% for item in blueprints %}
-                <tr class="table-row align-top {% if not item.is_available %}opacity-50{% endif %}"
+                <tr class="table-row align-top {% if not item.is_available %}opacity-50{% endif %} {% if item.blueprint.sync_status == 'pending' %}bg-yellow-500/5{% endif %}"
                     data-tags="{{ item.blueprint.tags|join:',' }}"
                     data-plugin="{{ item.blueprint.deploy_plugins|join:',' }}"
                     data-available="{{ item.is_available|yesno:'true,false' }}"
@@ -97,16 +97,24 @@
                     x-transition>
                     <!-- Name + Description -->
                     <td class="px-4 py-3">
-                        <div>
+                        <div class="flex items-center gap-2">
+                            {% if item.blueprint.name %}
                             <a href="{% url 'blueprints:detail' blueprint_name=item.blueprint.name %}"
                                class="font-medium text-dark-text hover:text-dark-accent transition-colors"
                                {% if not item.is_available %}title="Requires {{ item.required_plugins|join:', ' }} connection"{% endif %}>
-                                {{ item.blueprint.name|default:"Unnamed Blueprint" }}
+                                {{ item.blueprint.name }}
                             </a>
+                            {% else %}
+                            <span class="font-medium text-dark-muted italic">Registering...</span>
+                            {% endif %}
                         </div>
                         {% if item.blueprint.description %}
                         <div class="text-sm text-dark-muted mt-0.5 truncate max-w-md">
                             {{ item.blueprint.description|truncatechars:80 }}
+                        </div>
+                        {% elif item.blueprint.sync_status == 'pending' %}
+                        <div class="text-sm text-dark-muted mt-0.5 truncate max-w-md">
+                            {{ item.blueprint.git_url }}
                         </div>
                         {% endif %}
                     </td>
@@ -140,28 +148,44 @@
                     </td>
                     <!-- Sync Status -->
                     <td class="px-4 py-3">
-                        {% if item.blueprint.sync_status == 'synced' %}
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
-                            <span class="w-1.5 h-1.5 rounded-full bg-green-400 mr-1.5"></span>
-                            Synced
-                        </span>
-                        {% elif item.blueprint.sync_status == 'syncing' %}
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400">
-                            <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 mr-1.5 animate-pulse"></span>
-                            Syncing
-                        </span>
-                        {% elif item.blueprint.sync_status == 'error' %}
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400"
-                              title="{{ item.blueprint.sync_error }}">
-                            <span class="w-1.5 h-1.5 rounded-full bg-red-400 mr-1.5"></span>
-                            Error
-                        </span>
-                        {% else %}
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-500/20 text-gray-400">
-                            <span class="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1.5"></span>
-                            Pending
-                        </span>
-                        {% endif %}
+                        <div class="flex items-center">
+                            {% if item.blueprint.sync_status == 'synced' %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-green-400 mr-1.5"></span>
+                                Synced
+                            </span>
+                            {% elif item.blueprint.sync_status == 'syncing' %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 mr-1.5 animate-pulse"></span>
+                                Syncing
+                            </span>
+                            {% elif item.blueprint.sync_status == 'error' %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400"
+                                  title="{{ item.blueprint.sync_error }}">
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-400 mr-1.5"></span>
+                                Error
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-500/20 text-gray-400">
+                                <span class="w-1.5 h-1.5 rounded-full bg-gray-400 mr-1.5"></span>
+                                Pending
+                            </span>
+                            {% endif %}
+                            {% if can_manage and item.blueprint.sync_status in 'pending,error' %}
+                            <form method="post" action="{% url 'blueprints:delete' pk=item.blueprint.pk %}"
+                                  class="inline-block ml-2"
+                                  onsubmit="return confirm('Delete this blueprint registration?');">
+                                {% csrf_token %}
+                                <button type="submit"
+                                        class="text-red-400 hover:text-red-300 transition-colors"
+                                        title="Delete blueprint">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
