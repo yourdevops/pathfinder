@@ -21,7 +21,6 @@
                 <tr>
                     <th class="px-4 py-3 text-left text-sm font-medium text-dark-muted">Name</th>
                     <th class="px-4 py-3 text-left text-sm font-medium text-dark-muted">Status</th>
-                    <th class="px-4 py-3 text-left text-sm font-medium text-dark-muted">Blueprint</th>
                     <th class="px-4 py-3 text-left text-sm font-medium text-dark-muted">Last Activity</th>
                 </tr>
             </thead>
@@ -48,10 +47,6 @@
                             {{ service.get_status_display }}
                         </span>
                     </td>
-                    <td class="px-4 py-3 text-dark-muted">
-                        {{ service.blueprint.name }}
-                        <span class="text-dark-muted/70">{{ service.blueprint_version.tag_name }}</span>
-                    </td>
                     <td class="px-4 py-3 text-dark-muted text-sm">
                         {{ service.updated_at|timesince }} ago
                     </td>
@@ -67,7 +62,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
         </svg>
         <h2 class="text-xl font-semibold text-dark-text mb-2">No services yet</h2>
-        <p class="text-dark-muted mb-6">Create your first service using a blueprint template.</p>
+        <p class="text-dark-muted mb-6">Create your first service to get started.</p>
         {% if user_project_role == 'contributor' or user_project_role == 'owner' %}
         <a href="{% url 'projects:service_create' project_name=project.name %}"
            class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors inline-flex items-center gap-2">
@@ -75,11 +70,6 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
             Create Service
-        </a>
-        {% else %}
-        <a href="{% url 'blueprints:list' %}"
-           class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors inline-flex items-center gap-2">
-            Browse Blueprints
         </a>
         {% endif %}
     </div>

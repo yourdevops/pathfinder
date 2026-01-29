@@ -85,9 +85,7 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
 
         # Tab-specific data
         if tab == 'services':
-            context['services'] = self.project.services.select_related(
-                'blueprint', 'blueprint_version'
-            ).order_by('name')
+            context['services'] = self.project.services.order_by('name')
         elif tab == 'environments':
             context['environments'] = self.project.environments.filter(
                 status='active'

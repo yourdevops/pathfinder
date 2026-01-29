@@ -43,16 +43,6 @@
             </p>
         </div>
         <div class="bg-dark-surface border border-dark-border rounded-lg p-4">
-            <p class="text-sm text-dark-muted">Blueprint</p>
-            <p class="text-dark-text mt-1">
-                <a href="{% url 'blueprints:detail' blueprint_name=service.blueprint.name %}"
-                   class="hover:text-dark-accent transition-colors">
-                    {{ service.blueprint.name }}
-                </a>
-                <span class="text-dark-muted">{{ service.blueprint_version.tag_name }}</span>
-            </p>
-        </div>
-        <div class="bg-dark-surface border border-dark-border rounded-lg p-4">
             <p class="text-sm text-dark-muted">Repository</p>
             {% if service.repo_url %}
             <a href="{{ service.repo_url }}" target="_blank"
@@ -62,6 +52,10 @@
             {% else %}
             <p class="text-dark-muted mt-1">Pending...</p>
             {% endif %}
+        </div>
+        <div class="bg-dark-surface border border-dark-border rounded-lg p-4">
+            <p class="text-sm text-dark-muted">Branch</p>
+            <p class="text-dark-text font-mono mt-1">{{ service.repo_branch }}</p>
         </div>
     </div>
 

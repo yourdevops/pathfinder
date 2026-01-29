@@ -22,18 +22,6 @@
             <p class="text-dark-text font-mono mt-1">{{ review_data.handler }}</p>
         </div>
 
-        <!-- Blueprint -->
-        <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">
-            <p class="text-sm text-dark-muted">Blueprint</p>
-            <p class="text-dark-text font-medium mt-1">{{ review_data.blueprint.name }}</p>
-        </div>
-
-        <!-- Version -->
-        <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">
-            <p class="text-sm text-dark-muted">Version</p>
-            <p class="text-dark-text font-medium mt-1">{{ review_data.blueprint_version.tag_name }}</p>
-        </div>
-
         <!-- Repository Mode -->
         <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">
             <p class="text-sm text-dark-muted">Repository</p>
@@ -88,10 +76,10 @@
         <ul class="text-sm text-dark-muted space-y-1 list-disc list-inside">
             {% if review_data.repo_mode == 'new' %}
             <li>A new repository <code class="text-dark-text">{{ review_data.handler }}</code> will be created</li>
-            <li>Blueprint template will be pushed to the <code class="text-dark-text">{{ review_data.branch }}</code> branch</li>
+            <li>Service template will be pushed to the <code class="text-dark-text">{{ review_data.branch }}</code> branch</li>
             {% else %}
             <li>A feature branch <code class="text-dark-text">feature/{{ review_data.service_name }}</code> will be created</li>
-            <li>Blueprint template will be applied and a PR opened to <code class="text-dark-text">{{ review_data.branch }}</code></li>
+            <li>Service template will be applied and a PR opened to <code class="text-dark-text">{{ review_data.branch }}</code></li>
             {% endif %}
             <li>Service status will update when scaffolding completes</li>
         </ul>

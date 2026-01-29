@@ -27,7 +27,6 @@
                 <tr class="border-b border-dark-border bg-dark-bg/50">
                     <th class="px-6 py-3 text-left text-xs font-semibold text-dark-muted uppercase tracking-wider">Service</th>
                     <th class="px-6 py-3 text-left text-xs font-semibold text-dark-muted uppercase tracking-wider">Project</th>
-                    <th class="px-6 py-3 text-left text-xs font-semibold text-dark-muted uppercase tracking-wider">Blueprint</th>
                     <th class="px-6 py-3 text-left text-xs font-semibold text-dark-muted uppercase tracking-wider">Status</th>
                     <th class="px-6 py-3 text-left text-xs font-semibold text-dark-muted uppercase tracking-wider">Created</th>
                 </tr>
@@ -46,10 +45,6 @@
                            class="text-dark-muted hover:text-dark-accent transition-colors">
                             {{ service.project.name }}
                         </a>
-                    </td>
-                    <td class="px-6 py-4 text-dark-muted">
-                        {{ service.blueprint.name }}
-                        <span class="text-dark-muted/70 text-sm">{{ service.blueprint_version.display_name }}</span>
                     </td>
                     <td class="px-6 py-4">
                         {% if service.status == 'active' %}

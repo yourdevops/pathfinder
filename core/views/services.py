@@ -6,7 +6,6 @@ from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
 from django.utils.decorators import method_decorator
 from django.views.decorators.vary import vary_on_headers
-from django.db.models import Q
 
 from formtools.wizard.views import SessionWizardView
 
@@ -29,7 +28,7 @@ class ServiceListView(LoginRequiredMixin, ListView):
         # Admin/superusers or system admins/operators see all services
         if user.is_superuser or user.is_staff or has_system_role(user, ['admin', 'operator']):
             return Service.objects.select_related(
-                'project', 'blueprint', 'blueprint_version'
+                'project'
             ).order_by('-created_at')
 
         # Regular users see services from projects they have access to
@@ -47,7 +46,7 @@ class ServiceListView(LoginRequiredMixin, ListView):
         return Service.objects.filter(
             project_id__in=accessible_project_ids
         ).select_related(
-            'project', 'blueprint', 'blueprint_version'
+            'project'
         ).order_by('-created_at')
 
 
@@ -74,7 +73,7 @@ STEP_TITLES = {
 
 
 class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
-    """4-step service creation wizard."""
+    """4-step service creation wizard (project, repository, configuration, review)."""
     form_list = WIZARD_FORMS
 
     def dispatch(self, request, *args, **kwargs):
@@ -98,22 +97,21 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
     def get_form_kwargs(self, step=None):
         kwargs = super().get_form_kwargs(step)
 
-        if step == 'blueprint':
+        if step == 'project':
             kwargs['project'] = self.project
 
         elif step == 'repository':
-            # Pass project and blueprint from step 1
-            blueprint_data = self.get_cleaned_data_for_step('blueprint')
-            if blueprint_data:
-                kwargs['project'] = blueprint_data.get('project') or self.project
-                kwargs['blueprint'] = blueprint_data.get('blueprint')
+            # Pass project from step 1
+            project_data = self.get_cleaned_data_for_step('project')
+            if project_data:
+                kwargs['project'] = project_data.get('project') or self.project
 
         elif step == 'configuration':
             # Pass project and service name for env var inheritance display
-            blueprint_data = self.get_cleaned_data_for_step('blueprint')
-            if blueprint_data:
-                kwargs['project'] = blueprint_data.get('project') or self.project
-                kwargs['service_name'] = blueprint_data.get('name')
+            project_data = self.get_cleaned_data_for_step('project')
+            if project_data:
+                kwargs['project'] = project_data.get('project') or self.project
+                kwargs['service_name'] = project_data.get('name')
 
         return kwargs
 
@@ -121,7 +119,6 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         context = super().get_context_data(form, **kwargs)
 
         # Step metadata for progress bar
-        step_keys = list(dict(WIZARD_FORMS).keys())
         context['steps'] = [
             {
                 'key': key,
@@ -138,25 +135,21 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         context['project'] = self.project
 
         # Step-specific context
-        if self.steps.current == 'blueprint':
-            # For HTMX blueprint version loading
-            pass
-
-        elif self.steps.current == 'repository':
+        if self.steps.current == 'repository':
             # Preview repo name
-            blueprint_data = self.get_cleaned_data_for_step('blueprint')
-            if blueprint_data:
-                project = blueprint_data.get('project') or self.project
-                service_name = blueprint_data.get('name')
+            project_data = self.get_cleaned_data_for_step('project')
+            if project_data:
+                project = project_data.get('project') or self.project
+                service_name = project_data.get('name')
                 if project and service_name:
                     context['preview_repo_name'] = f"{project.name}-{service_name}"
 
         elif self.steps.current == 'configuration':
             # Show inherited project vars
-            blueprint_data = self.get_cleaned_data_for_step('blueprint')
-            if blueprint_data:
-                project = blueprint_data.get('project') or self.project
-                service_name = blueprint_data.get('name')
+            project_data = self.get_cleaned_data_for_step('project')
+            if project_data:
+                project = project_data.get('project') or self.project
+                service_name = project_data.get('name')
                 context['project_env_vars'] = project.env_vars or [] if project else []
                 context['service_name'] = service_name
                 # Default SERVICE_NAME variable (locked)
@@ -170,19 +163,15 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
 
     def _get_review_data(self):
         """Compile all wizard data for review step."""
-        blueprint_data = self.get_cleaned_data_for_step('blueprint') or {}
+        project_data = self.get_cleaned_data_for_step('project') or {}
         repository_data = self.get_cleaned_data_for_step('repository') or {}
         config_data = self.get_cleaned_data_for_step('configuration') or {}
 
-        project = blueprint_data.get('project') or self.project
-        blueprint = blueprint_data.get('blueprint')
-        blueprint_version = blueprint_data.get('blueprint_version')
-        service_name = blueprint_data.get('name')
+        project = project_data.get('project') or self.project
+        service_name = project_data.get('name')
 
         return {
             'project': project,
-            'blueprint': blueprint,
-            'blueprint_version': blueprint_version,
             'service_name': service_name,
             'handler': f"{project.name}-{service_name}" if project and service_name else '',
             'scm_connection': repository_data.get('scm_connection'),
@@ -196,14 +185,12 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
     def done(self, form_list, form_dict, **kwargs):
         """Create service and trigger repository scaffolding."""
         # Extract data from all forms
-        blueprint_data = form_dict['blueprint'].cleaned_data
+        project_data = form_dict['project'].cleaned_data
         repository_data = form_dict['repository'].cleaned_data
         config_data = form_dict['configuration'].cleaned_data
 
-        project = blueprint_data.get('project') or self.project
-        blueprint = blueprint_data['blueprint']
-        blueprint_version = blueprint_data['blueprint_version']
-        service_name = blueprint_data['name']
+        project = project_data.get('project') or self.project
+        service_name = project_data['name']
 
         scm_connection = repository_data['scm_connection']
         repo_mode = repository_data['repo_mode']
@@ -230,8 +217,6 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         service = Service.objects.create(
             project=project,
             name=service_name,
-            blueprint=blueprint,
-            blueprint_version=blueprint_version,
             repo_url=repo_url,
             repo_branch=branch,
             repo_is_new=repo_is_new,
@@ -253,21 +238,6 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         )
 
         return redirect('projects:detail', project_name=project.name)
-
-
-class BlueprintVersionsView(LoginRequiredMixin, View):
-    """HTMX endpoint to load blueprint versions."""
-
-    def get(self, request, blueprint_id):
-        versions = BlueprintVersion.objects.filter(
-            blueprint_id=blueprint_id
-        ).order_by('-sort_key')
-
-        html = '<option value="">Select version...</option>'
-        for v in versions:
-            html += f'<option value="{v.id}">{v.display_name}</option>'
-
-        return HttpResponse(html)
 
 
 @method_decorator(vary_on_headers("HX-Request"), name='dispatch')

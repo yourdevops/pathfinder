@@ -235,7 +235,7 @@ class UserEditForm(forms.Form):
 # System role choices for groups
 SYSTEM_ROLE_CHOICES = [
     ('admin', 'Admin - Full system access'),
-    ('operator', 'Operator - Manage integrations and blueprints'),
+    ('operator', 'Operator - Manage integrations and CI workflows'),
     ('auditor', 'Auditor - Read-only access to all projects'),
 ]
 

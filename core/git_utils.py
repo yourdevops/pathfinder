@@ -400,17 +400,17 @@ def scaffold_new_repository(
     variables: dict
 ) -> dict:
     """
-    Scaffold a new repository from blueprint template.
+    Scaffold a new repository from a service template.
 
     1. Create empty repo via SCM plugin
     2. Clone the new repo
-    3. Apply blueprint template with variable substitution
+    3. Apply template with variable substitution (if template dir provided)
     4. Commit and push to main branch
 
     Args:
         service: Service model instance
         connection: IntegrationConnection for SCM
-        blueprint_temp_dir: Path to cloned blueprint
+        blueprint_temp_dir: Path to template directory (optional)
         variables: Template variables
 
     Returns:
@@ -440,15 +440,16 @@ def scaffold_new_repository(
         # Initialize git repo
         repo = git.Repo.init(repo_temp_dir)
 
-        # Apply blueprint template
-        apply_template_to_directory(blueprint_temp_dir, repo_temp_dir, variables)
+        # Apply template if provided
+        if blueprint_temp_dir:
+            apply_template_to_directory(blueprint_temp_dir, repo_temp_dir, variables)
 
         # Git add all files
         repo.index.add('*')
 
         # Commit
         repo.index.commit(
-            f"Initial commit from blueprint {service.blueprint.name} {service.blueprint_version.tag_name}",
+            f"Initial commit for service {service.name}",
             author=git.Actor("DevSSP", "devssp@localhost"),
             committer=git.Actor("DevSSP", "devssp@localhost"),
         )
@@ -485,14 +486,14 @@ def scaffold_existing_repository(
 
     1. Clone existing repo
     2. Create feature/{service-name} branch
-    3. Apply blueprint template with variable substitution
+    3. Apply template with variable substitution (if template dir provided)
     4. Commit and push feature branch
     5. Create PR to base branch
 
     Args:
         service: Service model instance
         connection: IntegrationConnection for SCM
-        blueprint_temp_dir: Path to cloned blueprint
+        blueprint_temp_dir: Path to template directory (optional)
         variables: Template variables
 
     Returns:
@@ -516,8 +517,9 @@ def scaffold_existing_repository(
         repo.create_head(feature_branch)
         repo.heads[feature_branch].checkout()
 
-        # Apply blueprint template
-        apply_template_to_directory(blueprint_temp_dir, repo_temp_dir, variables)
+        # Apply template if provided
+        if blueprint_temp_dir:
+            apply_template_to_directory(blueprint_temp_dir, repo_temp_dir, variables)
 
         # Check if there are changes
         if not repo.is_dirty() and not repo.untracked_files:
@@ -530,7 +532,7 @@ def scaffold_existing_repository(
         # Git add and commit
         repo.index.add('*')
         repo.index.commit(
-            f"Add service scaffold from blueprint {service.blueprint.name} {service.blueprint_version.tag_name}",
+            f"Add service scaffold for {service.name}",
             author=git.Actor("DevSSP", "devssp@localhost"),
             committer=git.Actor("DevSSP", "devssp@localhost"),
         )
@@ -545,7 +547,7 @@ def scaffold_existing_repository(
             config,
             service.repo_url,
             title=f"Add {service.name} service scaffold",
-            body=f"Scaffolded from blueprint: {service.blueprint.name} {service.blueprint_version.tag_name}",
+            body=f"Scaffolded service: {service.name}",
             head=feature_branch,
             base=service.repo_branch,
         )

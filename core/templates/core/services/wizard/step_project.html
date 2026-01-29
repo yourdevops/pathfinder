@@ -1,0 +1,33 @@
+{% extends "core/services/wizard/base.html" %}
+
+{% block wizard_content %}
+<div class="space-y-6">
+    <!-- Project -->
+    <div>
+        <label class="block text-sm font-medium text-dark-text mb-2">Project</label>
+        {{ wizard.form.project }}
+        {% if wizard.form.project.help_text %}
+        <p class="mt-1 text-sm text-dark-muted">{{ wizard.form.project.help_text }}</p>
+        {% endif %}
+        {% if wizard.form.project.errors %}
+        <p class="mt-1 text-sm text-red-400">{{ wizard.form.project.errors.0 }}</p>
+        {% endif %}
+    </div>
+
+    <!-- Service Name -->
+    <div>
+        <label class="block text-sm font-medium text-dark-text mb-2">Service Name</label>
+        {{ wizard.form.name }}
+        <p class="mt-1 text-sm text-dark-muted">{{ wizard.form.name.help_text }}</p>
+        {% if wizard.form.name.errors %}
+        <p class="mt-1 text-sm text-red-400">{{ wizard.form.name.errors.0 }}</p>
+        {% endif %}
+    </div>
+</div>
+
+{% if wizard.form.non_field_errors %}
+<div class="mt-4 p-3 bg-red-900/20 border border-red-500/50 rounded-lg">
+    <p class="text-sm text-red-400">{{ wizard.form.non_field_errors.0 }}</p>
+</div>
+{% endif %}
+{% endblock %}
