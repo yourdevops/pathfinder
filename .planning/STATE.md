@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 5.1 in progress - CI Workflows Builder (Plan 03 of 4 complete)
+**Current focus:** Phase 5.1 complete - CI Workflows Builder (all 4 plans complete)
 
 ## Current Position
 
 Phase: 5.1 of 7 (CI Workflows Builder)
-Plan: 3 of 4 in current phase
-Status: In progress
-Last activity: 2026-01-29 - Completed 05.1-03-PLAN.md (Workflow Composer)
+Plan: 4 of 4 in current phase - COMPLETED (all plans)
+Status: Phase complete
+Last activity: 2026-01-29 - Completed 05.1-04-PLAN.md (Manifest Generation and Workflow Views)
 
-Progress: [========================                ] 75% (Phase 5.1)
+Progress: [====================================] 100% (Phase 5.1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 34
+- Total plans completed: 35
 - Average duration: 4 min
-- Total execution time: 2.7 hours
+- Total execution time: 2.8 hours
 
 **By Phase:**
 
@@ -34,10 +34,10 @@ Progress: [========================                ] 75% (Phase 5.1)
 | 04-blueprints | 3 | 10 min | 3.3 min |
 | 04.1-replace-uuid-urls-with-slugs | 4 | 19 min | 4.75 min |
 | 05-services | 4 | 18 min | 4.5 min |
-| 05.1-ci-workflows-builder | 3 | 21 min | 7 min |
+| 05.1-ci-workflows-builder | 4 | 29 min | 7.25 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-03 (4 min), 05-01 (1 min), 05.1-01 (11 min), 05.1-02 (6 min), 05.1-03 (4 min)
+- Last 5 plans: 05-01 (1 min), 05.1-01 (11 min), 05.1-02 (6 min), 05.1-03 (4 min), 05.1-04 (8 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -122,6 +122,9 @@ Recent decisions affecting current work:
 | 05.1-02 | steps_scan queue in TASKS QUEUES config | django-tasks validates queue names at import; needed for scan task |
 | 05.1-03 | WorkflowCreateView redirects to composer via GET query params | Clean separation of metadata and composition; no session state needed |
 | 05.1-03 | Alpine.js inline step config instead of HTMX per-step load | Faster UX; inputs_schema as JSON avoids server round-trip per step |
+| 05.1-04 | parse_git_url for manifest step uses references | Extract owner/repo from git URL for GitHub Actions uses: format |
+| 05.1-04 | sort_keys=False for YAML manifest | Preserves conventional GitHub Actions key ordering (name, on, jobs) |
+| 05.1-04 | Auto-injected checkout and notify steps | Bracket user steps with checkout, ssp-notify-start, ssp-notify-complete |
 
 ### Roadmap Evolution
 
@@ -135,7 +138,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Plan 03 complete, workflow composer functional. Ready for Plan 04 (GitHub Actions Manifest Generation)
+None - Phase 5.1 complete with all CI Workflows functionality
 
 ### Quick Tasks Completed
 
@@ -167,5 +170,5 @@ None - Plan 03 complete, workflow composer functional. Ready for Plan 04 (GitHub
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed 05.1-03-PLAN.md (Workflow Composer)
+Stopped at: Completed Phase 5.1 (CI Workflows Builder) - all 4 plans
 Resume file: None
