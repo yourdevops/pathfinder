@@ -53,22 +53,22 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </button>
-            <!-- Sub-items (URLs populated in Plan 02) -->
+            <!-- Sub-items -->
             <div x-show="ciWorkflowsOpen" x-transition x-cloak class="ml-2 mt-1 space-y-1">
-                <a href="#" {# TODO Plan 02: ci_workflows:workflow_list #}
-                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors {% if 'ci-workflows' in request.path and 'steps' not in request.path and 'runtimes' not in request.path and 'repositories' not in request.path %}bg-dark-border/50 text-dark-text{% else %}text-dark-muted hover:bg-dark-border/50 hover:text-dark-text{% endif %}">
+                <a href="#" {# TODO Plan 03: ci_workflows:workflow_list #}
+                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors {% if 'ci-workflows' in request.path and 'steps' not in request.path and 'runtimes' not in request.path and 'repos' not in request.path %}bg-dark-border/50 text-dark-text{% else %}text-dark-muted hover:bg-dark-border/50 hover:text-dark-text{% endif %}">
                     Workflows
                 </a>
-                <a href="#" {# TODO Plan 02: ci_workflows:steps_catalog #}
-                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors text-dark-muted hover:bg-dark-border/50 hover:text-dark-text">
+                <a href="{% url 'ci_workflows:steps_catalog' %}"
+                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors {% if '/ci-workflows/steps' in request.path %}bg-dark-border/50 text-dark-text{% else %}text-dark-muted hover:bg-dark-border/50 hover:text-dark-text{% endif %}">
                     Steps
                 </a>
-                <a href="#" {# TODO Plan 02: ci_workflows:runtimes #}
-                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors text-dark-muted hover:bg-dark-border/50 hover:text-dark-text">
+                <a href="{% url 'ci_workflows:runtimes' %}"
+                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors {% if '/ci-workflows/runtimes' in request.path %}bg-dark-border/50 text-dark-text{% else %}text-dark-muted hover:bg-dark-border/50 hover:text-dark-text{% endif %}">
                     Runtimes
                 </a>
-                <a href="#" {# TODO Plan 02: ci_workflows:repo_list #}
-                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors text-dark-muted hover:bg-dark-border/50 hover:text-dark-text">
+                <a href="{% url 'ci_workflows:repo_list' %}"
+                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors {% if '/ci-workflows/repos' in request.path %}bg-dark-border/50 text-dark-text{% else %}text-dark-muted hover:bg-dark-border/50 hover:text-dark-text{% endif %}">
                     Repositories
                 </a>
             </div>

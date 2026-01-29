@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Register Steps Repository - DevSSP{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <a href="{% url 'ci_workflows:repo_list' %}" class="text-dark-muted hover:text-dark-text text-sm transition-colors">
+            &larr; Back to Repositories
+        </a>
+        <h1 class="text-2xl font-bold text-dark-text mt-2">Register Steps Repository</h1>
+        <p class="text-dark-muted mt-1">Add a Git repository containing CI step definitions and runtimes</p>
+    </div>
+
+    <!-- Form -->
+    <div class="max-w-xl">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Name -->
+            <div>
+                <label for="id_name" class="block text-sm font-medium text-dark-text mb-1">
+                    Repository Name
+                </label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ form.name.errors.0 }}</p>
+                {% endif %}
+                <p class="text-dark-muted text-xs mt-1">{{ form.name.help_text }}</p>
+            </div>
+
+            <!-- Git URL -->
+            <div>
+                <label for="id_git_url" class="block text-sm font-medium text-dark-text mb-1">
+                    Git URL
+                </label>
+                {{ form.git_url }}
+                {% if form.git_url.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ form.git_url.errors.0 }}</p>
+                {% endif %}
+                <p class="text-dark-muted text-xs mt-1">{{ form.git_url.help_text }}</p>
+            </div>
+
+            <!-- Connection -->
+            <div>
+                <label for="id_connection" class="block text-sm font-medium text-dark-text mb-1">
+                    SCM Connection
+                </label>
+                {{ form.connection }}
+                {% if form.connection.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ form.connection.errors.0 }}</p>
+                {% endif %}
+                <p class="text-dark-muted text-xs mt-1">{{ form.connection.help_text }}</p>
+            </div>
+
+            <!-- Submit -->
+            <div class="flex items-center gap-4">
+                <button type="submit"
+                        class="px-6 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors">
+                    Register & Scan
+                </button>
+                <a href="{% url 'ci_workflows:repo_list' %}"
+                   class="px-4 py-2 text-dark-muted hover:text-dark-text transition-colors">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

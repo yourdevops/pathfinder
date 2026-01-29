@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}Steps Repositories - DevSSP{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-dark-text">Steps Repositories</h1>
+            <p class="text-dark-muted mt-1">Git repositories containing CI step definitions and runtimes</p>
+        </div>
+        {% if can_manage %}
+        <a href="{% url 'ci_workflows:repo_register' %}"
+           class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Register Repository
+        </a>
+        {% endif %}
+    </div>
+
+    {% if repos %}
+    <!-- Repository Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for repo in repos %}
+        <a href="{% url 'ci_workflows:repo_detail' repo_name=repo.name %}"
+           class="bg-dark-surface border border-dark-border rounded-lg p-5 hover:border-dark-accent/50 transition-colors block">
+            <div class="flex items-start justify-between mb-3">
+                <h3 class="text-lg font-semibold text-dark-text">{{ repo.name }}</h3>
+                <!-- Scan Status Badge -->
+                {% if repo.scan_status == 'scanned' %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
+                    Scanned
+                </span>
+                {% elif repo.scan_status == 'scanning' %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400">
+                    Scanning...
+                </span>
+                {% elif repo.scan_status == 'error' %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400">
+                    Error
+                </span>
+                {% else %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-500/20 text-gray-400">
+                    Pending
+                </span>
+                {% endif %}
+            </div>
+            <p class="text-sm text-dark-muted truncate mb-3">{{ repo.git_url }}</p>
+            <div class="flex items-center gap-4 text-sm text-dark-muted">
+                <span>{{ repo.step_count }} step{{ repo.step_count|pluralize }}</span>
+                <span>{{ repo.runtime_count }} runtime{{ repo.runtime_count|pluralize }}</span>
+                {% if repo.last_scanned_at %}
+                <span>Last scanned {{ repo.last_scanned_at|naturaltime }}</span>
+                {% endif %}
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg p-12 text-center">
+        <svg class="w-12 h-12 mx-auto text-dark-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+        </svg>
+        <h2 class="text-xl font-semibold text-dark-text mb-2">No repositories registered</h2>
+        <p class="text-dark-muted mb-6">Register a Git repository to import CI step definitions and runtimes.</p>
+        {% if can_manage %}
+        <a href="{% url 'ci_workflows:repo_register' %}"
+           class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors inline-flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Register Repository
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -25,6 +25,11 @@ from .views.services import (
     ServiceListView, ServiceCreateWizard, ServiceDetailView, ServiceDeleteView,
     ServiceScaffoldStatusView,
 )
+from .views.ci_workflows import (
+    StepsRepoListView, StepsRepoRegisterView, StepsRepoDetailView,
+    StepsRepoScanView, StepsRepoScanStatusView,
+    StepsCatalogView, StepDetailView, RuntimesView,
+)
 
 # Setup URLs
 setup_patterns = [
@@ -66,9 +71,16 @@ audit_patterns = [
     path('', AuditLogView.as_view(), name='list'),
 ]
 
-# CI Workflows URLs (populated in Plan 02)
+# CI Workflows URLs
 ci_workflows_patterns = [
-    # Populated in Plan 02
+    path('repos/', StepsRepoListView.as_view(), name='repo_list'),
+    path('repos/register/', StepsRepoRegisterView.as_view(), name='repo_register'),
+    path('repos/<dns:repo_name>/', StepsRepoDetailView.as_view(), name='repo_detail'),
+    path('repos/<dns:repo_name>/scan/', StepsRepoScanView.as_view(), name='repo_scan'),
+    path('repos/<dns:repo_name>/scan-status/', StepsRepoScanStatusView.as_view(), name='repo_scan_status'),
+    path('steps/', StepsCatalogView.as_view(), name='steps_catalog'),
+    path('steps/<uuid:step_uuid>/', StepDetailView.as_view(), name='step_detail'),
+    path('runtimes/', RuntimesView.as_view(), name='runtimes'),
 ]
 
 # Services URLs (global service list and helper endpoints)

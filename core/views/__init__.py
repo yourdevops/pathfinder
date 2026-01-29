@@ -31,6 +31,11 @@ from .settings import (
     GeneralSettingsView, UserManagementView, AuditLogsSettingsView,
     ApiTokensView, NotificationsView,
 )
+from .ci_workflows import (
+    StepsRepoListView, StepsRepoRegisterView, StepsRepoDetailView,
+    StepsRepoScanView, StepsRepoScanStatusView,
+    StepsCatalogView, StepDetailView, RuntimesView,
+)
 
 __all__ = [
     'UnlockView',
@@ -53,4 +58,8 @@ __all__ = [
     'EnvironmentAttachConnectionView', 'EnvironmentDetachConnectionView',
     'GeneralSettingsView', 'UserManagementView', 'AuditLogsSettingsView',
     'ApiTokensView', 'NotificationsView',
+    # CI Workflows
+    'StepsRepoListView', 'StepsRepoRegisterView', 'StepsRepoDetailView',
+    'StepsRepoScanView', 'StepsRepoScanStatusView',
+    'StepsCatalogView', 'StepDetailView', 'RuntimesView',
 ]
