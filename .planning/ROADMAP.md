@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Blueprints** - Template registration, versioning, availability filtering
 - [x] **Phase 4.1: Replace UUID URLs with Slugs** (INSERTED) - Use name-based slugs in URLs instead of UUIDs
 - [x] **Phase 5: Services** - Creation wizard, repository scaffolding, service management
-- [ ] **Phase 5.1: CI Workflows Builder** (INSERTED) - Steps catalog, workflow composer, GitHub Actions manifest preview
+- [x] **Phase 5.1: CI Workflows Builder** (INSERTED) - Steps catalog, workflow composer, GitHub Actions manifest preview
 - [ ] **Phase 6: Builds** - Webhook ingestion, build tracking, service activation
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
@@ -186,10 +186,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [ ] 05.1-01-PLAN.md — Remove Blueprints, add CI Workflow models, update navigation
-- [ ] 05.1-02-PLAN.md — Repository scanning, steps catalog, and runtimes views
-- [ ] 05.1-03-PLAN.md — Workflow composer with runtime compatibility filtering
-- [ ] 05.1-04-PLAN.md — Manifest generation, workflow list and detail views
+- [x] 05.1-01-PLAN.md — Remove Blueprints, add CI Workflow models, update navigation
+- [x] 05.1-02-PLAN.md — Repository scanning, steps catalog, and runtimes views
+- [x] 05.1-03-PLAN.md — Workflow composer with runtime compatibility filtering
+- [x] 05.1-04-PLAN.md — Manifest generation, workflow list and detail views
 
 ### Phase 6: Builds
 **Goal**: GitHub Actions can report build status; services transition from draft to active on first successful build
@@ -237,10 +237,10 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 6
 | 4. Blueprints | 3/3 | Complete | 2026-01-26 |
 | 4.1 Replace UUID URLs with Slugs (INSERTED) | 4/4 | Complete | 2026-01-26 |
 | 5. Services | 4/4 | Complete | 2026-01-26 |
-| 5.1 CI Workflows Builder (INSERTED) | 0/4 | Not started | - |
+| 5.1 CI Workflows Builder (INSERTED) | 4/4 | Complete | 2026-01-29 |
 | 6. Builds | 0/2 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-29 (Phase 5.1 planned - 4 plans in 4 waves)*
+*Last updated: 2026-01-29 (Phase 5.1 complete - 4 plans executed)*
