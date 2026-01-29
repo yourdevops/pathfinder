@@ -1,8 +1,12 @@
-"""CI Workflows forms for repository registration."""
+"""CI Workflows forms for repository registration and workflow creation."""
 from django import forms
 
-from core.models import StepsRepository, IntegrationConnection
+from core.models import StepsRepository, IntegrationConnection, CIWorkflow, RuntimeFamily
 from core.validators import dns_label_validator
+
+DARK_INPUT = 'w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent'
+DARK_SELECT = 'w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:border-dark-accent'
+DARK_TEXTAREA = 'w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent'
 
 
 class StepsRepoRegisterForm(forms.Form):
@@ -48,3 +52,90 @@ class StepsRepoRegisterForm(forms.Form):
         if StepsRepository.objects.filter(git_url=git_url).exists():
             raise forms.ValidationError('A repository with this URL is already registered.')
         return git_url
+
+
+class WorkflowCreateForm(forms.Form):
+    """Form for creating a new CI workflow with runtime selection."""
+
+    name = forms.CharField(
+        max_length=63,
+        validators=[dns_label_validator],
+        help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.',
+        widget=forms.TextInput(attrs={
+            'class': DARK_INPUT,
+            'placeholder': 'e.g., python-api-workflow',
+        }),
+    )
+    description = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={
+            'class': DARK_TEXTAREA,
+            'rows': 3,
+            'placeholder': 'Optional description of this workflow...',
+        }),
+    )
+    runtime_family = forms.ChoiceField(
+        choices=[],
+        widget=forms.Select(attrs={
+            'class': DARK_SELECT,
+        }),
+    )
+    runtime_version = forms.ChoiceField(
+        choices=[],
+        widget=forms.Select(attrs={
+            'class': DARK_SELECT,
+        }),
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Populate runtime_family choices dynamically
+        families = (
+            RuntimeFamily.objects
+            .values_list('name', flat=True)
+            .distinct()
+            .order_by('name')
+        )
+        family_choices = [('', '-- Select runtime --')] + [(f, f.title()) for f in families]
+        self.fields['runtime_family'].choices = family_choices
+
+        # Populate runtime_version if family is already selected (e.g. on form re-render)
+        if self.data and self.data.get('runtime_family'):
+            family = self.data['runtime_family']
+            versions = self._get_versions_for_family(family)
+            self.fields['runtime_version'].choices = [('', '-- Select version --')] + [
+                (v, v) for v in versions
+            ]
+        else:
+            self.fields['runtime_version'].choices = [('', '-- Select family first --')]
+
+    @staticmethod
+    def _get_versions_for_family(family_name):
+        """Get all unique versions for a runtime family across all repositories."""
+        runtimes = RuntimeFamily.objects.filter(name=family_name)
+        versions = set()
+        for rt in runtimes:
+            for v in rt.versions:
+                versions.add(str(v))
+        return sorted(versions, reverse=True)
+
+    def clean_name(self):
+        name = self.cleaned_data['name']
+        if CIWorkflow.objects.filter(name=name).exists():
+            raise forms.ValidationError('A workflow with this name already exists.')
+        return name
+
+    def clean_runtime_family(self):
+        family = self.cleaned_data['runtime_family']
+        if not RuntimeFamily.objects.filter(name=family).exists():
+            raise forms.ValidationError('Selected runtime family does not exist.')
+        return family
+
+    def clean_runtime_version(self):
+        version = self.cleaned_data.get('runtime_version')
+        family = self.cleaned_data.get('runtime_family')
+        if family and version:
+            versions = self._get_versions_for_family(family)
+            if version not in versions:
+                raise forms.ValidationError('Selected version is not available for this runtime family.')
+        return version
