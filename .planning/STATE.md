@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 5.1 in progress - CI Workflows Builder (Plan 02 of 4 complete)
+**Current focus:** Phase 5.1 in progress - CI Workflows Builder (Plan 03 of 4 complete)
 
 ## Current Position
 
 Phase: 5.1 of 7 (CI Workflows Builder)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In progress
-Last activity: 2026-01-29 - Completed 05.1-02-PLAN.md (Repository Scanning and Steps Catalog)
+Last activity: 2026-01-29 - Completed 05.1-03-PLAN.md (Workflow Composer)
 
-Progress: [================                        ] 50% (Phase 5.1)
+Progress: [========================                ] 75% (Phase 5.1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 33
+- Total plans completed: 34
 - Average duration: 4 min
-- Total execution time: 2.6 hours
+- Total execution time: 2.7 hours
 
 **By Phase:**
 
@@ -34,10 +34,10 @@ Progress: [================                        ] 50% (Phase 5.1)
 | 04-blueprints | 3 | 10 min | 3.3 min |
 | 04.1-replace-uuid-urls-with-slugs | 4 | 19 min | 4.75 min |
 | 05-services | 4 | 18 min | 4.5 min |
-| 05.1-ci-workflows-builder | 2 | 17 min | 8.5 min |
+| 05.1-ci-workflows-builder | 3 | 21 min | 7 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-04 (5 min), 05-03 (4 min), 05-01 (1 min), 05.1-01 (11 min), 05.1-02 (6 min)
+- Last 5 plans: 05-03 (4 min), 05-01 (1 min), 05.1-01 (11 min), 05.1-02 (6 min), 05.1-03 (4 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -120,6 +120,8 @@ Recent decisions affecting current work:
 | 05.1-01 | Resources moved to standalone nav item | Was nested under Blueprints; unrelated to CI Workflows |
 | 05.1-01 | Scaffold task passes None for template dir | Preserves existing scaffolding interface; CI template support added later |
 | 05.1-02 | steps_scan queue in TASKS QUEUES config | django-tasks validates queue names at import; needed for scan task |
+| 05.1-03 | WorkflowCreateView redirects to composer via GET query params | Clean separation of metadata and composition; no session state needed |
+| 05.1-03 | Alpine.js inline step config instead of HTMX per-step load | Faster UX; inputs_schema as JSON avoids server round-trip per step |
 
 ### Roadmap Evolution
 
@@ -133,7 +135,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Plan 02 complete, scanning pipeline and steps catalog ready for Plan 03 (Workflow Composer)
+None - Plan 03 complete, workflow composer functional. Ready for Plan 04 (GitHub Actions Manifest Generation)
 
 ### Quick Tasks Completed
 
@@ -165,5 +167,5 @@ None - Plan 02 complete, scanning pipeline and steps catalog ready for Plan 03 (
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed 05.1-02-PLAN.md (Repository Scanning and Steps Catalog)
+Stopped at: Completed 05.1-03-PLAN.md (Workflow Composer)
 Resume file: None
