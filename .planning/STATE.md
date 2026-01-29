@@ -166,9 +166,10 @@ None - Phase 5.1 complete with all CI Workflows functionality
 | 020 | ASGI docker-compose with worker | 2026-01-27 | 1552dd8 | [020-asgi-docker-compose-worker](./quick/020-asgi-docker-compose-worker/) |
 | 021 | Fix connection detail URL and worker queues | 2026-01-27 | c65a4b3 | [021-fix-connection-detail-url-and-investigat](./quick/021-fix-connection-detail-url-and-investigat/) |
 | 022 | Wizard improvements and helper text | 2026-01-27 | 27f64f1 | [022-fix-healthchecks-wizard-improvements](./quick/022-fix-healthchecks-wizard-improvements/) |
+| 023 | Fix CI step composer click actions not adding steps | 2026-01-29 | 754dcbb | [023-fix-ci-step-composer-click-actions-not-a](./quick/023-fix-ci-step-composer-click-actions-not-a/) |
 
 ## Session Continuity
 
 Last session: 2026-01-29
-Stopped at: Completed Phase 5.1 (CI Workflows Builder) - all 4 plans
+Stopped at: Completed quick task 023
 Resume file: None
