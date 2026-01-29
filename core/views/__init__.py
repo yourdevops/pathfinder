@@ -8,11 +8,6 @@ from .groups import (
 )
 from .audit import AuditLogView
 from .placeholders import ServicesPlaceholderView, ResourcesPlaceholderView
-from .blueprints import (
-    BlueprintListView, BlueprintsListView,
-    BlueprintDetailView, BlueprintRegisterView,
-    BlueprintPreviewView, BlueprintSyncView, BlueprintSyncStatusView, BlueprintDeleteView,
-)
 from .connections import (
     ConnectionListView,
     ConnectionDetailView,
@@ -45,8 +40,6 @@ __all__ = [
     'GroupListView', 'GroupDetailView', 'GroupCreateView', 'GroupEditView',
     'GroupDeleteView', 'GroupAddMemberView', 'GroupRemoveMemberView',
     'AuditLogView',
-    'BlueprintListView', 'BlueprintsListView', 'BlueprintDetailView',
-    'BlueprintRegisterView', 'BlueprintPreviewView', 'BlueprintSyncView', 'BlueprintSyncStatusView', 'BlueprintDeleteView',
     'ServicesPlaceholderView', 'ResourcesPlaceholderView',
     'ConnectionListView', 'ConnectionDetailView', 'ConnectionTestView',
     'ConnectionDeleteView', 'ConnectionConfigUpdateView', 'ConnectionCreateDispatchView', 'PluginListView',

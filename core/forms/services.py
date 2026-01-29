@@ -1,11 +1,11 @@
 """Service creation wizard forms."""
 import re
 from django import forms
-from core.models import Project, Blueprint, BlueprintVersion, Service, ProjectConnection
+from core.models import Project, Service, ProjectConnection
 
 
-class BlueprintStepForm(forms.Form):
-    """Step 1: Select project, blueprint, and service name."""
+class ProjectStepForm(forms.Form):
+    """Step 1: Select project and service name."""
 
     project = forms.ModelChoiceField(
         queryset=Project.objects.filter(status='active'),
@@ -14,24 +14,6 @@ class BlueprintStepForm(forms.Form):
         }),
         label='Project',
         help_text='Select the project for this service'
-    )
-
-    blueprint = forms.ModelChoiceField(
-        queryset=Blueprint.objects.filter(sync_status='synced'),
-        widget=forms.Select(attrs={
-            'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
-        }),
-        label='Blueprint',
-        help_text='Select the blueprint template for this service'
-    )
-
-    blueprint_version = forms.ModelChoiceField(
-        queryset=BlueprintVersion.objects.none(),
-        widget=forms.Select(attrs={
-            'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
-        }),
-        label='Version',
-        help_text='Select the blueprint version'
     )
 
     name = forms.CharField(
@@ -54,35 +36,6 @@ class BlueprintStepForm(forms.Form):
             self.fields['project'].initial = project
             self.fields['project'].queryset = Project.objects.filter(pk=project.pk)
             self.fields['project'].widget.attrs['disabled'] = True
-            # Filter blueprints available for this project
-            self._filter_blueprints_for_project(project)
-
-        # Handle blueprint version dynamic loading (will be populated via HTMX)
-        if 'blueprint' in self.data:
-            try:
-                blueprint_id = int(self.data.get('blueprint'))
-                self.fields['blueprint_version'].queryset = BlueprintVersion.objects.filter(
-                    blueprint_id=blueprint_id
-                ).order_by('-sort_key')
-            except (ValueError, TypeError):
-                pass
-        # Also handle prefixed field name from wizard
-        elif 'blueprint-blueprint' in self.data:
-            try:
-                blueprint_id = int(self.data.get('blueprint-blueprint'))
-                self.fields['blueprint_version'].queryset = BlueprintVersion.objects.filter(
-                    blueprint_id=blueprint_id
-                ).order_by('-sort_key')
-            except (ValueError, TypeError):
-                pass
-
-    def _filter_blueprints_for_project(self, project):
-        """Filter blueprints to those available for this project."""
-        available_blueprints = []
-        for blueprint in Blueprint.objects.filter(sync_status='synced'):
-            if blueprint.is_available_for_project(project):
-                available_blueprints.append(blueprint.pk)
-        self.fields['blueprint'].queryset = Blueprint.objects.filter(pk__in=available_blueprints)
 
     def clean_name(self):
         name = self.cleaned_data['name'].lower()
@@ -161,10 +114,9 @@ class RepositoryStepForm(forms.Form):
         help_text='Target branch for new repo, or base branch for existing repo PR'
     )
 
-    def __init__(self, *args, project=None, blueprint=None, **kwargs):
+    def __init__(self, *args, project=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.project = project
-        self.blueprint = blueprint
 
         # Populate SCM connections from project
         if project:

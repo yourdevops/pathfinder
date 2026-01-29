@@ -7,8 +7,6 @@ from .views import (
     GroupListView, GroupDetailView, GroupCreateView, GroupEditView,
     GroupDeleteView, GroupAddMemberView, GroupRemoveMemberView,
     AuditLogView,
-    BlueprintsListView, BlueprintDetailView, BlueprintRegisterView,
-    BlueprintPreviewView, BlueprintSyncView, BlueprintSyncStatusView, BlueprintDeleteView,
     ResourcesPlaceholderView,
     ConnectionListView, ConnectionDetailView, ConnectionTestView,
     ConnectionDeleteView, ConnectionConfigUpdateView, ConnectionCreateDispatchView, PluginListView,
@@ -25,7 +23,7 @@ from .views import (
 )
 from .views.services import (
     ServiceListView, ServiceCreateWizard, ServiceDetailView, ServiceDeleteView,
-    ServiceScaffoldStatusView, BlueprintVersionsView,
+    ServiceScaffoldStatusView,
 )
 
 # Setup URLs
@@ -68,22 +66,15 @@ audit_patterns = [
     path('', AuditLogView.as_view(), name='list'),
 ]
 
-# Blueprint URLs
-blueprints_patterns = [
-    path('', BlueprintsListView.as_view(), name='list'),
-    path('register/', BlueprintRegisterView.as_view(), name='register'),
-    path('preview/', BlueprintPreviewView.as_view(), name='preview'),
-    path('<int:pk>/delete/', BlueprintDeleteView.as_view(), name='delete'),
-    path('<dns:blueprint_name>/', BlueprintDetailView.as_view(), name='detail'),
-    path('<dns:blueprint_name>/sync/', BlueprintSyncView.as_view(), name='sync'),
-    path('<dns:blueprint_name>/sync-status/', BlueprintSyncStatusView.as_view(), name='sync_status'),
+# CI Workflows URLs (populated in Plan 02)
+ci_workflows_patterns = [
+    # Populated in Plan 02
 ]
 
 # Services URLs (global service list and helper endpoints)
 services_patterns = [
     path('', ServiceListView.as_view(), name='list'),
     path('create/', ServiceCreateWizard.as_view(), name='create'),
-    path('blueprint-versions/<int:blueprint_id>/', BlueprintVersionsView.as_view(), name='blueprint_versions'),
 ]
 
 # Resources placeholder URLs (to be replaced in future version)

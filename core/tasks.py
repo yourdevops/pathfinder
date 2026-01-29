@@ -6,9 +6,6 @@ For periodic health checks, set up a cron job or systemd timer to call
 schedule_health_checks periodically.
 """
 import logging
-import tempfile
-
-import git
 from datetime import timedelta
 
 from django.conf import settings
@@ -113,157 +110,6 @@ def check_all_connections_now() -> dict:
     return {'queued': queued}
 
 
-@task(queue_name='blueprint_sync')
-def sync_blueprint(blueprint_id: int) -> dict:
-    """
-    Sync a blueprint from its Git repository.
-
-    Fetches manifest from repository, updates blueprint fields,
-    and syncs version tags.
-
-    Uses GitPython for SCM-agnostic operations (works with GitHub,
-    GitLab, Bitbucket, or any Git-compatible server).
-    """
-    from core.models import Blueprint, BlueprintVersion
-    from core.git_utils import (
-        clone_repo_shallow,
-        read_manifest_from_repo,
-        list_tags_from_repo,
-        cleanup_repo,
-        build_authenticated_git_url,
-        parse_version_tag,
-    )
-
-    # Get blueprint
-    try:
-        blueprint = Blueprint.objects.get(id=blueprint_id)
-    except Blueprint.DoesNotExist:
-        logger.warning(f'Blueprint {blueprint_id} not found for sync')
-        return {'error': 'Blueprint not found'}
-
-    # Mark as syncing
-    blueprint.sync_status = 'syncing'
-    blueprint.sync_error = ''
-    blueprint.save(update_fields=['sync_status', 'sync_error'])
-
-    repo = None
-    temp_dir = None
-
-    try:
-        # Build authenticated URL if connection exists
-        if blueprint.connection:
-            auth_url = build_authenticated_git_url(blueprint.git_url, blueprint.connection)
-        else:
-            auth_url = None
-
-        # Clone repository
-        logger.info(f'Cloning repository for blueprint {blueprint_id}: {blueprint.git_url}')
-        repo, temp_dir = clone_repo_shallow(
-            blueprint.git_url,
-            blueprint.default_branch,
-            auth_url
-        )
-
-        # Read manifest
-        manifest = read_manifest_from_repo(temp_dir)
-
-        # Update blueprint fields from manifest
-        blueprint.name = manifest.get('name', '')
-        blueprint.description = manifest.get('description', '')
-        blueprint.tags = manifest.get('tags', [])
-        blueprint.ci_plugin = manifest.get('ci', {}).get('type', '')
-
-        # Get deploy plugins from required_plugins or fallback to type
-        deploy_config = manifest.get('deploy', {})
-        required_plugins = deploy_config.get('required_plugins', [])
-        if required_plugins:
-            blueprint.deploy_plugins = required_plugins  # Store full list
-        else:
-            deploy_type = deploy_config.get('type', '')
-            blueprint.deploy_plugins = [deploy_type] if deploy_type else []
-
-        blueprint.manifest = manifest
-
-        # List and sync tags
-        tags = list_tags_from_repo(repo)
-        logger.info(f'Found {len(tags)} tags for blueprint {blueprint_id}')
-
-        # Track existing tag names for cleanup
-        existing_tag_names = set()
-
-        for tag_info in tags:
-            tag_name = tag_info['name']
-            commit_sha = tag_info['commit_sha']
-            existing_tag_names.add(tag_name)
-
-            # Parse version
-            version_info = parse_version_tag(tag_name)
-
-            # Update or create version record
-            version, created = BlueprintVersion.objects.update_or_create(
-                blueprint=blueprint,
-                tag_name=tag_name,
-                defaults={
-                    'commit_sha': commit_sha,
-                    'major': version_info['major'],
-                    'minor': version_info['minor'],
-                    'patch': version_info['patch'],
-                    'prerelease': version_info['prerelease'],
-                    'is_prerelease': version_info['is_prerelease'],
-                    'sort_key': version_info['sort_key'],
-                }
-            )
-
-            if created:
-                logger.debug(f'Created version {tag_name} for blueprint {blueprint_id}')
-
-        # Remove versions for deleted tags
-        deleted_count, _ = BlueprintVersion.objects.filter(
-            blueprint=blueprint
-        ).exclude(
-            tag_name__in=existing_tag_names
-        ).delete()
-
-        if deleted_count > 0:
-            logger.info(f'Removed {deleted_count} deleted tags from blueprint {blueprint_id}')
-
-        # Mark as synced
-        blueprint.sync_status = 'synced'
-        blueprint.last_synced_at = timezone.now()
-        blueprint.save()
-
-        logger.info(f'Successfully synced blueprint {blueprint_id}: {blueprint.name}')
-
-        return {
-            'status': 'synced',
-            'name': blueprint.name,
-            'versions': len(tags),
-        }
-
-    except FileNotFoundError as e:
-        # Manifest not found
-        error_msg = str(e)
-        logger.error(f'Manifest not found for blueprint {blueprint_id}: {error_msg}')
-        blueprint.sync_status = 'error'
-        blueprint.sync_error = error_msg
-        blueprint.save(update_fields=['sync_status', 'sync_error'])
-        return {'status': 'error', 'error': error_msg}
-
-    except Exception as e:
-        # General error
-        error_msg = str(e)
-        logger.exception(f'Failed to sync blueprint {blueprint_id}')
-        blueprint.sync_status = 'error'
-        blueprint.sync_error = error_msg
-        blueprint.save(update_fields=['sync_status', 'sync_error'])
-        return {'status': 'error', 'error': error_msg}
-
-    finally:
-        # Always clean up temp directory
-        if repo and temp_dir:
-            cleanup_repo(repo, temp_dir)
-
-
 @task(queue_name='repository_scaffolding')
 def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
     """
@@ -290,7 +136,7 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
 
     # Get service and connection
     try:
-        service = Service.objects.select_related('project', 'blueprint', 'blueprint_version').get(id=service_id)
+        service = Service.objects.select_related('project').get(id=service_id)
     except Service.DoesNotExist:
         logger.error(f'Service {service_id} not found for scaffolding')
         return {'error': 'Service not found'}
@@ -309,41 +155,17 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
     service.scaffold_error = ''
     service.save(update_fields=['scaffold_status', 'scaffold_error'])
 
-    blueprint = service.blueprint
-    blueprint_version = service.blueprint_version
-    blueprint_repo = None
-    blueprint_temp_dir = None
-
     try:
-        # Clone blueprint repository at specific version
-        logger.info(f'Cloning blueprint {blueprint.name} at {blueprint_version.tag_name}')
-
-        # Build authenticated URL if blueprint has connection
-        if blueprint.connection:
-            auth_url = build_authenticated_git_url(blueprint.git_url, blueprint.connection)
-        else:
-            auth_url = None
-
-        # Clone at the specific tag/version
-        blueprint_temp_dir = tempfile.mkdtemp(prefix='ssp_blueprint_')
-        blueprint_repo = git.Repo.clone_from(
-            auth_url or blueprint.git_url,
-            blueprint_temp_dir,
-            depth=1,
-        )
-
-        # Checkout the specific tag
-        blueprint_repo.git.checkout(blueprint_version.tag_name)
-
         # Get template variables
         variables = get_template_variables(service)
 
         # Scaffold based on mode
+        # Note: Blueprint-based scaffolding removed. CI Workflow scaffolding will be added in Phase 5.1 Plan 03+.
         if service.repo_is_new:
             result = scaffold_new_repository(
                 service=service,
                 connection=connection,
-                blueprint_temp_dir=blueprint_temp_dir,
+                blueprint_temp_dir=None,
                 variables=variables,
             )
             # Update service with repo URL
@@ -352,7 +174,7 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
             result = scaffold_existing_repository(
                 service=service,
                 connection=connection,
-                blueprint_temp_dir=blueprint_temp_dir,
+                blueprint_temp_dir=None,
                 variables=variables,
             )
 
@@ -372,8 +194,3 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
         service.scaffold_error = error_msg
         service.save(update_fields=['scaffold_status', 'scaffold_error'])
         return {'status': 'failed', 'error': error_msg}
-
-    finally:
-        # Cleanup blueprint temp directory
-        if blueprint_repo and blueprint_temp_dir:
-            cleanup_repo(blueprint_repo, blueprint_temp_dir)

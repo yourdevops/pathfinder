@@ -365,153 +365,6 @@ class EnvironmentConnection(models.Model):
         super().save(*args, **kwargs)
 
 
-class Blueprint(models.Model):
-    """
-    Blueprint represents a service template from a Git repository.
-
-    Blueprints are synced from git repositories containing ssp-template.yaml manifests.
-    They define what service types are available for project deployments.
-    """
-    SYNC_STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('syncing', 'Syncing'),
-        ('synced', 'Synced'),
-        ('error', 'Error'),
-    ]
-
-    id = models.BigAutoField(primary_key=True)
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
-    git_url = models.URLField(max_length=500, unique=True)
-    default_branch = models.CharField(max_length=100, default='main')
-
-    # Synced from manifest
-    name = models.CharField(
-        max_length=63,
-        blank=True,
-        validators=[dns_label_validator],
-        help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.'
-    )
-    description = models.TextField(blank=True)
-    tags = models.JSONField(default=list)  # e.g., ['python', 'kubernetes']
-    ci_plugin = models.CharField(max_length=63, blank=True)  # from manifest ci.type
-    deploy_plugins = models.JSONField(default=list)  # List of required deploy plugin names
-    manifest = models.JSONField(default=dict)  # Full manifest stored for reference
-
-    # Sync status
-    sync_status = models.CharField(max_length=20, choices=SYNC_STATUS_CHOICES, default='pending')
-    sync_error = models.TextField(blank=True)
-    last_synced_at = models.DateTimeField(null=True, blank=True)
-
-    # Connection for private repositories
-    connection = models.ForeignKey(
-        IntegrationConnection,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='blueprints'
-    )
-
-    # Audit fields
-    created_by = models.CharField(max_length=150, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        db_table = 'core_blueprint'
-        ordering = ['name', 'created_at']
-
-    def __str__(self):
-        return self.name or self.git_url
-
-    @property
-    def version_count(self):
-        """Return total count of versions."""
-        return self.versions.count()
-
-    @property
-    def latest_version(self):
-        """Return latest stable (non-prerelease) version."""
-        return self.versions.filter(is_prerelease=False).order_by('-sort_key').first()
-
-    def is_available_for_project(self, project):
-        """
-        Check if blueprint can be used in a project.
-
-        Returns True if any environment in project has a connection
-        matching ANY of the blueprint's deploy_plugins.
-        """
-        if not self.deploy_plugins:
-            return True  # No deploy plugin requirement
-
-        # Check if ANY of the deploy_plugins has an active environment connection
-        for plugin in self.deploy_plugins:
-            if EnvironmentConnection.objects.filter(
-                environment__project=project,
-                connection__plugin_name=plugin,
-                connection__status='active'
-            ).exists():
-                return True
-        return False
-
-    def is_available_globally(self):
-        """
-        Check if blueprint can be used with any active connection.
-
-        Returns True if any active connection matches ANY of the deploy_plugins.
-        """
-        if not self.deploy_plugins:
-            return True  # No deploy plugin requirement
-
-        # Check if ANY of the deploy_plugins has an active connection
-        for plugin in self.deploy_plugins:
-            if IntegrationConnection.objects.filter(
-                plugin_name=plugin,
-                status='active'
-            ).exists():
-                return True
-        return False
-
-
-class BlueprintVersion(models.Model):
-    """
-    Represents a version of a blueprint from git tags.
-
-    Versions are parsed from semantic version tags (e.g., v1.2.3, 1.0.0-beta.1).
-    """
-    blueprint = models.ForeignKey(
-        Blueprint,
-        on_delete=models.CASCADE,
-        related_name='versions'
-    )
-    tag_name = models.CharField(max_length=100)  # e.g., 'v1.2.3'
-    commit_sha = models.CharField(max_length=40, blank=True)
-
-    # Parsed version components
-    major = models.IntegerField(default=0)
-    minor = models.IntegerField(default=0)
-    patch = models.IntegerField(default=0)
-    prerelease = models.CharField(max_length=100, blank=True)  # e.g., 'alpha', 'beta.1'
-    is_prerelease = models.BooleanField(default=False)
-    sort_key = models.CharField(max_length=100, blank=True)  # Computed for ordering
-
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        db_table = 'core_blueprint_version'
-        unique_together = ['blueprint', 'tag_name']
-        ordering = ['-sort_key']
-
-    def __str__(self):
-        return f"{self.blueprint.name} {self.tag_name}"
-
-    @property
-    def display_name(self):
-        """Return display name with pre-release indicator."""
-        if self.is_prerelease:
-            return f'{self.tag_name} (pre-release)'
-        return self.tag_name
-
-
 class Service(models.Model):
     """Service represents a deployed application within a project."""
     STATUS_CHOICES = [
@@ -529,18 +382,6 @@ class Service(models.Model):
         help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.'
     )
     description = models.TextField(blank=True)
-
-    # Blueprint reference - both for traceability
-    blueprint = models.ForeignKey(
-        Blueprint,
-        on_delete=models.PROTECT,  # Don't allow deleting blueprints with services
-        related_name='services'
-    )
-    blueprint_version = models.ForeignKey(
-        BlueprintVersion,
-        on_delete=models.PROTECT,
-        related_name='services'
-    )
 
     # Repository configuration
     repo_url = models.URLField(max_length=500, blank=True)
@@ -622,6 +463,4 @@ auditlog.register(SiteConfiguration)
 auditlog.register(IntegrationConnection, exclude_fields=['config_encrypted'])
 auditlog.register(ProjectConnection)
 auditlog.register(EnvironmentConnection)
-auditlog.register(Blueprint, exclude_fields=['manifest'])  # Exclude manifest for performance
-auditlog.register(BlueprintVersion)
 auditlog.register(Service)

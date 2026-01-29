@@ -25,7 +25,7 @@ register_converter(DnsLabelConverter, 'dns')
 from core.urls import (
     setup_patterns, auth_patterns, dashboard_patterns, users_patterns,
     groups_patterns, audit_patterns,
-    blueprints_patterns, connections_patterns,
+    ci_workflows_patterns, connections_patterns,
     projects_patterns, settings_patterns,
     services_patterns, resources_patterns,
 )
@@ -45,7 +45,7 @@ urlpatterns = [
     path('users/', include((users_patterns, 'users'), namespace='users')),
     path('groups/', include((groups_patterns, 'groups'), namespace='groups')),
     path('audit/', include((audit_patterns, 'audit'), namespace='audit')),
-    path('blueprints/', include((blueprints_patterns, 'blueprints'), namespace='blueprints')),
+    path('ci-workflows/', include((ci_workflows_patterns, 'ci_workflows'), namespace='ci_workflows')),
     path('connections/', include((connections_patterns, 'connections'), namespace='connections')),
     path('projects/', include((projects_patterns, 'projects'), namespace='projects')),
     path('settings/', include((settings_patterns, 'settings'), namespace='settings')),

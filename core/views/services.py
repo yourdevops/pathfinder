@@ -10,9 +10,9 @@ from django.db.models import Q
 
 from formtools.wizard.views import SessionWizardView
 
-from core.models import Project, Service, BlueprintVersion, GroupMembership, ProjectMembership
+from core.models import Project, Service, GroupMembership, ProjectMembership
 from core.forms.services import (
-    BlueprintStepForm, RepositoryStepForm, ConfigurationStepForm, ReviewStepForm
+    ProjectStepForm, RepositoryStepForm, ConfigurationStepForm, ReviewStepForm
 )
 from core.permissions import can_access_project, has_system_role
 from core.tasks import scaffold_repository
@@ -52,21 +52,21 @@ class ServiceListView(LoginRequiredMixin, ListView):
 
 
 WIZARD_FORMS = [
-    ('blueprint', BlueprintStepForm),
+    ('project', ProjectStepForm),
     ('repository', RepositoryStepForm),
     ('configuration', ConfigurationStepForm),
     ('review', ReviewStepForm),
 ]
 
 WIZARD_TEMPLATES = {
-    'blueprint': 'core/services/wizard/step_blueprint.html',
+    'project': 'core/services/wizard/step_project.html',
     'repository': 'core/services/wizard/step_repository.html',
     'configuration': 'core/services/wizard/step_configuration.html',
     'review': 'core/services/wizard/step_review.html',
 }
 
 STEP_TITLES = {
-    'blueprint': 'Blueprint',
+    'project': 'Service',
     'repository': 'Repository',
     'configuration': 'Configuration',
     'review': 'Review',

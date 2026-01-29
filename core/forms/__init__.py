@@ -22,7 +22,7 @@ from core.forms.base import (
 
 # Service wizard forms
 from core.forms.services import (
-    BlueprintStepForm,
+    ProjectStepForm,
     RepositoryStepForm,
     ConfigurationStepForm,
     ReviewStepForm,
@@ -48,7 +48,7 @@ __all__ = [
     'SYSTEM_ROLE_CHOICES',
     'PROJECT_ROLE_CHOICES',
     # Service wizard forms
-    'BlueprintStepForm',
+    'ProjectStepForm',
     'RepositoryStepForm',
     'ConfigurationStepForm',
     'ReviewStepForm',
