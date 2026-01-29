@@ -19,6 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Blueprints** - Template registration, versioning, availability filtering
 - [x] **Phase 4.1: Replace UUID URLs with Slugs** (INSERTED) - Use name-based slugs in URLs instead of UUIDs
 - [x] **Phase 5: Services** - Creation wizard, repository scaffolding, service management
+- [ ] **Phase 5.1: CI Workflows Builder** (INSERTED) - Steps catalog, workflow composer, GitHub Actions manifest preview
 - [ ] **Phase 6: Builds** - Webhook ingestion, build tracking, service activation
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
@@ -161,6 +162,35 @@ Plans:
 - [x] 05-03-PLAN.md — Repository scaffolding background task
 - [x] 05-04-PLAN.md — Service list and detail pages with sidebar
 
+### Phase 5.1: CI Workflows Builder (INSERTED)
+**Goal**: Platform engineers can scan a CI steps repository, browse a steps catalog, compose CI Workflows from compatible steps, and preview the generated GitHub Actions manifest
+**Depends on**: Phase 5
+**Requirements**: None (replaces Blueprints concept with CI Workflows per docs/ci-workflows.md)
+**Scope Notes**:
+  - Replaces existing Blueprints functionality with CI Workflows
+  - No deployment capabilities in this phase
+  - No Service integration yet (next phase will connect Services to CI Workflows)
+  - No versioning (save only, no semver lifecycle)
+  - GitHub Actions manifest preview (read-only, no push to repo)
+  - Recommendations for CI library repo structure at completion
+**Success Criteria** (what must be TRUE):
+  1. Operator can register a CI steps repository; DevSSP scans it and imports step definitions from action.yml files with x-pathfinder metadata
+  2. Operator can browse a Steps Catalog showing all imported steps organized by phase (setup, build, test, package) with runtime compatibility info
+  3. Operator can view runtimes parsed from runtimes.yml in the steps repository
+  4. User can click "+ Create CI Workflow" and select a runtime family/version
+  5. Workflow composer shows only steps compatible with the selected runtime; incompatible steps are visually indicated
+  6. User can add/reorder/remove steps to compose a workflow, configuring per-step inputs
+  7. User can save the CI Workflow with a name and description
+  8. User can view the generated GitHub Actions YAML manifest for the saved workflow
+  9. Existing Blueprints models/views are removed or replaced
+**Plans**: 4 plans
+
+Plans:
+- [ ] 05.1-01-PLAN.md — Remove Blueprints, add CI Workflow models, update navigation
+- [ ] 05.1-02-PLAN.md — Repository scanning, steps catalog, and runtimes views
+- [ ] 05.1-03-PLAN.md — Workflow composer with runtime compatibility filtering
+- [ ] 05.1-04-PLAN.md — Manifest generation, workflow list and detail views
+
 ### Phase 6: Builds
 **Goal**: GitHub Actions can report build status; services transition from draft to active on first successful build
 **Depends on**: Phase 5
@@ -196,7 +226,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 6 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -207,9 +237,10 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 6 -> 7
 | 4. Blueprints | 3/3 | Complete | 2026-01-26 |
 | 4.1 Replace UUID URLs with Slugs (INSERTED) | 4/4 | Complete | 2026-01-26 |
 | 5. Services | 4/4 | Complete | 2026-01-26 |
+| 5.1 CI Workflows Builder (INSERTED) | 0/4 | Not started | - |
 | 6. Builds | 0/2 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-26 (Phase 5 complete - service creation wizard and scaffolding)*
+*Last updated: 2026-01-29 (Phase 5.1 planned - 4 plans in 4 waves)*
