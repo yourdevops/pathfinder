@@ -1,12 +1,15 @@
-"""CI Workflows views: repository management, steps catalog, runtimes."""
+"""CI Workflows views: repository management, steps catalog, runtimes, workflow composer."""
+import json
 from collections import OrderedDict
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 
-from core.forms.ci_workflows import StepsRepoRegisterForm
-from core.models import StepsRepository, CIStep, RuntimeFamily
+from core.ci_manifest import get_compatible_steps
+from core.forms.ci_workflows import StepsRepoRegisterForm, WorkflowCreateForm
+from core.models import StepsRepository, CIStep, CIWorkflow, CIWorkflowStep, RuntimeFamily
 from core.permissions import OperatorRequiredMixin, has_system_role
 
 
@@ -180,4 +183,193 @@ class RuntimesView(LoginRequiredMixin, View):
         return render(request, 'core/ci_workflows/runtimes.html', {
             'runtimes_by_repo': runtimes_by_repo,
             'total_runtimes': runtimes.count(),
+        })
+
+
+# --- Workflow Creation and Composer Views ---
+
+
+class WorkflowListView(LoginRequiredMixin, View):
+    """List all CI workflows."""
+
+    def get(self, request):
+        workflows = CIWorkflow.objects.all().order_by('name')
+        return render(request, 'core/ci_workflows/workflow_list.html', {
+            'workflows': workflows,
+        })
+
+
+class WorkflowCreateView(LoginRequiredMixin, View):
+    """Step 1: Create workflow with name, description, and runtime selection."""
+
+    def get(self, request):
+        form = WorkflowCreateForm()
+        return render(request, 'core/ci_workflows/workflow_create.html', {
+            'form': form,
+        })
+
+    def post(self, request):
+        form = WorkflowCreateForm(request.POST)
+        if form.is_valid():
+            # Redirect to composer with params
+            from django.urls import reverse
+            from urllib.parse import urlencode
+            params = urlencode({
+                'name': form.cleaned_data['name'],
+                'description': form.cleaned_data.get('description', ''),
+                'runtime_family': form.cleaned_data['runtime_family'],
+                'runtime_version': form.cleaned_data['runtime_version'],
+            })
+            return redirect(f"{reverse('ci_workflows:workflow_composer')}?{params}")
+        return render(request, 'core/ci_workflows/workflow_create.html', {
+            'form': form,
+        })
+
+
+class RuntimeVersionsView(LoginRequiredMixin, View):
+    """HTMX endpoint: return version <option> elements for a runtime family."""
+
+    def get(self, request):
+        family = request.GET.get('runtime_family', '')
+        if not family:
+            return HttpResponse('<option value="">-- Select family first --</option>')
+
+        runtimes = RuntimeFamily.objects.filter(name=family)
+        versions = set()
+        for rt in runtimes:
+            for v in rt.versions:
+                versions.add(str(v))
+
+        options = ['<option value="">-- Select version --</option>']
+        for v in sorted(versions, reverse=True):
+            options.append(f'<option value="{v}">{v}</option>')
+        return HttpResponse('\n'.join(options))
+
+
+class WorkflowComposerView(LoginRequiredMixin, View):
+    """Step 2: Compose workflow steps with drag-and-drop ordering."""
+
+    def get(self, request):
+        name = request.GET.get('name', '')
+        description = request.GET.get('description', '')
+        runtime_family = request.GET.get('runtime_family', '')
+        runtime_version = request.GET.get('runtime_version', '')
+
+        if not name or not runtime_family or not runtime_version:
+            return redirect('ci_workflows:workflow_create')
+
+        compatible, incompatible = get_compatible_steps(runtime_family, runtime_version)
+
+        # Group compatible steps by phase
+        phase_order = ['setup', 'build', 'test', 'package']
+        phase_labels = {
+            'setup': 'Setup', 'build': 'Build',
+            'test': 'Test', 'package': 'Package',
+        }
+        compatible_by_phase = OrderedDict()
+        for phase in phase_order:
+            phase_steps = [s for s in compatible if s.phase == phase]
+            if phase_steps:
+                compatible_by_phase[phase_labels[phase]] = phase_steps
+
+        return render(request, 'core/ci_workflows/workflow_composer.html', {
+            'workflow_name': name,
+            'workflow_description': description,
+            'runtime_family': runtime_family,
+            'runtime_version': runtime_version,
+            'compatible_by_phase': compatible_by_phase,
+            'incompatible_steps': incompatible,
+            'compatible_steps': compatible,
+        })
+
+    def post(self, request):
+        name = request.POST.get('name', '')
+        description = request.POST.get('description', '')
+        runtime_family = request.POST.get('runtime_family', '')
+        runtime_version = request.POST.get('runtime_version', '')
+        steps_json = request.POST.get('steps_json', '[]')
+
+        if not name or not runtime_family or not runtime_version:
+            return redirect('ci_workflows:workflow_create')
+
+        try:
+            steps_data = json.loads(steps_json)
+        except json.JSONDecodeError:
+            steps_data = []
+
+        # Determine artifact_type from last package step
+        artifact_type = ''
+        for step_entry in reversed(steps_data):
+            try:
+                ci_step = CIStep.objects.get(uuid=step_entry.get('id'))
+                if ci_step.phase == 'package' and ci_step.produces:
+                    artifact_type = ci_step.produces.get('type', '')
+                    break
+            except CIStep.DoesNotExist:
+                continue
+
+        # Create the workflow
+        workflow = CIWorkflow.objects.create(
+            name=name,
+            description=description,
+            runtime_family=runtime_family,
+            runtime_version=runtime_version,
+            artifact_type=artifact_type,
+            created_by=request.user.username,
+        )
+
+        # Create workflow steps
+        for i, step_entry in enumerate(steps_data):
+            try:
+                ci_step = CIStep.objects.get(uuid=step_entry.get('id'))
+                CIWorkflowStep.objects.create(
+                    workflow=workflow,
+                    step=ci_step,
+                    order=i,
+                    input_config=step_entry.get('input_config', {}),
+                )
+            except CIStep.DoesNotExist:
+                continue
+
+        return redirect('ci_workflows:workflow_list')
+
+
+class CompatibleStepsView(LoginRequiredMixin, View):
+    """HTMX endpoint: return compatible/incompatible steps partial."""
+
+    def get(self, request):
+        runtime_family = request.GET.get('runtime_family', '')
+        runtime_version = request.GET.get('runtime_version', '')
+
+        if not runtime_family or not runtime_version:
+            return HttpResponse('<p class="text-dark-muted text-sm">Select a runtime to see available steps.</p>')
+
+        compatible, incompatible = get_compatible_steps(runtime_family, runtime_version)
+
+        phase_order = ['setup', 'build', 'test', 'package']
+        phase_labels = {
+            'setup': 'Setup', 'build': 'Build',
+            'test': 'Test', 'package': 'Package',
+        }
+        compatible_by_phase = OrderedDict()
+        for phase in phase_order:
+            phase_steps = [s for s in compatible if s.phase == phase]
+            if phase_steps:
+                compatible_by_phase[phase_labels[phase]] = phase_steps
+
+        return render(request, 'core/ci_workflows/_compatible_steps.html', {
+            'compatible_by_phase': compatible_by_phase,
+            'incompatible_steps': incompatible,
+            'runtime_family': runtime_family,
+            'runtime_version': runtime_version,
+        })
+
+
+class StepConfigView(LoginRequiredMixin, View):
+    """HTMX endpoint: return per-step input configuration form."""
+
+    def get(self, request, step_uuid):
+        step = get_object_or_404(CIStep, uuid=step_uuid)
+        return render(request, 'core/ci_workflows/_step_config.html', {
+            'step': step,
         })

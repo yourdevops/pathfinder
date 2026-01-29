@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}CI Workflows - DevSSP{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-dark-text">CI Workflows</h1>
+            <p class="text-dark-muted mt-1">Composable build pipelines for your services</p>
+        </div>
+        <a href="{% url 'ci_workflows:workflow_create' %}"
+           class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create Workflow
+        </a>
+    </div>
+
+    {% if workflows %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for workflow in workflows %}
+        <div class="bg-dark-surface border border-dark-border rounded-lg p-5">
+            <div class="flex items-start justify-between mb-3">
+                <h3 class="font-medium text-dark-text">{{ workflow.name }}</h3>
+                {% if workflow.artifact_type %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-400">
+                    {{ workflow.artifact_type }}
+                </span>
+                {% endif %}
+            </div>
+            {% if workflow.description %}
+            <p class="text-sm text-dark-muted mb-3 line-clamp-2">{{ workflow.description|truncatechars:120 }}</p>
+            {% endif %}
+            <div class="flex items-center gap-2 mb-3">
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-500/20 text-blue-400">
+                    {{ workflow.runtime_family }} {{ workflow.runtime_version }}
+                </span>
+                <span class="text-xs text-dark-muted">
+                    {{ workflow.workflow_steps.count }} step{{ workflow.workflow_steps.count|pluralize }}
+                </span>
+            </div>
+            <p class="text-xs text-dark-muted">
+                Created by {{ workflow.created_by }} on {{ workflow.created_at|date:"M j, Y" }}
+            </p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="bg-dark-surface border border-dark-border rounded-lg p-12 text-center">
+        <svg class="w-12 h-12 mx-auto text-dark-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+        <h2 class="text-xl font-semibold text-dark-text mb-2">No workflows yet</h2>
+        <p class="text-dark-muted mb-6">Create a CI workflow to define your build pipeline.</p>
+        <a href="{% url 'ci_workflows:workflow_create' %}"
+           class="inline-flex items-center gap-2 px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Create Workflow
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

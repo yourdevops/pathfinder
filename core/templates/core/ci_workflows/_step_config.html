@@ -1,0 +1,40 @@
+{% comment %}
+HTMX partial: per-step input configuration form.
+Context: step (CIStep instance)
+{% endcomment %}
+
+{% if step.inputs_schema %}
+<div class="space-y-3 p-3">
+    <h4 class="text-sm font-medium text-dark-text mb-2">{{ step.name }} - Inputs</h4>
+    {% for input_name, input_def in step.inputs_schema.items %}
+    <div>
+        <label class="block text-xs font-medium text-dark-text mb-1">
+            {{ input_name }}
+            {% if input_def.required %}<span class="text-red-400">*</span>{% endif %}
+        </label>
+        {% if input_def.type == 'boolean' %}
+        <label class="flex items-center gap-2">
+            <input type="checkbox"
+                   name="step_{{ step.uuid }}_input_{{ input_name }}"
+                   class="rounded border-dark-border bg-dark-surface text-dark-accent focus:ring-dark-accent"
+                   {% if input_def.default %}checked{% endif %}>
+            <span class="text-xs text-dark-muted">{{ input_def.description|default:"" }}</span>
+        </label>
+        {% else %}
+        <input type="text"
+               name="step_{{ step.uuid }}_input_{{ input_name }}"
+               value="{{ input_def.default|default:"" }}"
+               class="w-full px-3 py-1.5 text-sm bg-dark-bg border border-dark-border rounded text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent"
+               placeholder="{{ input_def.default|default:"" }}">
+        {% if input_def.description %}
+        <p class="text-xs text-dark-muted mt-0.5">{{ input_def.description }}</p>
+        {% endif %}
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="p-3">
+    <p class="text-sm text-dark-muted">This step has no configurable inputs.</p>
+</div>
+{% endif %}

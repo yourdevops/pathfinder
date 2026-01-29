@@ -29,6 +29,8 @@ from .views.ci_workflows import (
     StepsRepoListView, StepsRepoRegisterView, StepsRepoDetailView,
     StepsRepoScanView, StepsRepoScanStatusView,
     StepsCatalogView, StepDetailView, RuntimesView,
+    WorkflowListView, WorkflowCreateView, WorkflowComposerView,
+    CompatibleStepsView, StepConfigView, RuntimeVersionsView,
 )
 
 # Setup URLs
@@ -73,6 +75,12 @@ audit_patterns = [
 
 # CI Workflows URLs
 ci_workflows_patterns = [
+    path('', WorkflowListView.as_view(), name='workflow_list'),
+    path('create/', WorkflowCreateView.as_view(), name='workflow_create'),
+    path('composer/', WorkflowComposerView.as_view(), name='workflow_composer'),
+    path('compatible-steps/', CompatibleStepsView.as_view(), name='compatible_steps'),
+    path('step-config/<uuid:step_uuid>/', StepConfigView.as_view(), name='step_config'),
+    path('runtime-versions/', RuntimeVersionsView.as_view(), name='runtime_versions'),
     path('repos/', StepsRepoListView.as_view(), name='repo_list'),
     path('repos/register/', StepsRepoRegisterView.as_view(), name='repo_register'),
     path('repos/<dns:repo_name>/', StepsRepoDetailView.as_view(), name='repo_detail'),

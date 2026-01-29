@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Create CI Workflow - DevSSP{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <!-- Page Header -->
+    <div class="mb-6">
+        <a href="{% url 'ci_workflows:workflow_list' %}" class="text-dark-muted hover:text-dark-text text-sm transition-colors">
+            &larr; Back to Workflows
+        </a>
+        <h1 class="text-2xl font-bold text-dark-text mt-2">Create CI Workflow</h1>
+        <p class="text-dark-muted mt-1">Define name, description, and runtime for your workflow</p>
+    </div>
+
+    <!-- Form -->
+    <div class="max-w-xl">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            <!-- Name -->
+            <div>
+                <label for="id_name" class="block text-sm font-medium text-dark-text mb-1">
+                    Workflow Name
+                </label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ form.name.errors.0 }}</p>
+                {% endif %}
+                <p class="text-dark-muted text-xs mt-1">{{ form.name.help_text }}</p>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label for="id_description" class="block text-sm font-medium text-dark-text mb-1">
+                    Description
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ form.description.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Runtime Family -->
+            <div>
+                <label for="id_runtime_family" class="block text-sm font-medium text-dark-text mb-1">
+                    Runtime Family
+                </label>
+                <select name="runtime_family" id="id_runtime_family"
+                        class="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:border-dark-accent"
+                        hx-get="{% url 'ci_workflows:runtime_versions' %}"
+                        hx-trigger="change"
+                        hx-target="#id_runtime_version"
+                        hx-include="[name='runtime_family']">
+                    {% for value, label in form.runtime_family.field.choices %}
+                    <option value="{{ value }}" {% if form.runtime_family.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                {% if form.runtime_family.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ form.runtime_family.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Runtime Version -->
+            <div>
+                <label for="id_runtime_version" class="block text-sm font-medium text-dark-text mb-1">
+                    Runtime Version
+                </label>
+                <select name="runtime_version" id="id_runtime_version"
+                        class="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:border-dark-accent">
+                    {% for value, label in form.runtime_version.field.choices %}
+                    <option value="{{ value }}" {% if form.runtime_version.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                {% if form.runtime_version.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ form.runtime_version.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Submit -->
+            <div class="flex items-center gap-4">
+                <button type="submit"
+                        class="px-6 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
+                    Next: Compose Steps
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                </button>
+                <a href="{% url 'ci_workflows:workflow_list' %}"
+                   class="px-4 py-2 text-dark-muted hover:text-dark-text transition-colors">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
