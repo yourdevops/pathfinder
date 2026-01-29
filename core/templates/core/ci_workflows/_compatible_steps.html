@@ -2,6 +2,7 @@
 HTMX partial: compatible and incompatible steps grouped by phase.
 Context: compatible_by_phase (OrderedDict), incompatible_steps (list), runtime_family, runtime_version
 {% endcomment %}
+{% load json_filters %}
 
 {% for phase_label, phase_steps in compatible_by_phase.items %}
 <div class="mb-4">
@@ -25,7 +26,7 @@ Context: compatible_by_phase (OrderedDict), incompatible_steps (list), runtime_f
                  name: '{{ step.name|escapejs }}',
                  phase: '{{ step.phase }}',
                  description: '{{ step.description|escapejs|truncatechars:80 }}',
-                 inputs_schema: JSON.parse('{{ step.inputs_schema|escapejs }}' || '{}')
+                 inputs_schema: {{ step.inputs_schema|to_json }}
              })">
             <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-dark-text truncate">{{ step.name }}</p>
