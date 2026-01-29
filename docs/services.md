@@ -655,3 +655,8 @@ Services are displayed in the Project detail page under the Services tab.
 - Service activation/deactivation is a future feature (see roadmap)
 
 See [rbac.md](rbac.md) for full permission model documentation.
+
+
+# Security Concerns
+
+- When onboarding a new service from an existing repo, user is allowed to list all available repos in the org and select one for scaffolding. DevSSP will open a PR in that repo, which is harmless (can be reviewed and declined) but still can be merged by mistake. This is this a security risk, so for existing repos, we should make user authenticate to SCM with his credentials to make these actions within his permissions and under his name.
