@@ -1,1 +1,1 @@
-"""Blueprint views - removed. Will be repurposed as ci_workflows.py in Plan 02."""
+"""Deprecated: views replaced by ci_workflows.py in Phase 5.1."""

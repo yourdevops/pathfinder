@@ -151,7 +151,7 @@ def clone_repo_shallow(git_url: str, branch: str = 'main', auth_url: str = None,
     Raises:
         git.GitCommandError: If clone fails
     """
-    temp_dir = tempfile.mkdtemp(prefix='ssp_blueprint_')
+    temp_dir = tempfile.mkdtemp(prefix='ssp_clone_')
 
     try:
         url_to_clone = auth_url or git_url
@@ -322,7 +322,7 @@ def parse_version_tag(tag_name: str) -> dict:
 
 def get_template_variables(service) -> dict:
     """
-    Get template variables for blueprint substitution.
+    Get template variables for service template substitution.
 
     Args:
         service: Service model instance
@@ -339,10 +339,10 @@ def get_template_variables(service) -> dict:
 
 def apply_template_to_directory(src_dir: str, dest_dir: str, variables: dict, exclude_files: list = None):
     """
-    Copy blueprint files and apply variable substitution.
+    Copy template files and apply variable substitution.
 
     Args:
-        src_dir: Source directory (cloned blueprint)
+        src_dir: Source directory (cloned template)
         dest_dir: Destination directory (target repo)
         variables: Dict of template variables for substitution
         exclude_files: Files to skip (e.g., manifest files)
@@ -397,7 +397,7 @@ def apply_template_to_directory(src_dir: str, dest_dir: str, variables: dict, ex
 def scaffold_new_repository(
     service,
     connection,
-    blueprint_temp_dir: str,
+    template_temp_dir: str,
     variables: dict
 ) -> dict:
     """
@@ -411,7 +411,7 @@ def scaffold_new_repository(
     Args:
         service: Service model instance
         connection: IntegrationConnection for SCM
-        blueprint_temp_dir: Path to template directory (optional)
+        template_temp_dir: Path to template directory (optional)
         variables: Template variables
 
     Returns:
@@ -442,8 +442,8 @@ def scaffold_new_repository(
         repo = git.Repo.init(repo_temp_dir)
 
         # Apply template if provided
-        if blueprint_temp_dir:
-            apply_template_to_directory(blueprint_temp_dir, repo_temp_dir, variables)
+        if template_temp_dir:
+            apply_template_to_directory(template_temp_dir, repo_temp_dir, variables)
 
         # Git add all files
         repo.index.add('*')
@@ -479,7 +479,7 @@ def scaffold_new_repository(
 def scaffold_existing_repository(
     service,
     connection,
-    blueprint_temp_dir: str,
+    template_temp_dir: str,
     variables: dict
 ) -> dict:
     """
@@ -494,7 +494,7 @@ def scaffold_existing_repository(
     Args:
         service: Service model instance
         connection: IntegrationConnection for SCM
-        blueprint_temp_dir: Path to template directory (optional)
+        template_temp_dir: Path to template directory (optional)
         variables: Template variables
 
     Returns:
@@ -519,8 +519,8 @@ def scaffold_existing_repository(
         repo.heads[feature_branch].checkout()
 
         # Apply template if provided
-        if blueprint_temp_dir:
-            apply_template_to_directory(blueprint_temp_dir, repo_temp_dir, variables)
+        if template_temp_dir:
+            apply_template_to_directory(template_temp_dir, repo_temp_dir, variables)
 
         # Check if there are changes
         if not repo.is_dirty() and not repo.untracked_files:

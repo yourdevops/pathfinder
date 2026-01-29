@@ -30,6 +30,7 @@ from .views.ci_workflows import (
     StepsRepoScanView, StepsRepoScanStatusView,
     StepsCatalogView, StepDetailView, RuntimesView,
     WorkflowListView, WorkflowCreateView, WorkflowComposerView,
+    WorkflowDetailView, WorkflowManifestView, WorkflowDeleteView,
     CompatibleStepsView, StepConfigView, RuntimeVersionsView,
 )
 
@@ -89,6 +90,10 @@ ci_workflows_patterns = [
     path('steps/', StepsCatalogView.as_view(), name='steps_catalog'),
     path('steps/<uuid:step_uuid>/', StepDetailView.as_view(), name='step_detail'),
     path('runtimes/', RuntimesView.as_view(), name='runtimes'),
+    # Dynamic workflow paths (must be after all fixed paths to avoid URL conflicts)
+    path('<dns:workflow_name>/', WorkflowDetailView.as_view(), name='workflow_detail'),
+    path('<dns:workflow_name>/manifest/', WorkflowManifestView.as_view(), name='workflow_manifest'),
+    path('<dns:workflow_name>/delete/', WorkflowDeleteView.as_view(), name='workflow_delete'),
 ]
 
 # Services URLs (global service list and helper endpoints)

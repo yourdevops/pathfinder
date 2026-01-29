@@ -24,7 +24,7 @@
         {% for workflow in workflows %}
         <div class="bg-dark-surface border border-dark-border rounded-lg p-5">
             <div class="flex items-start justify-between mb-3">
-                <h3 class="font-medium text-dark-text">{{ workflow.name }}</h3>
+                <a href="{% url 'ci_workflows:workflow_detail' workflow_name=workflow.name %}" class="font-medium text-dark-text hover:text-dark-accent transition-colors">{{ workflow.name }}</a>
                 {% if workflow.artifact_type %}
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-400">
                     {{ workflow.artifact_type }}

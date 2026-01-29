@@ -113,7 +113,7 @@ def check_all_connections_now() -> dict:
 @task(queue_name='repository_scaffolding')
 def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
     """
-    Scaffold repository from blueprint template.
+    Scaffold repository from template.
 
     For new repos: Create repo, push template to main branch.
     For existing repos: Create feature branch, apply template, open PR.
@@ -160,12 +160,12 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
         variables = get_template_variables(service)
 
         # Scaffold based on mode
-        # Note: Blueprint-based scaffolding removed. CI Workflow scaffolding will be added in Phase 5.1 Plan 03+.
+        # Note: Template-based scaffolding. CI Workflow template support to be added in future phase.
         if service.repo_is_new:
             result = scaffold_new_repository(
                 service=service,
                 connection=connection,
-                blueprint_temp_dir=None,
+                template_temp_dir=None,
                 variables=variables,
             )
             # Update service with repo URL
@@ -174,7 +174,7 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
             result = scaffold_existing_repository(
                 service=service,
                 connection=connection,
-                blueprint_temp_dir=None,
+                template_temp_dir=None,
                 variables=variables,
             )
 

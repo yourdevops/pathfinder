@@ -7,7 +7,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 
-from core.ci_manifest import get_compatible_steps
+from core.ci_manifest import generate_github_actions_manifest, get_compatible_steps
 from core.forms.ci_workflows import StepsRepoRegisterForm, WorkflowCreateForm
 from core.models import StepsRepository, CIStep, CIWorkflow, CIWorkflowStep, RuntimeFamily
 from core.permissions import OperatorRequiredMixin, has_system_role
@@ -331,7 +331,7 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             except CIStep.DoesNotExist:
                 continue
 
-        return redirect('ci_workflows:workflow_list')
+        return redirect('ci_workflows:workflow_detail', workflow_name=workflow.name)
 
 
 class CompatibleStepsView(LoginRequiredMixin, View):
@@ -373,3 +373,47 @@ class StepConfigView(LoginRequiredMixin, View):
         return render(request, 'core/ci_workflows/_step_config.html', {
             'step': step,
         })
+
+
+# --- Workflow Detail, Manifest, and Delete Views ---
+
+
+class WorkflowDetailView(LoginRequiredMixin, View):
+    """Show workflow details with steps and generated manifest."""
+
+    def get(self, request, workflow_name):
+        workflow = get_object_or_404(CIWorkflow, name=workflow_name)
+        workflow_steps = workflow.workflow_steps.select_related('step').order_by('order')
+        manifest_yaml = generate_github_actions_manifest(workflow)
+
+        can_delete = (
+            request.user.is_authenticated
+            and (has_system_role(request.user, 'admin') or has_system_role(request.user, 'operator'))
+        )
+
+        return render(request, 'core/ci_workflows/workflow_detail.html', {
+            'workflow': workflow,
+            'workflow_steps': workflow_steps,
+            'manifest_yaml': manifest_yaml,
+            'can_delete': can_delete,
+        })
+
+
+class WorkflowManifestView(LoginRequiredMixin, View):
+    """HTMX endpoint: return manifest preview partial."""
+
+    def get(self, request, workflow_name):
+        workflow = get_object_or_404(CIWorkflow, name=workflow_name)
+        manifest_yaml = generate_github_actions_manifest(workflow)
+        return render(request, 'core/ci_workflows/_manifest_preview.html', {
+            'manifest_yaml': manifest_yaml,
+        })
+
+
+class WorkflowDeleteView(OperatorRequiredMixin, View):
+    """Delete a CI workflow."""
+
+    def post(self, request, workflow_name):
+        workflow = get_object_or_404(CIWorkflow, name=workflow_name)
+        workflow.delete()
+        return redirect('ci_workflows:workflow_list')

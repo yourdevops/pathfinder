@@ -1,7 +1,8 @@
-"""CI Manifest utilities: runtime compatibility checking for CI workflows."""
+"""CI Manifest utilities: runtime compatibility checking and GitHub Actions manifest generation."""
 import re
 
 import semver
+import yaml
 
 from core.models import CIStep
 
@@ -105,3 +106,82 @@ def get_compatible_steps(runtime_family: str, runtime_version: str):
             incompatible.append(step)
 
     return compatible, incompatible
+
+
+def generate_github_actions_manifest(workflow) -> str:
+    """
+    Generate a GitHub Actions workflow YAML for a CIWorkflow instance.
+
+    The manifest includes:
+    1. Checkout step (auto-injected)
+    2. SSP Notify Start step (auto-injected)
+    3. User-composed steps (from workflow_steps, ordered)
+    4. SSP Notify Complete step (auto-injected)
+
+    Args:
+        workflow: CIWorkflow model instance
+
+    Returns:
+        YAML string of the GitHub Actions workflow manifest.
+    """
+    from core.git_utils import parse_git_url
+
+    manifest = {
+        'name': f'CI - {workflow.name}',
+        'on': {
+            'push': {'branches': ['main']},
+        },
+        'jobs': {
+            'build': {
+                'runs-on': 'ubuntu-latest',
+                'steps': [],
+            },
+        },
+    }
+
+    steps_list = manifest['jobs']['build']['steps']
+
+    # Auto-inject: checkout
+    steps_list.append({
+        'name': 'Checkout',
+        'uses': 'actions/checkout@v4',
+    })
+
+    # Auto-inject: SSP Notify Start
+    steps_list.append({
+        'name': 'Notify SSP - Build Started',
+        'uses': './ci-steps/ssp-notify-start',
+    })
+
+    # User-composed steps
+    for ws in workflow.workflow_steps.select_related('step__repository').order_by('order'):
+        step = ws.step
+        repo = step.repository
+
+        # Build uses reference
+        parsed = parse_git_url(repo.git_url)
+        if parsed and parsed.get('owner') and parsed.get('repo'):
+            uses_ref = f"{parsed['owner']}/{parsed['repo']}/ci-steps/{step.directory_name}"
+            if step.commit_sha:
+                uses_ref += f"@{step.commit_sha}"
+            else:
+                uses_ref += f"@main"
+        else:
+            uses_ref = f"./ci-steps/{step.directory_name}"
+
+        step_entry = {
+            'name': step.name,
+            'uses': uses_ref,
+        }
+        if ws.input_config:
+            step_entry['with'] = ws.input_config
+
+        steps_list.append(step_entry)
+
+    # Auto-inject: SSP Notify Complete
+    steps_list.append({
+        'name': 'Notify SSP - Build Complete',
+        'uses': './ci-steps/ssp-notify-complete',
+    })
+
+    return yaml.dump(manifest, default_flow_style=False, sort_keys=False)
