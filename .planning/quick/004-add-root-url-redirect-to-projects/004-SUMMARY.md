@@ -5,7 +5,7 @@ subsystem: routing
 
 key-files:
   modified:
-    - devssp/urls.py
+    - pathfinder/urls.py
 
 duration: 1min
 completed: 2026-01-22
@@ -35,7 +35,7 @@ completed: 2026-01-22
 
 ## Files Modified
 
-- `devssp/urls.py` - Added RedirectView import and root URL pattern
+- `pathfinder/urls.py` - Added RedirectView import and root URL pattern
 
 ## Decisions Made
 

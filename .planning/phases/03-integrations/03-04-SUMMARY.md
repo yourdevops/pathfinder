@@ -23,7 +23,7 @@ completed: 2026-01-23
 - Added OperatorRequiredMixin to core/permissions.py for operator-level access control
 - Created connection views (list, detail, test, delete, create dispatch)
 - Configured connection URL routing with proper namespaces
-- Added plugin URL autodiscovery to devssp/urls.py
+- Added plugin URL autodiscovery to pathfinder/urls.py
 - Created connection templates with grouped list view and HTMX health testing
 
 ## Task Commits
@@ -39,7 +39,7 @@ Each task was committed atomically:
 - core/views/connections.py - Connection views
 - core/views/__init__.py - Updated exports
 - core/urls.py - Added connection URL patterns
-- devssp/urls.py - Added plugin autodiscovery
+- pathfinder/urls.py - Added plugin autodiscovery
 - core/templates/core/connections/list.html - Connection list
 - core/templates/core/connections/detail.html - Connection detail
 - core/templates/core/connections/_health_status.html - Health partial

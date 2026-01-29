@@ -169,7 +169,7 @@ Header: "You can skip this step and configure these settings later."
    - Commit and push
    - Create pull request to base branch
 
-3. Create Service record in DevSSP database with:
+3. Create Service record in Pathfinder database with:
    - Reference to selected template
    - deploy_type from template (for deployment routing)
 

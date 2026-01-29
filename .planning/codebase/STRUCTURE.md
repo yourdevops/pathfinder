@@ -5,8 +5,8 @@
 ## Directory Layout
 
 ```
-devssp/
-├── devssp/                  # Django project configuration package
+pathfinder/
+├── pathfinder/                  # Django project configuration package
 │   ├── __init__.py          # Empty package marker
 │   ├── settings.py          # Django settings (database, middleware, apps)
 │   ├── urls.py              # Root URL router (currently: admin only)
@@ -38,7 +38,7 @@ devssp/
 
 ## Directory Purposes
 
-**`devssp/`:** Django project configuration package containing settings, routing, and WSGI/ASGI entrypoints. Currently minimal, no custom apps registered yet.
+**`pathfinder/`:** Django project configuration package containing settings, routing, and WSGI/ASGI entrypoints. Currently minimal, no custom apps registered yet.
 
 **`docs/`:** Comprehensive design documentation covering all features: Projects, Services, Environments, Integrations, RBAC, Blueprints, Wizard UI, and roadmap. Source of truth for implementation.
 
@@ -48,14 +48,14 @@ devssp/
 
 **Entry Points:**
 
-- `devssp/wsgi.py`: WSGI entry point for Gunicorn/production servers. Sets `DJANGO_SETTINGS_MODULE` and calls `get_wsgi_application()`.
-- `devssp/asgi.py`: ASGI entry point for async application servers. Currently unused but available for future async support.
-- `manage.py`: Development CLI utility. Runs `django.core.management.execute_from_command_line()` with `DJANGO_SETTINGS_MODULE` set to `devssp.settings`.
+- `pathfinder/wsgi.py`: WSGI entry point for Gunicorn/production servers. Sets `DJANGO_SETTINGS_MODULE` and calls `get_wsgi_application()`.
+- `pathfinder/asgi.py`: ASGI entry point for async application servers. Currently unused but available for future async support.
+- `manage.py`: Development CLI utility. Runs `django.core.management.execute_from_command_line()` with `DJANGO_SETTINGS_MODULE` set to `pathfinder.settings`.
 - `entrypoint.sh`: Container startup script. Runs migrations, collects static files, starts Gunicorn with 2 workers and 4 threads.
 
 **Configuration:**
 
-- `devssp/settings.py`: Django settings module. Database backend (SQLite at `db.sqlite3`), installed apps (currently: admin, auth, contenttypes, sessions, messages, staticfiles), middleware stack (security, sessions, CSRF, auth, messages, clickjacking), templates, static files configuration.
+- `pathfinder/settings.py`: Django settings module. Database backend (SQLite at `db.sqlite3`), installed apps (currently: admin, auth, contenttypes, sessions, messages, staticfiles), middleware stack (security, sessions, CSRF, auth, messages, clickjacking), templates, static files configuration.
 - `docker-compose.yml`: Multi-container orchestration configuration. Defines `ssp` service with build context, environment variables, volume mounts, healthcheck, and Traefik labels for reverse proxy.
 - `Dockerfile`: Container image definition. Base: Python 3.13 slim, installs libpq-dev (PostgreSQL support for future), creates non-root user `ssp:ssp`, runs migrations and static collection before starting Gunicorn.
 - `requirements.txt`: Python dependencies list (file does not exist yet, needs to be created with Django 6.x and dependencies).
@@ -79,7 +79,7 @@ devssp/
 
 **Directories:**
 
-- Feature packages: lowercase snake_case (e.g., `devssp/integrations/`, `devssp/core/`)
+- Feature packages: lowercase snake_case (e.g., `pathfinder/integrations/`, `pathfinder/core/`)
 - Plugin directories: lowercase with hyphens (e.g., `integrations/plugins/github/`, `integrations/plugins/jenkins/`)
 - Template directories: lowercase (e.g., `templates/`, `templates/wizard/`)
 
@@ -94,25 +94,25 @@ devssp/
 
 **New Django App:**
 
-1. Create directory under `devssp/` (e.g., `devssp/core/`, `devssp/wizard/`)
+1. Create directory under `pathfinder/` (e.g., `pathfinder/core/`, `pathfinder/wizard/`)
 2. Create `__init__.py` (empty package marker)
 3. Create `apps.py` with AppConfig subclass
 4. Create `models.py` for ORM models
 5. Create `views.py` for views or `views/` directory with multiple view modules
 6. Create `urls.py` with URL patterns (if app-specific)
 7. Create `forms.py` for Django Forms
-8. Register in `devssp/settings.py` INSTALLED_APPS as `'devssp.core'`
-9. Add app-specific URL patterns to `devssp/urls.py` with `include()` if needed
+8. Register in `pathfinder/settings.py` INSTALLED_APPS as `'pathfinder.core'`
+9. Add app-specific URL patterns to `pathfinder/urls.py` with `include()` if needed
 
 **New Feature (Service Logic):**
 
-- Main business logic: `devssp/services/` (e.g., `devssp/services/wizard_orchestrator.py`)
-- Service lifecycle helpers: `devssp/services/` (e.g., `devssp/services/build_manager.py`, `devssp/services/deployment_manager.py`)
+- Main business logic: `pathfinder/services/` (e.g., `pathfinder/services/wizard_orchestrator.py`)
+- Service lifecycle helpers: `pathfinder/services/` (e.g., `pathfinder/services/build_manager.py`, `pathfinder/services/deployment_manager.py`)
 - Helpers called by views and signals
 
 **New Integration Plugin:**
 
-1. Create directory: `devssp/integrations/plugins/{plugin-name}/`
+1. Create directory: `pathfinder/integrations/plugins/{plugin-name}/`
 2. Create `__init__.py` with plugin class registration
 3. Create plugin implementation file (e.g., `github.py`)
 4. Implement base plugin interface with capability declarations
@@ -121,21 +121,21 @@ devssp/
 
 **New Templates:**
 
-- Feature-specific templates: `devssp/{app}/templates/{app}/*.html`
-- Wizard steps: `devssp/wizard/templates/wizard/page-{n}.html` (following Django app template layout)
-- Base layout: `devssp/core/templates/base.html` (inherited by all pages)
-- Shared components: `devssp/core/templates/components/*.html`
+- Feature-specific templates: `pathfinder/{app}/templates/{app}/*.html`
+- Wizard steps: `pathfinder/wizard/templates/wizard/page-{n}.html` (following Django app template layout)
+- Base layout: `pathfinder/core/templates/base.html` (inherited by all pages)
+- Shared components: `pathfinder/core/templates/components/*.html`
 
 **New Tests:**
 
-- Unit tests: `devssp/{app}/tests/test_{module}.py` (adjacent to source)
-- Test fixtures: `devssp/{app}/tests/fixtures.py` or `devssp/tests/factories/` using Factory Boy
+- Unit tests: `pathfinder/{app}/tests/test_{module}.py` (adjacent to source)
+- Test fixtures: `pathfinder/{app}/tests/fixtures.py` or `pathfinder/tests/factories/` using Factory Boy
 - Test database: Uses temporary in-memory SQLite during test runs (Django default)
 
 **New Management Command:**
 
-1. Create directory: `devssp/{app}/management/commands/`
-2. Create file: `devssp/{app}/management/commands/{command-name}.py`
+1. Create directory: `pathfinder/{app}/management/commands/`
+2. Create file: `pathfinder/{app}/management/commands/{command-name}.py`
 3. Implement Command class extending `django.core.management.BaseCommand`
 4. Callable via: `python manage.py {command-name}`
 

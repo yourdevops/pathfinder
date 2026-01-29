@@ -6,7 +6,7 @@
 
 ## Summary
 
-This research covers the technical foundation for implementing Phase 1: Foundation & Security in DevSSP. The phase requires implementing an unlock flow, custom user/group management with SystemRoles, session-based authentication, audit logging, and a dark mode UI.
+This research covers the technical foundation for implementing Phase 1: Foundation & Security in Pathfinder. The phase requires implementing an unlock flow, custom user/group management with SystemRoles, session-based authentication, audit logging, and a dark mode UI.
 
 The standard approach for Django 6.x projects is to use a custom user model extending `AbstractUser` from the start (before any migrations), implement groups as a separate model (not Django's built-in groups which lack the flexibility needed for SystemRoles), use `django-auditlog` for change tracking, and integrate Tailwind CSS with the `class` strategy for dark mode.
 
@@ -47,8 +47,8 @@ pip install django-tailwind[cookiecutter,honcho,reload] django-auditlog
 
 ### Recommended Project Structure
 ```
-devssp/
-├── devssp/              # Project settings
+pathfinder/
+├── pathfinder/              # Project settings
 │   ├── settings.py
 │   ├── urls.py
 │   └── wsgi.py
@@ -486,7 +486,7 @@ module.exports = {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}DevSSP{% endblock %}</title>
+    <title>{% block title %}Pathfinder{% endblock %}</title>
     {% tailwind_css %}
     <!-- Prevent dark mode flash -->
     <script>

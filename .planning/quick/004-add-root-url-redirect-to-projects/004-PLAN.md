@@ -3,7 +3,7 @@ task: 004
 type: quick
 autonomous: true
 files_modified:
-  - devssp/urls.py
+  - pathfinder/urls.py
 
 must_haves:
   truths:
@@ -11,7 +11,7 @@ must_haves:
     - "Unauthenticated users see login page after redirect chain"
     - "Authenticated users see projects list"
   artifacts:
-    - path: "devssp/urls.py"
+    - path: "pathfinder/urls.py"
       provides: "Root URL redirect"
       contains: "RedirectView"
 ---
@@ -26,14 +26,14 @@ Output: Working redirect from / to /projects/
 </objective>
 
 <context>
-@devssp/urls.py
+@pathfinder/urls.py
 </context>
 
 <tasks>
 
 <task type="auto">
   <name>Task 1: Add root URL redirect</name>
-  <files>devssp/urls.py</files>
+  <files>pathfinder/urls.py</files>
   <action>
 Add a redirect from "/" to "/projects/" using Django's RedirectView:
 

@@ -8,7 +8,7 @@
 
 Internal Developer Platforms (IDPs) have matured significantly. Backstage holds ~89% market share among organizations that have adopted an IDP, with Gartner predicting 75% of organizations with platform engineering teams will provide internal developer portals by 2026 (up from 45% in 2023).
 
-DevSSP's planned features align well with industry table stakes. The current design covers the essential foundation: service catalog, blueprints/golden paths, RBAC, environment management, and deployment tracking. However, several differentiating opportunities and notable gaps exist.
+Pathfinder's planned features align well with industry table stakes. The current design covers the essential foundation: service catalog, blueprints/golden paths, RBAC, environment management, and deployment tracking. However, several differentiating opportunities and notable gaps exist.
 
 ---
 
@@ -16,9 +16,9 @@ DevSSP's planned features align well with industry table stakes. The current des
 
 Features users expect. Missing these means the product feels incomplete or users will choose alternatives.
 
-| Feature | Why Expected | Complexity | DevSSP Status | Gap Analysis |
+| Feature | Why Expected | Complexity | Pathfinder Status | Gap Analysis |
 |---------|--------------|------------|---------------|--------------|
-| **Software Catalog** | Central inventory for all services, APIs, and resources. Users need to know "what exists and who owns it." | Medium | Covered (Services, Projects) | DevSSP models services well; consider extending to non-service entities (APIs, data pipelines, libraries) in future |
+| **Software Catalog** | Central inventory for all services, APIs, and resources. Users need to know "what exists and who owns it." | Medium | Covered (Services, Projects) | Pathfinder models services well; consider extending to non-service entities (APIs, data pipelines, libraries) in future |
 | **Service Blueprints / Golden Paths** | Scaffold new services with best practices baked in. 89% of IDPs provide templates. | Medium | Covered (Blueprints with ssp-template.yaml) | Well-designed. Consider multiple archetype support (REST, event-driven, scheduled jobs, ML models) |
 | **Self-Service Deployment** | Developers deploy without filing tickets. Core value proposition of any IDP. | High | Covered (wizard + deployment flows) | Strong design with direct/GitOps/pipeline mechanisms |
 | **Environment Management** | Dev/staging/prod separation with appropriate connections and variables. | Medium | Covered (Environments model) | Well-designed with connection binding and env vars cascade |
@@ -51,7 +51,7 @@ Features users expect. Missing these means the product feels incomplete or users
 
 Features that set product apart. Not expected but valued highly by users who have them.
 
-| Feature | Value Proposition | Complexity | DevSSP Status | Recommendation |
+| Feature | Value Proposition | Complexity | Pathfinder Status | Recommendation |
 |---------|-------------------|------------|---------------|----------------|
 | **Scorecards / Service Maturity** | Track service health, production readiness, compliance against standards. Cortex/OpsLevel key differentiator. | High | Missing | **HIGH PRIORITY**: Add scorecards for service maturity (has tests, has docs, has SLOs, security scans passing) |
 | **API Documentation Integration** | Unified API docs via OpenAPI/Swagger specs attached to services. Reduces context-switching. | Medium | Missing | Consider: Attach OpenAPI specs to services, render in UI |
@@ -91,9 +91,9 @@ Features to explicitly NOT build. Common mistakes in this domain.
 
 | Anti-Feature | Why Avoid | What to Do Instead |
 |--------------|-----------|-------------------|
-| **Full PaaS Functionality** | DevSSP should orchestrate existing tools (K8s, Jenkins, ArgoCD), not replace them. Building a full PaaS creates massive scope creep and maintenance burden. | Delegate execution to battle-tested tools. Be the control plane, not the compute plane. |
+| **Full PaaS Functionality** | Pathfinder should orchestrate existing tools (K8s, Jenkins, ArgoCD), not replace them. Building a full PaaS creates massive scope creep and maintenance burden. | Delegate execution to battle-tested tools. Be the control plane, not the compute plane. |
 | **Custom CI System** | Jenkins, GitHub Actions, GitLab CI are mature. Building CI from scratch is years of work. | Integrate via webhooks and API calls. Track builds, don't execute them. |
-| **Built-in Secrets Storage** | Security liability. Vault, AWS Secrets Manager are purpose-built and audited. | Integrate with external secrets managers. Never store secrets in DevSSP database. |
+| **Built-in Secrets Storage** | Security liability. Vault, AWS Secrets Manager are purpose-built and audited. | Integrate with external secrets managers. Never store secrets in Pathfinder database. |
 | **Custom Container Runtime** | Docker/containerd are standards. Building container orchestration is Kubernetes-level effort. | Use deployment plugins that call K8s/Docker APIs. |
 | **Comprehensive Log Aggregation** | Datadog, Grafana Loki, ELK are specialized. Building log management is a separate product. | Link to external observability tools. Show deployment logs via CI/CD integration. |
 | **Full GitOps Engine** | ArgoCD/Flux are mature, CNCF-backed. | Integrate with existing GitOps tools. Commit manifests, let them sync. |
@@ -106,7 +106,7 @@ Features to explicitly NOT build. Common mistakes in this domain.
 
 **Critical Anti-Pattern:** Building a platform and assuming developers will use it.
 
-**What DevSSP Does Right:**
+**What Pathfinder Does Right:**
 - Wizard-driven service creation (low friction onboarding)
 - Integration with existing tools developers already use (GitHub, Jenkins)
 - Solves real pain: "deploy my code without filing tickets"
@@ -190,47 +190,47 @@ For MVP, prioritize these features in order:
 
 ## Competitive Positioning
 
-### DevSSP vs. Backstage
+### Pathfinder vs. Backstage
 
-| Aspect | Backstage | DevSSP |
+| Aspect | Backstage | Pathfinder |
 |--------|-----------|--------|
 | **Model** | Framework (build your own) | Opinionated product |
 | **Setup Time** | Weeks to months | Hours to days |
 | **Customization** | Unlimited (plugin architecture) | Guided (within guardrails) |
-| **Maintenance** | High (upgrades, plugin compatibility) | Low (managed by DevSSP) |
+| **Maintenance** | High (upgrades, plugin compatibility) | Low (managed by Pathfinder) |
 | **Target** | Large enterprises with platform teams | SMB to mid-market, lean platform teams |
 
-**DevSSP Advantage:** Faster time-to-value for teams without dedicated platform engineers.
+**Pathfinder Advantage:** Faster time-to-value for teams without dedicated platform engineers.
 
-### DevSSP vs. Port.io
+### Pathfinder vs. Port.io
 
-| Aspect | Port.io | DevSSP |
+| Aspect | Port.io | Pathfinder |
 |--------|---------|--------|
 | **Model** | Flexible data model (any entity) | Opinionated (Services focus) |
 | **Complexity** | High (powerful but complex blueprints) | Medium (guided wizard) |
 | **Use Case** | Any software catalog | Service deployment self-service |
 
-**DevSSP Advantage:** Focused on deployment self-service, not general-purpose catalog.
+**Pathfinder Advantage:** Focused on deployment self-service, not general-purpose catalog.
 
-### DevSSP vs. Humanitec
+### Pathfinder vs. Humanitec
 
-| Aspect | Humanitec | DevSSP |
+| Aspect | Humanitec | Pathfinder |
 |--------|-----------|--------|
 | **Focus** | Platform Orchestration (Score spec) | Service Deployment |
 | **IaC Approach** | Dynamic configuration generation | Template-based (existing IaC) |
 | **Pricing** | Enterprise only | Accessible (to be defined) |
 
-**DevSSP Advantage:** Works with existing tooling rather than requiring Score adoption.
+**Pathfinder Advantage:** Works with existing tooling rather than requiring Score adoption.
 
-### DevSSP vs. Cortex/OpsLevel
+### Pathfinder vs. Cortex/OpsLevel
 
-| Aspect | Cortex/OpsLevel | DevSSP |
+| Aspect | Cortex/OpsLevel | Pathfinder |
 |--------|-----------------|--------|
 | **Focus** | Service maturity, scorecards | Service deployment |
 | **Primary Value** | Governance and standards | Self-service deployment |
 | **Pricing** | $40-65/user/month | TBD |
 
-**DevSSP Opportunity:** Add scorecards to compete, while maintaining deployment focus.
+**Pathfinder Opportunity:** Add scorecards to compete, while maintaining deployment focus.
 
 ---
 

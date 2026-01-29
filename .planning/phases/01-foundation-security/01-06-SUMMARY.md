@@ -29,7 +29,7 @@ key-files:
   modified:
     - core/views/__init__.py
     - core/urls.py
-    - devssp/urls.py
+    - pathfinder/urls.py
 
 key-decisions:
   - "Placeholder views extend LoginRequiredMixin for authentication enforcement"
@@ -75,7 +75,7 @@ Each task was committed atomically:
 - `core/templates/core/placeholders/blueprints.html` - Empty state page for blueprints
 - `core/templates/core/placeholders/connections.html` - Empty state page for connections
 - `core/urls.py` - Added blueprints_patterns and connections_patterns
-- `devssp/urls.py` - Registered /blueprints/ and /connections/ namespaces
+- `pathfinder/urls.py` - Registered /blueprints/ and /connections/ namespaces
 
 ## Decisions Made
 1. **LoginRequiredMixin for auth enforcement** - Standard Django pattern, redirects unauthenticated users to login

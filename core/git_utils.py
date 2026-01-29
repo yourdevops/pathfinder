@@ -177,7 +177,7 @@ def read_manifest_from_repo(repo_path: str) -> dict:
     """
     Read and parse manifest file from repository.
 
-    Looks for ssp-template.yaml first, then devssp-template.yaml.
+    Looks for ssp-template.yaml first, then pathfinder-template.yaml.
 
     Args:
         repo_path: Path to cloned repository
@@ -191,7 +191,7 @@ def read_manifest_from_repo(repo_path: str) -> dict:
     """
     import os
 
-    manifest_names = ['ssp-template.yaml', 'devssp-template.yaml']
+    manifest_names = ['ssp-template.yaml', 'pathfinder-template.yaml']
 
     for name in manifest_names:
         manifest_path = os.path.join(repo_path, name)
@@ -350,7 +350,7 @@ def apply_template_to_directory(src_dir: str, dest_dir: str, variables: dict, ex
     import os
 
     if exclude_files is None:
-        exclude_files = ['ssp-template.yaml', 'devssp-template.yaml', '.git']
+        exclude_files = ['ssp-template.yaml', 'pathfinder-template.yaml', '.git']
 
     # Copy all files except excluded
     for item in os.listdir(src_dir):
@@ -451,8 +451,8 @@ def scaffold_new_repository(
         # Commit
         repo.index.commit(
             f"Initial commit for service {service.name}",
-            author=git.Actor("DevSSP", "devssp@localhost"),
-            committer=git.Actor("DevSSP", "devssp@localhost"),
+            author=git.Actor("Pathfinder", "pathfinder@localhost"),
+            committer=git.Actor("Pathfinder", "pathfinder@localhost"),
         )
 
         # Add remote and push
@@ -534,8 +534,8 @@ def scaffold_existing_repository(
         repo.index.add('*')
         repo.index.commit(
             f"Add service scaffold for {service.name}",
-            author=git.Actor("DevSSP", "devssp@localhost"),
-            committer=git.Actor("DevSSP", "devssp@localhost"),
+            author=git.Actor("Pathfinder", "pathfinder@localhost"),
+            committer=git.Actor("Pathfinder", "pathfinder@localhost"),
         )
 
         # Push feature branch

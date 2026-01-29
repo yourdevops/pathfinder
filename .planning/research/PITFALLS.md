@@ -1,9 +1,9 @@
 # Domain Pitfalls: Internal Developer Platform (IDP)
 
 **Domain:** Internal Developer Platform / Self-Service Portal
-**Project:** DevSSP
+**Project:** Pathfinder
 **Researched:** 2026-01-21
-**Confidence:** MEDIUM-HIGH (based on multiple industry sources + DevSSP design analysis)
+**Confidence:** MEDIUM-HIGH (based on multiple industry sources + Pathfinder design analysis)
 
 ---
 
@@ -35,8 +35,8 @@ Mistakes that cause rewrites, security breaches, or complete adoption failure.
 - Every portal page should enable an action, not just display information
 - Measure "actions completed via portal" not "portal visits"
 
-**Relevance to DevSSP:**
-- DevSSP design correctly emphasizes "orchestrate, don't rebuild"
+**Relevance to Pathfinder:**
+- Pathfinder design correctly emphasizes "orchestrate, don't rebuild"
 - Webhook-based CI integration is action-oriented
 - Risk: Ensure the wizard UI actually triggers deployments, not just shows status
 
@@ -46,21 +46,21 @@ Mistakes that cause rewrites, security breaches, or complete adoption failure.
 
 ### Pitfall 2: Webhook-Only Integration Fragility
 
-**What goes wrong:** Relying exclusively on webhooks for CI/CD integration creates fragile state synchronization. Missed webhooks leave DevSSP in inconsistent state with no recovery mechanism.
+**What goes wrong:** Relying exclusively on webhooks for CI/CD integration creates fragile state synchronization. Missed webhooks leave Pathfinder in inconsistent state with no recovery mechanism.
 
 **Why it happens:**
 - Webhooks appear simpler than polling
 - Assumption that webhooks are reliable "fire and forget"
-- DevSSP design explicitly chose "webhook-only CI integration (no polling)"
+- Pathfinder design explicitly chose "webhook-only CI integration (no polling)"
 
 **Consequences:**
-- Builds complete in CI but DevSSP shows "pending" forever
+- Builds complete in CI but Pathfinder shows "pending" forever
 - Deployments succeed but portal shows "failed"
 - Loss of trust in the platform - developers check CI directly
 - No way to reconcile state without manual database fixes
 
 **Warning signs:**
-- Discrepancies between CI system status and DevSSP status
+- Discrepancies between CI system status and Pathfinder status
 - Support tickets: "my build shows pending but it finished hours ago"
 - Increasing "unknown" statuses over time
 
@@ -71,8 +71,8 @@ Mistakes that cause rewrites, security breaches, or complete adoption failure.
 - Consider hybrid approach: webhook for real-time + periodic "health sync" for reconciliation
 - Log all webhook payloads for debugging and replay
 
-**Relevance to DevSSP:**
-- CRITICAL: DevSSP explicitly chose webhook-only (per milestone context)
+**Relevance to Pathfinder:**
+- CRITICAL: Pathfinder explicitly chose webhook-only (per milestone context)
 - This decision trades operational complexity for simplicity but creates brittleness
 - At minimum: implement webhook replay/resync capability
 - Consider: optional polling fallback for environments where webhook delivery is unreliable
@@ -94,7 +94,7 @@ Mistakes that cause rewrites, security breaches, or complete adoption failure.
 **Consequences:**
 - User in Project A can view/modify resources in Project B
 - Audit logs show access but enforcement is inconsistent
-- Compliance violations (SOX, PCI DSS) - DevSSP targets enterprise with compliance needs
+- Compliance violations (SOX, PCI DSS) - Pathfinder targets enterprise with compliance needs
 
 **Warning signs:**
 - Inconsistent results between API and admin interface
@@ -108,8 +108,8 @@ Mistakes that cause rewrites, security breaches, or complete adoption failure.
 - Audit admin customizations to ensure proper filtering
 - Add "effective permissions" debug endpoint for troubleshooting
 
-**Relevance to DevSSP:**
-- DevSSP uses django-guardian (per milestone context)
+**Relevance to Pathfinder:**
+- Pathfinder uses django-guardian (per milestone context)
 - Complex hierarchy: User -> Group -> SystemRole + ProjectMembership -> Resources
 - Services, Deployments, Builds all need project-scoped filtering
 - IntegrationConnections shared across projects add complexity
@@ -142,11 +142,11 @@ Mistakes that cause rewrites, security breaches, or complete adoption failure.
 - Explicitly document: "env_vars are for CONFIGURATION ONLY, not secrets"
 - Add validation to reject common secret patterns in env_vars
 - Integrate with external secrets managers for actual secrets
-- Secrets injected at deploy time by the deploy plugin, not stored in DevSSP
+- Secrets injected at deploy time by the deploy plugin, not stored in Pathfinder
 - Add "secret reference" type that points to external secret store
 
-**Relevance to DevSSP:**
-- DevSSP docs already note: "Secrets must come from external sources (Vault, K8s Secrets)"
+**Relevance to Pathfinder:**
+- Pathfinder docs already note: "Secrets must come from external sources (Vault, K8s Secrets)"
 - But no enforcement mechanism exists in the design
 - Risk: Users WILL put secrets in env_vars if there's no alternative workflow
 - Need clear UX showing "Configuration" vs "Secrets" with different handling
@@ -183,8 +183,8 @@ Mistakes that cause rewrites, security breaches, or complete adoption failure.
 - Consider: template as "source" vs "one-time scaffolding" modes
 - Separate "CI pipeline template" (can upgrade) from "source scaffolding" (one-time)
 
-**Relevance to DevSSP:**
-- DevSSP uses "template versioning via git tags" (per milestone context)
+**Relevance to Pathfinder:**
+- Pathfinder uses "template versioning via git tags" (per milestone context)
 - Current design treats templates as one-time scaffolding (clone, substitute, push)
 - No mechanism to update existing services when templates change
 - This is acceptable for MVP but creates long-term fleet management issues
@@ -222,8 +222,8 @@ Mistakes that cause delays, technical debt, or user frustration.
 - Multi-instance from day one (multiple GitHub orgs, multiple K8s clusters)
 - Clear capability interface that plugins implement selectively
 
-**Relevance to DevSSP:**
-- DevSSP has solid plugin architecture design (IntegrationPlugin -> IntegrationConnection)
+**Relevance to Pathfinder:**
+- Pathfinder has solid plugin architecture design (IntegrationPlugin -> IntegrationConnection)
 - Multi-instance already supported (one GitHub plugin, many GitHub connections)
 - Risk: GitHub Actions as CI has different needs than Jenkins
 - Risk: Kubernetes direct deploy vs ArgoCD GitOps vs Jenkins pipeline
@@ -260,8 +260,8 @@ Mistakes that cause delays, technical debt, or user frustration.
 - Register all models including M2M fields explicitly
 - Implement async audit logging for high-volume operations
 
-**Relevance to DevSSP:**
-- DevSSP targets enterprise compliance (SOX, PCI DSS per RBAC design)
+**Relevance to Pathfinder:**
+- Pathfinder targets enterprise compliance (SOX, PCI DSS per RBAC design)
 - RBAC doc specifies comprehensive audit logging requirements
 - All permission-related actions should be logged
 - Need to verify: Build/Deployment updates logged? Connection config changes?
@@ -299,8 +299,8 @@ Mistakes that cause delays, technical debt, or user frustration.
 - Build for the "happy path" first, compliance second
 - Make the platform the path of least resistance
 
-**Relevance to DevSSP:**
-- DevSSP positions as enterprise-focused (compliance, audit)
+**Relevance to Pathfinder:**
+- Pathfinder positions as enterprise-focused (compliance, audit)
 - Risk: building for admins/auditors first, developers second
 - Wizard-based UI is developer-friendly approach
 - Self-service is the goal - don't undermine it with approval bottlenecks
@@ -334,7 +334,7 @@ Mistakes that cause delays, technical debt, or user frustration.
 - Allow power users to override/customize at appropriate points
 - Different templates for different experience levels
 
-**Relevance to DevSSP:**
+**Relevance to Pathfinder:**
 - Blueprints (templates) provide abstractions over infrastructure
 - Env var cascade provides layered configuration control
 - Risk: template `variables` schema may be too simple or too complex
@@ -349,7 +349,7 @@ Mistakes that cause delays, technical debt, or user frustration.
 **What goes wrong:** SQLite works for development but creates operational issues in production deployments.
 
 **Why it happens:**
-- DevSSP stack specifies SQLite (per CLAUDE.md)
+- Pathfinder stack specifies SQLite (per CLAUDE.md)
 - Works fine for single-instance testing
 - Migration to PostgreSQL deferred "for later"
 
@@ -370,7 +370,7 @@ Mistakes that cause delays, technical debt, or user frustration.
 - Document production database requirements early
 - Design for async webhook processing with proper queue
 
-**Relevance to DevSSP:**
+**Relevance to Pathfinder:**
 - CLAUDE.md specifies SQLite as stack
 - Acceptable for early development/demo
 - Enterprise deployment will require PostgreSQL
@@ -389,7 +389,7 @@ Mistakes that cause annoyance but are recoverable.
 **What goes wrong:** Strict naming rules (lowercase, hyphens only, 63 chars) frustrate users who want human-readable names.
 
 **Why it happens:**
-- DevSSP enforces DNS-compatible naming for all entities
+- Pathfinder enforces DNS-compatible naming for all entities
 - Users expect to use "My App" not "my-app"
 - Error messages don't explain why restrictions exist
 
@@ -398,7 +398,7 @@ Mistakes that cause annoyance but are recoverable.
 - Auto-suggest valid name from user input
 - Description field clearly positioned for human-readable text
 
-**Relevance to DevSSP:**
+**Relevance to Pathfinder:**
 - Already has description field for human context
 - Consider: auto-slugify from free-text input?
 
@@ -418,7 +418,7 @@ Mistakes that cause annoyance but are recoverable.
 - "Test connection" should try representative operations
 - Track health_status vs operation_success separately
 
-**Relevance to DevSSP:**
+**Relevance to Pathfinder:**
 - IntegrationConnection has health_status, last_health_check
 - Need to ensure health checks are meaningful, not just "can connect"
 
@@ -454,7 +454,7 @@ Mistakes that cause annoyance but are recoverable.
 
 ---
 
-## DevSSP Design Decisions: Risk Assessment
+## Pathfinder Design Decisions: Risk Assessment
 
 | Design Decision | Risk Level | Notes |
 |-----------------|------------|-------|

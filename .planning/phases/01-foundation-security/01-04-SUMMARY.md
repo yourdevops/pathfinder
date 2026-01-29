@@ -33,7 +33,7 @@ key-files:
     - core/forms.py
     - core/views/__init__.py
     - core/urls.py
-    - devssp/urls.py
+    - pathfinder/urls.py
 
 key-decisions:
   - "AdminRequiredMixin for CBV permission checking (consistent with Django patterns)"
@@ -88,7 +88,7 @@ Each task was committed atomically:
 - `core/templates/core/users/list.html` - User table with create modal
 - `core/templates/core/users/edit.html` - Edit form with group checkboxes
 - `core/urls.py` - Added users_patterns
-- `devssp/urls.py` - Registered users namespace
+- `pathfinder/urls.py` - Registered users namespace
 
 ## Decisions Made
 1. **AdminRequiredMixin over decorator** - Class-based views use mixin for cleaner composition

@@ -4,7 +4,7 @@ Services are deployable application configurations within a Project. They repres
 
 ## Overview
 
-SSP follows the **orchestrate, don't rebuild** principle. Services are built and deployed by external CI/CD systems, with DevSSP acting as the control plane that tracks state and coordinates actions.
+SSP follows the **orchestrate, don't rebuild** principle. Services are built and deployed by external CI/CD systems, with Pathfinder acting as the control plane that tracks state and coordinates actions.
 
 **Key Concepts:**
 - **Service**: Configuration defining what to build and deploy
@@ -171,10 +171,10 @@ Before services can be created in a Project:
 
 ```
 1. Developer selects Project and Template
-   └─ DevSSP validates: Project has default Environment
-   └─ DevSSP shows template-specific configuration options
+   └─ Pathfinder validates: Project has default Environment
+   └─ Pathfinder shows template-specific configuration options
 
-2. DevSSP creates repository via SCM connection
+2. Pathfinder creates repository via SCM connection
    └─ Clones template, substitutes variables
    └─ Pushes scaffolding (includes Jenkinsfile/.github/workflows)
    └─ Creates Service record with status: draft
@@ -185,9 +185,9 @@ Before services can be created in a Project:
    └─ (GitHub Actions: workflow file auto-discovered)
 
 4. First build triggers on push
-   └─ CI calls DevSSP webhook: build started
+   └─ CI calls Pathfinder webhook: build started
    └─ CI builds, pushes artifact to registry
-   └─ CI calls DevSSP webhook: build complete + artifact_ref
+   └─ CI calls Pathfinder webhook: build complete + artifact_ref
    └─ Service status transitions: draft → active
 ```
 
@@ -199,34 +199,34 @@ Before services can be created in a Project:
 2. SCM triggers CI (via webhook or polling)
 
 3. CI starts build
-   └─ Calls DevSSP webhook: POST /api/webhooks/builds/{service_handler}/started
-   └─ DevSSP creates Build record, status: running
+   └─ Calls Pathfinder webhook: POST /api/webhooks/builds/{service_handler}/started
+   └─ Pathfinder creates Build record, status: running
 
 4. CI completes build
    └─ Pushes artifact to registry (e.g., ghcr.io/org/app:abc123)
-   └─ Calls DevSSP webhook: POST /api/webhooks/builds/{service_handler}/complete
-   └─ DevSSP updates Build: status: success, artifact_ref set
-   └─ DevSSP updates Service: current_artifact_ref, current_build
+   └─ Calls Pathfinder webhook: POST /api/webhooks/builds/{service_handler}/complete
+   └─ Pathfinder updates Build: status: success, artifact_ref set
+   └─ Pathfinder updates Service: current_artifact_ref, current_build
 ```
 
 ### Deployment Flow
 
 ```
-1. User clicks "Deploy to [Environment]" in DevSSP UI
+1. User clicks "Deploy to [Environment]" in Pathfinder UI
    └─ Selects build (defaults to current/latest)
    └─ Confirms deployment
 
-2. DevSSP creates Deployment record
+2. Pathfinder creates Deployment record
    └─ status: pending
    └─ artifact_ref: from selected build
 
-3. DevSSP triggers deployment via Environment's connection
+3. Pathfinder triggers deployment via Environment's connection
    └─ Direct: calls deploy plugin API (Kubernetes, Docker)
    └─ Pipeline: triggers CD job (Jenkins, GitHub Actions)
 
 4. Deployment completes
-   └─ CD calls DevSSP webhook: POST /api/webhooks/deploys/{service_handler}/{env}/complete
-   └─ DevSSP updates Deployment: status: success/failed
+   └─ CD calls Pathfinder webhook: POST /api/webhooks/deploys/{service_handler}/{env}/complete
+   └─ Pathfinder updates Deployment: status: success/failed
 ```
 
 ---
@@ -341,15 +341,15 @@ Token is configured when creating the IntegrationConnection and stored securely.
 
 ## Template Integration
 
-Service Blueprints define how CI/CD is configured. The template's Jenkinsfile or GitHub Actions workflow must include DevSSP webhook calls.
+Service Blueprints define how CI/CD is configured. The template's Jenkinsfile or GitHub Actions workflow must include Pathfinder webhook calls.
 
 ### Example: Jenkinsfile
 
 ```groovy
 pipeline {
   environment {
-    DevSSP_WEBHOOK = "https://ssp.example.com/api/webhooks/builds/{{ service_handler }}"
-    DevSSP_TOKEN = credentials('ssp-webhook-token')
+    PTF_WEBHOOK = "https://ssp.example.com/api/webhooks/builds/{{ service_handler }}"
+    PTF_TOKEN = credentials('ssp-webhook-token')
     IMAGE_TAG = "ghcr.io/{{ project_name }}/{{ app_name }}:${GIT_COMMIT}"
   }
   
@@ -357,8 +357,8 @@ pipeline {
     stage('Notify Start') {
       steps {
         sh '''
-          curl -X POST ${SSP_WEBHOOK}/started \
-            -H "Authorization: Bearer ${SSP_TOKEN}" \
+          curl -X POST ${PTF_WEBHOOK}/started \
+            -H "Authorization: Bearer ${PTF_TOKEN}" \
             -H "Content-Type: application/json" \
             -d '{"commit_sha": "'${GIT_COMMIT}'", "commit_message": "'${GIT_COMMIT_MSG}'", "ci_job_url": "'${BUILD_URL}'"}'
         '''
@@ -380,8 +380,8 @@ pipeline {
     stage('Notify Complete') {
       steps {
         sh '''
-          curl -X POST ${SSP_WEBHOOK}/complete \
-            -H "Authorization: Bearer ${SSP_TOKEN}" \
+          curl -X POST ${PTF_WEBHOOK}/complete \
+            -H "Authorization: Bearer ${PTF_TOKEN}" \
             -H "Content-Type: application/json" \
             -d '{"commit_sha": "'${GIT_COMMIT}'", "status": "success", "artifact_ref": "'${IMAGE_TAG}'", "ci_job_url": "'${BUILD_URL}'"}'
         '''
@@ -392,8 +392,8 @@ pipeline {
   post {
     failure {
       sh '''
-        curl -X POST ${SSP_WEBHOOK}/complete \
-          -H "Authorization: Bearer ${SSP_TOKEN}" \
+        curl -X POST ${PTF_WEBHOOK}/complete \
+          -H "Authorization: Bearer ${PTF_TOKEN}" \
           -H "Content-Type: application/json" \
           -d '{"commit_sha": "'${GIT_COMMIT}'", "status": "failed", "error_message": "Build failed", "ci_job_url": "'${BUILD_URL}'"}'
       '''
@@ -412,7 +412,7 @@ on:
     branches: [main]
 
 env:
-  DevSSP_WEBHOOK: https://ssp.example.com/api/webhooks/builds/{{ service_handler }}
+  PTF_WEBHOOK: https://ssp.example.com/api/webhooks/builds/{{ service_handler }}
   IMAGE_TAG: ghcr.io/{{ project_name }}/{{ app_name }}:${{ github.sha }}
 
 jobs:
@@ -421,10 +421,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Notify DevSSP - Build Started
+      - name: Notify Pathfinder - Build Started
         run: |
-          curl -X POST $SSP_WEBHOOK/started \
-            -H "Authorization: Bearer ${{ secrets.SSP_TOKEN }}" \
+          curl -X POST $PTF_WEBHOOK/started \
+            -H "Authorization: Bearer ${{ secrets.PTF_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{"commit_sha": "${{ github.sha }}", "commit_message": "${{ github.event.head_commit.message }}", "ci_job_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
       
@@ -433,19 +433,19 @@ jobs:
           docker build -t $IMAGE_TAG .
           docker push $IMAGE_TAG
       
-      - name: Notify DevSSP - Build Complete
+      - name: Notify Pathfinder - Build Complete
         if: success()
         run: |
-          curl -X POST $SSP_WEBHOOK/complete \
-            -H "Authorization: Bearer ${{ secrets.SSP_TOKEN }}" \
+          curl -X POST $PTF_WEBHOOK/complete \
+            -H "Authorization: Bearer ${{ secrets.PTF_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{"commit_sha": "${{ github.sha }}", "status": "success", "artifact_ref": "'$IMAGE_TAG'", "ci_job_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
       
-      - name: Notify DevSSP - Build Failed
+      - name: Notify Pathfinder - Build Failed
         if: failure()
         run: |
-          curl -X POST $SSP_WEBHOOK/complete \
-            -H "Authorization: Bearer ${{ secrets.SSP_TOKEN }}" \
+          curl -X POST $PTF_WEBHOOK/complete \
+            -H "Authorization: Bearer ${{ secrets.PTF_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{"commit_sha": "${{ github.sha }}", "status": "failed", "error_message": "Build failed", "ci_job_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
 ```
@@ -659,4 +659,4 @@ See [rbac.md](rbac.md) for full permission model documentation.
 
 # Security Concerns
 
-- When onboarding a new service from an existing repo, user is allowed to list all available repos in the org and select one for scaffolding. DevSSP will open a PR in that repo, which is harmless (can be reviewed and declined) but still can be merged by mistake. This is this a security risk, so for existing repos, we should make user authenticate to SCM with his credentials to make these actions within his permissions and under his name.
+- When onboarding a new service from an existing repo, user is allowed to list all available repos in the org and select one for scaffolding. Pathfinder will open a PR in that repo, which is harmless (can be reviewed and declined) but still can be merged by mistake. This is this a security risk, so for existing repos, we should make user authenticate to SCM with his credentials to make these actions within his permissions and under his name.

@@ -9,7 +9,7 @@ from ..forms import SiteConfigurationForm
 
 
 class GeneralSettingsView(LoginRequiredMixin, AdminRequiredMixin, View):
-    """General settings page - DevSSP URLs configuration."""
+    """General settings page - Pathfinder URLs configuration."""
     template_name = 'core/settings/general.html'
 
     def get(self, request):

@@ -38,7 +38,7 @@ key-files:
     - core/forms.py
     - core/views/__init__.py
     - core/urls.py
-    - devssp/urls.py
+    - pathfinder/urls.py
 
 key-decisions:
   - "Groups displayed as cards showing name, status, roles, and member count"
@@ -96,7 +96,7 @@ Each task was committed atomically:
 - `core/templates/core/groups/*.html` - List, detail, create, edit templates
 - `core/templates/core/audit/list.html` - Audit log template with filters and pagination
 - `core/urls.py` - Added groups_patterns and audit_patterns
-- `devssp/urls.py` - Wired groups and audit namespaces
+- `pathfinder/urls.py` - Wired groups and audit namespaces
 
 ## Decisions Made
 1. **Card-based group list** - Groups displayed as cards (vs table) for visual hierarchy and scanability

@@ -1,15 +1,15 @@
 # Project Research Summary
 
-**Project:** DevSSP (Developer Self-Service Portal)
+**Project:** Pathfinder (Developer Self-Service Portal)
 **Domain:** Internal Developer Platform (IDP)
 **Researched:** 2026-01-21
 **Confidence:** HIGH
 
 ## Executive Summary
 
-DevSSP is an Internal Developer Platform control plane - a category with 89% market dominance held by Backstage, and growing enterprise adoption (75% by 2026 according to Gartner). The research validates DevSSP's core architecture decisions while identifying critical improvements needed for production readiness.
+Pathfinder is an Internal Developer Platform control plane - a category with 89% market dominance held by Backstage, and growing enterprise adoption (75% by 2026 according to Gartner). The research validates Pathfinder's core architecture decisions while identifying critical improvements needed for production readiness.
 
-**The recommended approach:** DevSSP should remain a Django monolith with plugin-based extensibility. The control plane workload profile (low volume, high complexity, state-heavy) aligns perfectly with monolithic architecture. Django 6.0's new built-in Tasks framework, template partials, and CSP support make it an excellent choice. The stack should be augmented with HTMX + Alpine.js for lightweight interactivity, avoiding the build complexity of React/Vue. The existing plugin architecture (IntegrationPlugin -> IntegrationConnection) is well-designed and matches IDP industry patterns.
+**The recommended approach:** Pathfinder should remain a Django monolith with plugin-based extensibility. The control plane workload profile (low volume, high complexity, state-heavy) aligns perfectly with monolithic architecture. Django 6.0's new built-in Tasks framework, template partials, and CSP support make it an excellent choice. The stack should be augmented with HTMX + Alpine.js for lightweight interactivity, avoiding the build complexity of React/Vue. The existing plugin architecture (IntegrationPlugin -> IntegrationConnection) is well-designed and matches IDP industry patterns.
 
 **Key risks and mitigations:** Five critical pitfalls require immediate attention: (1) webhook-only integration creates state inconsistency - add reconciliation endpoints; (2) permission leakage via django-guardian - filter every queryset, not just check permissions in views; (3) secrets in environment variables - integrate external secrets managers before env var cascade; (4) SQLite in production - support PostgreSQL from day one; (5) static portal syndrome - build orchestration APIs first, UI second. The current design has already avoided the worst IDP anti-pattern: trying to rebuild existing tools instead of orchestrating them.
 
@@ -35,7 +35,7 @@ Django 6.0 is the right foundation, bringing critical new features aligned with 
 
 ### Expected Features
 
-DevSSP's current design covers table stakes well: service catalog, blueprints/golden paths, self-service deployment, environment management, RBAC, build/deployment tracking, and integration plugins. The approach aligns with industry expectations for IDP functionality.
+Pathfinder's current design covers table stakes well: service catalog, blueprints/golden paths, self-service deployment, environment management, RBAC, build/deployment tracking, and integration plugins. The approach aligns with industry expectations for IDP functionality.
 
 **Must have (table stakes):**
 - Software catalog with ownership tracking (covered: Services/Projects; gap: add explicit owner field, not just created_by)
@@ -64,12 +64,12 @@ DevSSP's current design covers table stakes well: service catalog, blueprints/go
 - Custom CI system (integrate Jenkins/GitHub Actions, don't replace them)
 - Built-in secrets storage (security liability; use Vault/AWS Secrets Manager)
 - Custom container runtime (delegate to Docker/Kubernetes)
-- Full PaaS functionality (DevSSP is control plane, not compute plane)
+- Full PaaS functionality (Pathfinder is control plane, not compute plane)
 - Unlimited custom workflows (Port.io's flexible approach creates maintenance burden)
 
 ### Architecture Approach
 
-The Django monolith with modular app structure is validated as appropriate for IDP control planes. Research confirms 42% of organizations that adopted microservices have consolidated services back (CNCF 2025). DevSSP operates in the Developer Control Plane and Integration/Delivery Plane - orchestrating actions, not processing workloads. This low-volume, high-complexity, state-heavy profile favors monolithic architecture.
+The Django monolith with modular app structure is validated as appropriate for IDP control planes. Research confirms 42% of organizations that adopted microservices have consolidated services back (CNCF 2025). Pathfinder operates in the Developer Control Plane and Integration/Delivery Plane - orchestrating actions, not processing workloads. This low-volume, high-complexity, state-heavy profile favors monolithic architecture.
 
 **Major components:**
 1. **Core Domain** (core app) — Models (Project, Service, Environment, Build, Deployment), business logic. State management and orchestration coordination.
@@ -86,15 +86,15 @@ The Django monolith with modular app structure is validated as appropriate for I
 
 Research identified five critical pitfalls that could cause rewrites, security breaches, or adoption failure:
 
-1. **Webhook-Only Integration Fragility** — DevSSP's design choice of "webhook-only CI integration (no polling)" creates state inconsistency risk. Missed webhooks leave builds showing "pending" forever. Prevention: implement idempotent handlers with deduplication, add reconciliation API endpoint for manual sync, log all webhook payloads for replay capability. Consider hybrid: webhook for real-time + periodic health sync.
+1. **Webhook-Only Integration Fragility** — Pathfinder's design choice of "webhook-only CI integration (no polling)" creates state inconsistency risk. Missed webhooks leave builds showing "pending" forever. Prevention: implement idempotent handlers with deduplication, add reconciliation API endpoint for manual sync, log all webhook payloads for replay capability. Consider hybrid: webhook for real-time + periodic health sync.
 
 2. **Permission Leakage via Object-Level Access** — Using django-guardian without comprehensive queryset filtering exposes data across projects. Prevention: always filter querysets with get_objects_for_user(), never just check permissions in views. Test every list view for proper scoping. Complex hierarchy (User -> Group -> ProjectMembership -> Service) needs audit. Add "effective permissions" debug endpoint.
 
-3. **Secrets in Environment Variables** — The env var cascade (Project -> Environment -> Service -> Deployment) will tempt users to store secrets. Prevention: document "env_vars are for CONFIGURATION ONLY", add validation rejecting common secret patterns (api_key, password, token), integrate external secrets managers (Vault, AWS Secrets Manager) before implementing env vars. Secrets should be injected at deploy time by plugin, never stored in DevSSP.
+3. **Secrets in Environment Variables** — The env var cascade (Project -> Environment -> Service -> Deployment) will tempt users to store secrets. Prevention: document "env_vars are for CONFIGURATION ONLY", add validation rejecting common secret patterns (api_key, password, token), integrate external secrets managers (Vault, AWS Secrets Manager) before implementing env vars. Secrets should be injected at deploy time by plugin, never stored in Pathfinder.
 
 4. **SQLite in Production** — Current CLAUDE.md spec lists SQLite as stack. Works for dev but creates write locks under concurrent webhooks, no HA, limited scaling. Prevention: support PostgreSQL from day one, use SQLite only for local development. Enterprise deployment requires PostgreSQL.
 
-5. **Static Portal Syndrome** — IDP becomes directory of links, not self-service platform. Developers bypass it. Prevention: build orchestration APIs first, UI second. Every page should enable action, not just display info. Measure "actions completed" not "portal visits". DevSSP wizard design already avoids this - ensure wizard actually triggers deployments.
+5. **Static Portal Syndrome** — IDP becomes directory of links, not self-service platform. Developers bypass it. Prevention: build orchestration APIs first, UI second. Every page should enable action, not just display info. Measure "actions completed" not "portal visits". Pathfinder wizard design already avoids this - ensure wizard actually triggers deployments.
 
 ## Implications for Roadmap
 
@@ -242,7 +242,7 @@ Based on combined research findings, dependencies from architecture analysis, an
 | Stack | HIGH | Django 6.0 official release verified, PyPI packages confirmed, HTMX production case studies documented |
 | Features | HIGH | Multiple IDP comparisons (Backstage, Port, Humanitec, Cortex), Gartner research, feature consistency across sources |
 | Architecture | HIGH | AWS Prescriptive Guidance, internaldeveloperplatform.org, CNCF survey data on monolith trend |
-| Pitfalls | MEDIUM-HIGH | Multiple industry sources agree on top pitfalls, DevSSP-specific assessment based on design docs |
+| Pitfalls | MEDIUM-HIGH | Multiple industry sources agree on top pitfalls, Pathfinder-specific assessment based on design docs |
 
 **Overall confidence:** HIGH
 

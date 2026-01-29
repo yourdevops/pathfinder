@@ -28,7 +28,7 @@ key-files:
     - core/context_processors.py
     - core/templates/core/components/nav.html
   modified:
-    - devssp/settings.py
+    - pathfinder/settings.py
 
 key-decisions:
   - "darkMode: 'class' with hardcoded dark class on html element (no toggle needed)"
@@ -80,7 +80,7 @@ _Note: Task 1 files were committed as part of 01-03 execution (out-of-order plan
 - `theme/templates/base.html` - Base HTML template with dark mode class and navigation include
 - `core/context_processors.py` - user_roles function computing role booleans from GroupMembership
 - `core/templates/core/components/nav.html` - Sidebar navigation with permission-based sections
-- `devssp/settings.py` - Added theme to INSTALLED_APPS and context processor to TEMPLATES
+- `pathfinder/settings.py` - Added theme to INSTALLED_APPS and context processor to TEMPLATES
 
 ## Decisions Made
 1. **Dark mode always on** - No toggle needed per requirements, hardcoded class="dark" on html element

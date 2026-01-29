@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
             name='SiteConfiguration',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('external_url', models.URLField(blank=True, help_text='Public URL for webhooks and OAuth callbacks (e.g., https://devssp.example.com)')),
+                ('external_url', models.URLField(blank=True, help_text='Public URL for webhooks and OAuth callbacks (e.g., https://pathfinder.example.com)')),
             ],
             options={
                 'verbose_name': 'Site Configuration',

@@ -7,8 +7,8 @@
 **Overall:** Django monolithic application with planned plugin-based extensibility
 
 **Key Characteristics:**
-- Single Django project (`devssp`) with a template-driven wizard UI for service onboarding
-- Orchestration pattern: DevSSP acts as control plane, delegates execution to external CI/CD systems
+- Single Django project (`pathfinder`) with a template-driven wizard UI for service onboarding
+- Orchestration pattern: Pathfinder acts as control plane, delegates execution to external CI/CD systems
 - Two-level integration model: code-defined IntegrationPlugin classes and database-stored IntegrationConnection instances
 - Service lifecycle tracked from source code through build artifacts to deployments
 - Database-driven with SQLite (single-file, development-focused)
@@ -18,22 +18,22 @@
 
 **Presentation Layer (Views & Templates):**
 - Purpose: HTTP request handling, HTML rendering, user interface
-- Location: Not yet created (planned: `devssp/templates/`, class-based or function views)
+- Location: Not yet created (planned: `pathfinder/templates/`, class-based or function views)
 - Contains: Django view functions/classes, template HTML files, static assets (CSS/JS)
 - Depends on: Models, Forms (for validation), Integrations
 - Used by: HTTP clients, browser
-- Entry point: URL routing via `devssp/urls.py`
+- Entry point: URL routing via `pathfinder/urls.py`
 
 **Application Logic Layer (Services & Business Logic):**
 - Purpose: Orchestration of wizard flows, service creation, build tracking, deployment coordination
-- Location: Planned `devssp/services/` or similar (currently not created)
+- Location: Planned `pathfinder/services/` or similar (currently not created)
 - Contains: Workflow orchestrators, state machine logic for service/build/deployment lifecycle
 - Depends on: Models, Integration connections
 - Used by: Views, Signals, Background jobs
 
 **Integration Layer (External System Communication):**
 - Purpose: Abstract communication with SCM, CI systems, artifact registries, deployment targets
-- Location: Planned `devssp/integrations/plugins/` (plugin discovery) and `devssp/integrations/connections/` (management)
+- Location: Planned `pathfinder/integrations/plugins/` (plugin discovery) and `pathfinder/integrations/connections/` (management)
 - Contains: Plugin base classes, per-plugin implementations (GitHub, Jenkins, Kubernetes, etc.)
 - Depends on: Models (IntegrationConnection), external APIs
 - Used by: Application logic layer, views
@@ -41,13 +41,13 @@
 
 **Data Access Layer (Models):**
 - Purpose: Database schema definition, ORM abstraction
-- Location: Planned `devssp/models.py` or `devssp/core/models/` directory
+- Location: Planned `pathfinder/models.py` or `pathfinder/core/models/` directory
 - Contains: Django models for Project, Service, Build, Deployment, Environment, IntegrationConnection, User, Group, Repository
 - Depends on: Django ORM, database backend
 - Used by: All layers above
 
 **Configuration & Settings:**
-- Location: `devssp/settings.py`
+- Location: `pathfinder/settings.py`
 - Contains: Django settings, database configuration, middleware, installed apps, static files
 - Current state: Minimal - only built-in Django apps, no custom apps registered yet
 
@@ -92,14 +92,14 @@
 
 **IntegrationPlugin:**
 - Purpose: Code-defined integration type representing a capability (GitHub, Jenkins, Kubernetes)
-- Examples: `devssp/integrations/plugins/github.py`, `devssp/integrations/plugins/jenkins.py`
+- Examples: `pathfinder/integrations/plugins/github.py`, `pathfinder/integrations/plugins/jenkins.py`
 - Pattern: Base class with capability declarations, subclasses implement specific operations
 - Categories: `scm`, `ci`, `artifact`, `deploy`
 - Multi-capability support: GitHub provides SCM + CI (Actions) + Artifacts (Packages)
 
 **IntegrationConnection:**
 - Purpose: Database record of a configured plugin instance (e.g., "yourdevops" GitHub org, "prod-eks" Kubernetes cluster)
-- Location: Database model definition planned in `devssp/models.py`
+- Location: Database model definition planned in `pathfinder/models.py`
 - Stores: plugin_name, config (JSON), config_encrypted (sensitive fields), health_status, webhook_token
 - Lifecycle: Created by admin/operator, used by application logic to call plugin operations
 
@@ -124,25 +124,25 @@
 ## Entry Points
 
 **HTTP Entry Point:**
-- Location: `devssp/wsgi.py` (WSGI application)
-- Alternative: `devssp/asgi.py` (ASGI for async, currently unused)
+- Location: `pathfinder/wsgi.py` (WSGI application)
+- Alternative: `pathfinder/asgi.py` (ASGI for async, currently unused)
 - Triggers: Browser requests, CI webhooks
 - Responsibilities: Route to views, handle sessions, CSRF protection
 
 **Management Commands:**
-- Location: Planned `devssp/management/commands/`
+- Location: Planned `pathfinder/management/commands/`
 - Examples: `python manage.py migrate`, `python manage.py runserver`
 - Entrypoint: `manage.py` CLI wrapper
 
 **Webhooks (CI):**
 - Purpose: CI systems post build completion status
-- Location: Planned integration-specific webhook handlers (e.g., `devssp/integrations/plugins/github/webhooks.py`)
+- Location: Planned integration-specific webhook handlers (e.g., `pathfinder/integrations/plugins/github/webhooks.py`)
 - Route Pattern: `/integrations/<plugin_name>/<connection_name>/webhook/`
 - Triggers: Build record creation, status update
 
 **Django Signals (Async-like):**
 - Purpose: Trigger background jobs on model changes
-- Location: Planned `devssp/core/signals.py`
+- Location: Planned `pathfinder/core/signals.py`
 - Examples: On successful build → queue deployment job
 - Used by: Celery or similar task queue (planned)
 
@@ -158,7 +158,7 @@
 
 ## Cross-Cutting Concerns
 
-**Logging:** Python `logging` module (planned centralization in `devssp/logging.py`). Entrypoint logs major lifecycle events: service creation, build trigger, deployment start. Integration layer logs API calls and errors.
+**Logging:** Python `logging` module (planned centralization in `pathfinder/logging.py`). Entrypoint logs major lifecycle events: service creation, build trigger, deployment start. Integration layer logs API calls and errors.
 
 **Validation:** Django Forms for user input validation (wizard steps), model-level validators for name format (DNS-compatible), Integration plugin has schema validation for configuration fields.
 

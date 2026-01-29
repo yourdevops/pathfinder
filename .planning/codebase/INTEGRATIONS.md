@@ -93,7 +93,7 @@
 - `DJANGO_DEBUG` - Should be False in production
 - `DJANGO_ALLOWED_HOSTS` - Comma-separated host list
 - `CSRF_TRUSTED_ORIGINS` - Comma-separated origin list
-- `SSP_PUBLIC_URL` - Public-facing URL for the portal
+- `PTF_PUBLIC_URL` - Public-facing URL for the portal
 - `DOCKER_GID` - Docker group ID if using container management features
 
 **Secrets location:**

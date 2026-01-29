@@ -20,7 +20,7 @@ tech-stack:
 
 key-files:
   created: [core/models.py, core/admin.py, core/apps.py, core/migrations/0001_initial.py, requirements.txt]
-  modified: [devssp/settings.py]
+  modified: [pathfinder/settings.py]
 
 key-decisions:
   - "Custom User extends AbstractUser with separate UUID field (not as PK) for better DB performance"
@@ -70,7 +70,7 @@ Each task was committed atomically:
 - `core/admin.py` - Django admin configuration for all core models
 - `core/apps.py` - Core app configuration with BigAutoField default
 - `core/migrations/0001_initial.py` - Initial migration for core models
-- `devssp/settings.py` - AUTH_USER_MODEL, INSTALLED_APPS, MIDDLEWARE, session settings
+- `pathfinder/settings.py` - AUTH_USER_MODEL, INSTALLED_APPS, MIDDLEWARE, session settings
 
 ## Decisions Made
 1. **Custom User extends AbstractUser** - Simpler than AbstractBaseUser, keeps username field and permission system

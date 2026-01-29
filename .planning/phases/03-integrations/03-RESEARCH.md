@@ -50,7 +50,7 @@ pip install cryptography PyGithub docker django-tasks django-formtools
 
 ### Recommended Project Structure
 ```
-devssp/
+pathfinder/
 ├── plugins/                    # Plugin packages (outside core app)
 │   ├── __init__.py            # Plugin registry
 │   ├── base.py                # Base plugin classes
@@ -318,11 +318,11 @@ from cryptography.fernet import Fernet, MultiFernet
 def get_encryption_key() -> bytes:
     """
     Get encryption key from environment or file.
-    Priority: SSP_ENCRYPTION_KEY env var > secrets/encryption.key file
+    Priority: PTF_ENCRYPTION_KEY env var > secrets/encryption.key file
     Auto-generates key file if neither exists.
     """
     # Check environment variable first
-    env_key = os.environ.get('SSP_ENCRYPTION_KEY')
+    env_key = os.environ.get('PTF_ENCRYPTION_KEY')
     if env_key:
         return env_key.encode() if isinstance(env_key, str) else env_key
 
@@ -1047,7 +1047,7 @@ python manage.py db_worker --repeat 900  # Run scheduler every 15 min
 ### Plugin URL Integration
 ```python
 # Source: Django URL patterns
-# devssp/urls.py
+# pathfinder/urls.py
 from django.urls import path, include
 from plugins.base import registry
 

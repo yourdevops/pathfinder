@@ -71,16 +71,16 @@ None - plan executed exactly as written.
 
 ## Files Modified
 
-- `/Users/fandruhin/work/yourdevops/devssp/theme/static_src/src/styles.css`
-- `/Users/fandruhin/work/yourdevops/devssp/core/views/setup.py`
-- `/Users/fandruhin/work/yourdevops/devssp/core/views/__init__.py`
-- `/Users/fandruhin/work/yourdevops/devssp/core/templates/core/setup/unlock.html`
-- `/Users/fandruhin/work/yourdevops/devssp/core/urls.py`
-- `/Users/fandruhin/work/yourdevops/devssp/.planning/PROJECT.md`
+- `/Users/fandruhin/work/yourdevops/pathfinder/theme/static_src/src/styles.css`
+- `/Users/fandruhin/work/yourdevops/pathfinder/core/views/setup.py`
+- `/Users/fandruhin/work/yourdevops/pathfinder/core/views/__init__.py`
+- `/Users/fandruhin/work/yourdevops/pathfinder/core/templates/core/setup/unlock.html`
+- `/Users/fandruhin/work/yourdevops/pathfinder/core/urls.py`
+- `/Users/fandruhin/work/yourdevops/pathfinder/.planning/PROJECT.md`
 
 ## Files Deleted
 
-- `/Users/fandruhin/work/yourdevops/devssp/core/templates/core/setup/register.html`
+- `/Users/fandruhin/work/yourdevops/pathfinder/core/templates/core/setup/register.html`
 
 ## Verification
 

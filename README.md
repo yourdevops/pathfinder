@@ -1,6 +1,6 @@
-# DevSSP - Developer Self-Service Portal
+# Pathfinder - Developer Self-Service Portal
 
-DevSSP is a lightweight internal developer platform that turns your existing templates and CI/CD into governed, self-service workflows. It gives developers fast golden paths while giving platform teams consistent policy enforcement and audit visibility.
+Pathfinder is a lightweight internal developer platform that turns your existing templates and CI/CD into governed, self-service workflows. It gives developers fast golden paths while giving platform teams consistent policy enforcement and audit visibility.
 
 ## Quick Start
 
@@ -31,7 +31,7 @@ The portal will be available at **http://localhost:8000**
 
 /gsd:quick UI Navigation items arrangement:
 Settings item on navbar should lead to a separate page - General settings. The items on the sidebar nav should be replaced with:
-1. General (current tab) -- placeholder for general settings page with settings like "DevSSP Internal/Public URLs"
+1. General (current tab) -- placeholder for general settings page with settings like "Pathfinder Internal/Public URLs"
 2. User Management (A separate page with Users, Groups, LDAP/SSO tabs/pages)
 3. Audit & Logs
 4. API & Tokens

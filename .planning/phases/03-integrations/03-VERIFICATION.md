@@ -32,7 +32,7 @@ score: 7/7 must-haves verified
 
 | Artifact | Expected | Status | Details |
 |----------|----------|--------|---------|
-| `plugins/__init__.py` | Plugin autodiscover function | ✓ VERIFIED | 43 lines, autodiscover() uses pkgutil.iter_modules, logs results, imported in devssp/urls.py |
+| `plugins/__init__.py` | Plugin autodiscover function | ✓ VERIFIED | 43 lines, autodiscover() uses pkgutil.iter_modules, logs results, imported in pathfinder/urls.py |
 | `plugins/base.py` | BasePlugin + PluginRegistry | ✓ VERIFIED | 171 lines, PluginRegistry singleton with register/get/all/by_category, BasePlugin ABC with sensitive_field_patterns |
 | `core/encryption.py` | Fernet encrypt/decrypt | ✓ VERIFIED | 115 lines, get_encryption_key from env/file/auto-generate, encrypt_config/decrypt_config for dict serialization |
 | `core/models.py` (IntegrationConnection) | Connection model | ✓ VERIFIED | Model with config (JSONField), config_encrypted (BinaryField), set_config/get_config methods, health status fields |
@@ -55,7 +55,7 @@ score: 7/7 must-haves verified
 
 | From | To | Via | Status | Details |
 |------|-----|-----|--------|---------|
-| devssp/urls.py | plugins autodiscover | import + call | ✓ WIRED | Line 29-32: autodiscover() called before urlpatterns, plugins registered dynamically |
+| pathfinder/urls.py | plugins autodiscover | import + call | ✓ WIRED | Line 29-32: autodiscover() called before urlpatterns, plugins registered dynamically |
 | plugins/github/__init__.py | registry | registry.register | ✓ WIRED | Lines 8-13: imports GitHubPlugin, instantiates, calls registry.register(github_plugin) |
 | plugins/docker/__init__.py | registry | registry.register | ✓ WIRED | Lines 7-12: imports DockerPlugin, instantiates, calls registry.register(docker_plugin) |
 | IntegrationConnection.set_config | encryption.encrypt_config | import + call | ✓ WIRED | Lines 217-218: if sensitive fields exist, imports encrypt_config and stores in config_encrypted |
@@ -117,19 +117,19 @@ sensitive_field_patterns: List[str] = [
 - Non-sensitive fields (app_id, installation_id, socket_path) → stored in config JSONField
 
 **Key management:**
-- Priority: SSP_ENCRYPTION_KEY env → secrets/encryption.key file → auto-generate
+- Priority: PTF_ENCRYPTION_KEY env → secrets/encryption.key file → auto-generate
 - Auto-generated key saved with chmod 0o600
 - Cached Fernet instance for performance
 
 ### Plugin Registry Verification
 
 **Autodiscovery flow:**
-1. `devssp/urls.py` line 29: `from plugins import autodiscover`
-2. `devssp/urls.py` line 32: `autodiscover()` called before urlpatterns
+1. `pathfinder/urls.py` line 29: `from plugins import autodiscover`
+2. `pathfinder/urls.py` line 32: `autodiscover()` called before urlpatterns
 3. `plugins/__init__.py` line 28: `pkgutil.iter_modules` scans plugins directory
 4. `plugins/github/__init__.py` line 13: `registry.register(github_plugin)`
 5. `plugins/docker/__init__.py` line 12: `registry.register(docker_plugin)`
-6. `devssp/urls.py` lines 49-54: Dynamic URL registration for each plugin
+6. `pathfinder/urls.py` lines 49-54: Dynamic URL registration for each plugin
 
 **Verified plugins registered:**
 - `github` (category: scm)

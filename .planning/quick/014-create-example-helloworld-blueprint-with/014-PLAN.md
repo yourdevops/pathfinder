@@ -18,7 +18,7 @@ autonomous: true
 
 must_haves:
   truths:
-    - "Blueprint can be registered in DevSSP via git URL"
+    - "Blueprint can be registered in Pathfinder via git URL"
     - "Manifest is valid and parseable by sync_blueprint task"
     - "Container builds successfully with Containerfile"
     - "App responds to health check at /health"
@@ -42,9 +42,9 @@ must_haves:
 <objective>
 Create an example "python-helloworld" blueprint in the `blueprints/` directory at the project root.
 
-Purpose: Provide a working example blueprint that demonstrates DevSSP's blueprint format and can be used for testing service creation. This blueprint showcases multi-target deployment (docker, podman, kubernetes) using a simple Python Flask app.
+Purpose: Provide a working example blueprint that demonstrates Pathfinder's blueprint format and can be used for testing service creation. This blueprint showcases multi-target deployment (docker, podman, kubernetes) using a simple Python Flask app.
 
-Output: Complete blueprint directory ready to be pushed to a separate repo and registered as a blueprint in DevSSP.
+Output: Complete blueprint directory ready to be pushed to a separate repo and registered as a blueprint in Pathfinder.
 </objective>
 
 <execution_context>
@@ -193,7 +193,7 @@ Create documentation for the blueprint:
 1. Title: Python Helloworld Blueprint
 2. Description: What this blueprint provides
 3. Quick Start:
-   - How to register in DevSSP (git URL)
+   - How to register in Pathfinder (git URL)
    - Template variables available
 4. Local Development:
    - Build: `podman build -f Containerfile -t helloworld .`
@@ -246,7 +246,7 @@ Keep it concise and practical.
 <success_criteria>
 - All 9 files created in blueprints/python-helloworld/
 - Manifest parseable by YAML parser
-- Blueprint can be registered in DevSSP (structure matches docs/blueprints.md)
+- Blueprint can be registered in Pathfinder (structure matches docs/blueprints.md)
 - Deploy manifests support docker-compose and kubernetes
 </success_criteria>
 

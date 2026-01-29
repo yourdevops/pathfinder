@@ -550,14 +550,14 @@ class SiteConfigurationForm(forms.ModelForm):
         widgets = {
             'external_url': forms.URLInput(attrs={
                 'class': 'w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent',
-                'placeholder': 'https://devssp.example.com',
+                'placeholder': 'https://pathfinder.example.com',
             }),
         }
         labels = {
             'external_url': 'External URL',
         }
         help_texts = {
-            'external_url': 'Public URL where DevSSP is accessible. Required for OAuth callbacks and webhooks.',
+            'external_url': 'Public URL where Pathfinder is accessible. Required for OAuth callbacks and webhooks.',
         }
 
     def clean_external_url(self):

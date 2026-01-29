@@ -1,8 +1,8 @@
-# Roadmap: DevSSP
+# Roadmap: Pathfinder
 
 ## Overview
 
-DevSSP delivers an internal developer platform control plane in 7 phases. Phase 1 establishes secure user management with RBAC and audit logging. Phases 2-3 build the organizational structure (Projects, Environments) and integration infrastructure (GitHub, Docker plugins). Phases 4-5 enable the golden path: Blueprints for templates, Services with wizard-based creation. Phases 6-7 complete the CI/CD loop: Builds from GitHub Actions webhooks, Deployments to Docker containers. The end-to-end flow enables developers to go from "I need a new service" to "it's running" without tickets.
+Pathfinder delivers an internal developer platform control plane in 7 phases. Phase 1 establishes secure user management with RBAC and audit logging. Phases 2-3 build the organizational structure (Projects, Environments) and integration infrastructure (GitHub, Docker plugins). Phases 4-5 enable the golden path: Blueprints for templates, Services with wizard-based creation. Phases 6-7 complete the CI/CD loop: Builds from GitHub Actions webhooks, Deployments to Docker containers. The end-to-end flow enables developers to go from "I need a new service" to "it's running" without tickets.
 
 ## Phases
 
@@ -174,7 +174,7 @@ Plans:
   - GitHub Actions manifest preview (read-only, no push to repo)
   - Recommendations for CI library repo structure at completion
 **Success Criteria** (what must be TRUE):
-  1. Operator can register a CI steps repository; DevSSP scans it and imports step definitions from action.yml files with x-pathfinder metadata
+  1. Operator can register a CI steps repository; Pathfinder scans it and imports step definitions from action.yml files with x-pathfinder metadata
   2. Operator can browse a Steps Catalog showing all imported steps organized by phase (setup, build, test, package) with runtime compatibility info
   3. Operator can view runtimes parsed from runtimes.yml in the steps repository
   4. User can click "+ Create CI Workflow" and select a runtime family/version

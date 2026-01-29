@@ -143,7 +143,7 @@ For ALL 5 settings templates (general.html, user_management.html, audit_logs.htm
    ```django
    {% extends "base.html" %}
 
-   {% block title %}[Page Title] - DevSSP{% endblock %}
+   {% block title %}[Page Title] - Pathfinder{% endblock %}
 
    {% block content %}
    <div class="p-8">

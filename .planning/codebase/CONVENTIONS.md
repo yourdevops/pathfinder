@@ -11,7 +11,7 @@ This is an early-stage Django 6.0 project (initial commit phase). The codebase c
 **Files:**
 - Django module files follow Django conventions: `settings.py`, `urls.py`, `wsgi.py`, `asgi.py`, `manage.py`
 - No custom apps have been created yet; only core Django project structure exists
-- Lowercase with underscores: `devssp/settings.py`, `devssp/urls.py`
+- Lowercase with underscores: `pathfinder/settings.py`, `pathfinder/urls.py`
 
 **Functions:**
 - Python standard: `snake_case` for function names
@@ -20,7 +20,7 @@ This is an early-stage Django 6.0 project (initial commit phase). The codebase c
 **Variables:**
 - Python standard: `snake_case` for variables and constants
 - Django settings use `UPPER_CASE` for configuration constants (e.g., `DEBUG`, `ALLOWED_HOSTS`, `SECRET_KEY`)
-- Example in `devssp/settings.py`: `BASE_DIR`, `INSTALLED_APPS`, `MIDDLEWARE`, `DATABASES`
+- Example in `pathfinder/settings.py`: `BASE_DIR`, `INSTALLED_APPS`, `MIDDLEWARE`, `DATABASES`
 
 **Types:**
 - No type hints currently used in project code
@@ -85,7 +85,7 @@ except ImportError as exc:
 
 ## Settings & Configuration
 
-**Location:** `devssp/settings.py`
+**Location:** `pathfinder/settings.py`
 
 **Key Settings Patterns:**
 - Database configuration uses dict format: `DATABASES = {'default': {...}}`
@@ -101,7 +101,7 @@ except ImportError as exc:
 ## Django-Specific Patterns
 
 **URL Configuration:**
-- Located in `devssp/urls.py`
+- Located in `pathfinder/urls.py`
 - Uses path-based routing (not re_path):
   ```python
   from django.urls import path

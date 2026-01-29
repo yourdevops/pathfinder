@@ -27,11 +27,11 @@ key-files:
     - core/migrations/0003_integrationconnection.py
   modified:
     - requirements.txt
-    - devssp/settings.py
+    - pathfinder/settings.py
     - core/models.py
 
 key-decisions:
-  - "Fernet encryption key sourced from SSP_ENCRYPTION_KEY env or auto-generated file"
+  - "Fernet encryption key sourced from PTF_ENCRYPTION_KEY env or auto-generated file"
   - "Sensitive fields detected by pattern matching (token, secret, password, etc.)"
   - "Plugin registry uses class methods for singleton behavior"
 
@@ -78,10 +78,10 @@ Each task was committed atomically:
 - `core/models.py` - IntegrationConnection model with set_config/get_config
 - `core/migrations/0003_integrationconnection.py` - Migration for IntegrationConnection
 - `requirements.txt` - Added cryptography, PyGithub, docker, django-tasks, django-formtools
-- `devssp/settings.py` - Added django_tasks and formtools to INSTALLED_APPS
+- `pathfinder/settings.py` - Added django_tasks and formtools to INSTALLED_APPS
 
 ## Decisions Made
-- Encryption key auto-generates to secrets/encryption.key if SSP_ENCRYPTION_KEY env not set
+- Encryption key auto-generates to secrets/encryption.key if PTF_ENCRYPTION_KEY env not set
 - Sensitive field patterns include: password, token, secret, private_key, api_key, client_secret
 - IntegrationConnection stores non-sensitive config in JSONField, sensitive in encrypted BinaryField
 - Auditlog excludes config_encrypted field to prevent logging encrypted data

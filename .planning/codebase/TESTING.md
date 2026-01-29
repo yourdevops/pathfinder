@@ -48,7 +48,7 @@ python manage.py test --keepdb           # Keep test database between runs
 
 **Structure:**
 ```
-devssp/
+pathfinder/
 └── app_name/
     └── tests/
         ├── __init__.py
@@ -290,7 +290,7 @@ def setUp(self):
 2. Create pytest configuration (`pytest.ini`):
    ```ini
    [pytest]
-   DJANGO_SETTINGS_MODULE = devssp.settings
+   DJANGO_SETTINGS_MODULE = pathfinder.settings
    python_files = test_*.py
    addopts = --cov --cov-report=html
    ```

@@ -31,8 +31,8 @@ key-files:
     - core/forms.py
     - core/urls.py
     - core/views/__init__.py
-    - devssp/urls.py
-    - devssp/settings.py
+    - pathfinder/urls.py
+    - pathfinder/settings.py
 decisions:
   - id: nav-settings-grouping
     choice: Settings section groups User Management under admin-only
@@ -58,7 +58,7 @@ metrics:
 
 Completely rewrote sidebar navigation per CONTEXT.md:
 
-- **DevSSP logo** links to projects:list (home)
+- **Pathfinder logo** links to projects:list (home)
 - **Projects** link visible to all authenticated users
 - **Blueprints** and **Integrations** (renamed from Connections)
 - **Settings section** (admin-only) containing:
@@ -111,8 +111,8 @@ Completely rewrote sidebar navigation per CONTEXT.md:
 | core/templates/core/projects/create_modal.html | HTMX modal form |
 | core/forms.py | Added ProjectCreateForm |
 | core/urls.py | Added projects_patterns |
-| devssp/urls.py | Added projects namespace |
-| devssp/settings.py | Updated LOGIN_REDIRECT_URL and context_processors |
+| pathfinder/urls.py | Added projects namespace |
+| pathfinder/settings.py | Updated LOGIN_REDIRECT_URL and context_processors |
 
 ## Commit History
 

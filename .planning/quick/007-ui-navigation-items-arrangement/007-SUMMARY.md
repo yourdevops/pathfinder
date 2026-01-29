@@ -21,7 +21,7 @@ key-files:
   modified:
     - core/views/__init__.py
     - core/urls.py
-    - devssp/urls.py
+    - pathfinder/urls.py
     - core/templates/core/components/nav.html
 decisions:
   - id: Q007-01
@@ -44,7 +44,7 @@ metrics:
 - **URL structure:** `/settings/`, `/settings/user-management/`, `/settings/audit-logs/`, etc.
 
 ### Views Created (`core/views/settings.py`)
-1. `GeneralSettingsView` - DevSSP URL configuration placeholder
+1. `GeneralSettingsView` - Pathfinder URL configuration placeholder
 2. `UserManagementView` - Links to Users and Groups pages
 3. `AuditLogsSettingsView` - Links to audit log viewer
 4. `ApiTokensView` - API token management placeholder
@@ -57,7 +57,7 @@ Each template features:
 - Dark theme styling matching existing design system
 
 **Specific content:**
-- `general.html` - Placeholder for DevSSP Internal/Public URL configuration
+- `general.html` - Placeholder for Pathfinder Internal/Public URL configuration
 - `user_management.html` - Card links to Users and Groups pages with note about future LDAP/SSO
 - `audit_logs.html` - Link to existing audit log viewer, placeholder for additional log viewers
 - `api_tokens.html` - Placeholder for API token management
@@ -65,7 +65,7 @@ Each template features:
 
 ### URL Changes
 - Added `settings_patterns` to `core/urls.py`
-- Connected `/settings/` route in `devssp/urls.py` with `settings` namespace
+- Connected `/settings/` route in `pathfinder/urls.py` with `settings` namespace
 
 ### Main Nav Update
 - Simplified from nested section (7 elements) to single link

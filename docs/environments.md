@@ -87,7 +87,7 @@ IntegrationConnection: yourdevops-github
   config: { organization: "yourdevops", ... }
 ```
 
-**Step 2: Platform team registers Service Blueprints (from git repos with devssp-template.yaml):**
+**Step 2: Platform team registers Service Blueprints (from git repos with pathfinder-template.yaml):**
 ```yaml
 # python-k8s-service/ssp-template.yaml
 name: python-k8s-service
@@ -136,7 +136,7 @@ Environment: dev
 3. Selects `python-lambda-vpc`, names service `order-processor`
 4. Page 3 shows serverless-specific options (handler, runtime, timeout)
 5. Page 4 shows `dev` environment, deployment via "jenkins-cd"
-6. On deploy, DevSSP triggers Jenkins with: `PROJECT_NAME=team-a`, `ENV=dev`, `APP_NAME=order-processor`
+6. On deploy, Pathfinder triggers Jenkins with: `PROJECT_NAME=team-a`, `ENV=dev`, `APP_NAME=order-processor`
 7. Terraform uses data blocks to find VPC by naming convention, deploys Lambda
 
 ---

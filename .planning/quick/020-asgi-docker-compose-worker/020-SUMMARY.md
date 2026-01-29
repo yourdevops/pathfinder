@@ -12,7 +12,7 @@ tech-stack:
   patterns: [asgi, multi-container, background-tasks]
 key-files:
   created: [.env.example]
-  modified: [devssp/settings.py, requirements.txt, entrypoint.sh, docker-compose.yml, .gitignore]
+  modified: [pathfinder/settings.py, requirements.txt, entrypoint.sh, docker-compose.yml, .gitignore]
 decisions:
   - id: data-dir-location
     choice: "Database in data/db.sqlite3 subdirectory"
@@ -35,15 +35,15 @@ metrics:
 ## What Was Built
 
 ### 1. ASGI Server Configuration
-- Updated `devssp/settings.py` to use `data/db.sqlite3` path with auto-directory creation
+- Updated `pathfinder/settings.py` to use `data/db.sqlite3` path with auto-directory creation
 - Added `uvicorn[standard]` and `gunicorn` to requirements.txt
-- Updated `entrypoint.sh` to run `uvicorn devssp.asgi:application` instead of gunicorn
+- Updated `entrypoint.sh` to run `uvicorn pathfinder.asgi:application` instead of gunicorn
 
 ### 2. Multi-Container Docker Compose
 - Renamed `ssp` service to `web` for clarity
 - Added `worker` service running `python manage.py db_worker` for background tasks
 - Both services share `./data` volume for SQLite database consistency
-- Added `SSP_ENCRYPTION_KEY` environment variable to both services
+- Added `PTF_ENCRYPTION_KEY` environment variable to both services
 
 ### 3. Environment Configuration
 - Created `.env.example` with documentation for required environment variables
@@ -62,11 +62,11 @@ metrics:
 
 | File | Change |
 |------|--------|
-| `devssp/settings.py` | DATA_DIR setup, database path to data/ |
+| `pathfinder/settings.py` | DATA_DIR setup, database path to data/ |
 | `requirements.txt` | Added uvicorn[standard], gunicorn |
 | `entrypoint.sh` | Replaced gunicorn with uvicorn ASGI |
 | `docker-compose.yml` | Added worker service, bind mount data/ |
-| `.env.example` | New file with SSP_ENCRYPTION_KEY template |
+| `.env.example` | New file with PTF_ENCRYPTION_KEY template |
 | `.gitignore` | Added data/ directory |
 
 ## Commits
@@ -105,7 +105,7 @@ metrics:
 ```bash
 # Local development with docker-compose
 cp .env.example .env
-# Edit .env and add SSP_ENCRYPTION_KEY
+# Edit .env and add PTF_ENCRYPTION_KEY
 docker-compose up -d
 
 # Generate encryption key

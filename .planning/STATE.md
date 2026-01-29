@@ -77,7 +77,7 @@ Recent decisions affecting current work:
 | 02-04 | Env var lock prevents override | Locked project vars cannot be overridden at environment level |
 | 02-04 | Amber styling for production | bg-amber-500/20 for production environments |
 | 02-04 | Inheritance shown via badge | Blue Inherited for project-level, green Environment for local |
-| 03-01 | Fernet key from env or auto-generated file | SSP_ENCRYPTION_KEY env for prod, secrets/encryption.key for dev |
+| 03-01 | Fernet key from env or auto-generated file | PTF_ENCRYPTION_KEY env for prod, secrets/encryption.key for dev |
 | 03-01 | Sensitive field detection by pattern | Matches token, secret, password, private_key, api_key, client_secret |
 | 03-01 | Plugin registry singleton pattern | Class methods on PluginRegistry for global access |
 | 03-04 | OperatorRequiredMixin for system-level access | Uses existing has_system_role helper |
@@ -88,10 +88,10 @@ Recent decisions affecting current work:
 | 03.1-01 | active_settings_section context variable | Nav highlighting for settings sub-pages |
 | quick-017 | Services as default project landing page | Consolidated nav: Services, Environments, Settings |
 | quick-017 | Members section in Settings tab | Reduces nav items, keeps related config together |
-| 03.1-03 | Back button in DevSSP logo position | Consistent styling with text-xl font-bold |
+| 03.1-03 | Back button in Pathfinder logo position | Consistent styling with text-xl font-bold |
 | 04-01 | GitPython for SCM abstraction (not GitHub API) | Supports any Git server (GitHub, GitLab, Bitbucket, self-hosted) |
 | 04-01 | Sort key format for versions | {major:05d}.{minor:05d}.{patch:05d}.{prerelease or 'zzzz'} |
-| 04-01 | Manifest file names | Primary: ssp-template.yaml, fallback: devssp-template.yaml |
+| 04-01 | Manifest file names | Primary: ssp-template.yaml, fallback: pathfinder-template.yaml |
 | 04-02 | SCM connection dropdown for private repos | "None" option for public repos, GitHub connections for private |
 | 04-02 | HTMX live preview validates manifest | Registration blocked until valid manifest previewed |
 | 04-02 | Redirect to detail after registration | Per CONTEXT.md decision, not to list page |

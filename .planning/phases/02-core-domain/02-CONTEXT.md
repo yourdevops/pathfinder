@@ -44,7 +44,7 @@ Projects with membership roles and Environments with deploy targets. Platform en
 
 ### Sidebar Navigation Restructure
 - Full restructure in Phase 2 (not deferred)
-- DevSSP logo/icon as home button
+- Pathfinder logo/icon as home button
 - Projects (links to list, no inline expansion)
 - Blueprints (catalog, placeholder for Phase 4)
 - Integrations (placeholder for Phase 3)

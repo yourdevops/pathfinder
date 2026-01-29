@@ -8,7 +8,7 @@ class CustomUserAdmin(UserAdmin):
     list_display = ['username', 'email', 'status', 'source', 'is_staff']
     list_filter = ['status', 'source', 'is_staff', 'is_superuser']
     fieldsets = UserAdmin.fieldsets + (
-        ('DevSSP', {'fields': ('uuid', 'status', 'source', 'external_id')}),
+        ('Pathfinder', {'fields': ('uuid', 'status', 'source', 'external_id')}),
     )
     readonly_fields = ['uuid']
     search_fields = ['username', 'email']

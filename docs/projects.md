@@ -1,6 +1,6 @@
 # Projects
 
-Projects are the primary organizational unit in DevSSP. They group related Services and define shared configuration.
+Projects are the primary organizational unit in Pathfinder. They group related Services and define shared configuration.
 
 ## Project Model
 

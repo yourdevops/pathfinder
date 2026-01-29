@@ -1,6 +1,6 @@
 # Integrations
 
-Integrations connect DevSSP to external services like source control, CI systems, artifact registries, and deployment targets.
+Integrations connect Pathfinder to external services like source control, CI systems, artifact registries, and deployment targets.
 
 ## Architecture Overview
 
@@ -19,7 +19,7 @@ Kubernetes                      →     prod-eks (cluster: prod-eks)
                                 →     dev-k3s (cluster: team-a-dev)
 ```
 
-- **Plugin**: Python class defining the integration type, capabilities, and configuration schema. Built into DevSSP.
+- **Plugin**: Python class defining the integration type, capabilities, and configuration schema. Built into Pathfinder.
 - **Connection**: Database record representing a configured instance. Created by admin or operator.
 
 ---
@@ -114,7 +114,7 @@ Sensitive configuration fields (passwords, tokens, private keys) are encrypted a
 - `tls_client_key`, `client_secret`, `access_key`, `secret_key`
 
 **Encryption key location:**
-- Environment variable: `SSP_ENCRYPTION_KEY`
+- Environment variable: `PTF_ENCRYPTION_KEY`
 - Or file: `$BASE_DIR/secrets/encryption.key` (auto-generated if missing)
 
 **Important:** Back up the encryption key. If lost, all encrypted credentials must be re-entered.
@@ -123,7 +123,7 @@ Sensitive configuration fields (passwords, tokens, private keys) are encrypted a
 
 Environments can have multiple connections, enabling different service types in the same environment.
 
-Connections are bound to Environments with an optional `is_default` flag per plugin type. When deploying an app, DevSSP uses the environment's connections to determine available deployment targets.
+Connections are bound to Environments with an optional `is_default` flag per plugin type. When deploying an app, Pathfinder uses the environment's connections to determine available deployment targets.
 
 **Default Connection Rules:**
 - One connection per plugin type can be marked `is_default` in an Environment
@@ -141,7 +141,7 @@ Blueprints declare which plugin types they require for deployment in their `ssp-
 ### Template Requirements
 
 ```yaml
-# In devssp-template.yaml
+# In pathfinder-template.yaml
 deploy:
   required_plugins:
     - kubernetes

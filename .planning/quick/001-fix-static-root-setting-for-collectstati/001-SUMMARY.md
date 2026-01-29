@@ -20,7 +20,7 @@ tech-stack:
 
 key-files:
   created: []
-  modified: [devssp/settings.py]
+  modified: [pathfinder/settings.py]
 
 key-decisions:
   - "STATIC_ROOT points to staticfiles/ directory following Django convention"
@@ -45,7 +45,7 @@ completed: 2026-01-22
 - **Files modified:** 1
 
 ## Accomplishments
-- Added STATIC_ROOT setting to devssp/settings.py
+- Added STATIC_ROOT setting to pathfinder/settings.py
 - collectstatic command now works without ImproperlyConfigured error
 - Verified staticfiles/ already in .gitignore
 
@@ -56,7 +56,7 @@ Each task was committed atomically:
 1. **Task 1: Add STATIC_ROOT setting** - `1cac75c` (fix)
 
 ## Files Created/Modified
-- `devssp/settings.py` - Added STATIC_ROOT = BASE_DIR / 'staticfiles' after STATIC_URL
+- `pathfinder/settings.py` - Added STATIC_ROOT = BASE_DIR / 'staticfiles' after STATIC_URL
 
 ## Decisions Made
 None - followed plan as specified

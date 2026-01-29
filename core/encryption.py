@@ -5,10 +5,10 @@ This module provides Fernet-based encryption for storing sensitive
 configuration fields like API keys, tokens, and passwords.
 
 The encryption key is sourced from (in order of priority):
-1. SSP_ENCRYPTION_KEY environment variable
+1. PTF_ENCRYPTION_KEY environment variable
 2. secrets/encryption.key file (auto-generated if missing)
 
-For production deployments, use the SSP_ENCRYPTION_KEY environment variable.
+For production deployments, use the PTF_ENCRYPTION_KEY environment variable.
 """
 import json
 import logging
@@ -28,7 +28,7 @@ def get_encryption_key() -> bytes:
     Get the encryption key from environment or file.
 
     Priority:
-    1. SSP_ENCRYPTION_KEY environment variable
+    1. PTF_ENCRYPTION_KEY environment variable
     2. secrets/encryption.key file
 
     If no key exists, generates a new one and saves to file.
@@ -37,9 +37,9 @@ def get_encryption_key() -> bytes:
         The encryption key as bytes.
     """
     # Check environment variable first
-    env_key = os.environ.get('SSP_ENCRYPTION_KEY')
+    env_key = os.environ.get('PTF_ENCRYPTION_KEY')
     if env_key:
-        logger.debug("Using encryption key from SSP_ENCRYPTION_KEY environment variable")
+        logger.debug("Using encryption key from PTF_ENCRYPTION_KEY environment variable")
         return env_key.encode('utf-8')
 
     # Check secrets file

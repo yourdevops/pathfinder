@@ -28,7 +28,7 @@ key-files:
   modified:
     - core/models.py
     - core/admin.py
-    - devssp/settings.py
+    - pathfinder/settings.py
     - theme/templates/base.html
     - requirements.txt
 decisions:
@@ -100,7 +100,7 @@ metrics:
 | core/models.py | Added Project, Environment, ProjectMembership models |
 | core/admin.py | Admin configuration for all three models |
 | core/migrations/0002_*.py | Database schema migration |
-| devssp/settings.py | Added django_htmx app and middleware |
+| pathfinder/settings.py | Added django_htmx app and middleware |
 | requirements.txt | Added django-htmx>=1.21.0 |
 | theme/templates/base.html | HTMX script and CSRF configuration |
 

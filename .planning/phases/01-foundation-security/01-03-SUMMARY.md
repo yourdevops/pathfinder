@@ -34,8 +34,8 @@ key-files:
     - core/templates/core/setup/register.html
     - core/templates/core/auth/login.html
   modified:
-    - devssp/settings.py
-    - devssp/urls.py
+    - pathfinder/settings.py
+    - pathfinder/urls.py
 
 key-decisions:
   - "Setup state determined by token existence + admin group membership"
@@ -91,8 +91,8 @@ Each task was committed atomically:
 - `core/templates/core/setup/unlock.html` - Unlock token entry page
 - `core/templates/core/setup/register.html` - Admin registration form
 - `core/templates/core/auth/login.html` - Login page with remember me
-- `devssp/settings.py` - Added SetupMiddleware, LOGIN_URL settings
-- `devssp/urls.py` - Wired setup and auth namespaces
+- `pathfinder/settings.py` - Added SetupMiddleware, LOGIN_URL settings
+- `pathfinder/urls.py` - Wired setup and auth namespaces
 
 ## Decisions Made
 1. **Setup state detection** - Check for admins group membership when token doesn't exist to distinguish fresh install from completed setup

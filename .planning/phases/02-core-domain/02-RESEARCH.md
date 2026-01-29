@@ -360,7 +360,7 @@ def navigation_context(request):
     <aside class="fixed left-0 top-0 h-full w-64 bg-dark-surface border-r border-dark-border flex flex-col">
         <!-- Logo as home -->
         <div class="p-4 border-b border-dark-border">
-            <a href="/" class="text-xl font-bold text-dark-text">DevSSP</a>
+            <a href="/" class="text-xl font-bold text-dark-text">Pathfinder</a>
         </div>
 
         <nav class="flex-1 p-4 space-y-1">
@@ -559,7 +559,7 @@ MIDDLEWARE = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}DevSSP{% endblock %}</title>
+    <title>{% block title %}Pathfinder{% endblock %}</title>
     {% tailwind_css %}
     <!-- HTMX -->
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>

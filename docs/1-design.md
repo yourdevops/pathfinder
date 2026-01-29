@@ -1,12 +1,12 @@
-# DevSSP - Self-Service Portal for Developers
+# Pathfinder - Self-Service Portal for Developers
 
-This document contains the design specification for DevSSP features. It serves as the source of truth for implementation.
+This document contains the design specification for Pathfinder features. It serves as the source of truth for implementation.
 
 ## Design Principles
 
 ### Core Insight: Orchestrate, Don't Rebuild
 
-The most successful IDPs (Backstage, Port, Humanitec) follow a pattern: they orchestrate existing tools, not replace them. DevSSP should be the unified UI and control plane, delegating execution to battle-tested tools.
+The most successful IDPs (Backstage, Port, Humanitec) follow a pattern: they orchestrate existing tools, not replace them. Pathfinder should be the unified UI and control plane, delegating execution to battle-tested tools.
 
 ### Naming Convention
 
@@ -48,7 +48,7 @@ Every entity has an optional `description` field (text, no length limit) for:
 
 ## Projects
 
-Projects are the primary organizational unit in DevSSP. They group related Services, Environments, and define shared configuration.
+Projects are the primary organizational unit in Pathfinder. They group related Services, Environments, and define shared configuration.
 
 See [projects.md](projects.md) for full documentation including:
 - Project model and features
@@ -159,8 +159,8 @@ Repository:
 
 | Term | Definition |
 |------|------------|
-| **Organization** | DevSSP instance scope. Single-org by default, multi-org achieved by multiple instances. |
-| **User** | An authenticated user of the DevSSP system |
+| **Organization** | Pathfinder instance scope. Single-org by default, multi-org achieved by multiple instances. |
+| **User** | An authenticated user of the Pathfinder system |
 | **Group** | Container for users; can have SystemRoles and be assigned to projects |
 | **SystemRole** | Predefined system-wide role: `admin`, `operator`, `auditor`, `user` (baseline) |
 | **ProjectRole** | Role within a project context: `owner`, `contributor`, `viewer` |

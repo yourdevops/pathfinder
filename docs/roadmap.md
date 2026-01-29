@@ -1,4 +1,4 @@
-# DevSSP Roadmap
+# Pathfinder Roadmap
 
 Features and improvements planned for future releases.
 
@@ -39,7 +39,7 @@ External identity provider integration with single source of truth model.
 - If no local setup exists: Treated as fresh install
   - New unlock token generated
   - Admin completes unlock sequence
-  - DevSSP creates new local admin group with `admin` SystemRole
+  - Pathfinder creates new local admin group with `admin` SystemRole
 
 **Data Preservation:**
 - Audit entries use denormalized user data (snapshot at action time)
@@ -52,7 +52,7 @@ auth:
   mode: external  # or 'local'
   oidc:
     issuer: https://login.example.com
-    client_id: devssp-client
+    client_id: pathfinder-client
     # ... other OIDC config
   group_mapping:
     "oidc-admins": 
@@ -151,8 +151,8 @@ Actions to run after successful deployment:
 **Status:** Planned
 
 SSP-managed deployment manifests:
-- Kubernetes: DevSSP generates/updates deployment.yaml with correct image tag
-- Docker: DevSSP generates docker-compose or run command
+- Kubernetes: Pathfinder generates/updates deployment.yaml with correct image tag
+- Docker: Pathfinder generates docker-compose or run command
 - Eliminates manual manifest updates in CI
 
 ### Multi-Artifact Services
@@ -226,7 +226,7 @@ Extend audit logging beyond permission changes to cover all system actions:
 ### Branching Strategies
 **Status:** Planned
 
-Currently DevSSP assumes trunk-based development (single main branch for builds). Future support for alternative development workflows:
+Currently Pathfinder assumes trunk-based development (single main branch for builds). Future support for alternative development workflows:
 
 **Strategies to Support:**
 - **Trunk-Based** (current): All builds from main branch

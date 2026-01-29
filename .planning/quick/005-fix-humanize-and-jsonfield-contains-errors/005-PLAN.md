@@ -5,7 +5,7 @@ type: execute
 wave: 1
 depends_on: []
 files_modified:
-  - devssp/settings.py
+  - pathfinder/settings.py
   - core/decorators.py
 autonomous: true
 
@@ -15,7 +15,7 @@ must_haves:
     - "has_system_role() correctly checks JSONField system_roles on SQLite"
     - "Admin users can access admin-protected views"
   artifacts:
-    - path: "devssp/settings.py"
+    - path: "pathfinder/settings.py"
       provides: "django.contrib.humanize in INSTALLED_APPS"
       contains: "django.contrib.humanize"
     - path: "core/decorators.py"
@@ -44,7 +44,7 @@ Output: Working application with both issues resolved.
 
 <context>
 @.planning/STATE.md
-@devssp/settings.py
+@pathfinder/settings.py
 @core/decorators.py
 @core/models.py
 </context>
@@ -53,13 +53,13 @@ Output: Working application with both issues resolved.
 
 <task type="auto">
   <name>Task 1: Add django.contrib.humanize to INSTALLED_APPS</name>
-  <files>devssp/settings.py</files>
+  <files>pathfinder/settings.py</files>
   <action>
     Add 'django.contrib.humanize' to INSTALLED_APPS list in settings.py.
     Place it with other django.contrib apps (after django.contrib.staticfiles is fine).
     This enables the {% load humanize %} template tag used in environment_detail.html and list.html.
   </action>
-  <verify>grep -q "django.contrib.humanize" devssp/settings.py</verify>
+  <verify>grep -q "django.contrib.humanize" pathfinder/settings.py</verify>
   <done>django.contrib.humanize is in INSTALLED_APPS</done>
 </task>
 

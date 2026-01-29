@@ -35,7 +35,7 @@ key-files:
     - core/tasks.py
     - plugins/github/plugin.py
     - requirements.txt
-    - devssp/settings.py
+    - pathfinder/settings.py
 
 key-decisions:
   - "Jinja2 for template substitution instead of string.Template"
@@ -82,7 +82,7 @@ Each task was committed atomically:
 - `core/tasks.py` - Replaced placeholder with full scaffold_repository implementation
 - `plugins/github/plugin.py` - Added create_pull_request method for PR creation
 - `requirements.txt` - Added Jinja2 dependency
-- `devssp/settings.py` - Added repository_scaffolding queue to TASKS
+- `pathfinder/settings.py` - Added repository_scaffolding queue to TASKS
 
 ## Decisions Made
 - **Jinja2 for templating:** Chose Jinja2 with StrictUndefined mode to catch missing variables early rather than silent substitution failures
@@ -104,8 +104,8 @@ Each task was committed atomically:
 **2. [Rule 3 - Blocking] Added repository_scaffolding queue to TASKS settings**
 - **Found during:** Task 2 (scaffold_repository task import)
 - **Issue:** Task used queue_name='repository_scaffolding' but this queue wasn't in TASKS settings
-- **Fix:** Added 'repository_scaffolding' to QUEUES list in devssp/settings.py
-- **Files modified:** devssp/settings.py
+- **Fix:** Added 'repository_scaffolding' to QUEUES list in pathfinder/settings.py
+- **Files modified:** pathfinder/settings.py
 - **Verification:** Task import succeeds, Django check passes
 - **Committed in:** 0c8a5d8 (Task 2 commit)
 

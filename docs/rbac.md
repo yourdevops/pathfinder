@@ -43,11 +43,11 @@ SSP uses a group-based permission model designed for enterprise compliance (SOX,
 
 ## Initial Setup
 
-When DevSSP is first installed:
+When Pathfinder is first installed:
 
 1. **Unlock**: First user enters the unlock token from `secrets/initialUnlockToken`
 2. **Create Account**: User creates their account (username, email, password)
-3. **Automatic Setup**: DevSSP automatically:
+3. **Automatic Setup**: Pathfinder automatically:
    - Creates a local group called `admins`
    - Attaches the `admin` SystemRole to this group
    - Adds the first user to the `admins` group

@@ -1,5 +1,5 @@
 # SSP - Agent Instructions
-DevSSP (Developer Self-Service Portal) is a Django web app for managing container deployments via a wizard-based UI.
+Pathfinder (Developer Self-Service Portal) is a Django web app for managing container deployments via a wizard-based UI.
 
 **Project Docs**: docs/ directory
 

@@ -31,7 +31,7 @@ User creation should be admin-only or via AD/SSO. The `/setup/register/` URL sho
 <task type="auto">
   <name>Task 1: Fix input text color for dark mode compatibility</name>
   <files>
-    - /Users/fandruhin/work/yourdevops/devssp/theme/static_src/src/styles.css
+    - /Users/fandruhin/work/yourdevops/pathfinder/theme/static_src/src/styles.css
   </files>
   <action>
 Update the `input-field` component class to use explicit dark text color that works with the form plugin's default light background:
@@ -57,13 +57,13 @@ This uses:
 
 After CSS change, rebuild Tailwind:
 ```bash
-cd /Users/fandruhin/work/yourdevops/devssp && source venv/bin/activate && python manage.py tailwind build
+cd /Users/fandruhin/work/yourdevops/pathfinder && source venv/bin/activate && python manage.py tailwind build
 ```
   </action>
   <verify>
 Run dev server and verify input fields on /setup/unlock/ and /auth/login/ show black text on white background.
 ```bash
-cd /Users/fandruhin/work/yourdevops/devssp && source venv/bin/activate && python manage.py runserver &
+cd /Users/fandruhin/work/yourdevops/pathfinder && source venv/bin/activate && python manage.py runserver &
 sleep 2 && curl -s http://localhost:8000/setup/unlock/ | grep -o 'input-field\|text-gray-900'
 ```
   </verify>
@@ -73,9 +73,9 @@ sleep 2 && curl -s http://localhost:8000/setup/unlock/ | grep -o 'input-field\|t
 <task type="auto">
   <name>Task 2: Merge unlock and register into single-page flow</name>
   <files>
-    - /Users/fandruhin/work/yourdevops/devssp/core/views/setup.py
-    - /Users/fandruhin/work/yourdevops/devssp/core/templates/core/setup/unlock.html
-    - /Users/fandruhin/work/yourdevops/devssp/core/urls.py
+    - /Users/fandruhin/work/yourdevops/pathfinder/core/views/setup.py
+    - /Users/fandruhin/work/yourdevops/pathfinder/core/templates/core/setup/unlock.html
+    - /Users/fandruhin/work/yourdevops/pathfinder/core/urls.py
   </files>
   <action>
 1. **Update UnlockView** to handle both unlock token validation AND admin registration:
@@ -97,12 +97,12 @@ sleep 2 && curl -s http://localhost:8000/setup/unlock/ | grep -o 'input-field\|t
    - Remove AdminRegistrationView from imports
 
 5. **Delete register.html template** (no longer needed):
-   - /Users/fandruhin/work/yourdevops/devssp/core/templates/core/setup/register.html
+   - /Users/fandruhin/work/yourdevops/pathfinder/core/templates/core/setup/register.html
   </action>
   <verify>
 Test the merged flow:
 ```bash
-cd /Users/fandruhin/work/yourdevops/devssp && source venv/bin/activate
+cd /Users/fandruhin/work/yourdevops/pathfinder && source venv/bin/activate
 # Reset database for fresh setup state
 rm -f db.sqlite3
 python manage.py migrate
@@ -129,7 +129,7 @@ Verify:
 <task type="auto">
   <name>Task 3: Update planning docs about user registration</name>
   <files>
-    - /Users/fandruhin/work/yourdevops/devssp/.planning/PROJECT.md
+    - /Users/fandruhin/work/yourdevops/pathfinder/.planning/PROJECT.md
   </files>
   <action>
 Add a note to the Key Decisions table in PROJECT.md:
@@ -142,8 +142,8 @@ Also update any mentions of setup flow if they reference /setup/register/.
   </action>
   <verify>
 ```bash
-grep -i "register" /Users/fandruhin/work/yourdevops/devssp/.planning/PROJECT.md
-grep -i "user.*creation" /Users/fandruhin/work/yourdevops/devssp/.planning/PROJECT.md
+grep -i "register" /Users/fandruhin/work/yourdevops/pathfinder/.planning/PROJECT.md
+grep -i "user.*creation" /Users/fandruhin/work/yourdevops/pathfinder/.planning/PROJECT.md
 ```
 Verify the decision is documented.
   </verify>
@@ -159,12 +159,12 @@ Verify the decision is documented.
 
 ## Files Modified
 
-- `/Users/fandruhin/work/yourdevops/devssp/theme/static_src/src/styles.css`
-- `/Users/fandruhin/work/yourdevops/devssp/core/views/setup.py`
-- `/Users/fandruhin/work/yourdevops/devssp/core/templates/core/setup/unlock.html`
-- `/Users/fandruhin/work/yourdevops/devssp/core/urls.py`
-- `/Users/fandruhin/work/yourdevops/devssp/.planning/PROJECT.md`
+- `/Users/fandruhin/work/yourdevops/pathfinder/theme/static_src/src/styles.css`
+- `/Users/fandruhin/work/yourdevops/pathfinder/core/views/setup.py`
+- `/Users/fandruhin/work/yourdevops/pathfinder/core/templates/core/setup/unlock.html`
+- `/Users/fandruhin/work/yourdevops/pathfinder/core/urls.py`
+- `/Users/fandruhin/work/yourdevops/pathfinder/.planning/PROJECT.md`
 
 ## Files Deleted
 
-- `/Users/fandruhin/work/yourdevops/devssp/core/templates/core/setup/register.html`
+- `/Users/fandruhin/work/yourdevops/pathfinder/core/templates/core/setup/register.html`

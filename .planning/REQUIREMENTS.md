@@ -1,4 +1,4 @@
-# Requirements: DevSSP
+# Requirements: Pathfinder
 
 **Defined:** 2026-01-21
 **Core Value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
@@ -142,7 +142,7 @@ Explicitly excluded. Documented to prevent scope creep.
 | Custom CI system | Orchestrate Jenkins/GitHub Actions, don't replace them |
 | Built-in secrets storage | Security liability; use Vault/K8s Secrets externally |
 | Custom container runtime | Delegate to Docker/Kubernetes |
-| Full PaaS functionality | DevSSP is control plane, not compute plane |
+| Full PaaS functionality | Pathfinder is control plane, not compute plane |
 | Multi-tenancy (isolated DBs) | Single org per instance; deploy multiple for isolation |
 | Service dependency graphs | High complexity, defer to v2+ |
 | AI-assisted features | Emerging tech, not essential for MVP |

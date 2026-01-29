@@ -69,7 +69,7 @@ Output: Settings page structure with General, User Management, Audit & Logs, API
   </files>
   <action>
 Create `core/views/settings.py` with:
-- `GeneralSettingsView` - renders general.html with placeholder content for "DevSSP Internal/Public URLs" settings
+- `GeneralSettingsView` - renders general.html with placeholder content for "Pathfinder Internal/Public URLs" settings
 - `UserManagementView` - renders user_management.html with links to existing Users and Groups pages
 - `AuditLogsSettingsView` - renders audit_logs.html (can link to existing audit:list or be placeholder)
 - `ApiTokensView` - renders api_tokens.html placeholder
@@ -124,7 +124,7 @@ Template content:
 
 **general.html**:
 - Title: "General Settings"
-- Placeholder card: "DevSSP URLs configuration coming soon"
+- Placeholder card: "Pathfinder URLs configuration coming soon"
 - Note about Internal URL and Public URL settings
 
 **user_management.html**:

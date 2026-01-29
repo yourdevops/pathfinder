@@ -358,7 +358,7 @@ def sync_blueprint(blueprint_id: int) -> dict:
 
         # Fetch ssp-template.yaml from default branch
         manifest_content = None
-        for manifest_name in ['ssp-template.yaml', 'devssp-template.yaml']:
+        for manifest_name in ['ssp-template.yaml', 'pathfinder-template.yaml']:
             try:
                 file_content = repo.get_contents(manifest_name, ref=blueprint.default_branch)
                 manifest_content = file_content.decoded_content.decode('utf-8')
@@ -367,7 +367,7 @@ def sync_blueprint(blueprint_id: int) -> dict:
                 continue
 
         if not manifest_content:
-            raise ValueError('No ssp-template.yaml or devssp-template.yaml found in repository')
+            raise ValueError('No ssp-template.yaml or pathfinder-template.yaml found in repository')
 
         # Parse manifest with safe_load (security)
         manifest = yaml.safe_load(manifest_content)
@@ -659,7 +659,7 @@ class BlueprintSyncView(OperatorRequiredMixin, View):
 - **Synchronous git operations in request:** Always use background tasks for network calls
 - **Using yaml.load():** Always use yaml.safe_load() for security
 - **Ignoring non-semver tags:** Handle gracefully by treating as prerelease
-- **Hardcoding manifest filename:** Support both ssp-template.yaml and devssp-template.yaml
+- **Hardcoding manifest filename:** Support both ssp-template.yaml and pathfinder-template.yaml
 - **Storing full manifest in every version:** Manifest belongs on Blueprint, versions are lightweight
 - **Blocking UI during sync:** Save immediately with 'pending' status, update via background task
 
@@ -742,7 +742,7 @@ def get_manifest(client, repo_name, branch='main'):
     """Fetch ssp-template.yaml from repository."""
     repo = client.get_repo(repo_name)
 
-    for filename in ['ssp-template.yaml', 'devssp-template.yaml']:
+    for filename in ['ssp-template.yaml', 'pathfinder-template.yaml']:
         try:
             content = repo.get_contents(filename, ref=branch)
             return content.decoded_content.decode('utf-8')

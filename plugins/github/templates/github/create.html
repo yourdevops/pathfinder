@@ -20,7 +20,7 @@
         organizationTouched: false,
         get defaultAppName() {
             if (this.organization.trim()) {
-                return 'devssp-' + this.organization.trim().toLowerCase();
+                return 'pathfinder-' + this.organization.trim().toLowerCase();
             }
             return '';
         },
@@ -49,7 +49,7 @@
             <!-- Header Card -->
             <div class="card">
                 <h1 class="text-xl font-bold mb-2">Create GitHub Connection</h1>
-                <p class="text-dark-muted">Connect DevSSP to GitHub to manage repositories and workflows.</p>
+                <p class="text-dark-muted">Connect Pathfinder to GitHub to manage repositories and workflows.</p>
             </div>
 
             <!-- Connection Name -->
@@ -211,7 +211,7 @@
                                class="w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
                                x-model="appName"
                                @input="appNameTouched = true"
-                               placeholder="devssp-myorg">
+                               placeholder="pathfinder-myorg">
                         {% if form.app_name.errors %}
                         <p class="mt-1 text-sm text-red-400">{{ form.app_name.errors.0 }}</p>
                         {% endif %}

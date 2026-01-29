@@ -71,7 +71,7 @@
 
 ## Django Configuration
 
-**Settings Module:** `devssp.settings`
+**Settings Module:** `pathfinder.settings`
 
 **Installed Apps:**
 - `django.contrib.admin` - Admin interface

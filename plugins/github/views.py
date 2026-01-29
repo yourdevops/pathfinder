@@ -25,8 +25,8 @@ def get_default_app_name():
         hostname = parsed.netloc.split(':')[0]  # Remove port if present
         # Create a readable name from hostname
         name_parts = hostname.replace('.', '-').split('-')
-        return f"devssp-{'-'.join(name_parts[:2])}"
-    return "DevSSP"
+        return f"pathfinder-{'-'.join(name_parts[:2])}"
+    return "Pathfinder"
 
 
 def get_default_connection_name(org_name=None):
@@ -97,7 +97,7 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
         request.session['github_manifest_data'] = {
             'name': data['name'],
             'organization': data['organization'],
-            'app_name': data.get('app_name') or f"devssp-{data['organization']}",
+            'app_name': data.get('app_name') or f"pathfinder-{data['organization']}",
             'base_url': data.get('base_url', ''),
         }
 
@@ -127,7 +127,7 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
         # Use provided app_name, or generate from organization
         app_name = data.get('app_name')
         if not app_name and data.get('organization'):
-            app_name = f"devssp-{data['organization']}"
+            app_name = f"pathfinder-{data['organization']}"
         if not app_name:
             app_name = get_default_app_name()
 

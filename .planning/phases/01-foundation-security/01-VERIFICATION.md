@@ -77,28 +77,28 @@ re_verification: false
 | core/templates/core/placeholders/blueprints.html | ✓ VERIFIED | Empty state placeholder |
 | core/templates/core/placeholders/connections.html | ✓ VERIFIED | Empty state placeholder |
 | secrets/initialUnlockToken | ✓ VERIFIED | 43 bytes, 400 permissions |
-| devssp/settings.py | ✓ VERIFIED | AUTH_USER_MODEL, auditlog middleware, session settings |
+| pathfinder/settings.py | ✓ VERIFIED | AUTH_USER_MODEL, auditlog middleware, session settings |
 | core/urls.py | ✓ VERIFIED | All URL patterns defined |
-| devssp/urls.py | ✓ VERIFIED | All namespaces included |
+| pathfinder/urls.py | ✓ VERIFIED | All namespaces included |
 | core/migrations/0001_initial.py | ✓ VERIFIED | Initial migration created |
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 |------|----|----|--------|---------|
-| devssp/settings.py | core.User | AUTH_USER_MODEL setting | ✓ WIRED | AUTH_USER_MODEL = 'core.User' found |
+| pathfinder/settings.py | core.User | AUTH_USER_MODEL setting | ✓ WIRED | AUTH_USER_MODEL = 'core.User' found |
 | core/models.py | auditlog | auditlog.register() | ✓ WIRED | User, Group, GroupMembership registered |
 | core/middleware.py | core/utils.py | is_setup_complete import | ✓ WIRED | from .utils import is_setup_complete |
 | core/views/setup.py | core/models.py | User.objects.create_user | ✓ WIRED | AdminRegistrationView creates user and group |
 | theme/templates/base.html | core/components/nav.html | include tag | ✓ WIRED | {% include "core/components/nav.html" %} |
-| devssp/settings.py | core.context_processors.user_roles | TEMPLATES context_processors | ✓ WIRED | 'core.context_processors.user_roles' in settings |
+| pathfinder/settings.py | core.context_processors.user_roles | TEMPLATES context_processors | ✓ WIRED | 'core.context_processors.user_roles' in settings |
 | core/views/users.py | core.decorators.py | AdminRequiredMixin | ✓ WIRED | UserListView(AdminRequiredMixin, View) |
 | core/urls.py | core/views/users.py | URL patterns | ✓ WIRED | UserListView.as_view() in users_patterns |
 | core/views/groups.py | core/models.py | Group.objects | ✓ WIRED | GroupListView queries Group.objects.all() |
 | core/views/audit.py | auditlog.models.LogEntry | LogEntry.objects | ✓ WIRED | AuditLogView queries LogEntry.objects.all() |
 | core/templates/core/components/nav.html | blueprints:list | URL link | ✓ WIRED | {% url 'blueprints:list' %} in nav |
 | core/templates/core/components/nav.html | connections:list | URL link | ✓ WIRED | {% url 'connections:list' %} in nav |
-| devssp/urls.py | core/urls.py | include | ✓ WIRED | All pattern lists included with namespaces |
+| pathfinder/urls.py | core/urls.py | include | ✓ WIRED | All pattern lists included with namespaces |
 
 ### Requirements Coverage
 

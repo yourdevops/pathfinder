@@ -4,7 +4,7 @@ plan: 01
 type: execute
 wave: 1
 depends_on: []
-files_modified: [devssp/settings.py]
+files_modified: [pathfinder/settings.py]
 autonomous: true
 
 must_haves:
@@ -12,11 +12,11 @@ must_haves:
     - "collectstatic command runs without ImproperlyConfigured error"
     - "Static files are collected to staticfiles/ directory"
   artifacts:
-    - path: "devssp/settings.py"
+    - path: "pathfinder/settings.py"
       provides: "STATIC_ROOT configuration"
       contains: "STATIC_ROOT"
   key_links:
-    - from: "devssp/settings.py"
+    - from: "pathfinder/settings.py"
       to: "staticfiles/"
       via: "STATIC_ROOT = BASE_DIR / 'staticfiles'"
 ---
@@ -34,16 +34,16 @@ Output: Working collectstatic command that collects static files to staticfiles/
 </execution_context>
 
 <context>
-@devssp/settings.py
+@pathfinder/settings.py
 </context>
 
 <tasks>
 
 <task type="auto">
   <name>Task 1: Add STATIC_ROOT setting</name>
-  <files>devssp/settings.py</files>
+  <files>pathfinder/settings.py</files>
   <action>
-    Add STATIC_ROOT setting to devssp/settings.py after the existing STATIC_URL line (line 132).
+    Add STATIC_ROOT setting to pathfinder/settings.py after the existing STATIC_URL line (line 132).
 
     Add:
     ```python

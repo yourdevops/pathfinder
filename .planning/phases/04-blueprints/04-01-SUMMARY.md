@@ -27,12 +27,12 @@ key-files:
     - core/models.py
     - core/tasks.py
     - requirements.txt
-    - devssp/settings.py
+    - pathfinder/settings.py
 
 key-decisions:
   - "GitPython for SCM abstraction (not GitHub API) - supports any Git server"
   - "Sort key format: {major:05d}.{minor:05d}.{patch:05d}.{prerelease or 'zzzz'}"
-  - "Manifest files: ssp-template.yaml (primary), devssp-template.yaml (fallback)"
+  - "Manifest files: ssp-template.yaml (primary), pathfinder-template.yaml (fallback)"
 
 patterns-established:
   - "Git URL parsing: Support HTTPS and SSH formats from any host"
@@ -78,13 +78,13 @@ Each task was committed atomically:
 - `core/git_utils.py` - GitPython helper functions (parse_git_url, build_authenticated_git_url, clone_repo_shallow, etc.)
 - `core/tasks.py` - sync_blueprint task for background repository sync
 - `requirements.txt` - Added GitPython, semver, PyYAML dependencies
-- `devssp/settings.py` - Added QUEUES configuration for django_tasks
+- `pathfinder/settings.py` - Added QUEUES configuration for django_tasks
 - `core/migrations/0006_blueprint_blueprintversion.py` - Database schema migration
 
 ## Decisions Made
 
 - **GitPython for SCM abstraction:** Uses Git protocol directly instead of GitHub API, enabling support for any Git-compatible server (GitHub, GitLab, Bitbucket, self-hosted)
-- **Manifest file names:** Primary: ssp-template.yaml, fallback: devssp-template.yaml
+- **Manifest file names:** Primary: ssp-template.yaml, fallback: pathfinder-template.yaml
 - **Sort key format:** `{major:05d}.{minor:05d}.{patch:05d}.{prerelease or 'zzzz'}` ensures releases sort after pre-releases
 - **Authentication pattern:** build_authenticated_git_url embeds credentials in URL for private repo access
 
@@ -96,7 +96,7 @@ Each task was committed atomically:
 - **Found during:** Task 3 (sync_blueprint task)
 - **Issue:** Task decorator with queue_name='blueprint_sync' failed because queue not configured in TASKS settings
 - **Fix:** Added QUEUES configuration with ["default", "health_checks", "blueprint_sync"]
-- **Files modified:** devssp/settings.py
+- **Files modified:** pathfinder/settings.py
 - **Verification:** Task import succeeds, no InvalidTaskError
 - **Committed in:** a47c40a (Task 3 commit)
 

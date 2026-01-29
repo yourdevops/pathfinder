@@ -1,12 +1,12 @@
 # Technology Stack Research
 
-**Project:** DevSSP (Developer Self-Service Portal)
+**Project:** Pathfinder (Developer Self-Service Portal)
 **Researched:** 2026-01-21
 **Mode:** Stack validation and improvement for Django-based IDP
 
 ## Executive Summary
 
-The existing stack decisions are **largely sound** for a Django-based internal developer platform. Django 6.0 is an excellent choice with its new built-in Tasks framework that reduces the need for Celery in simple use cases. However, several refinements and additions will improve the production readiness of DevSSP.
+The existing stack decisions are **largely sound** for a Django-based internal developer platform. Django 6.0 is an excellent choice with its new built-in Tasks framework that reduces the need for Celery in simple use cases. However, several refinements and additions will improve the production readiness of Pathfinder.
 
 **Key validations:**
 - Django 6.x: Excellent choice with new async capabilities and built-in background tasks
@@ -76,10 +76,10 @@ The existing stack decisions are **largely sound** for a Django-based internal d
 
 **Validation of django-guardian choice:**
 
-After researching alternatives (django-rules, custom implementations), django-guardian remains the best choice for DevSSP's permission model:
+After researching alternatives (django-rules, custom implementations), django-guardian remains the best choice for Pathfinder's permission model:
 
 **Why django-guardian over django-rules:**
-- DevSSP needs explicit permission storage ("user X can access project Y") not rule-based evaluation
+- Pathfinder needs explicit permission storage ("user X can access project Y") not rule-based evaluation
 - Audit requirements need queryable permission records
 - Group-based permissions integrate naturally with django-guardian's GroupObjectPermission
 - Performance optimizations available (direct FK, ObjectPermissionChecker prefetching)
@@ -89,7 +89,7 @@ After researching alternatives (django-rules, custom implementations), django-gu
 - Use direct FK permission models for Project and Environment permissions
 - Prefetch permissions with `ObjectPermissionChecker` in list views
 
-**Alternative considered:** `django-rules` - Better for rule-based ("users can edit their own objects") but DevSSP needs explicit assignment model for compliance/audit.
+**Alternative considered:** `django-rules` - Better for rule-based ("users can edit their own objects") but Pathfinder needs explicit assignment model for compliance/audit.
 
 **Source:** [django-guardian documentation](https://django-guardian.readthedocs.io/en/3.0.3/userguide/performance/)
 
@@ -106,7 +106,7 @@ After researching alternatives (django-rules, custom implementations), django-gu
 
 **Rationale for HTMX + Alpine.js over React/Vue:**
 
-DevSSP is a **server-rendered** application with moderate interactivity needs:
+Pathfinder is a **server-rendered** application with moderate interactivity needs:
 - Wizard forms (multi-step, dynamic fields)
 - Status polling (build/deployment status)
 - Modal dialogs (confirmations, forms)
@@ -141,7 +141,7 @@ Django 6.0's new Tasks framework is a **foundational API**, not a complete solut
 
 **But:** Django only ships development backends (Immediate, Dummy). Production backends are community-provided or coming soon.
 
-**Recommendation for DevSSP:**
+**Recommendation for Pathfinder:**
 1. **Start with Django Tasks** using database backend (community packages emerging)
 2. **Evaluate Celery** if you need: complex task chains, scheduled tasks, high concurrency
 3. **Keep architecture simple** - most IDP operations (repo creation, webhook processing) are infrequent
@@ -171,7 +171,7 @@ from cryptography.fernet import Fernet
 ```
 
 **Key management best practices:**
-- Store encryption key in environment variable (`SSP_ENCRYPTION_KEY`)
+- Store encryption key in environment variable (`PTF_ENCRYPTION_KEY`)
 - Support key rotation (list of keys, newest first)
 - Consider cloud KMS for production (AWS KMS, GCP KMS)
 
@@ -211,13 +211,13 @@ from cryptography.fernet import Fernet
 
 **Current setup (validated):**
 ```bash
-gunicorn devssp.wsgi:application -w 2 --threads 4 -b 0.0.0.0:8000
+gunicorn pathfinder.wsgi:application -w 2 --threads 4 -b 0.0.0.0:8000
 ```
 
 **Recommended upgrade path:**
 ```bash
 # Hybrid approach: Gunicorn process management + Uvicorn ASGI workers
-gunicorn devssp.asgi:application -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000
+gunicorn pathfinder.asgi:application -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000
 ```
 
 **Benefits of hybrid approach:**
@@ -296,11 +296,11 @@ strict = true
 | Technology | Why Avoid |
 |------------|-----------|
 | django-fernet-fields (original) | Unmaintained since 2019, likely broken with Django 6.0 |
-| Django REST Framework | Not needed - DevSSP is server-rendered, not a JSON API. HTMX partial responses suffice. |
+| Django REST Framework | Not needed - Pathfinder is server-rendered, not a JSON API. HTMX partial responses suffice. |
 | React/Vue/Next.js | Over-engineered for IDP needs. Adds build pipeline, API duplication, expertise requirements. |
 | MongoDB | Django's ORM is PostgreSQL-optimized. NoSQL adds complexity without clear benefit. |
 | GraphQL | No client diversity (single web UI). REST-style views simpler for server-rendered app. |
-| Kubernetes (for DevSSP itself) | Over-engineered for single-instance IDP. Docker Compose sufficient for deployment. |
+| Kubernetes (for Pathfinder itself) | Over-engineered for single-instance IDP. Docker Compose sufficient for deployment. |
 
 ---
 

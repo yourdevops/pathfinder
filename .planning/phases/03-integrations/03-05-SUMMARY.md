@@ -26,7 +26,7 @@ key-files:
     - core/tasks.py
   modified:
     - core/admin.py
-    - devssp/settings.py
+    - pathfinder/settings.py
 
 key-decisions:
   - "Spread scheduling divides interval by connection count"
@@ -74,7 +74,7 @@ completed: 2026-01-23
 
 ## Files Modified
 - `core/admin.py` - IntegrationConnectionAdmin registration
-- `devssp/settings.py` - HEALTH_CHECK_INTERVAL setting
+- `pathfinder/settings.py` - HEALTH_CHECK_INTERVAL setting
 
 ## Decisions Made
 - Spread scheduling: checks spread evenly across HEALTH_CHECK_INTERVAL

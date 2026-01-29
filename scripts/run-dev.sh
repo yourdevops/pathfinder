@@ -1,5 +1,5 @@
 #!/bin/bash
-# DevSSP development runner
+# Pathfinder development runner
 # Runs web server and worker with interleaved, prefixed logs
 
 set -e
@@ -43,7 +43,7 @@ cleanup() {
 # Set up signal handlers
 trap cleanup INT TERM
 
-echo -e "${GREEN}Starting DevSSP...${RESET}"
+echo -e "${GREEN}Starting Pathfinder...${RESET}"
 echo ""
 
 # Start worker with prefixed output

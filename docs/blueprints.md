@@ -11,7 +11,7 @@ An Service Template is a git repository containing:
 2. **CI configuration**: Jenkinsfile, GitHub Actions workflow, or build scripts
 3. **Template manifest**: `ssp-template.yaml` defining metadata and requirements
 
-When a developer creates an service using a template, DevSSP:
+When a developer creates an service using a template, Pathfinder:
 1. Clones/copies the template contents to the target repository
 2. Substitutes variables (service name, project name, etc.)
 3. Commits and pushes the result
@@ -26,7 +26,7 @@ Every template must include an `ssp-template.yaml` file in the repository root.
 ### Manifest Format
 
 ```yaml
-# devssp-template.yaml
+# pathfinder-template.yaml
 
 # Required fields
 name: python-k8s-service
@@ -35,7 +35,7 @@ description: Python service deployed to Kubernetes
 # Source configuration
 source:
   # Files/directories to copy (relative to template repo root)
-  # If omitted, copies entire repo (excluding devssp-template.yaml and .git)
+  # If omitted, copies entire repo (excluding pathfinder-template.yaml and .git)
   include:
     - src/
     - Dockerfile
@@ -106,7 +106,7 @@ defaults:
 
 ## Template Registration
 
-Blueprints are registered in DevSSP by providing a git URL. DevSSP fetches the manifest and stores the metadata.
+Blueprints are registered in Pathfinder by providing a git URL. Pathfinder fetches the manifest and stores the metadata.
 
 ### Registration Flow
 
@@ -114,13 +114,13 @@ Blueprints are registered in DevSSP by providing a git URL. DevSSP fetches the m
 1. Admin provides template git URL
    └─ https://github.com/yourdevops/blueprints/python-k8s-service
 
-2. DevSSP clones repository (shallow)
+2. Pathfinder clones repository (shallow)
 
-3. DevSSP reads devssp-template.yaml
+3. Pathfinder reads pathfinder-template.yaml
    └─ Validates required fields
    └─ Parses all metadata
 
-4. DevSSP creates Blueprint record
+4. Pathfinder creates Blueprint record
    └─ name: from manifest
    └─ description: from manifest
    └─ source: { type: git, url: ..., ref: main }
@@ -163,7 +163,7 @@ Result: python-k8s-service is available (at least one env has github and kuberne
 
 ```
 python-k8s-service/
-├── devssp-template.yaml         # Template manifest (required)
+├── pathfinder-template.yaml         # Template manifest (required)
 ├── Dockerfile                # Container build
 ├── Jenkinsfile               # CI pipeline
 ├── requirements.txt          # Python dependencies
@@ -181,7 +181,7 @@ python-k8s-service/
 
 ```
 python-lambda-vpc/
-├── devssp-template.yaml
+├── pathfinder-template.yaml
 ├── Jenkinsfile               # CI: build + package
 ├── Jenkinsfile.deploy        # CD: terraform apply
 ├── src/
@@ -224,8 +224,8 @@ See [rbac.md](rbac.md) for full permission model documentation.
 
 ## Common Deploy Mechanisms
 
-| Mechanism | Description | How DevSSP Deploys |
+| Mechanism | Description | How Pathfinder Deploys |
 |-----------|-------------|-----------------|
-| `direct` | DevSSP calls integration API | `kubernetes.apply()`, `docker.run()` |
-| `gitops` | DevSSP commits manifests | Push to gitops repo, ArgoCD syncs |
-| `pipeline` | DevSSP triggers CD pipeline | `jenkins.trigger(job, params)` |
+| `direct` | Pathfinder calls integration API | `kubernetes.apply()`, `docker.run()` |
+| `gitops` | Pathfinder commits manifests | Push to gitops repo, ArgoCD syncs |
+| `pipeline` | Pathfinder triggers CD pipeline | `jenkins.trigger(job, params)` |

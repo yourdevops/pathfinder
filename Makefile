@@ -1,4 +1,4 @@
-# DevSSP Makefile
+# Pathfinder Makefile
 # Run both web server and background worker with interleaved logs
 
 VENV := venv
@@ -10,7 +10,7 @@ WORKER_PID := $(PID_DIR)/worker.pid
 .PHONY: run stop clean help venv migrate build
 
 help:
-	@echo "DevSSP Development Commands"
+	@echo "Pathfinder Development Commands"
 	@echo ""
 	@echo "  make run     - Start web server and worker (Ctrl+C to stop)"
 	@echo "  make stop    - Stop running processes"

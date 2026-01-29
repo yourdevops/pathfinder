@@ -21,7 +21,7 @@ tech-stack:
 key-files:
   created: []
   modified:
-    - devssp/settings.py
+    - pathfinder/settings.py
     - core/decorators.py
 
 key-decisions:
@@ -60,7 +60,7 @@ Each task was committed atomically:
 2. **Task 2: Fix has_system_role for SQLite compatibility** - `413b55a` (fix)
 
 ## Files Created/Modified
-- `devssp/settings.py` - Added django.contrib.humanize to INSTALLED_APPS
+- `pathfinder/settings.py` - Added django.contrib.humanize to INSTALLED_APPS
 - `core/decorators.py` - Replaced ORM contains lookup with Python filtering for SQLite compatibility
 
 ## Decisions Made

@@ -1,8 +1,8 @@
-# DevSSP
+# Pathfinder
 
 ## What This Is
 
-DevSSP is a lightweight internal developer platform that turns existing templates and CI/CD into governed, self-service workflows. It acts as a control plane that orchestrates external tools (SCM, CI, deployment targets) rather than replacing them. Platform engineers define "golden paths" as blueprints; developers use a wizard-based UI to create and deploy services without needing to understand the underlying infrastructure.
+Pathfinder is a lightweight internal developer platform that turns existing templates and CI/CD into governed, self-service workflows. It acts as a control plane that orchestrates external tools (SCM, CI, deployment targets) rather than replacing them. Platform engineers define "golden paths" as blueprints; developers use a wizard-based UI to create and deploy services without needing to understand the underlying infrastructure.
 
 ## Core Value
 
@@ -80,7 +80,7 @@ Existing codebase and design documentation:
 |---------|--------|
 | Custom SystemRoles | Predefined roles sufficient; add complexity only if proven need |
 | Multi-tenancy | Single org per instance; deploy multiple instances for isolation |
-| Secrets management | Use external stores (Vault, K8s Secrets); DevSSP stores references only |
+| Secrets management | Use external stores (Vault, K8s Secrets); Pathfinder stores references only |
 | Approval workflows | Deferred to future; production deploy requires owner role for now |
 | Real-time WebSocket updates | Polling sufficient for MVP; add if UX demands it |
 | Mobile-responsive UI | Desktop-first; platform engineers use laptops |
@@ -94,7 +94,7 @@ Existing codebase and design documentation:
 - Developers: Create services via wizard, deploy to environments
 - Auditors: Read-only access to all projects, audit logs
 
-**Design philosophy:** "Orchestrate, don't rebuild." DevSSP is a control plane that coordinates existing tools (GitHub, Jenkins, Kubernetes, Docker) rather than replacing them.
+**Design philosophy:** "Orchestrate, don't rebuild." Pathfinder is a control plane that coordinates existing tools (GitHub, Jenkins, Kubernetes, Docker) rather than replacing them.
 
 **Documentation approach:** `docs/` contains user-facing documentation for platform engineers. Updated as features are implemented. Eventually served as built-in Docs in the app.
 

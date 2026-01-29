@@ -2,17 +2,17 @@
 
 **Domain:** Internal Developer Platform (IDP)
 **Researched:** 2026-01-21
-**Focus:** Validating Django monolith approach for DevSSP
+**Focus:** Validating Django monolith approach for Pathfinder
 
 ---
 
 ## Executive Summary
 
-DevSSP's planned architecture as a Django monolith with plugin-based extensibility is **appropriate and well-suited** for an IDP control plane. Research confirms:
+Pathfinder's planned architecture as a Django monolith with plugin-based extensibility is **appropriate and well-suited** for an IDP control plane. Research confirms:
 
 1. **IDPs are orchestration layers, not compute-intensive systems** - They coordinate external tools rather than performing heavy processing, making monolith architecture viable
 2. **Modular monoliths are the 2025-2026 consensus for small-medium teams** - 42% of organizations that adopted microservices have consolidated services back (CNCF 2025 survey)
-3. **DevSSP's role as control plane (not data plane) maps well to monolith** - Low throughput, state-heavy, configuration-focused workloads favor monolithic designs
+3. **Pathfinder's role as control plane (not data plane) maps well to monolith** - Low throughput, state-heavy, configuration-focused workloads favor monolithic designs
 4. **Django's app system provides natural module boundaries** - The existing `core`, `integrations`, `wizard` app structure aligns with modular monolith best practices
 
 **Recommendation:** Continue with Django monolith. Focus on clean module boundaries and async task handling for external operations.
@@ -65,11 +65,11 @@ The McKinsey/Humanitec reference architecture defines five planes for IDPs:
 +------------------------------------------------------------------+
 ```
 
-### Where DevSSP Fits
+### Where Pathfinder Fits
 
-DevSSP operates primarily in the **Developer Control Plane** and **Integration & Delivery Plane**:
+Pathfinder operates primarily in the **Developer Control Plane** and **Integration & Delivery Plane**:
 
-| Plane | DevSSP Role | Implementation |
+| Plane | Pathfinder Role | Implementation |
 |-------|-------------|----------------|
 | Developer Control | Primary UI, service catalog, self-service | Django views, wizard flow |
 | Integration & Delivery | Orchestration, CI/CD coordination | Plugin system, webhook handlers |
@@ -77,7 +77,7 @@ DevSSP operates primarily in the **Developer Control Plane** and **Integration &
 | Monitoring | Aggregates status from external tools | Health checks, status polling |
 | Security | RBAC, connection auth | Django auth, encrypted secrets |
 
-**Key insight:** DevSSP is a **control plane**, not a data plane. It manages state and coordinates actions but does not process the actual workloads. This is the ideal use case for a monolith.
+**Key insight:** Pathfinder is a **control plane**, not a data plane. It manages state and coordinates actions but does not process the actual workloads. This is the ideal use case for a monolith.
 
 ---
 
@@ -92,7 +92,7 @@ DevSSP operates primarily in the **Developer Control Plane** and **Integration &
 | **Scaling needs** | Scale with complexity | Scale with throughput |
 | **Architecture** | Often monolithic | Often distributed |
 
-DevSSP characteristics (all control plane):
+Pathfinder characteristics (all control plane):
 - Receives webhooks (low volume)
 - Manages configuration state (database-heavy)
 - Triggers actions in external systems (orchestration)
@@ -102,7 +102,7 @@ DevSSP characteristics (all control plane):
 
 ---
 
-## Recommended Architecture for DevSSP
+## Recommended Architecture for Pathfinder
 
 ### Component Diagram
 
@@ -266,11 +266,11 @@ Developer           Web Layer          Core Domain       Integration App      De
 
 ### App Structure
 
-Current DevSSP structure aligns with modular monolith best practices:
+Current Pathfinder structure aligns with modular monolith best practices:
 
 ```
-devssp/
-  devssp/              # Project settings
+pathfinder/
+  pathfinder/              # Project settings
     settings.py
     urls.py
   core/                # Core domain models
@@ -319,7 +319,7 @@ When/if scaling requires:
 
 ## Plugin System Architecture
 
-DevSSP's plugin pattern aligns with IDP best practices:
+Pathfinder's plugin pattern aligns with IDP best practices:
 
 ### Plugin Registry Pattern
 
@@ -430,7 +430,7 @@ class DeployPlugin(IntegrationPlugin):
 - Process with management command
 - Simplest possible approach
 
-**Recommendation for DevSSP MVP:** Start with Django Background Tasks or database queue. Add Celery if scaling requires it.
+**Recommendation for Pathfinder MVP:** Start with Django Background Tasks or database queue. Add Celery if scaling requires it.
 
 ### Task Pattern Example
 
@@ -476,15 +476,15 @@ def execute_deployment(deployment_id: int):
 | Growing | 50-200 | Redis cache, Celery workers |
 | Enterprise | 200+ | Read replicas, horizontal scaling |
 
-### What DevSSP Doesn't Need
+### What Pathfinder Doesn't Need
 
-Because DevSSP is a control plane:
+Because Pathfinder is a control plane:
 - **No need for microservices** - Low traffic volume
 - **No need for event sourcing** - Simple CRUD state
 - **No need for GraphQL** - REST adequate for this domain
 - **No need for real-time at MVP** - Polling acceptable initially
 
-### What DevSSP Might Need Later
+### What Pathfinder Might Need Later
 
 - **WebSocket for real-time updates** (deployment progress)
 - **Read replicas** (if query load grows)
@@ -508,7 +508,7 @@ Because DevSSP is a control plane:
 
 ### 3. Synchronous External Calls in Request Path
 
-**What goes wrong:** User waits while DevSSP calls slow external APIs
+**What goes wrong:** User waits while Pathfinder calls slow external APIs
 **Why it happens:** Simpler to implement synchronously
 **Prevention:** Queue external operations, return immediately with "pending" status
 
@@ -572,7 +572,7 @@ Based on dependencies between components:
 
 ### Characteristics That Favor Monolith
 
-| Characteristic | DevSSP | Monolith Appropriate? |
+| Characteristic | Pathfinder | Monolith Appropriate? |
 |----------------|--------|----------------------|
 | Team size | Small (< 10) | Yes |
 | Request volume | Low (< 100 req/s) | Yes |
@@ -584,14 +584,14 @@ Based on dependencies between components:
 ### When to Reconsider
 
 Monitor for these signals that might warrant architecture change:
-- Team grows beyond 10 full-time engineers on DevSSP
+- Team grows beyond 10 full-time engineers on Pathfinder
 - Webhook volume exceeds 1000/minute sustained
 - Need to deploy components independently
 - Database becomes bottleneck despite optimization
 
 ### Verdict
 
-**Django monolith is the right choice for DevSSP.** The application is:
+**Django monolith is the right choice for Pathfinder.** The application is:
 - A control plane (low throughput)
 - State-management focused
 - Plugin-based (extensible without microservices)

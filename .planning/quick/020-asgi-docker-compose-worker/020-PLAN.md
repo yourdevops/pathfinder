@@ -5,7 +5,7 @@ type: execute
 wave: 1
 depends_on: []
 files_modified:
-  - devssp/settings.py
+  - pathfinder/settings.py
   - requirements.txt
   - Dockerfile
   - entrypoint.sh
@@ -29,7 +29,7 @@ must_haves:
       to: "data/"
       via: "volume mount"
     - from: "entrypoint.sh"
-      to: "devssp.asgi:application"
+      to: "pathfinder.asgi:application"
       via: "uvicorn command"
 ---
 
@@ -49,15 +49,15 @@ Output: Working docker-compose setup with web (uvicorn) and worker (db_worker) s
 @Dockerfile
 @entrypoint.sh
 @requirements.txt
-@devssp/settings.py
-@devssp/asgi.py
+@pathfinder/settings.py
+@pathfinder/asgi.py
 </context>
 
 <tasks>
 
 <task type="auto">
   <name>Task 1: Update settings and requirements for ASGI</name>
-  <files>devssp/settings.py, requirements.txt</files>
+  <files>pathfinder/settings.py, requirements.txt</files>
   <action>
 1. In settings.py, update DATABASES to use data/ subdirectory:
    ```python
@@ -80,7 +80,7 @@ Output: Working docker-compose setup with web (uvicorn) and worker (db_worker) s
    Add after the gunicorn entry if present, or in the deployment section.
   </action>
   <verify>
-    - grep "DATA_DIR" devssp/settings.py shows data directory setup
+    - grep "DATA_DIR" pathfinder/settings.py shows data directory setup
     - grep "uvicorn" requirements.txt shows uvicorn dependency
   </verify>
   <done>Settings point to data/db.sqlite3, uvicorn in requirements</done>
@@ -94,7 +94,7 @@ Output: Working docker-compose setup with web (uvicorn) and worker (db_worker) s
    ```bash
    # Start uvicorn (ASGI server)
    echo "Starting uvicorn server..."
-   exec uvicorn devssp.asgi:application --host 0.0.0.0 --port 8000 --workers 2
+   exec uvicorn pathfinder.asgi:application --host 0.0.0.0 --port 8000 --workers 2
    ```
 
 2. In Dockerfile, no changes needed to the build process. The entrypoint already points to entrypoint.sh which will use uvicorn. Requirements install will pull uvicorn.
@@ -122,7 +122,7 @@ Output: Working docker-compose setup with web (uvicorn) and worker (db_worker) s
        volumes:
          - ./data:/app/data
        environment:
-         - SSP_ENCRYPTION_KEY=${SSP_ENCRYPTION_KEY}
+         - PTF_ENCRYPTION_KEY=${PTF_ENCRYPTION_KEY}
        depends_on:
          - worker
        restart: unless-stopped
@@ -133,7 +133,7 @@ Output: Working docker-compose setup with web (uvicorn) and worker (db_worker) s
        volumes:
          - ./data:/app/data
        environment:
-         - SSP_ENCRYPTION_KEY=${SSP_ENCRYPTION_KEY}
+         - PTF_ENCRYPTION_KEY=${PTF_ENCRYPTION_KEY}
        restart: unless-stopped
    ```
 
@@ -143,12 +143,12 @@ Output: Working docker-compose setup with web (uvicorn) and worker (db_worker) s
 
    # Encryption key for sensitive data (required)
    # Generate with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
-   SSP_ENCRYPTION_KEY=
+   PTF_ENCRYPTION_KEY=
    ```
   </action>
   <verify>
     - cat docker-compose.yml shows web and worker services
-    - cat .env.example shows SSP_ENCRYPTION_KEY placeholder
+    - cat .env.example shows PTF_ENCRYPTION_KEY placeholder
   </verify>
   <done>docker-compose.yml with web+worker services, .env.example with encryption key template</done>
 </task>

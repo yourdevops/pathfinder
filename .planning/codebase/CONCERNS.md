@@ -6,31 +6,31 @@
 
 **Hardcoded SECRET_KEY:**
 - Issue: Django `SECRET_KEY` is hardcoded with development value in version control
-- Files: `devssp/settings.py` (line 23)
+- Files: `pathfinder/settings.py` (line 23)
 - Impact: Production deployments inherit insecure secret key; session tokens, CSRF tokens, and password reset links are predictable
 - Fix approach: Move `SECRET_KEY` to environment variable with validation that production uses strong random value. Implement startup check to fail if `SECRET_KEY` matches development default
 
 **DEBUG Mode Enabled:**
 - Issue: `DEBUG = True` hardcoded in settings.py
-- Files: `devssp/settings.py` (line 26)
+- Files: `pathfinder/settings.py` (line 26)
 - Impact: Stack traces expose source code and environment details; static files served by Django; email goes to console instead of backend in development
 - Fix approach: Move to environment variable (`DJANGO_DEBUG`) with default `False` for safety. Verify environment-specific settings applied on startup.
 
 **ALLOWED_HOSTS Empty:**
 - Issue: `ALLOWED_HOSTS = []` in settings.py allows requests to any host
-- Files: `devssp/settings.py` (line 28)
+- Files: `pathfinder/settings.py` (line 28)
 - Impact: Host-header injection attacks possible; cache poisoning in shared caches
 - Fix approach: Configure `ALLOWED_HOSTS` via environment variable, validate on startup, provide clear error if not set in production
 
 **Missing CSRF/Security Headers:**
 - Issue: No explicit CSRF cookie protection, `SECURE_HSTS_SECONDS`, `SECURE_BROWSER_XSS_FILTER`, `X_FRAME_OPTIONS` configuration
-- Files: `devssp/settings.py`
+- Files: `pathfinder/settings.py`
 - Impact: Vulnerable to CSRF attacks in non-HTTPS contexts; clickjacking possible; missing XSS protection headers
 - Fix approach: Add Django security middleware configuration for HTTPS, HSTS, and frame options. Implement environment-based security settings.
 
 **Default Admin URL Exposed:**
 - Issue: Admin site available at `/admin/` without custom path obfuscation
-- Files: `devssp/urls.py` (line 21)
+- Files: `pathfinder/urls.py` (line 21)
 - Impact: Predictable location for brute-force attacks against authentication
 - Fix approach: Move admin URL to environment-configurable unpredictable path or implement IP whitelisting
 
@@ -38,7 +38,7 @@
 
 **No Environment Variable Management System:**
 - Issue: Settings rely on hardcoded values instead of environment variables
-- Files: `devssp/settings.py`
+- Files: `pathfinder/settings.py`
 - Impact: Unable to configure for different deployment environments (dev/staging/prod) without code changes; no clear distinction between dev and production configs
 - Fix approach: Implement `python-decouple`, `python-dotenv`, or Django's environment variable system. Create environment-specific settings modules or environment.py configuration file.
 
@@ -58,25 +58,25 @@
 
 **No Django Apps Defined:**
 - Issue: Settings only include Django contrib apps, no project-specific applications
-- Files: `devssp/settings.py` (lines 33-40)
+- Files: `pathfinder/settings.py` (lines 33-40)
 - Impact: Project structure incomplete; nowhere to place models, views, forms, or business logic. URL routing and templates will fail.
 - Fix approach: Create Django apps (e.g., `core`, `projects`, `services`, `deployments`) following Django conventions. Add to `INSTALLED_APPS`.
 
 **Empty URL Configuration:**
 - Issue: Only admin URLs configured, no API or template views
-- Files: `devssp/urls.py` (lines 20-22)
+- Files: `pathfinder/urls.py` (lines 20-22)
 - Impact: Project non-functional; frontend cannot load; API endpoints missing
 - Fix approach: Design view/API structure per architecture documents. Add URL patterns for each app.
 
 **No Templates Directory:**
 - Issue: `TEMPLATES` config has `'DIRS': []` and relies on `APP_DIRS: True`
-- Files: `devssp/settings.py` (line 57)
+- Files: `pathfinder/settings.py` (line 57)
 - Impact: No shared template base for common layouts; duplicated template code across apps
 - Fix approach: Create `templates/` directory at project root, configure in `TEMPLATES['DIRS']`. Create base template and reusable components.
 
 **No Static Files Strategy:**
 - Issue: `STATIC_URL` configured but no `STATIC_ROOT` or `STATICFILES_DIRS`
-- Files: `devssp/settings.py` (line 117)
+- Files: `pathfinder/settings.py` (line 117)
 - Impact: CSS/JavaScript collection will fail in production; static files served by Django in debug mode only
 - Fix approach: Set `STATIC_ROOT = BASE_DIR / 'staticfiles'`, configure whitenoise or CDN strategy, test `collectstatic` in CI
 
@@ -96,7 +96,7 @@
 
 **No Type Checking:**
 - Issue: No mypy configuration; no type hints in code
-- Files: `devssp/settings.py`, core Python files lack annotations
+- Files: `pathfinder/settings.py`, core Python files lack annotations
 - Impact: Type errors not caught until runtime; IDE support limited; refactoring risky
 - Fix approach: Add `mypy` to dev requirements. Create `mypy.ini`. Begin adding type hints to new code.
 
@@ -104,7 +104,7 @@
 
 **SQLite for All Environments:**
 - Issue: `db.sqlite3` used in development and implicit in production Docker setup
-- Files: `devssp/settings.py` (lines 75-80)
+- Files: `pathfinder/settings.py` (lines 75-80)
 - Impact: SQLite not suitable for concurrent production traffic; no backup strategy evident; file-based database fragile in containers
 - Fix approach: Use PostgreSQL in production (configurable via `DATABASE_URL` env var). Keep SQLite for local development only. Implement database initialization in entrypoint.sh.
 
@@ -182,7 +182,7 @@
 
 **Minimal Viable Implementation:**
 - Issue: Django skeleton with no models, views, templates, or API logic
-- Files: `devssp/` project configuration only
+- Files: `pathfinder/` project configuration only
 - Impact: Application non-functional; core features described in docs (Projects, Services, Deployments, etc.) not implemented
 - Fix approach: Not a bug—project is early stage. Prioritize implementing core models and APIs per design documents.
 
@@ -194,7 +194,7 @@
 
 **Missing Logging Configuration:**
 - Issue: No logging configured; only Django defaults
-- Files: `devssp/settings.py`
+- Files: `pathfinder/settings.py`
 - Impact: Production troubleshooting difficult; no structured logs for monitoring
 - Fix approach: Configure Python logging with handlers for file, console, and optional centralized logging (ELK, Datadog, CloudWatch)
 

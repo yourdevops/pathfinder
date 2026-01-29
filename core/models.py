@@ -174,7 +174,7 @@ class SiteConfiguration(models.Model):
     """
     external_url = models.URLField(
         blank=True,
-        help_text="Public URL for webhooks and OAuth callbacks (e.g., https://devssp.example.com)"
+        help_text="Public URL for webhooks and OAuth callbacks (e.g., https://pathfinder.example.com)"
     )
 
     class Meta:
