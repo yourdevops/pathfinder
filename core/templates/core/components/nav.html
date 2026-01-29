@@ -10,7 +10,7 @@
     <!-- Main Navigation -->
     <nav class="flex-1 p-4 space-y-1 overflow-y-auto" x-data="{
         serviceCatalogOpen: $persist(true).as('nav_serviceCatalog'),
-        blueprintsOpen: $persist(false).as('nav_blueprints'),
+        ciWorkflowsOpen: $persist(false).as('nav_ciWorkflows'),
         integrationsOpen: $persist({% if 'connections' in request.path or 'plugins' in request.path %}true{% else %}false{% endif %}).as('nav_integrations'),
         settingsOpen: $persist({% if 'settings' in request.path %}true{% else %}false{% endif %}).as('nav_settings')
     }">
@@ -40,30 +40,49 @@
             </div>
         </div>
 
-        <!-- Blueprints (all authenticated users) -->
+        <!-- CI Workflows (all authenticated users) -->
         <div>
             <!-- Parent toggle -->
-            <button @click="blueprintsOpen = !blueprintsOpen"
-                    class="w-full flex items-center px-3 py-2 rounded-lg text-dark-text hover:bg-dark-border/50 transition-colors {% if 'blueprints' in request.path or request.path == '/resources/' %}bg-dark-border{% endif %}">
+            <button @click="ciWorkflowsOpen = !ciWorkflowsOpen"
+                    class="w-full flex items-center px-3 py-2 rounded-lg text-dark-text hover:bg-dark-border/50 transition-colors {% if 'ci-workflows' in request.path %}bg-dark-border{% endif %}">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                 </svg>
-                Blueprints
-                <svg class="w-4 h-4 ml-auto transition-transform" :class="{ 'rotate-90': blueprintsOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                CI Workflows
+                <svg class="w-4 h-4 ml-auto transition-transform" :class="{ 'rotate-90': ciWorkflowsOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
             </button>
-            <!-- Sub-items -->
-            <div x-show="blueprintsOpen" x-transition x-cloak class="ml-2 mt-1 space-y-1">
-                <a href="{% url 'blueprints:list' %}"
-                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors {% if 'blueprints' in request.path %}bg-dark-border/50 text-dark-text{% else %}text-dark-muted hover:bg-dark-border/50 hover:text-dark-text{% endif %}">
-                    Services
+            <!-- Sub-items (URLs populated in Plan 02) -->
+            <div x-show="ciWorkflowsOpen" x-transition x-cloak class="ml-2 mt-1 space-y-1">
+                <a href="#" {# TODO Plan 02: ci_workflows:workflow_list #}
+                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors {% if 'ci-workflows' in request.path and 'steps' not in request.path and 'runtimes' not in request.path and 'repositories' not in request.path %}bg-dark-border/50 text-dark-text{% else %}text-dark-muted hover:bg-dark-border/50 hover:text-dark-text{% endif %}">
+                    Workflows
                 </a>
-                <a href="{% url 'resources:list' %}"
-                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors {% if request.path == '/resources/' %}bg-dark-border/50 text-dark-text{% else %}text-dark-muted hover:bg-dark-border/50 hover:text-dark-text{% endif %}">
-                    Resources
+                <a href="#" {# TODO Plan 02: ci_workflows:steps_catalog #}
+                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors text-dark-muted hover:bg-dark-border/50 hover:text-dark-text">
+                    Steps
+                </a>
+                <a href="#" {# TODO Plan 02: ci_workflows:runtimes #}
+                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors text-dark-muted hover:bg-dark-border/50 hover:text-dark-text">
+                    Runtimes
+                </a>
+                <a href="#" {# TODO Plan 02: ci_workflows:repo_list #}
+                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors text-dark-muted hover:bg-dark-border/50 hover:text-dark-text">
+                    Repositories
                 </a>
             </div>
+        </div>
+
+        <!-- Resources (standalone) -->
+        <div>
+            <a href="{% url 'resources:list' %}"
+               class="flex items-center px-3 py-2 rounded-lg text-dark-text hover:bg-dark-border/50 transition-colors {% if request.path == '/resources/' %}bg-dark-border{% endif %}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+                Resources
+            </a>
         </div>
 
         <!-- Integrations (all authenticated users) -->

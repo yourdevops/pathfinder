@@ -450,6 +450,187 @@ class Service(models.Model):
         return list(merged.values())
 
 
+# --- CI Workflow Domain Models ---
+
+
+class StepsRepository(models.Model):
+    """
+    A Git repository containing reusable CI step definitions.
+
+    Each repository is scanned to discover action.yml files
+    that define individual CI steps.
+    """
+    SCAN_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('scanning', 'Scanning'),
+        ('scanned', 'Scanned'),
+        ('error', 'Error'),
+    ]
+
+    id = models.BigAutoField(primary_key=True)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
+    name = models.CharField(
+        max_length=63,
+        unique=True,
+        validators=[dns_label_validator],
+        help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.'
+    )
+    git_url = models.URLField(max_length=500, unique=True)
+    default_branch = models.CharField(max_length=100, default='main')
+    connection = models.ForeignKey(
+        IntegrationConnection,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='steps_repositories'
+    )
+    scan_status = models.CharField(max_length=20, choices=SCAN_STATUS_CHOICES, default='pending')
+    scan_error = models.TextField(blank=True)
+    last_scanned_at = models.DateTimeField(null=True, blank=True)
+    created_by = models.CharField(max_length=150, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'core_steps_repository'
+        ordering = ['name']
+        verbose_name_plural = 'steps repositories'
+
+    def __str__(self):
+        return self.name
+
+
+class RuntimeFamily(models.Model):
+    """
+    A runtime family discovered from a steps repository.
+
+    Examples: python, node, go, java. Each family has a list
+    of supported versions.
+    """
+    id = models.BigAutoField(primary_key=True)
+    repository = models.ForeignKey(
+        StepsRepository,
+        on_delete=models.CASCADE,
+        related_name='runtimes'
+    )
+    name = models.CharField(max_length=63)  # e.g., 'python', 'node'
+    display_name = models.CharField(max_length=100, blank=True)  # e.g., 'Python', 'Node.js'
+    versions = models.JSONField(default=list)  # e.g., ["3.11", "3.12", "3.13"]
+
+    class Meta:
+        db_table = 'core_runtime_family'
+        unique_together = [['repository', 'name']]
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} ({self.repository.name})"
+
+
+class CIStep(models.Model):
+    """
+    A single CI step discovered from a steps repository.
+
+    Each step corresponds to a directory containing an action.yml
+    file that defines inputs, outputs, and execution.
+    """
+    PHASE_CHOICES = [
+        ('setup', 'Setup'),
+        ('build', 'Build'),
+        ('test', 'Test'),
+        ('package', 'Package'),
+    ]
+
+    id = models.BigAutoField(primary_key=True)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
+    repository = models.ForeignKey(
+        StepsRepository,
+        on_delete=models.CASCADE,
+        related_name='steps'
+    )
+    directory_name = models.CharField(max_length=255)  # e.g., 'setup-python'
+    name = models.CharField(max_length=255)  # from action.yml 'name'
+    description = models.TextField(blank=True)  # from action.yml 'description'
+    phase = models.CharField(max_length=20, choices=PHASE_CHOICES, blank=True)
+    runtime_constraints = models.JSONField(default=dict)  # e.g., {"python": ">=3.10"}
+    tags = models.JSONField(default=list)
+    produces = models.JSONField(null=True, blank=True)  # e.g., {"type": "container-image"}
+    inputs_schema = models.JSONField(default=dict)  # full inputs from action.yml
+    commit_sha = models.CharField(max_length=40, blank=True)
+    raw_metadata = models.JSONField(default=dict)  # full parsed action.yml
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'core_ci_step'
+        unique_together = [['repository', 'directory_name']]
+        ordering = ['phase', 'name']
+
+    def __str__(self):
+        return self.name
+
+
+class CIWorkflow(models.Model):
+    """
+    A composed CI workflow made of ordered CI steps.
+
+    Workflows define the full build pipeline for a service:
+    setup -> build -> test -> package.
+    """
+    id = models.BigAutoField(primary_key=True)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
+    name = models.CharField(
+        max_length=63,
+        unique=True,
+        validators=[dns_label_validator],
+        help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.'
+    )
+    description = models.TextField(blank=True)
+    runtime_family = models.CharField(max_length=63)  # e.g., 'python'
+    runtime_version = models.CharField(max_length=20)  # e.g., '3.12'
+    artifact_type = models.CharField(max_length=50, blank=True)  # derived from last package step
+    created_by = models.CharField(max_length=150, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'core_ci_workflow'
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
+class CIWorkflowStep(models.Model):
+    """
+    An ordered step within a CI workflow.
+
+    Links a CIStep to a CIWorkflow with a specific order
+    and optional per-step input configuration overrides.
+    """
+    id = models.BigAutoField(primary_key=True)
+    workflow = models.ForeignKey(
+        CIWorkflow,
+        on_delete=models.CASCADE,
+        related_name='workflow_steps'
+    )
+    step = models.ForeignKey(
+        CIStep,
+        on_delete=models.PROTECT,
+        related_name='workflow_usages'
+    )
+    order = models.IntegerField()
+    input_config = models.JSONField(default=dict)  # per-step overrides
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'core_ci_workflow_step'
+        unique_together = [['workflow', 'order']]
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.workflow.name} - Step {self.order}: {self.step.name}"
+
+
 # Register models with auditlog
 from auditlog.registry import auditlog
 
@@ -464,3 +645,7 @@ auditlog.register(IntegrationConnection, exclude_fields=['config_encrypted'])
 auditlog.register(ProjectConnection)
 auditlog.register(EnvironmentConnection)
 auditlog.register(Service)
+auditlog.register(StepsRepository)
+auditlog.register(CIStep)
+auditlog.register(CIWorkflow)
+auditlog.register(CIWorkflowStep)
