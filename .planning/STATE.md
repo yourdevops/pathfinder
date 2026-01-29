@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 5 complete - Ready for Phase 6 (Builds)
+**Current focus:** Phase 5.1 in progress - CI Workflows Builder (Plan 01 of 4 complete)
 
 ## Current Position
 
-Phase: 5 of 7 (Services)
-Plan: 4 of 4 in current phase - COMPLETED (all plans)
-Status: Phase complete
-Last activity: 2026-01-26 - Completed 05-04-PLAN.md (Service List and Detail)
+Phase: 5.1 of 7 (CI Workflows Builder)
+Plan: 1 of 4 in current phase
+Status: In progress
+Last activity: 2026-01-29 - Completed 05.1-01-PLAN.md (Blueprint Removal and CI Workflow Models)
 
-Progress: [====================================] 100% (Phase 5)
+Progress: [========                                ] 25% (Phase 5.1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 31
+- Total plans completed: 32
 - Average duration: 4 min
-- Total execution time: 2.25 hours
+- Total execution time: 2.5 hours
 
 **By Phase:**
 
@@ -34,10 +34,11 @@ Progress: [====================================] 100% (Phase 5)
 | 04-blueprints | 3 | 10 min | 3.3 min |
 | 04.1-replace-uuid-urls-with-slugs | 4 | 19 min | 4.75 min |
 | 05-services | 4 | 18 min | 4.5 min |
+| 05.1-ci-workflows-builder | 1 | 11 min | 11 min |
 
 **Recent Trend:**
-- Last 5 plans: 05-01 (1 min), 05-03 (4 min), 05-02 (8 min), 05-04 (5 min)
-- Trend: stable
+- Last 5 plans: 05-02 (8 min), 05-04 (5 min), 05-03 (4 min), 05-01 (1 min), 05.1-01 (11 min)
+- Trend: stable (05.1-01 larger due to major model migration + cleanup)
 
 *Updated after each plan completion*
 
@@ -104,7 +105,6 @@ Recent decisions affecting current work:
 | 04.1-04 | Connection names used as URL slug | Human-readable URLs like /connections/github-main/ |
 | 04.1-03 | User URLs remain UUID-based for privacy | Group remove_member keeps user_uuid for the user being removed |
 | 04.1-03 | Blueprint name lookup uses exact match | Already enforced by model validator |
-| 05-01 | PROTECT on_delete for blueprint ForeignKeys | Prevents orphan services when blueprints deleted |
 | 05-01 | Service status: draft, active, error | draft=not built, active=successful build, error=failed |
 | 05-01 | Env var merge: project first, service overrides | Locked project vars cannot be overridden at service level |
 | 05-02 | forms.py converted to forms/ package | Better organization as forms modules grow |
@@ -116,11 +116,15 @@ Recent decisions affecting current work:
 | 05-04 | Service URLs under projects namespace | URLs follow /projects/<project_name>/services/<service_name>/ pattern |
 | 05-04 | Wizard redirect to project detail | After service creation, redirects to projects:detail (services tab) |
 | 05-04 | Service sidebar navigation pattern | Details, Builds, Environments tabs with HTMX switching |
+| 05.1-01 | 4-step wizard: project, repo, config, review | Blueprint selection removed; project+name is the natural first step |
+| 05.1-01 | Resources moved to standalone nav item | Was nested under Blueprints; unrelated to CI Workflows |
+| 05.1-01 | Scaffold task passes None for template dir | Preserves existing scaffolding interface; CI template support added later |
 
 ### Roadmap Evolution
 
 - Phase 3.1 inserted after Phase 3: Unified sidebar navigation structure (URGENT) - 2026-01-26
 - Phase 4.1 inserted after Phase 4: Replace UUID URLs with Slugs - Use human-readable slugs instead of UUIDs in all URLs (URGENT) - 2026-01-26
+- Phase 5.1 inserted after Phase 5: CI Workflows Builder - Replace Blueprints with CI Workflows, steps catalog, workflow composer, GitHub Actions manifest preview (URGENT) - 2026-01-29
 
 ### Pending Todos
 
@@ -128,7 +132,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Phase 5 complete with service creation, scaffolding, list and detail pages
+None - Plan 01 complete, CI Workflow models and clean URLs ready for Plan 02
 
 ### Quick Tasks Completed
 
@@ -159,6 +163,6 @@ None - Phase 5 complete with service creation, scaffolding, list and detail page
 
 ## Session Continuity
 
-Last session: 2026-01-27
-Stopped at: Completed quick-022 (Wizard improvements and helper text)
+Last session: 2026-01-29
+Stopped at: Completed 05.1-01-PLAN.md (Blueprint Removal and CI Workflow Models)
 Resume file: None
