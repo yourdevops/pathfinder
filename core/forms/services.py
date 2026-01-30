@@ -182,8 +182,8 @@ class ConfigurationStepForm(forms.Form):
                     raise forms.ValidationError(f'Variable key "{key}" must be uppercase with underscores only.')
 
             return env_vars
-        except json.JSONDecodeError:
-            raise forms.ValidationError("Invalid JSON format for environment variables.")
+        except json.JSONDecodeError as err:
+            raise forms.ValidationError("Invalid JSON format for environment variables.") from err
 
 
 class ReviewStepForm(forms.Form):

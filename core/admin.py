@@ -16,7 +16,7 @@ from .models import (
 class CustomUserAdmin(UserAdmin):
     list_display = ["username", "email", "status", "source", "is_staff"]
     list_filter = ["status", "source", "is_staff", "is_superuser"]
-    fieldsets = UserAdmin.fieldsets + (("Pathfinder", {"fields": ("uuid", "status", "source", "external_id")}),)
+    fieldsets = [*UserAdmin.fieldsets, ("Pathfinder", {"fields": ("uuid", "status", "source", "external_id")})]
     readonly_fields = ["uuid"]
     search_fields = ["username", "email"]
 

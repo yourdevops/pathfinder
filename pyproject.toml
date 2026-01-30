@@ -60,6 +60,7 @@ select = [
 ]
 ignore = [
     "E501",  # line length handled by formatter
+    "RUF012",  # mutable class attrs - false positive on Django Meta/model fields
 ]
 
 [tool.ruff.lint.isort]

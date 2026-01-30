@@ -398,7 +398,11 @@ class ProjectCreateForm(forms.ModelForm):
         widgets = {
             "name": forms.TextInput(
                 attrs={
-                    "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
+                    "class": (
+                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
+                        " rounded-lg text-dark-text focus:outline-none"
+                        " focus:ring-2 focus:ring-dark-accent"
+                    ),
                     "placeholder": "my-project",
                     "pattern": "[a-z0-9][a-z0-9-]*[a-z0-9]|[a-z0-9]",
                     "title": "Lowercase letters, numbers, and hyphens only",
@@ -406,7 +410,11 @@ class ProjectCreateForm(forms.ModelForm):
             ),
             "description": forms.Textarea(
                 attrs={
-                    "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
+                    "class": (
+                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
+                        " rounded-lg text-dark-text focus:outline-none"
+                        " focus:ring-2 focus:ring-dark-accent"
+                    ),
                     "rows": 3,
                     "placeholder": "A brief description of this project",
                 }
@@ -435,13 +443,21 @@ class ProjectUpdateForm(forms.ModelForm):
         widgets = {
             "description": forms.Textarea(
                 attrs={
-                    "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
+                    "class": (
+                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
+                        " rounded-lg text-dark-text focus:outline-none"
+                        " focus:ring-2 focus:ring-dark-accent"
+                    ),
                     "rows": 3,
                 }
             ),
             "status": forms.Select(
                 attrs={
-                    "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
+                    "class": (
+                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
+                        " rounded-lg text-dark-text focus:outline-none"
+                        " focus:ring-2 focus:ring-dark-accent"
+                    ),
                 }
             ),
         }
@@ -456,13 +472,21 @@ class EnvironmentForm(forms.ModelForm):
         widgets = {
             "name": forms.TextInput(
                 attrs={
-                    "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
+                    "class": (
+                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
+                        " rounded-lg text-dark-text focus:outline-none"
+                        " focus:ring-2 focus:ring-dark-accent"
+                    ),
                     "placeholder": "e.g., dev, staging, production",
                 }
             ),
             "description": forms.Textarea(
                 attrs={
-                    "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
+                    "class": (
+                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
+                        " rounded-lg text-dark-text focus:outline-none"
+                        " focus:ring-2 focus:ring-dark-accent"
+                    ),
                     "rows": 2,
                 }
             ),
@@ -478,7 +502,11 @@ class EnvironmentForm(forms.ModelForm):
             ),
             "order": forms.NumberInput(
                 attrs={
-                    "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
+                    "class": (
+                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
+                        " rounded-lg text-dark-text focus:outline-none"
+                        " focus:ring-2 focus:ring-dark-accent"
+                    ),
                 }
             ),
         }
@@ -516,7 +544,11 @@ class AddProjectMemberForm(forms.Form):
         queryset=Group.objects.filter(status="active"),
         widget=forms.Select(
             attrs={
-                "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
+                "class": (
+                    "w-full px-3 py-2 bg-dark-bg border border-dark-border"
+                    " rounded-lg text-dark-text focus:outline-none"
+                    " focus:ring-2 focus:ring-dark-accent"
+                ),
             }
         ),
         label="Group",
@@ -525,7 +557,11 @@ class AddProjectMemberForm(forms.Form):
         choices=PROJECT_ROLE_CHOICES,
         widget=forms.Select(
             attrs={
-                "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
+                "class": (
+                    "w-full px-3 py-2 bg-dark-bg border border-dark-border"
+                    " rounded-lg text-dark-text focus:outline-none"
+                    " focus:ring-2 focus:ring-dark-accent"
+                ),
             }
         ),
         label="Role",
@@ -545,7 +581,11 @@ class AttachConnectionForm(forms.Form):
         label="Connection",
         widget=forms.Select(
             attrs={
-                "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
+                "class": (
+                    "w-full px-3 py-2 bg-dark-bg border border-dark-border"
+                    " rounded-lg text-dark-text focus:outline-none"
+                    " focus:ring-2 focus:ring-dark-accent"
+                ),
             }
         ),
     )
@@ -580,7 +620,11 @@ class ConnectionConfigUpdateForm(forms.Form):
         required=False,
         widget=forms.Textarea(
             attrs={
-                "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
+                "class": (
+                    "w-full px-3 py-2 bg-dark-bg border border-dark-border"
+                    " rounded-lg text-dark-text focus:outline-none"
+                    " focus:ring-2 focus:ring-dark-accent"
+                ),
                 "rows": 2,
                 "placeholder": "Optional description",
             }
@@ -616,7 +660,11 @@ class ConnectionConfigUpdateForm(forms.Form):
                             required=False,
                             widget=forms.PasswordInput(
                                 attrs={
-                                    "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
+                                    "class": (
+                                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
+                                        " rounded-lg text-dark-text focus:outline-none"
+                                        " focus:ring-2 focus:ring-dark-accent"
+                                    ),
                                     "placeholder": "••••••••",
                                     "autocomplete": "off",
                                 }
@@ -630,7 +678,11 @@ class ConnectionConfigUpdateForm(forms.Form):
                             initial=config.get(field_name, ""),
                             widget=forms.TextInput(
                                 attrs={
-                                    "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
+                                    "class": (
+                                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
+                                        " rounded-lg text-dark-text focus:outline-none"
+                                        " focus:ring-2 focus:ring-dark-accent"
+                                    ),
                                 }
                             ),
                             label=field_info.get("label", field_name),
@@ -647,7 +699,11 @@ class SiteConfigurationForm(forms.ModelForm):
         widgets = {
             "external_url": forms.URLInput(
                 attrs={
-                    "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
+                    "class": (
+                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
+                        " rounded-lg text-dark-text focus:outline-none"
+                        " focus:ring-2 focus:ring-dark-accent"
+                    ),
                     "placeholder": "https://pathfinder.example.com",
                 }
             ),

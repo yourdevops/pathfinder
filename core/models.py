@@ -193,16 +193,16 @@ class SiteConfiguration(models.Model):
     def __str__(self):
         return "Site Configuration"
 
+    def save(self, *args, **kwargs):
+        # Ensure only one instance exists
+        self.pk = 1
+        super().save(*args, **kwargs)
+
     @classmethod
     def get_instance(cls):
         """Get or create the singleton configuration instance."""
         obj, _ = cls.objects.get_or_create(pk=1)
         return obj
-
-    def save(self, *args, **kwargs):
-        # Ensure only one instance exists
-        self.pk = 1
-        super().save(*args, **kwargs)
 
 
 class IntegrationConnection(models.Model):
