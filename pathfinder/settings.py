@@ -87,11 +87,11 @@ TEMPLATES = [
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
+                "django.template.context_processors.csp",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "core.context_processors.user_roles",
                 "core.context_processors.navigation_context",
-                "django.template.context_processors.csp",
             ],
         },
     },
@@ -171,18 +171,19 @@ TASKS = {
     }
 }
 
-# Content Security Policy (Django 6.0 native)
+# Content Security Policy
 SECURE_CSP = {
     "default-src": [CSP.SELF],
     "script-src": [CSP.SELF, CSP.NONCE, "https://unpkg.com", "https://cdn.jsdelivr.net"],
-    "style-src": [CSP.SELF, CSP.UNSAFE_INLINE],
-    "img-src": [CSP.SELF, "data:"],
-    "connect-src": [CSP.SELF],
-    "font-src": [CSP.SELF],
+    "style-src": [CSP.SELF, CSP.NONCE],
+    # No iframes are used, so blocking them entirely is reasonable hardening
     "frame-src": [CSP.NONE],
+    # The <object>/<embed> have no legitimate use in this app and are a classic attack vector.
     "object-src": [CSP.NONE],
+    # Do not fall back to default-src:
     "base-uri": [CSP.SELF],
-    "form-action": [CSP.SELF, "https://github.com"],
+    "form-action": [CSP.SELF],
+    "frame-ancestors": [CSP.NONE],
 }
 
 # Integration health check interval (seconds)
