@@ -136,8 +136,6 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
     """
     from core.models import Service, IntegrationConnection
     from core.git_utils import (
-        build_authenticated_git_url,
-        cleanup_repo,
         get_template_variables,
         scaffold_new_repository,
         scaffold_existing_repository,

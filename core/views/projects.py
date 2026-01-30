@@ -7,7 +7,6 @@ from django.shortcuts import redirect, get_object_or_404, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.vary import vary_on_headers
 from django.contrib import messages
-from django_htmx.http import HttpResponseClientRedirect
 
 from core.models import (
     Project,
@@ -16,7 +15,6 @@ from core.models import (
     Group,
     ProjectConnection,
     EnvironmentConnection,
-    Service,
 )
 from core.forms import (
     ProjectCreateForm,
@@ -30,7 +28,6 @@ from core.permissions import (
     ProjectViewerMixin,
     ProjectContributorMixin,
     ProjectOwnerMixin,
-    can_access_project,
 )
 
 

@@ -7,7 +7,7 @@ enabling container lifecycle management for deployments.
 
 from typing import Dict, Any, List
 import docker
-from docker.errors import DockerException, NotFound, APIError
+from docker.errors import DockerException, NotFound
 from plugins.base import BasePlugin
 
 
@@ -88,12 +88,11 @@ class DockerPlugin(BasePlugin):
         # TLS configuration
         tls_config = None
         if config.get("tls_enabled"):
+            cert = config.get("tls_client_cert")
+            key = config.get("tls_client_key")
             tls_config = docker.tls.TLSConfig(
                 ca_cert=config.get("tls_ca_cert"),
-                client_cert=(
-                    config.get("tls_client_cert"),
-                    config.get("tls_client_key"),
-                ),
+                client_cert=(cert, key) if cert and key else None,
                 verify=True,
             )
 
@@ -139,7 +138,7 @@ class DockerPlugin(BasePlugin):
             }
 
     def run_container(
-        self, config: Dict[str, Any], image: str, name: str = None, **kwargs
+        self, config: Dict[str, Any], image: str, name: str | None = None, **kwargs
     ) -> Dict[str, Any]:
         """
         Run a container.

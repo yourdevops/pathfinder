@@ -10,7 +10,7 @@ import re
 import shutil
 import tempfile
 from typing import Optional
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse
 
 import git
 import jinja2
@@ -164,7 +164,7 @@ def clone_repo_shallow(
 
         return repo, temp_dir
 
-    except Exception as e:
+    except Exception:
         # Clean up on failure
         shutil.rmtree(temp_dir, ignore_errors=True)
         raise

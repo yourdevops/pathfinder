@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth import login
-from django.urls import reverse, NoReverseMatch
+from django.urls import NoReverseMatch
 
 from ..forms import UnlockForm, AdminRegistrationForm
 from ..utils import verify_unlock_token, complete_setup, get_unlock_token_path

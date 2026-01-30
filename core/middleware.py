@@ -1,5 +1,4 @@
 from django.shortcuts import redirect
-from django.urls import reverse
 from .utils import is_setup_complete, generate_unlock_token
 
 

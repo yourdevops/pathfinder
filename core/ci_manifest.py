@@ -179,7 +179,7 @@ def generate_github_actions_manifest(workflow) -> str:
             if step.commit_sha:
                 uses_ref += f"@{step.commit_sha}"
             else:
-                uses_ref += f"@main"
+                uses_ref += "@main"
         else:
             uses_ref = f"./ci-steps/{step.directory_name}"
 

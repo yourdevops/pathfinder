@@ -2,13 +2,11 @@
 
 import json
 import secrets
-from urllib.parse import urlencode
 
 from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
-from django.http import HttpResponseBadRequest
 import requests
 
 from core.models import IntegrationConnection, SiteConfiguration
@@ -352,7 +350,7 @@ class GitHubInstallationCallbackView(LoginRequiredMixin, OperatorRequiredMixin, 
                 connection.status = "active"
                 connection.save()
                 messages.success(
-                    request, f"GitHub App installed successfully on your organization!"
+                    request, "GitHub App installed successfully on your organization!"
                 )
                 return redirect("connections:detail", connection_name=connection.name)
         except Exception as e:

@@ -1,6 +1,5 @@
 """Validation utilities for DNS-compatible naming."""
 
-import re
 from django.core.validators import RegexValidator
 
 # RFC 1123 label: lowercase letters, numbers, hyphens
