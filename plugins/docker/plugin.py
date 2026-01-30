@@ -4,6 +4,7 @@ Docker plugin for container deployment operations.
 This plugin provides connectivity to Docker daemons via socket or TCP,
 enabling container lifecycle management for deployments.
 """
+
 from typing import Dict, Any, List
 import docker
 from docker.errors import DockerException, NotFound, APIError
@@ -17,51 +18,53 @@ class DockerPlugin(BasePlugin):
     Supports connecting to Docker via Unix socket or TCP (with optional TLS).
     Provides container lifecycle operations: run, status, stop, logs.
     """
-    name = 'docker'
-    display_name = 'Docker'
-    category = 'deploy'
-    capabilities = ['deploy', 'get_status', 'stop', 'logs']
-    icon = 'docker'
+
+    name = "docker"
+    display_name = "Docker"
+    category = "deploy"
+    capabilities = ["deploy", "get_status", "stop", "logs"]
+    icon = "docker"
 
     def get_config_schema(self) -> Dict[str, Any]:
         """Return configuration schema for Docker connections."""
         return {
-            'socket_path': {
-                'type': 'string',
-                'required': True,
-                'default': '/var/run/docker.sock',
-                'label': 'Docker Socket Path',
-                'editable': True,
+            "socket_path": {
+                "type": "string",
+                "required": True,
+                "default": "/var/run/docker.sock",
+                "label": "Docker Socket Path",
+                "editable": True,
             },
-            'tls_enabled': {
-                'type': 'boolean',
-                'required': False,
-                'default': False,
-                'label': 'TLS Enabled'
+            "tls_enabled": {
+                "type": "boolean",
+                "required": False,
+                "default": False,
+                "label": "TLS Enabled",
             },
-            'tls_ca_cert': {
-                'type': 'string',
-                'required': False,
-                'sensitive': True,
-                'label': 'TLS CA Certificate'
+            "tls_ca_cert": {
+                "type": "string",
+                "required": False,
+                "sensitive": True,
+                "label": "TLS CA Certificate",
             },
-            'tls_client_cert': {
-                'type': 'string',
-                'required': False,
-                'sensitive': True,
-                'label': 'TLS Client Certificate'
+            "tls_client_cert": {
+                "type": "string",
+                "required": False,
+                "sensitive": True,
+                "label": "TLS Client Certificate",
             },
-            'tls_client_key': {
-                'type': 'string',
-                'required': False,
-                'sensitive': True,
-                'label': 'TLS Client Key'
+            "tls_client_key": {
+                "type": "string",
+                "required": False,
+                "sensitive": True,
+                "label": "TLS Client Key",
             },
         }
 
     def get_wizard_forms(self) -> List:
         """Return form classes for connection setup."""
         from .forms import DockerConnectionForm
+
         return [DockerConnectionForm]  # Single form, not a wizard
 
     def _get_docker_client(self, config: Dict[str, Any]) -> docker.DockerClient:
@@ -74,21 +77,24 @@ class DockerPlugin(BasePlugin):
         Returns:
             Configured Docker client instance.
         """
-        socket_path = config.get('socket_path', '/var/run/docker.sock')
+        socket_path = config.get("socket_path", "/var/run/docker.sock")
 
         # Determine base URL format
-        if socket_path.startswith(('tcp://', 'https://', 'http://')):
+        if socket_path.startswith(("tcp://", "https://", "http://")):
             base_url = socket_path
         else:
-            base_url = f'unix://{socket_path}'
+            base_url = f"unix://{socket_path}"
 
         # TLS configuration
         tls_config = None
-        if config.get('tls_enabled'):
+        if config.get("tls_enabled"):
             tls_config = docker.tls.TLSConfig(
-                ca_cert=config.get('tls_ca_cert'),
-                client_cert=(config.get('tls_client_cert'), config.get('tls_client_key')),
-                verify=True
+                ca_cert=config.get("tls_ca_cert"),
+                client_cert=(
+                    config.get("tls_client_cert"),
+                    config.get("tls_client_key"),
+                ),
+                verify=True,
             )
 
         return docker.DockerClient(base_url=base_url, tls=tls_config)
@@ -111,33 +117,30 @@ class DockerPlugin(BasePlugin):
             info = client.info()
 
             return {
-                'status': 'healthy',
-                'message': f'Docker {version.get("Version", "unknown")} - {info.get("ContainersRunning", 0)} containers running',
-                'details': {
-                    'version': version.get('Version'),
-                    'api_version': version.get('ApiVersion'),
-                    'os': version.get('Os'),
-                    'arch': version.get('Arch'),
-                    'containers_running': info.get('ContainersRunning', 0),
-                    'containers_total': info.get('Containers', 0),
-                    'images': info.get('Images', 0),
-                }
+                "status": "healthy",
+                "message": f"Docker {version.get('Version', 'unknown')} - {info.get('ContainersRunning', 0)} containers running",
+                "details": {
+                    "version": version.get("Version"),
+                    "api_version": version.get("ApiVersion"),
+                    "os": version.get("Os"),
+                    "arch": version.get("Arch"),
+                    "containers_running": info.get("ContainersRunning", 0),
+                    "containers_total": info.get("Containers", 0),
+                    "images": info.get("Images", 0),
+                },
             }
         except DockerException as e:
-            return {
-                'status': 'unhealthy',
-                'message': str(e),
-                'details': {}
-            }
+            return {"status": "unhealthy", "message": str(e), "details": {}}
         except Exception as e:
             return {
-                'status': 'unknown',
-                'message': f'Unexpected error: {e}',
-                'details': {}
+                "status": "unknown",
+                "message": f"Unexpected error: {e}",
+                "details": {},
             }
 
-    def run_container(self, config: Dict[str, Any], image: str,
-                      name: str = None, **kwargs) -> Dict[str, Any]:
+    def run_container(
+        self, config: Dict[str, Any], image: str, name: str = None, **kwargs
+    ) -> Dict[str, Any]:
         """
         Run a container.
 
@@ -151,21 +154,17 @@ class DockerPlugin(BasePlugin):
             Container info dict with id, short_id, name, status.
         """
         client = self._get_docker_client(config)
-        container = client.containers.run(
-            image,
-            name=name,
-            detach=True,
-            **kwargs
-        )
+        container = client.containers.run(image, name=name, detach=True, **kwargs)
         return {
-            'id': container.id,
-            'short_id': container.short_id,
-            'name': container.name,
-            'status': container.status,
+            "id": container.id,
+            "short_id": container.short_id,
+            "name": container.name,
+            "status": container.status,
         }
 
-    def get_container_status(self, config: Dict[str, Any],
-                             container_id: str) -> Dict[str, Any]:
+    def get_container_status(
+        self, config: Dict[str, Any], container_id: str
+    ) -> Dict[str, Any]:
         """
         Get container status.
 
@@ -181,22 +180,25 @@ class DockerPlugin(BasePlugin):
             container = client.containers.get(container_id)
             container.reload()
             return {
-                'id': container.id,
-                'name': container.name,
-                'status': container.status,
-                'health': container.attrs.get('State', {}).get('Health', {}).get('Status', 'none'),
-                'running': container.status == 'running',
+                "id": container.id,
+                "name": container.name,
+                "status": container.status,
+                "health": container.attrs.get("State", {})
+                .get("Health", {})
+                .get("Status", "none"),
+                "running": container.status == "running",
             }
         except NotFound:
             return {
-                'id': container_id,
-                'status': 'not_found',
-                'running': False,
-                'error': 'Container not found'
+                "id": container_id,
+                "status": "not_found",
+                "running": False,
+                "error": "Container not found",
             }
 
-    def stop_container(self, config: Dict[str, Any],
-                       container_id: str, timeout: int = 10) -> Dict[str, Any]:
+    def stop_container(
+        self, config: Dict[str, Any], container_id: str, timeout: int = 10
+    ) -> Dict[str, Any]:
         """
         Stop a container.
 
@@ -211,10 +213,11 @@ class DockerPlugin(BasePlugin):
         client = self._get_docker_client(config)
         container = client.containers.get(container_id)
         container.stop(timeout=timeout)
-        return {'status': 'stopped', 'id': container_id}
+        return {"status": "stopped", "id": container_id}
 
-    def get_container_logs(self, config: Dict[str, Any],
-                           container_id: str, tail: int = 100) -> str:
+    def get_container_logs(
+        self, config: Dict[str, Any], container_id: str, tail: int = 100
+    ) -> str:
         """
         Get container logs.
 
@@ -228,9 +231,10 @@ class DockerPlugin(BasePlugin):
         """
         client = self._get_docker_client(config)
         container = client.containers.get(container_id)
-        return container.logs(tail=tail, timestamps=True).decode('utf-8')
+        return container.logs(tail=tail, timestamps=True).decode("utf-8")
 
     def get_urlpatterns(self):
         """Return URL patterns for this plugin's views."""
         from . import urls
+
         return urls.urlpatterns

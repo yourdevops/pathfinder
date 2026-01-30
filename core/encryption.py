@@ -10,6 +10,7 @@ The encryption key is sourced from (in order of priority):
 
 For production deployments, use the PTF_ENCRYPTION_KEY environment variable.
 """
+
 import json
 import logging
 import os
@@ -37,14 +38,16 @@ def get_encryption_key() -> bytes:
         The encryption key as bytes.
     """
     # Check environment variable first
-    env_key = os.environ.get('PTF_ENCRYPTION_KEY')
+    env_key = os.environ.get("PTF_ENCRYPTION_KEY")
     if env_key:
-        logger.debug("Using encryption key from PTF_ENCRYPTION_KEY environment variable")
-        return env_key.encode('utf-8')
+        logger.debug(
+            "Using encryption key from PTF_ENCRYPTION_KEY environment variable"
+        )
+        return env_key.encode("utf-8")
 
     # Check secrets file
-    secrets_dir = Path(__file__).resolve().parent.parent / 'secrets'
-    key_file = secrets_dir / 'encryption.key'
+    secrets_dir = Path(__file__).resolve().parent.parent / "secrets"
+    key_file = secrets_dir / "encryption.key"
 
     if key_file.exists():
         logger.debug(f"Using encryption key from {key_file}")
@@ -91,7 +94,7 @@ def encrypt_config(config: dict) -> bytes:
         Encrypted bytes that can be stored in BinaryField.
     """
     fernet = get_fernet()
-    json_bytes = json.dumps(config).encode('utf-8')
+    json_bytes = json.dumps(config).encode("utf-8")
     return fernet.encrypt(json_bytes)
 
 
@@ -111,4 +114,4 @@ def decrypt_config(encrypted: bytes) -> dict:
     """
     fernet = get_fernet()
     decrypted_bytes = fernet.decrypt(encrypted)
-    return json.loads(decrypted_bytes.decode('utf-8'))
+    return json.loads(decrypted_bytes.decode("utf-8"))

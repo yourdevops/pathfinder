@@ -5,41 +5,84 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0003_integrationconnection'),
+        ("core", "0003_integrationconnection"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='EnvironmentConnection',
+            name="EnvironmentConnection",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('is_default', models.BooleanField(default=False)),
-                ('config_override', models.JSONField(blank=True, default=dict)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('created_by', models.CharField(blank=True, max_length=150)),
-                ('connection', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='environment_attachments', to='core.integrationconnection')),
-                ('environment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='connections', to='core.environment')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("is_default", models.BooleanField(default=False)),
+                ("config_override", models.JSONField(blank=True, default=dict)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("created_by", models.CharField(blank=True, max_length=150)),
+                (
+                    "connection",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="environment_attachments",
+                        to="core.integrationconnection",
+                    ),
+                ),
+                (
+                    "environment",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="connections",
+                        to="core.environment",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'core_environment_connection',
-                'unique_together': {('environment', 'connection')},
+                "db_table": "core_environment_connection",
+                "unique_together": {("environment", "connection")},
             },
         ),
         migrations.CreateModel(
-            name='ProjectConnection',
+            name="ProjectConnection",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('is_default', models.BooleanField(default=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('created_by', models.CharField(blank=True, max_length=150)),
-                ('connection', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='project_attachments', to='core.integrationconnection')),
-                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='connections', to='core.project')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("is_default", models.BooleanField(default=False)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("created_by", models.CharField(blank=True, max_length=150)),
+                (
+                    "connection",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="project_attachments",
+                        to="core.integrationconnection",
+                    ),
+                ),
+                (
+                    "project",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="connections",
+                        to="core.project",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'core_project_connection',
-                'unique_together': {('project', 'connection')},
+                "db_table": "core_project_connection",
+                "unique_together": {("project", "connection")},
             },
         ),
     ]

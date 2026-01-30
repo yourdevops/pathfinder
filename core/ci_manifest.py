@@ -1,4 +1,5 @@
 """CI Manifest utilities: runtime compatibility checking and GitHub Actions manifest generation."""
+
 import re
 
 import semver
@@ -15,10 +16,10 @@ def normalize_version(version_str: str) -> str:
     "3" -> "3.0.0"
     "1.2.3" -> "1.2.3"
     """
-    parts = version_str.strip().split('.')
+    parts = version_str.strip().split(".")
     while len(parts) < 3:
-        parts.append('0')
-    return '.'.join(parts[:3])
+        parts.append("0")
+    return ".".join(parts[:3])
 
 
 def is_step_compatible(step, runtime_family: str, runtime_version: str) -> bool:
@@ -43,15 +44,15 @@ def is_step_compatible(step, runtime_family: str, runtime_version: str) -> bool:
     constraint_value = constraints[runtime_family]
 
     # Wildcard matches all versions
-    if constraint_value == '*':
+    if constraint_value == "*":
         return True
 
     # Parse constraint: e.g. ">=3.10", "<4.0", "==3.12"
-    match = re.match(r'^(>=|<=|>|<|==|!=|~=)?\s*(.+)$', str(constraint_value))
+    match = re.match(r"^(>=|<=|>|<|==|!=|~=)?\s*(.+)$", str(constraint_value))
     if not match:
         return False
 
-    operator = match.group(1) or '>='
+    operator = match.group(1) or ">="
     constraint_ver_str = match.group(2).strip()
 
     try:
@@ -62,21 +63,24 @@ def is_step_compatible(step, runtime_family: str, runtime_version: str) -> bool:
         constraint_ver = semver.Version.parse(normalized_constraint)
 
         # Map operators to comparisons
-        if operator == '>=':
+        if operator == ">=":
             return runtime_ver >= constraint_ver
-        elif operator == '<=':
+        elif operator == "<=":
             return runtime_ver <= constraint_ver
-        elif operator == '>':
+        elif operator == ">":
             return runtime_ver > constraint_ver
-        elif operator == '<':
+        elif operator == "<":
             return runtime_ver < constraint_ver
-        elif operator == '==':
+        elif operator == "==":
             return runtime_ver == constraint_ver
-        elif operator == '!=':
+        elif operator == "!=":
             return runtime_ver != constraint_ver
-        elif operator == '~=':
+        elif operator == "~=":
             # Compatible release: ~=3.10 means >=3.10, <4.0
-            return runtime_ver >= constraint_ver and runtime_ver.major == constraint_ver.major
+            return (
+                runtime_ver >= constraint_ver
+                and runtime_ver.major == constraint_ver.major
+            )
         else:
             return False
     except ValueError:
@@ -94,7 +98,9 @@ def get_compatible_steps(runtime_family: str, runtime_version: str):
     Returns:
         Tuple of (compatible_steps, incompatible_steps), both ordered by phase then name.
     """
-    all_steps = CIStep.objects.all().select_related('repository').order_by('phase', 'name')
+    all_steps = (
+        CIStep.objects.all().select_related("repository").order_by("phase", "name")
+    )
 
     compatible = []
     incompatible = []
@@ -127,41 +133,49 @@ def generate_github_actions_manifest(workflow) -> str:
     from core.git_utils import parse_git_url
 
     manifest = {
-        'name': f'CI - {workflow.name}',
-        'on': {
-            'push': {'branches': ['main']},
+        "name": f"CI - {workflow.name}",
+        "on": {
+            "push": {"branches": ["main"]},
         },
-        'jobs': {
-            'build': {
-                'runs-on': 'ubuntu-latest',
-                'steps': [],
+        "jobs": {
+            "build": {
+                "runs-on": "ubuntu-latest",
+                "steps": [],
             },
         },
     }
 
-    steps_list = manifest['jobs']['build']['steps']
+    steps_list = manifest["jobs"]["build"]["steps"]
 
     # Auto-inject: checkout
-    steps_list.append({
-        'name': 'Checkout',
-        'uses': 'actions/checkout@v4',
-    })
+    steps_list.append(
+        {
+            "name": "Checkout",
+            "uses": "actions/checkout@v4",
+        }
+    )
 
     # Auto-inject: SSP Notify Start
-    steps_list.append({
-        'name': 'Notify SSP - Build Started',
-        'uses': './ci-steps/ssp-notify-start',
-    })
+    steps_list.append(
+        {
+            "name": "Notify SSP - Build Started",
+            "uses": "./ci-steps/ssp-notify-start",
+        }
+    )
 
     # User-composed steps
-    for ws in workflow.workflow_steps.select_related('step__repository').order_by('order'):
+    for ws in workflow.workflow_steps.select_related("step__repository").order_by(
+        "order"
+    ):
         step = ws.step
         repo = step.repository
 
         # Build uses reference
         parsed = parse_git_url(repo.git_url)
-        if parsed and parsed.get('owner') and parsed.get('repo'):
-            uses_ref = f"{parsed['owner']}/{parsed['repo']}/ci-steps/{step.directory_name}"
+        if parsed and parsed.get("owner") and parsed.get("repo"):
+            uses_ref = (
+                f"{parsed['owner']}/{parsed['repo']}/ci-steps/{step.directory_name}"
+            )
             if step.commit_sha:
                 uses_ref += f"@{step.commit_sha}"
             else:
@@ -170,18 +184,20 @@ def generate_github_actions_manifest(workflow) -> str:
             uses_ref = f"./ci-steps/{step.directory_name}"
 
         step_entry = {
-            'name': step.name,
-            'uses': uses_ref,
+            "name": step.name,
+            "uses": uses_ref,
         }
         if ws.input_config:
-            step_entry['with'] = ws.input_config
+            step_entry["with"] = ws.input_config
 
         steps_list.append(step_entry)
 
     # Auto-inject: SSP Notify Complete
-    steps_list.append({
-        'name': 'Notify SSP - Build Complete',
-        'uses': './ci-steps/ssp-notify-complete',
-    })
+    steps_list.append(
+        {
+            "name": "Notify SSP - Build Complete",
+            "uses": "./ci-steps/ssp-notify-complete",
+        }
+    )
 
     return yaml.dump(manifest, default_flow_style=False, sort_keys=False)

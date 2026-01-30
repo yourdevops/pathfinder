@@ -6,57 +6,97 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0005_add_site_configuration_and_pending_status'),
+        ("core", "0005_add_site_configuration_and_pending_status"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Blueprint',
+            name="Blueprint",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('uuid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
-                ('git_url', models.URLField(max_length=500, unique=True)),
-                ('default_branch', models.CharField(default='main', max_length=100)),
-                ('name', models.CharField(blank=True, max_length=100)),
-                ('description', models.TextField(blank=True)),
-                ('tags', models.JSONField(default=list)),
-                ('ci_plugin', models.CharField(blank=True, max_length=63)),
-                ('deploy_plugin', models.CharField(blank=True, max_length=63)),
-                ('manifest', models.JSONField(default=dict)),
-                ('sync_status', models.CharField(choices=[('pending', 'Pending'), ('syncing', 'Syncing'), ('synced', 'Synced'), ('error', 'Error')], default='pending', max_length=20)),
-                ('sync_error', models.TextField(blank=True)),
-                ('last_synced_at', models.DateTimeField(blank=True, null=True)),
-                ('created_by', models.CharField(blank=True, max_length=150)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('connection', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='blueprints', to='core.integrationconnection')),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                (
+                    "uuid",
+                    models.UUIDField(
+                        db_index=True, default=uuid.uuid4, editable=False, unique=True
+                    ),
+                ),
+                ("git_url", models.URLField(max_length=500, unique=True)),
+                ("default_branch", models.CharField(default="main", max_length=100)),
+                ("name", models.CharField(blank=True, max_length=100)),
+                ("description", models.TextField(blank=True)),
+                ("tags", models.JSONField(default=list)),
+                ("ci_plugin", models.CharField(blank=True, max_length=63)),
+                ("deploy_plugin", models.CharField(blank=True, max_length=63)),
+                ("manifest", models.JSONField(default=dict)),
+                (
+                    "sync_status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("syncing", "Syncing"),
+                            ("synced", "Synced"),
+                            ("error", "Error"),
+                        ],
+                        default="pending",
+                        max_length=20,
+                    ),
+                ),
+                ("sync_error", models.TextField(blank=True)),
+                ("last_synced_at", models.DateTimeField(blank=True, null=True)),
+                ("created_by", models.CharField(blank=True, max_length=150)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "connection",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="blueprints",
+                        to="core.integrationconnection",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'core_blueprint',
-                'ordering': ['name', 'created_at'],
+                "db_table": "core_blueprint",
+                "ordering": ["name", "created_at"],
             },
         ),
         migrations.CreateModel(
-            name='BlueprintVersion',
+            name="BlueprintVersion",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('tag_name', models.CharField(max_length=100)),
-                ('commit_sha', models.CharField(blank=True, max_length=40)),
-                ('major', models.IntegerField(default=0)),
-                ('minor', models.IntegerField(default=0)),
-                ('patch', models.IntegerField(default=0)),
-                ('prerelease', models.CharField(blank=True, max_length=100)),
-                ('is_prerelease', models.BooleanField(default=False)),
-                ('sort_key', models.CharField(blank=True, max_length=100)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('blueprint', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='versions', to='core.blueprint')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("tag_name", models.CharField(max_length=100)),
+                ("commit_sha", models.CharField(blank=True, max_length=40)),
+                ("major", models.IntegerField(default=0)),
+                ("minor", models.IntegerField(default=0)),
+                ("patch", models.IntegerField(default=0)),
+                ("prerelease", models.CharField(blank=True, max_length=100)),
+                ("is_prerelease", models.BooleanField(default=False)),
+                ("sort_key", models.CharField(blank=True, max_length=100)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "blueprint",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="versions",
+                        to="core.blueprint",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'core_blueprint_version',
-                'ordering': ['-sort_key'],
-                'unique_together': {('blueprint', 'tag_name')},
+                "db_table": "core_blueprint_version",
+                "ordering": ["-sort_key"],
+                "unique_together": {("blueprint", "tag_name")},
             },
         ),
     ]

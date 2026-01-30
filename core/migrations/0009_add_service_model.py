@@ -7,39 +7,100 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0008_slug_url_refactor'),
+        ("core", "0008_slug_url_refactor"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Service',
+            name="Service",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('uuid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
-                ('name', models.CharField(help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.', max_length=63, validators=[django.core.validators.RegexValidator(code='invalid_dns_label', message='Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. Max 63 characters, no leading/trailing hyphens.', regex='^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$|^[a-z0-9]$')])),
-                ('description', models.TextField(blank=True)),
-                ('repo_url', models.URLField(blank=True, max_length=500)),
-                ('repo_branch', models.CharField(default='main', max_length=100)),
-                ('repo_is_new', models.BooleanField(default=True)),
-                ('env_vars', models.JSONField(default=list)),
-                ('status', models.CharField(choices=[('draft', 'Draft'), ('active', 'Active'), ('error', 'Error')], default='draft', max_length=20)),
-                ('scaffold_status', models.CharField(choices=[('pending', 'Pending'), ('running', 'Running'), ('success', 'Success'), ('failed', 'Failed')], default='pending', max_length=20)),
-                ('scaffold_error', models.TextField(blank=True)),
-                ('current_build_id', models.IntegerField(blank=True, null=True)),
-                ('current_artifact_ref', models.CharField(blank=True, max_length=255)),
-                ('created_by', models.CharField(blank=True, max_length=150)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('blueprint', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='services', to='core.blueprint')),
-                ('blueprint_version', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='services', to='core.blueprintversion')),
-                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='services', to='core.project')),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                (
+                    "uuid",
+                    models.UUIDField(
+                        db_index=True, default=uuid.uuid4, editable=False, unique=True
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.",
+                        max_length=63,
+                        validators=[
+                            django.core.validators.RegexValidator(
+                                code="invalid_dns_label",
+                                message="Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. Max 63 characters, no leading/trailing hyphens.",
+                                regex="^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$|^[a-z0-9]$",
+                            )
+                        ],
+                    ),
+                ),
+                ("description", models.TextField(blank=True)),
+                ("repo_url", models.URLField(blank=True, max_length=500)),
+                ("repo_branch", models.CharField(default="main", max_length=100)),
+                ("repo_is_new", models.BooleanField(default=True)),
+                ("env_vars", models.JSONField(default=list)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("draft", "Draft"),
+                            ("active", "Active"),
+                            ("error", "Error"),
+                        ],
+                        default="draft",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "scaffold_status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("running", "Running"),
+                            ("success", "Success"),
+                            ("failed", "Failed"),
+                        ],
+                        default="pending",
+                        max_length=20,
+                    ),
+                ),
+                ("scaffold_error", models.TextField(blank=True)),
+                ("current_build_id", models.IntegerField(blank=True, null=True)),
+                ("current_artifact_ref", models.CharField(blank=True, max_length=255)),
+                ("created_by", models.CharField(blank=True, max_length=150)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "blueprint",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="services",
+                        to="core.blueprint",
+                    ),
+                ),
+                (
+                    "blueprint_version",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="services",
+                        to="core.blueprintversion",
+                    ),
+                ),
+                (
+                    "project",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="services",
+                        to="core.project",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'core_service',
-                'ordering': ['name'],
-                'unique_together': {('project', 'name')},
+                "db_table": "core_service",
+                "ordering": ["name"],
+                "unique_together": {("project", "name")},
             },
         ),
     ]

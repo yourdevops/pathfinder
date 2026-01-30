@@ -7,107 +7,210 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0010_remove_blueprints_and_service_fks'),
+        ("core", "0010_remove_blueprints_and_service_fks"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='CIWorkflow',
+            name="CIWorkflow",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('uuid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
-                ('name', models.CharField(help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.', max_length=63, unique=True, validators=[django.core.validators.RegexValidator(code='invalid_dns_label', message='Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. Max 63 characters, no leading/trailing hyphens.', regex='^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$|^[a-z0-9]$')])),
-                ('description', models.TextField(blank=True)),
-                ('runtime_family', models.CharField(max_length=63)),
-                ('runtime_version', models.CharField(max_length=20)),
-                ('artifact_type', models.CharField(blank=True, max_length=50)),
-                ('created_by', models.CharField(blank=True, max_length=150)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                (
+                    "uuid",
+                    models.UUIDField(
+                        db_index=True, default=uuid.uuid4, editable=False, unique=True
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.",
+                        max_length=63,
+                        unique=True,
+                        validators=[
+                            django.core.validators.RegexValidator(
+                                code="invalid_dns_label",
+                                message="Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. Max 63 characters, no leading/trailing hyphens.",
+                                regex="^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$|^[a-z0-9]$",
+                            )
+                        ],
+                    ),
+                ),
+                ("description", models.TextField(blank=True)),
+                ("runtime_family", models.CharField(max_length=63)),
+                ("runtime_version", models.CharField(max_length=20)),
+                ("artifact_type", models.CharField(blank=True, max_length=50)),
+                ("created_by", models.CharField(blank=True, max_length=150)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'db_table': 'core_ci_workflow',
-                'ordering': ['name'],
+                "db_table": "core_ci_workflow",
+                "ordering": ["name"],
             },
         ),
         migrations.CreateModel(
-            name='StepsRepository',
+            name="StepsRepository",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('uuid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
-                ('name', models.CharField(help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.', max_length=63, unique=True, validators=[django.core.validators.RegexValidator(code='invalid_dns_label', message='Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. Max 63 characters, no leading/trailing hyphens.', regex='^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$|^[a-z0-9]$')])),
-                ('git_url', models.URLField(max_length=500, unique=True)),
-                ('default_branch', models.CharField(default='main', max_length=100)),
-                ('scan_status', models.CharField(choices=[('pending', 'Pending'), ('scanning', 'Scanning'), ('scanned', 'Scanned'), ('error', 'Error')], default='pending', max_length=20)),
-                ('scan_error', models.TextField(blank=True)),
-                ('last_scanned_at', models.DateTimeField(blank=True, null=True)),
-                ('created_by', models.CharField(blank=True, max_length=150)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('connection', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='steps_repositories', to='core.integrationconnection')),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                (
+                    "uuid",
+                    models.UUIDField(
+                        db_index=True, default=uuid.uuid4, editable=False, unique=True
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        help_text="DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.",
+                        max_length=63,
+                        unique=True,
+                        validators=[
+                            django.core.validators.RegexValidator(
+                                code="invalid_dns_label",
+                                message="Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. Max 63 characters, no leading/trailing hyphens.",
+                                regex="^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$|^[a-z0-9]$",
+                            )
+                        ],
+                    ),
+                ),
+                ("git_url", models.URLField(max_length=500, unique=True)),
+                ("default_branch", models.CharField(default="main", max_length=100)),
+                (
+                    "scan_status",
+                    models.CharField(
+                        choices=[
+                            ("pending", "Pending"),
+                            ("scanning", "Scanning"),
+                            ("scanned", "Scanned"),
+                            ("error", "Error"),
+                        ],
+                        default="pending",
+                        max_length=20,
+                    ),
+                ),
+                ("scan_error", models.TextField(blank=True)),
+                ("last_scanned_at", models.DateTimeField(blank=True, null=True)),
+                ("created_by", models.CharField(blank=True, max_length=150)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "connection",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="steps_repositories",
+                        to="core.integrationconnection",
+                    ),
+                ),
             ],
             options={
-                'verbose_name_plural': 'steps repositories',
-                'db_table': 'core_steps_repository',
-                'ordering': ['name'],
+                "verbose_name_plural": "steps repositories",
+                "db_table": "core_steps_repository",
+                "ordering": ["name"],
             },
         ),
         migrations.CreateModel(
-            name='CIStep',
+            name="CIStep",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('uuid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
-                ('directory_name', models.CharField(max_length=255)),
-                ('name', models.CharField(max_length=255)),
-                ('description', models.TextField(blank=True)),
-                ('phase', models.CharField(blank=True, choices=[('setup', 'Setup'), ('build', 'Build'), ('test', 'Test'), ('package', 'Package')], max_length=20)),
-                ('runtime_constraints', models.JSONField(default=dict)),
-                ('tags', models.JSONField(default=list)),
-                ('produces', models.JSONField(blank=True, null=True)),
-                ('inputs_schema', models.JSONField(default=dict)),
-                ('commit_sha', models.CharField(blank=True, max_length=40)),
-                ('raw_metadata', models.JSONField(default=dict)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('repository', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='steps', to='core.stepsrepository')),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                (
+                    "uuid",
+                    models.UUIDField(
+                        db_index=True, default=uuid.uuid4, editable=False, unique=True
+                    ),
+                ),
+                ("directory_name", models.CharField(max_length=255)),
+                ("name", models.CharField(max_length=255)),
+                ("description", models.TextField(blank=True)),
+                (
+                    "phase",
+                    models.CharField(
+                        blank=True,
+                        choices=[
+                            ("setup", "Setup"),
+                            ("build", "Build"),
+                            ("test", "Test"),
+                            ("package", "Package"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("runtime_constraints", models.JSONField(default=dict)),
+                ("tags", models.JSONField(default=list)),
+                ("produces", models.JSONField(blank=True, null=True)),
+                ("inputs_schema", models.JSONField(default=dict)),
+                ("commit_sha", models.CharField(blank=True, max_length=40)),
+                ("raw_metadata", models.JSONField(default=dict)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "repository",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="steps",
+                        to="core.stepsrepository",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'core_ci_step',
-                'ordering': ['phase', 'name'],
-                'unique_together': {('repository', 'directory_name')},
+                "db_table": "core_ci_step",
+                "ordering": ["phase", "name"],
+                "unique_together": {("repository", "directory_name")},
             },
         ),
         migrations.CreateModel(
-            name='CIWorkflowStep',
+            name="CIWorkflowStep",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('order', models.IntegerField()),
-                ('input_config', models.JSONField(default=dict)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('step', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='workflow_usages', to='core.cistep')),
-                ('workflow', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='workflow_steps', to='core.ciworkflow')),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("order", models.IntegerField()),
+                ("input_config", models.JSONField(default=dict)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "step",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="workflow_usages",
+                        to="core.cistep",
+                    ),
+                ),
+                (
+                    "workflow",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="workflow_steps",
+                        to="core.ciworkflow",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'core_ci_workflow_step',
-                'ordering': ['order'],
-                'unique_together': {('workflow', 'order')},
+                "db_table": "core_ci_workflow_step",
+                "ordering": ["order"],
+                "unique_together": {("workflow", "order")},
             },
         ),
         migrations.CreateModel(
-            name='RuntimeFamily',
+            name="RuntimeFamily",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('name', models.CharField(max_length=63)),
-                ('display_name', models.CharField(blank=True, max_length=100)),
-                ('versions', models.JSONField(default=list)),
-                ('repository', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='runtimes', to='core.stepsrepository')),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                ("name", models.CharField(max_length=63)),
+                ("display_name", models.CharField(blank=True, max_length=100)),
+                ("versions", models.JSONField(default=list)),
+                (
+                    "repository",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="runtimes",
+                        to="core.stepsrepository",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'core_runtime_family',
-                'ordering': ['name'],
-                'unique_together': {('repository', 'name')},
+                "db_table": "core_runtime_family",
+                "ordering": ["name"],
+                "unique_together": {("repository", "name")},
             },
         ),
     ]

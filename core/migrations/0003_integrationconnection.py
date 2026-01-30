@@ -5,33 +5,55 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0002_project_environment_projectmembership'),
+        ("core", "0002_project_environment_projectmembership"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='IntegrationConnection',
+            name="IntegrationConnection",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('uuid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
-                ('name', models.CharField(max_length=63, unique=True)),
-                ('description', models.TextField(blank=True)),
-                ('plugin_name', models.CharField(max_length=63)),
-                ('config', models.JSONField(default=dict)),
-                ('config_encrypted', models.BinaryField(blank=True, null=True)),
-                ('status', models.CharField(choices=[('active', 'Active'), ('disabled', 'Disabled')], default='active', max_length=20)),
-                ('health_status', models.CharField(choices=[('healthy', 'Healthy'), ('unhealthy', 'Unhealthy'), ('unknown', 'Unknown')], default='unknown', max_length=20)),
-                ('last_health_check', models.DateTimeField(blank=True, null=True)),
-                ('last_health_message', models.TextField(blank=True)),
-                ('created_by', models.CharField(blank=True, max_length=150)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                (
+                    "uuid",
+                    models.UUIDField(
+                        db_index=True, default=uuid.uuid4, editable=False, unique=True
+                    ),
+                ),
+                ("name", models.CharField(max_length=63, unique=True)),
+                ("description", models.TextField(blank=True)),
+                ("plugin_name", models.CharField(max_length=63)),
+                ("config", models.JSONField(default=dict)),
+                ("config_encrypted", models.BinaryField(blank=True, null=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("active", "Active"), ("disabled", "Disabled")],
+                        default="active",
+                        max_length=20,
+                    ),
+                ),
+                (
+                    "health_status",
+                    models.CharField(
+                        choices=[
+                            ("healthy", "Healthy"),
+                            ("unhealthy", "Unhealthy"),
+                            ("unknown", "Unknown"),
+                        ],
+                        default="unknown",
+                        max_length=20,
+                    ),
+                ),
+                ("last_health_check", models.DateTimeField(blank=True, null=True)),
+                ("last_health_message", models.TextField(blank=True)),
+                ("created_by", models.CharField(blank=True, max_length=150)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'db_table': 'core_integration_connection',
-                'ordering': ['name'],
+                "db_table": "core_integration_connection",
+                "ordering": ["name"],
             },
         ),
     ]

@@ -5,37 +5,36 @@ from django.db import migrations, models
 
 def convert_deploy_plugin_to_list(apps, schema_editor):
     """Convert existing deploy_plugin string values to deploy_plugins list."""
-    Blueprint = apps.get_model('core', 'Blueprint')
+    Blueprint = apps.get_model("core", "Blueprint")
     for blueprint in Blueprint.objects.all():
         if blueprint.deploy_plugin:
             blueprint.deploy_plugins = [blueprint.deploy_plugin]
         else:
             blueprint.deploy_plugins = []
-        blueprint.save(update_fields=['deploy_plugins'])
+        blueprint.save(update_fields=["deploy_plugins"])
 
 
 def convert_deploy_plugins_to_string(apps, schema_editor):
     """Reverse: convert deploy_plugins list back to single string."""
-    Blueprint = apps.get_model('core', 'Blueprint')
+    Blueprint = apps.get_model("core", "Blueprint")
     for blueprint in Blueprint.objects.all():
         if blueprint.deploy_plugins:
             blueprint.deploy_plugin = blueprint.deploy_plugins[0]
         else:
-            blueprint.deploy_plugin = ''
-        blueprint.save(update_fields=['deploy_plugin'])
+            blueprint.deploy_plugin = ""
+        blueprint.save(update_fields=["deploy_plugin"])
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0006_blueprint_blueprintversion'),
+        ("core", "0006_blueprint_blueprintversion"),
     ]
 
     operations = [
         # Add new JSONField
         migrations.AddField(
-            model_name='blueprint',
-            name='deploy_plugins',
+            model_name="blueprint",
+            name="deploy_plugins",
             field=models.JSONField(default=list),
         ),
         # Migrate data from old field to new field
@@ -45,7 +44,7 @@ class Migration(migrations.Migration):
         ),
         # Remove old CharField
         migrations.RemoveField(
-            model_name='blueprint',
-            name='deploy_plugin',
+            model_name="blueprint",
+            name="deploy_plugin",
         ),
     ]

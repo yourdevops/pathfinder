@@ -8,8 +8,8 @@ class SetupMiddleware:
     redirect away from setup pages if setup is complete.
     """
 
-    SETUP_URL_NAMES = ['setup:unlock', 'setup:register']
-    EXEMPT_PREFIXES = ['/static/', '/favicon.ico']
+    SETUP_URL_NAMES = ["setup:unlock", "setup:register"]
+    EXEMPT_PREFIXES = ["/static/", "/favicon.ico"]
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -25,12 +25,12 @@ class SetupMiddleware:
 
         # Check if current URL is a setup URL
         is_setup_url = False
-        if hasattr(request, 'resolver_match') and request.resolver_match:
+        if hasattr(request, "resolver_match") and request.resolver_match:
             url_name = request.resolver_match.view_name
             is_setup_url = url_name in self.SETUP_URL_NAMES
         else:
             # Fallback for when resolver hasn't run yet
-            is_setup_url = path.startswith('/setup/')
+            is_setup_url = path.startswith("/setup/")
 
         if not setup_complete:
             # Generate token if it doesn't exist yet
@@ -38,10 +38,10 @@ class SetupMiddleware:
 
             if not is_setup_url:
                 # Redirect to unlock page
-                return redirect('setup:unlock')
+                return redirect("setup:unlock")
         else:
             if is_setup_url:
                 # Setup is done, redirect to login
-                return redirect('auth:login')
+                return redirect("auth:login")
 
         return self.get_response(request)

@@ -8,7 +8,8 @@ class DnsLabelConverter:
     Matches: lowercase letters, numbers, hyphens
     Can start with letter or digit, max 63 characters
     """
-    regex = r'[a-z0-9][a-z0-9-]{0,61}[a-z0-9]|[a-z0-9]'
+
+    regex = r"[a-z0-9][a-z0-9-]{0,61}[a-z0-9]|[a-z0-9]"
 
     def to_python(self, value):
         return value

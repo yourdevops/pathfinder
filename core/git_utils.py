@@ -3,6 +3,7 @@
 Uses GitPython for repository operations, enabling support for any
 Git-compatible SCM (GitHub, GitLab, Bitbucket, self-hosted).
 """
+
 import logging
 import os
 import re
@@ -36,22 +37,22 @@ def parse_git_url(url: str) -> Optional[dict]:
         return None
 
     # Handle SSH format: git@github.com:owner/repo.git
-    ssh_match = re.match(r'^git@([^:]+):(.+)/(.+?)(?:\.git)?$', url)
+    ssh_match = re.match(r"^git@([^:]+):(.+)/(.+?)(?:\.git)?$", url)
     if ssh_match:
         host, owner, repo = ssh_match.groups()
-        return {'host': host, 'owner': owner, 'repo': repo}
+        return {"host": host, "owner": owner, "repo": repo}
 
     # Handle HTTPS format
     try:
         parsed = urlparse(url)
-        if parsed.scheme not in ('http', 'https'):
+        if parsed.scheme not in ("http", "https"):
             return None
 
         if not parsed.netloc or not parsed.path:
             return None
 
         # Parse path: /owner/repo or /owner/repo.git
-        path_parts = parsed.path.strip('/').split('/')
+        path_parts = parsed.path.strip("/").split("/")
         if len(path_parts) < 2:
             return None
 
@@ -59,14 +60,10 @@ def parse_git_url(url: str) -> Optional[dict]:
         repo = path_parts[1]
 
         # Remove .git suffix if present
-        if repo.endswith('.git'):
+        if repo.endswith(".git"):
             repo = repo[:-4]
 
-        return {
-            'host': parsed.netloc,
-            'owner': owner,
-            'repo': repo
-        }
+        return {"host": parsed.netloc, "owner": owner, "repo": repo}
     except Exception:
         return None
 
@@ -89,19 +86,19 @@ def build_authenticated_git_url(git_url: str, connection=None) -> str:
     if not parsed_url:
         return git_url
 
-    host = parsed_url['host']
-    owner = parsed_url['owner']
-    repo = parsed_url['repo']
+    host = parsed_url["host"]
+    owner = parsed_url["owner"]
+    repo = parsed_url["repo"]
 
     config = connection.get_config()
-    auth_type = config.get('auth_type', 'token')
+    auth_type = config.get("auth_type", "token")
 
     token = None
 
-    if auth_type == 'token':
+    if auth_type == "token":
         # Personal Access Token
-        token = config.get('personal_token')
-    elif auth_type == 'app':
+        token = config.get("personal_token")
+    elif auth_type == "app":
         # GitHub App - need to get installation token
         plugin = connection.get_plugin()
         if plugin:
@@ -109,14 +106,16 @@ def build_authenticated_git_url(git_url: str, connection=None) -> str:
                 # Get GitHub client which handles installation token
                 github_client = plugin._get_github_client_app(config)
                 # The installation token is in the requester
-                token = github_client.requester._Requester__authorizationHeader.split(' ')[-1]
+                token = github_client.requester._Requester__authorizationHeader.split(
+                    " "
+                )[-1]
             except Exception as e:
                 logger.warning(f"Failed to get GitHub App installation token: {e}")
                 # Fall back to public access
                 return git_url
     else:
         # Unknown auth type, try to use any token-like field
-        for key in ('personal_token', 'token', 'access_token'):
+        for key in ("personal_token", "token", "access_token"):
             if config.get(key):
                 token = config.get(key)
                 break
@@ -127,7 +126,7 @@ def build_authenticated_git_url(git_url: str, connection=None) -> str:
     # Build authenticated URL
     # Format: https://{token}@{host}/{owner}/{repo}.git
     # For GitHub App: https://x-access-token:{token}@{host}/{owner}/{repo}.git
-    if auth_type == 'app':
+    if auth_type == "app":
         auth_url = f"https://x-access-token:{token}@{host}/{owner}/{repo}.git"
     else:
         auth_url = f"https://{token}@{host}/{owner}/{repo}.git"
@@ -135,7 +134,9 @@ def build_authenticated_git_url(git_url: str, connection=None) -> str:
     return auth_url
 
 
-def clone_repo_shallow(git_url: str, branch: str = 'main', auth_url: str = None, depth: int = 1):
+def clone_repo_shallow(
+    git_url: str, branch: str = "main", auth_url: str = None, depth: int = 1
+):
     """
     Clone a repository with shallow depth.
 
@@ -151,18 +152,14 @@ def clone_repo_shallow(git_url: str, branch: str = 'main', auth_url: str = None,
     Raises:
         git.GitCommandError: If clone fails
     """
-    temp_dir = tempfile.mkdtemp(prefix='ssp_clone_')
+    temp_dir = tempfile.mkdtemp(prefix="ssp_clone_")
 
     try:
         url_to_clone = auth_url or git_url
         logger.info(f"Cloning repository (branch={branch}, depth={depth})")
 
         repo = git.Repo.clone_from(
-            url_to_clone,
-            temp_dir,
-            depth=depth,
-            branch=branch,
-            single_branch=True
+            url_to_clone, temp_dir, depth=depth, branch=branch, single_branch=True
         )
 
         return repo, temp_dir
@@ -191,12 +188,12 @@ def read_manifest_from_repo(repo_path: str) -> dict:
     """
     import os
 
-    manifest_names = ['ssp-template.yaml', 'pathfinder-template.yaml']
+    manifest_names = ["ssp-template.yaml", "pathfinder-template.yaml"]
 
     for name in manifest_names:
         manifest_path = os.path.join(repo_path, name)
         if os.path.exists(manifest_path):
-            with open(manifest_path, 'r') as f:
+            with open(manifest_path, "r") as f:
                 return yaml.safe_load(f)
 
     raise FileNotFoundError(
@@ -220,15 +217,12 @@ def list_tags_from_repo(repo: git.Repo) -> list:
         try:
             # Handle both lightweight and annotated tags
             commit = tag.commit
-            tags.append({
-                'name': tag.name,
-                'commit_sha': commit.hexsha
-            })
+            tags.append({"name": tag.name, "commit_sha": commit.hexsha})
         except Exception as e:
             logger.warning(f"Failed to get commit for tag {tag.name}: {e}")
 
     # Sort by tag name
-    tags.sort(key=lambda t: t['name'])
+    tags.sort(key=lambda t: t["name"])
 
     return tags
 
@@ -249,7 +243,9 @@ def cleanup_repo(repo: git.Repo, temp_dir: str):
     shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-def compute_version_sort_key(major: int, minor: int, patch: int, prerelease: str) -> str:
+def compute_version_sort_key(
+    major: int, minor: int, patch: int, prerelease: str
+) -> str:
     """
     Compute sortable string key for version ordering.
 
@@ -269,8 +265,8 @@ def compute_version_sort_key(major: int, minor: int, patch: int, prerelease: str
         Sortable version string
     """
     # Use 'zzzz' for releases so they sort after pre-releases
-    pre = prerelease if prerelease else 'zzzz'
-    return f'{major:05d}.{minor:05d}.{patch:05d}.{pre}'
+    pre = prerelease if prerelease else "zzzz"
+    return f"{major:05d}.{minor:05d}.{patch:05d}.{pre}"
 
 
 def parse_version_tag(tag_name: str) -> dict:
@@ -289,34 +285,34 @@ def parse_version_tag(tag_name: str) -> dict:
     """
     # Strip leading 'v' or 'V'
     version_str = tag_name
-    if version_str.lower().startswith('v'):
+    if version_str.lower().startswith("v"):
         version_str = version_str[1:]
 
     try:
         version = semver.Version.parse(version_str)
 
-        prerelease = version.prerelease or ''
+        prerelease = version.prerelease or ""
         is_prerelease = bool(version.prerelease)
 
         return {
-            'major': version.major,
-            'minor': version.minor,
-            'patch': version.patch,
-            'prerelease': prerelease,
-            'is_prerelease': is_prerelease,
-            'sort_key': compute_version_sort_key(
+            "major": version.major,
+            "minor": version.minor,
+            "patch": version.patch,
+            "prerelease": prerelease,
+            "is_prerelease": is_prerelease,
+            "sort_key": compute_version_sort_key(
                 version.major, version.minor, version.patch, prerelease
-            )
+            ),
         }
     except ValueError:
         # Non-semver tag - treat as pre-release with version 0.0.0
         return {
-            'major': 0,
-            'minor': 0,
-            'patch': 0,
-            'prerelease': tag_name,
-            'is_prerelease': True,
-            'sort_key': compute_version_sort_key(0, 0, 0, tag_name)
+            "major": 0,
+            "minor": 0,
+            "patch": 0,
+            "prerelease": tag_name,
+            "is_prerelease": True,
+            "sort_key": compute_version_sort_key(0, 0, 0, tag_name),
         }
 
 
@@ -331,13 +327,15 @@ def get_template_variables(service) -> dict:
         Dict of variables: service_name, project_name, service_handler
     """
     return {
-        'service_name': service.name,
-        'project_name': service.project.name,
-        'service_handler': service.handler,
+        "service_name": service.name,
+        "project_name": service.project.name,
+        "service_handler": service.handler,
     }
 
 
-def apply_template_to_directory(src_dir: str, dest_dir: str, variables: dict, exclude_files: list = None):
+def apply_template_to_directory(
+    src_dir: str, dest_dir: str, variables: dict, exclude_files: list = None
+):
     """
     Copy template files and apply variable substitution.
 
@@ -350,7 +348,7 @@ def apply_template_to_directory(src_dir: str, dest_dir: str, variables: dict, ex
     import os
 
     if exclude_files is None:
-        exclude_files = ['ssp-template.yaml', 'pathfinder-template.yaml', '.git']
+        exclude_files = ["ssp-template.yaml", "pathfinder-template.yaml", ".git"]
 
     # Copy all files except excluded
     for item in os.listdir(src_dir):
@@ -366,39 +364,60 @@ def apply_template_to_directory(src_dir: str, dest_dir: str, variables: dict, ex
             shutil.copy2(src_path, dest_path)
 
     # Apply variable substitution to text files
-    text_extensions = {'.yaml', '.yml', '.json', '.md', '.txt', '.py', '.js', '.ts',
-                       '.html', '.css', '.sh', '.dockerfile', '.toml', '.ini', '.cfg',
-                       '.env', '.env.example'}
+    text_extensions = {
+        ".yaml",
+        ".yml",
+        ".json",
+        ".md",
+        ".txt",
+        ".py",
+        ".js",
+        ".ts",
+        ".html",
+        ".css",
+        ".sh",
+        ".dockerfile",
+        ".toml",
+        ".ini",
+        ".cfg",
+        ".env",
+        ".env.example",
+    }
 
     for root, dirs, files in os.walk(dest_dir):
         # Skip .git directory
-        if '.git' in dirs:
-            dirs.remove('.git')
+        if ".git" in dirs:
+            dirs.remove(".git")
 
         for filename in files:
             _, ext = os.path.splitext(filename.lower())
-            if ext in text_extensions or filename.lower() in {'dockerfile', 'makefile', 'readme'}:
+            if ext in text_extensions or filename.lower() in {
+                "dockerfile",
+                "makefile",
+                "readme",
+            }:
                 filepath = os.path.join(root, filename)
                 try:
-                    with open(filepath, 'r', encoding='utf-8') as f:
+                    with open(filepath, "r", encoding="utf-8") as f:
                         content = f.read()
 
                     # Use Jinja2 for substitution (handles {{ var }} syntax)
-                    template = jinja2.Template(content, undefined=jinja2.StrictUndefined)
+                    template = jinja2.Template(
+                        content, undefined=jinja2.StrictUndefined
+                    )
                     rendered = template.render(**variables)
 
-                    with open(filepath, 'w', encoding='utf-8') as f:
+                    with open(filepath, "w", encoding="utf-8") as f:
                         f.write(rendered)
                 except (UnicodeDecodeError, jinja2.TemplateError) as e:
                     # Skip binary files or files with template errors
-                    logger.warning(f"Skipping template substitution for {filepath}: {e}")
+                    logger.warning(
+                        f"Skipping template substitution for {filepath}: {e}"
+                    )
 
 
 def scaffold_new_repository(
-    service,
-    connection,
-    template_temp_dir: str,
-    variables: dict
+    service, connection, template_temp_dir: str, variables: dict
 ) -> dict:
     """
     Scaffold a new repository from a service template.
@@ -426,7 +445,7 @@ def scaffold_new_repository(
     # Create repository via plugin
     logger.info(f"Creating repository: {repo_name}")
     create_result = plugin.create_repository(config, repo_name, private=True)
-    repo_url = create_result.get('clone_url') or create_result.get('html_url')
+    repo_url = create_result.get("clone_url") or create_result.get("html_url")
 
     if not repo_url:
         raise ValueError("Failed to get repository URL from create_repository response")
@@ -435,7 +454,7 @@ def scaffold_new_repository(
     auth_url = build_authenticated_git_url(repo_url, connection)
 
     # Create temp directory for the new repo
-    repo_temp_dir = tempfile.mkdtemp(prefix='ssp_scaffold_')
+    repo_temp_dir = tempfile.mkdtemp(prefix="ssp_scaffold_")
 
     try:
         # Initialize git repo
@@ -446,7 +465,7 @@ def scaffold_new_repository(
             apply_template_to_directory(template_temp_dir, repo_temp_dir, variables)
 
         # Git add all files
-        repo.index.add('*')
+        repo.index.add("*")
 
         # Commit
         repo.index.commit(
@@ -456,7 +475,7 @@ def scaffold_new_repository(
         )
 
         # Add remote and push
-        origin = repo.create_remote('origin', auth_url)
+        origin = repo.create_remote("origin", auth_url)
 
         # Rename branch to match target (usually 'main')
         if repo.active_branch.name != service.repo_branch:
@@ -467,8 +486,8 @@ def scaffold_new_repository(
         logger.info(f"Successfully scaffolded new repository: {repo_url}")
 
         return {
-            'status': 'success',
-            'repo_url': repo_url,
+            "status": "success",
+            "repo_url": repo_url,
         }
 
     finally:
@@ -477,10 +496,7 @@ def scaffold_new_repository(
 
 
 def scaffold_existing_repository(
-    service,
-    connection,
-    template_temp_dir: str,
-    variables: dict
+    service, connection, template_temp_dir: str, variables: dict
 ) -> dict:
     """
     Scaffold into existing repository with feature branch and PR.
@@ -507,7 +523,7 @@ def scaffold_existing_repository(
     auth_url = build_authenticated_git_url(service.repo_url, connection)
 
     # Clone existing repo
-    repo_temp_dir = tempfile.mkdtemp(prefix='ssp_scaffold_existing_')
+    repo_temp_dir = tempfile.mkdtemp(prefix="ssp_scaffold_existing_")
 
     try:
         logger.info(f"Cloning existing repository: {service.repo_url}")
@@ -526,12 +542,12 @@ def scaffold_existing_repository(
         if not repo.is_dirty() and not repo.untracked_files:
             logger.warning("No changes to commit after applying template")
             return {
-                'status': 'success',
-                'message': 'No changes - template already applied',
+                "status": "success",
+                "message": "No changes - template already applied",
             }
 
         # Git add and commit
-        repo.index.add('*')
+        repo.index.add("*")
         repo.index.commit(
             f"Add service scaffold for {service.name}",
             author=git.Actor("Pathfinder", "pathfinder@localhost"),
@@ -539,7 +555,7 @@ def scaffold_existing_repository(
         )
 
         # Push feature branch
-        origin = repo.remote('origin')
+        origin = repo.remote("origin")
         origin.push(feature_branch)
 
         # Create PR via plugin
@@ -553,13 +569,13 @@ def scaffold_existing_repository(
             base=service.repo_branch,
         )
 
-        pr_url = pr_result.get('html_url', '')
+        pr_url = pr_result.get("html_url", "")
 
         logger.info(f"Successfully created PR: {pr_url}")
 
         return {
-            'status': 'success',
-            'pr_url': pr_url,
+            "status": "success",
+            "pr_url": pr_url,
         }
 
     finally:
@@ -579,18 +595,18 @@ def parse_runtimes_yml(repo_path: str) -> dict:
         Dict mapping family name to list of version strings.
         e.g., {"python": ["3.11", "3.12", "3.13"], "node": ["18", "20", "22"]}
     """
-    runtimes_path = os.path.join(repo_path, 'runtimes.yml')
+    runtimes_path = os.path.join(repo_path, "runtimes.yml")
     if not os.path.exists(runtimes_path):
         return {}
 
-    with open(runtimes_path, 'r') as f:
+    with open(runtimes_path, "r") as f:
         data = yaml.safe_load(f) or {}
 
     result = {}
     for family, config in data.items():
-        if isinstance(config, dict) and 'versions' in config:
+        if isinstance(config, dict) and "versions" in config:
             # Format: {family: {versions: [...]}}
-            result[family] = [str(v) for v in config['versions']]
+            result[family] = [str(v) for v in config["versions"]]
         elif isinstance(config, list):
             # Format: {family: [...]}
             result[family] = [str(v) for v in config]
@@ -609,7 +625,7 @@ def scan_ci_steps(repo_path: str) -> list:
     Returns:
         Sorted list of dicts with step metadata from action.yml files.
     """
-    steps_dir = os.path.join(repo_path, 'ci-steps')
+    steps_dir = os.path.join(repo_path, "ci-steps")
     if not os.path.isdir(steps_dir):
         return []
 
@@ -620,32 +636,34 @@ def scan_ci_steps(repo_path: str) -> list:
             continue
 
         # Look for action.yml, fallback to action.yaml
-        action_file = os.path.join(step_dir, 'action.yml')
+        action_file = os.path.join(step_dir, "action.yml")
         if not os.path.exists(action_file):
-            action_file = os.path.join(step_dir, 'action.yaml')
+            action_file = os.path.join(step_dir, "action.yaml")
             if not os.path.exists(action_file):
                 logger.warning(f"No action.yml found in ci-steps/{entry}, skipping")
                 continue
 
         try:
-            with open(action_file, 'r') as f:
+            with open(action_file, "r") as f:
                 metadata = yaml.safe_load(f) or {}
         except yaml.YAMLError as e:
             logger.warning(f"Failed to parse action.yml in ci-steps/{entry}: {e}")
             continue
 
-        pathfinder = metadata.get('x-pathfinder', {})
+        pathfinder = metadata.get("x-pathfinder", {})
 
-        steps.append({
-            'directory_name': entry,
-            'name': metadata.get('name', entry),
-            'description': metadata.get('description', ''),
-            'inputs': metadata.get('inputs', {}),
-            'phase': pathfinder.get('phase', ''),
-            'runtime_constraints': pathfinder.get('runtimes', {}),
-            'tags': pathfinder.get('tags', []),
-            'produces': pathfinder.get('produces'),
-            'raw_metadata': metadata,
-        })
+        steps.append(
+            {
+                "directory_name": entry,
+                "name": metadata.get("name", entry),
+                "description": metadata.get("description", ""),
+                "inputs": metadata.get("inputs", {}),
+                "phase": pathfinder.get("phase", ""),
+                "runtime_constraints": pathfinder.get("runtimes", {}),
+                "tags": pathfinder.get("tags", []),
+                "produces": pathfinder.get("produces"),
+                "raw_metadata": metadata,
+            }
+        )
 
     return steps

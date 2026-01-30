@@ -6,65 +6,131 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0001_initial'),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Project',
+            name="Project",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('uuid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
-                ('name', models.CharField(max_length=20, unique=True)),
-                ('description', models.TextField(blank=True)),
-                ('env_vars', models.JSONField(default=list)),
-                ('status', models.CharField(choices=[('active', 'Active'), ('inactive', 'Inactive'), ('archived', 'Archived')], default='active', max_length=20)),
-                ('created_by', models.CharField(blank=True, max_length=150)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                (
+                    "uuid",
+                    models.UUIDField(
+                        db_index=True, default=uuid.uuid4, editable=False, unique=True
+                    ),
+                ),
+                ("name", models.CharField(max_length=20, unique=True)),
+                ("description", models.TextField(blank=True)),
+                ("env_vars", models.JSONField(default=list)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("active", "Active"),
+                            ("inactive", "Inactive"),
+                            ("archived", "Archived"),
+                        ],
+                        default="active",
+                        max_length=20,
+                    ),
+                ),
+                ("created_by", models.CharField(blank=True, max_length=150)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
             ],
             options={
-                'db_table': 'core_project',
-                'ordering': ['name'],
+                "db_table": "core_project",
+                "ordering": ["name"],
             },
         ),
         migrations.CreateModel(
-            name='Environment',
+            name="Environment",
             fields=[
-                ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('uuid', models.UUIDField(db_index=True, default=uuid.uuid4, editable=False, unique=True)),
-                ('name', models.CharField(max_length=20)),
-                ('description', models.TextField(blank=True)),
-                ('env_vars', models.JSONField(default=list)),
-                ('is_production', models.BooleanField(default=False)),
-                ('is_default', models.BooleanField(default=False)),
-                ('status', models.CharField(choices=[('active', 'Active'), ('inactive', 'Inactive')], default='active', max_length=20)),
-                ('order', models.IntegerField(default=10)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='environments', to='core.project')),
+                ("id", models.BigAutoField(primary_key=True, serialize=False)),
+                (
+                    "uuid",
+                    models.UUIDField(
+                        db_index=True, default=uuid.uuid4, editable=False, unique=True
+                    ),
+                ),
+                ("name", models.CharField(max_length=20)),
+                ("description", models.TextField(blank=True)),
+                ("env_vars", models.JSONField(default=list)),
+                ("is_production", models.BooleanField(default=False)),
+                ("is_default", models.BooleanField(default=False)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("active", "Active"), ("inactive", "Inactive")],
+                        default="active",
+                        max_length=20,
+                    ),
+                ),
+                ("order", models.IntegerField(default=10)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "project",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="environments",
+                        to="core.project",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'core_environment',
-                'ordering': ['order', 'name'],
-                'unique_together': {('project', 'name')},
+                "db_table": "core_environment",
+                "ordering": ["order", "name"],
+                "unique_together": {("project", "name")},
             },
         ),
         migrations.CreateModel(
-            name='ProjectMembership',
+            name="ProjectMembership",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('project_role', models.CharField(choices=[('owner', 'Owner'), ('contributor', 'Contributor'), ('viewer', 'Viewer')], max_length=20)),
-                ('added_by', models.CharField(blank=True, max_length=150)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='project_memberships', to='core.group')),
-                ('project', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='memberships', to='core.project')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "project_role",
+                    models.CharField(
+                        choices=[
+                            ("owner", "Owner"),
+                            ("contributor", "Contributor"),
+                            ("viewer", "Viewer"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("added_by", models.CharField(blank=True, max_length=150)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                (
+                    "group",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="project_memberships",
+                        to="core.group",
+                    ),
+                ),
+                (
+                    "project",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="memberships",
+                        to="core.project",
+                    ),
+                ),
             ],
             options={
-                'db_table': 'core_project_membership',
-                'unique_together': {('project', 'group')},
+                "db_table": "core_project_membership",
+                "unique_together": {("project", "group")},
             },
         ),
     ]

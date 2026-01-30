@@ -4,26 +4,47 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0004_environmentconnection_projectconnection'),
+        ("core", "0004_environmentconnection_projectconnection"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='SiteConfiguration',
+            name="SiteConfiguration",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('external_url', models.URLField(blank=True, help_text='Public URL for webhooks and OAuth callbacks (e.g., https://pathfinder.example.com)')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "external_url",
+                    models.URLField(
+                        blank=True,
+                        help_text="Public URL for webhooks and OAuth callbacks (e.g., https://pathfinder.example.com)",
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Site Configuration',
-                'db_table': 'core_site_configuration',
+                "verbose_name": "Site Configuration",
+                "db_table": "core_site_configuration",
             },
         ),
         migrations.AlterField(
-            model_name='integrationconnection',
-            name='status',
-            field=models.CharField(choices=[('pending', 'Pending'), ('active', 'Active'), ('disabled', 'Disabled')], default='active', max_length=20),
+            model_name="integrationconnection",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("pending", "Pending"),
+                    ("active", "Active"),
+                    ("disabled", "Disabled"),
+                ],
+                default="active",
+                max_length=20,
+            ),
         ),
     ]

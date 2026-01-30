@@ -4,6 +4,7 @@ Plugin framework base classes.
 This module provides the abstract BasePlugin class and the PluginRegistry
 singleton that manages plugin registration and discovery.
 """
+
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
@@ -16,10 +17,11 @@ class PluginRegistry:
     module import. The registry provides methods to retrieve plugins
     by name or category.
     """
-    _plugins: Dict[str, 'BasePlugin'] = {}
+
+    _plugins: Dict[str, "BasePlugin"] = {}
 
     @classmethod
-    def register(cls, plugin: 'BasePlugin') -> None:
+    def register(cls, plugin: "BasePlugin") -> None:
         """
         Register a plugin instance.
 
@@ -34,7 +36,7 @@ class PluginRegistry:
         cls._plugins[plugin.name] = plugin
 
     @classmethod
-    def get(cls, name: str) -> Optional['BasePlugin']:
+    def get(cls, name: str) -> Optional["BasePlugin"]:
         """
         Get a plugin by name.
 
@@ -47,7 +49,7 @@ class PluginRegistry:
         return cls._plugins.get(name)
 
     @classmethod
-    def all(cls) -> Dict[str, 'BasePlugin']:
+    def all(cls) -> Dict[str, "BasePlugin"]:
         """
         Get all registered plugins.
 
@@ -57,7 +59,7 @@ class PluginRegistry:
         return cls._plugins.copy()
 
     @classmethod
-    def by_category(cls, category: str) -> List['BasePlugin']:
+    def by_category(cls, category: str) -> List["BasePlugin"]:
         """
         Get plugins filtered by category.
 
@@ -94,20 +96,21 @@ class BasePlugin(ABC):
         icon: CSS class name for the plugin icon.
         sensitive_field_patterns: Field name patterns that should be encrypted.
     """
+
     name: str
     display_name: str
     category: str  # 'scm', 'ci', 'deploy'
     capabilities: List[str] = []
-    icon: str = ''
+    icon: str = ""
 
     # Fields matching these patterns will be encrypted
     sensitive_field_patterns: List[str] = [
-        'password',
-        'token',
-        'secret',
-        'private_key',
-        'api_key',
-        'client_secret',
+        "password",
+        "token",
+        "secret",
+        "private_key",
+        "api_key",
+        "client_secret",
     ]
 
     def is_sensitive_field(self, field_name: str) -> bool:

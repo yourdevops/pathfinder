@@ -4,6 +4,7 @@ Plugin autodiscovery and registration.
 This module provides the autodiscover function that scans the plugins directory
 and imports all plugin packages, triggering their registration with the registry.
 """
+
 import importlib
 import logging
 import pkgutil
@@ -27,10 +28,10 @@ def autodiscover():
 
     for module_info in pkgutil.iter_modules([str(plugins_dir)]):
         # Skip base module (it's infrastructure, not a plugin)
-        if module_info.name == 'base':
+        if module_info.name == "base":
             continue
 
-        module_name = f'plugins.{module_info.name}'
+        module_name = f"plugins.{module_info.name}"
         try:
             importlib.import_module(module_name)
             logger.debug(f"Loaded plugin: {module_name}")

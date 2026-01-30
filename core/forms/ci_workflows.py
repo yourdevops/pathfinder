@@ -1,12 +1,18 @@
 """CI Workflows forms for repository registration and workflow creation."""
+
 from django import forms
 
-from core.models import StepsRepository, IntegrationConnection, CIWorkflow, RuntimeFamily
+from core.models import (
+    StepsRepository,
+    IntegrationConnection,
+    CIWorkflow,
+    RuntimeFamily,
+)
 from core.validators import dns_label_validator
 
-DARK_INPUT = 'w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent'
-DARK_SELECT = 'w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:border-dark-accent'
-DARK_TEXTAREA = 'w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent'
+DARK_INPUT = "w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent"
+DARK_SELECT = "w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:border-dark-accent"
+DARK_TEXTAREA = "w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent"
 
 
 class StepsRepoRegisterForm(forms.Form):
@@ -15,42 +21,50 @@ class StepsRepoRegisterForm(forms.Form):
     name = forms.CharField(
         max_length=63,
         validators=[dns_label_validator],
-        help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.',
-        widget=forms.TextInput(attrs={
-            'class': 'w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent',
-            'placeholder': 'e.g., pathfinder-steps',
-        }),
+        help_text="DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.",
+        widget=forms.TextInput(
+            attrs={
+                "class": "w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent",
+                "placeholder": "e.g., pathfinder-steps",
+            }
+        ),
     )
     git_url = forms.URLField(
         max_length=500,
-        help_text='HTTPS URL of the Git repository containing CI step definitions.',
-        widget=forms.URLInput(attrs={
-            'class': 'w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent',
-            'placeholder': 'https://github.com/org/ci-steps-repo',
-        }),
+        help_text="HTTPS URL of the Git repository containing CI step definitions.",
+        widget=forms.URLInput(
+            attrs={
+                "class": "w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent",
+                "placeholder": "https://github.com/org/ci-steps-repo",
+            }
+        ),
     )
     connection = forms.ModelChoiceField(
         queryset=IntegrationConnection.objects.filter(
-            plugin_name='github', status='active'
+            plugin_name="github", status="active"
         ),
         required=False,
-        empty_label='None (public repository)',
-        help_text='Select a GitHub connection for private repositories.',
-        widget=forms.Select(attrs={
-            'class': 'w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:border-dark-accent',
-        }),
+        empty_label="None (public repository)",
+        help_text="Select a GitHub connection for private repositories.",
+        widget=forms.Select(
+            attrs={
+                "class": "w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:border-dark-accent",
+            }
+        ),
     )
 
     def clean_name(self):
-        name = self.cleaned_data['name']
+        name = self.cleaned_data["name"]
         if StepsRepository.objects.filter(name=name).exists():
-            raise forms.ValidationError('A repository with this name already exists.')
+            raise forms.ValidationError("A repository with this name already exists.")
         return name
 
     def clean_git_url(self):
-        git_url = self.cleaned_data['git_url']
+        git_url = self.cleaned_data["git_url"]
         if StepsRepository.objects.filter(git_url=git_url).exists():
-            raise forms.ValidationError('A repository with this URL is already registered.')
+            raise forms.ValidationError(
+                "A repository with this URL is already registered."
+            )
         return git_url
 
 
@@ -60,54 +74,63 @@ class WorkflowCreateForm(forms.Form):
     name = forms.CharField(
         max_length=63,
         validators=[dns_label_validator],
-        help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.',
-        widget=forms.TextInput(attrs={
-            'class': DARK_INPUT,
-            'placeholder': 'e.g., python-api-workflow',
-        }),
+        help_text="DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.",
+        widget=forms.TextInput(
+            attrs={
+                "class": DARK_INPUT,
+                "placeholder": "e.g., python-api-workflow",
+            }
+        ),
     )
     description = forms.CharField(
         required=False,
-        widget=forms.Textarea(attrs={
-            'class': DARK_TEXTAREA,
-            'rows': 3,
-            'placeholder': 'Optional description of this workflow...',
-        }),
+        widget=forms.Textarea(
+            attrs={
+                "class": DARK_TEXTAREA,
+                "rows": 3,
+                "placeholder": "Optional description of this workflow...",
+            }
+        ),
     )
     runtime_family = forms.ChoiceField(
         choices=[],
-        widget=forms.Select(attrs={
-            'class': DARK_SELECT,
-        }),
+        widget=forms.Select(
+            attrs={
+                "class": DARK_SELECT,
+            }
+        ),
     )
     runtime_version = forms.ChoiceField(
         choices=[],
-        widget=forms.Select(attrs={
-            'class': DARK_SELECT,
-        }),
+        widget=forms.Select(
+            attrs={
+                "class": DARK_SELECT,
+            }
+        ),
     )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Populate runtime_family choices dynamically
         families = (
-            RuntimeFamily.objects
-            .values_list('name', flat=True)
+            RuntimeFamily.objects.values_list("name", flat=True)
             .distinct()
-            .order_by('name')
+            .order_by("name")
         )
-        family_choices = [('', '-- Select runtime --')] + [(f, f.title()) for f in families]
-        self.fields['runtime_family'].choices = family_choices
+        family_choices = [("", "-- Select runtime --")] + [
+            (f, f.title()) for f in families
+        ]
+        self.fields["runtime_family"].choices = family_choices
 
         # Populate runtime_version if family is already selected (e.g. on form re-render)
-        if self.data and self.data.get('runtime_family'):
-            family = self.data['runtime_family']
+        if self.data and self.data.get("runtime_family"):
+            family = self.data["runtime_family"]
             versions = self._get_versions_for_family(family)
-            self.fields['runtime_version'].choices = [('', '-- Select version --')] + [
+            self.fields["runtime_version"].choices = [("", "-- Select version --")] + [
                 (v, v) for v in versions
             ]
         else:
-            self.fields['runtime_version'].choices = [('', '-- Select family first --')]
+            self.fields["runtime_version"].choices = [("", "-- Select family first --")]
 
     @staticmethod
     def _get_versions_for_family(family_name):
@@ -120,22 +143,24 @@ class WorkflowCreateForm(forms.Form):
         return sorted(versions, reverse=True)
 
     def clean_name(self):
-        name = self.cleaned_data['name']
+        name = self.cleaned_data["name"]
         if CIWorkflow.objects.filter(name=name).exists():
-            raise forms.ValidationError('A workflow with this name already exists.')
+            raise forms.ValidationError("A workflow with this name already exists.")
         return name
 
     def clean_runtime_family(self):
-        family = self.cleaned_data['runtime_family']
+        family = self.cleaned_data["runtime_family"]
         if not RuntimeFamily.objects.filter(name=family).exists():
-            raise forms.ValidationError('Selected runtime family does not exist.')
+            raise forms.ValidationError("Selected runtime family does not exist.")
         return family
 
     def clean_runtime_version(self):
-        version = self.cleaned_data.get('runtime_version')
-        family = self.cleaned_data.get('runtime_family')
+        version = self.cleaned_data.get("runtime_version")
+        family = self.cleaned_data.get("runtime_family")
         if family and version:
             versions = self._get_versions_for_family(family)
             if version not in versions:
-                raise forms.ValidationError('Selected version is not available for this runtime family.')
+                raise forms.ValidationError(
+                    "Selected version is not available for this runtime family."
+                )
         return version

@@ -10,12 +10,17 @@ class ConnectionsListView(LoginRequiredMixin, View):
     For now, shows empty state to satisfy FNDN-13 (authenticated
     users can view connections list).
     """
-    template_name = 'core/placeholders/connections.html'
+
+    template_name = "core/placeholders/connections.html"
 
     def get(self, request):
-        return render(request, self.template_name, {
-            'connections': [],  # Empty for now
-        })
+        return render(
+            request,
+            self.template_name,
+            {
+                "connections": [],  # Empty for now
+            },
+        )
 
 
 class ServicesPlaceholderView(LoginRequiredMixin, View):
@@ -24,12 +29,17 @@ class ServicesPlaceholderView(LoginRequiredMixin, View):
     Services will be the deployed instances from the Service Catalog.
     Will be implemented in Phase 5.
     """
-    template_name = 'core/placeholders/services.html'
+
+    template_name = "core/placeholders/services.html"
 
     def get(self, request):
-        return render(request, self.template_name, {
-            'title': 'Services',
-        })
+        return render(
+            request,
+            self.template_name,
+            {
+                "title": "Services",
+            },
+        )
 
 
 class ResourcesPlaceholderView(LoginRequiredMixin, View):
@@ -38,9 +48,14 @@ class ResourcesPlaceholderView(LoginRequiredMixin, View):
     Resources will be infrastructure components (databases, caches, etc.)
     Will be implemented in a future version.
     """
-    template_name = 'core/placeholders/resources.html'
+
+    template_name = "core/placeholders/resources.html"
 
     def get(self, request):
-        return render(request, self.template_name, {
-            'title': 'Resources',
-        })
+        return render(
+            request,
+            self.template_name,
+            {
+                "title": "Resources",
+            },
+        )

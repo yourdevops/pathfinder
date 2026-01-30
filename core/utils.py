@@ -5,12 +5,12 @@ from django.conf import settings
 
 def get_secrets_dir():
     """Return path to secrets directory."""
-    return Path(settings.BASE_DIR) / 'secrets'
+    return Path(settings.BASE_DIR) / "secrets"
 
 
 def get_unlock_token_path():
     """Return path to unlock token file."""
-    return get_secrets_dir() / 'initialUnlockToken'
+    return get_secrets_dir() / "initialUnlockToken"
 
 
 def is_setup_complete():
@@ -32,7 +32,8 @@ def is_setup_complete():
     # Token doesn't exist - check if any admin users exist
     # Import here to avoid circular imports
     from core.models import Group, GroupMembership
-    admins_group = Group.objects.filter(name='admins', status='active').first()
+
+    admins_group = Group.objects.filter(name="admins", status="active").first()
     if admins_group:
         return GroupMembership.objects.filter(group=admins_group).exists()
 
@@ -67,7 +68,7 @@ def verify_unlock_token(provided_token):
     if not token_path.exists():
         return False
     stored_token = token_path.read_text().strip()
-    provided_token = provided_token.strip() if provided_token else ''
+    provided_token = provided_token.strip() if provided_token else ""
     return secrets.compare_digest(stored_token, provided_token)
 
 

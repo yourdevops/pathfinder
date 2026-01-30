@@ -5,35 +5,88 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0007_blueprint_deploy_plugins'),
+        ("core", "0007_blueprint_deploy_plugins"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='blueprint',
-            name='name',
-            field=models.CharField(blank=True, help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.', max_length=63, validators=[django.core.validators.RegexValidator(code='invalid_dns_label', message='Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. Max 63 characters, no leading/trailing hyphens.', regex='^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$|^[a-z0-9]$')]),
+            model_name="blueprint",
+            name="name",
+            field=models.CharField(
+                blank=True,
+                help_text="DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.",
+                max_length=63,
+                validators=[
+                    django.core.validators.RegexValidator(
+                        code="invalid_dns_label",
+                        message="Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. Max 63 characters, no leading/trailing hyphens.",
+                        regex="^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$|^[a-z0-9]$",
+                    )
+                ],
+            ),
         ),
         migrations.AlterField(
-            model_name='environment',
-            name='name',
-            field=models.CharField(help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.', max_length=63, validators=[django.core.validators.RegexValidator(code='invalid_dns_label', message='Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. Max 63 characters, no leading/trailing hyphens.', regex='^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$|^[a-z0-9]$')]),
+            model_name="environment",
+            name="name",
+            field=models.CharField(
+                help_text="DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.",
+                max_length=63,
+                validators=[
+                    django.core.validators.RegexValidator(
+                        code="invalid_dns_label",
+                        message="Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. Max 63 characters, no leading/trailing hyphens.",
+                        regex="^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$|^[a-z0-9]$",
+                    )
+                ],
+            ),
         ),
         migrations.AlterField(
-            model_name='group',
-            name='name',
-            field=models.CharField(help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.', max_length=63, unique=True, validators=[django.core.validators.RegexValidator(code='invalid_dns_label', message='Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. Max 63 characters, no leading/trailing hyphens.', regex='^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$|^[a-z0-9]$')]),
+            model_name="group",
+            name="name",
+            field=models.CharField(
+                help_text="DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.",
+                max_length=63,
+                unique=True,
+                validators=[
+                    django.core.validators.RegexValidator(
+                        code="invalid_dns_label",
+                        message="Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. Max 63 characters, no leading/trailing hyphens.",
+                        regex="^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$|^[a-z0-9]$",
+                    )
+                ],
+            ),
         ),
         migrations.AlterField(
-            model_name='integrationconnection',
-            name='name',
-            field=models.CharField(help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.', max_length=63, unique=True, validators=[django.core.validators.RegexValidator(code='invalid_dns_label', message='Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. Max 63 characters, no leading/trailing hyphens.', regex='^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$|^[a-z0-9]$')]),
+            model_name="integrationconnection",
+            name="name",
+            field=models.CharField(
+                help_text="DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.",
+                max_length=63,
+                unique=True,
+                validators=[
+                    django.core.validators.RegexValidator(
+                        code="invalid_dns_label",
+                        message="Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. Max 63 characters, no leading/trailing hyphens.",
+                        regex="^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$|^[a-z0-9]$",
+                    )
+                ],
+            ),
         ),
         migrations.AlterField(
-            model_name='project',
-            name='name',
-            field=models.CharField(help_text='DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.', max_length=63, unique=True, validators=[django.core.validators.RegexValidator(code='invalid_dns_label', message='Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. Max 63 characters, no leading/trailing hyphens.', regex='^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$|^[a-z0-9]$')]),
+            model_name="project",
+            name="name",
+            field=models.CharField(
+                help_text="DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.",
+                max_length=63,
+                unique=True,
+                validators=[
+                    django.core.validators.RegexValidator(
+                        code="invalid_dns_label",
+                        message="Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. Max 63 characters, no leading/trailing hyphens.",
+                        regex="^[a-z0-9][a-z0-9-]{0,61}[a-z0-9]$|^[a-z0-9]$",
+                    )
+                ],
+            ),
         ),
     ]
