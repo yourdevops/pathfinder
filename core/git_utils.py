@@ -131,7 +131,7 @@ def build_authenticated_git_url(git_url: str, connection=None) -> str:
     return auth_url
 
 
-def clone_repo_shallow(git_url: str, branch: str = "main", auth_url: str = None, depth: int = 1):
+def clone_repo_shallow(git_url: str, branch: str = "main", auth_url: str | None = None, depth: int = 1):
     """
     Clone a repository with shallow depth.
 
@@ -320,7 +320,7 @@ def get_template_variables(service) -> dict:
     }
 
 
-def apply_template_to_directory(src_dir: str, dest_dir: str, variables: dict, exclude_files: list = None):
+def apply_template_to_directory(src_dir: str, dest_dir: str, variables: dict, exclude_files: list | None = None):
     """
     Copy template files and apply variable substitution.
 

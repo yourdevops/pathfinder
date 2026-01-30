@@ -23,7 +23,7 @@ class User(AbstractUser):
         choices=[("local", "Local"), ("oidc", "OIDC"), ("ldap", "LDAP")],
         default="local",
     )
-    external_id = models.CharField(max_length=255, blank=True, null=True)
+    external_id = models.CharField(max_length=255, blank=True, default="")
 
     class Meta:
         db_table = "core_user"
@@ -49,7 +49,7 @@ class Group(models.Model):
         choices=[("local", "Local"), ("oidc", "OIDC"), ("ldap", "LDAP")],
         default="local",
     )
-    external_id = models.CharField(max_length=255, blank=True, null=True)
+    external_id = models.CharField(max_length=255, blank=True, default="")
     system_roles = models.JSONField(default=list)  # ['admin', 'operator', 'auditor']
     status = models.CharField(
         max_length=20,

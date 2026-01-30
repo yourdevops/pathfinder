@@ -78,10 +78,12 @@ class AdminRegistrationForm(forms.Form):
 
     def clean_password(self):
         password = self.cleaned_data.get("password")
+        if not password:
+            raise forms.ValidationError("This field is required.")
         try:
             validate_password(password)
-        except ValidationError as e:
-            raise forms.ValidationError(e.messages)
+        except ValidationError:
+            raise
         return password
 
     def clean(self):
@@ -204,10 +206,12 @@ class UserCreateForm(forms.Form):
 
     def clean_password(self):
         password = self.cleaned_data.get("password")
+        if not password:
+            raise forms.ValidationError("This field is required.")
         try:
             validate_password(password)
-        except ValidationError as e:
-            raise forms.ValidationError(e.messages)
+        except ValidationError:
+            raise
         return password
 
 
@@ -267,8 +271,8 @@ class UserEditForm(forms.Form):
         if password:
             try:
                 validate_password(password)
-            except ValidationError as e:
-                raise forms.ValidationError(e.messages)
+            except ValidationError:
+                raise
         return password
 
 

@@ -319,7 +319,7 @@ class GitHubPlugin(BasePlugin):
         config: dict[str, Any],
         repo_name: str,
         webhook_url: str,
-        events: list[str] = None,
+        events: list[str] | None = None,
     ) -> dict[str, Any]:
         """
         Configure webhook on repository.

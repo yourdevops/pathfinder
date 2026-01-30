@@ -1,12 +1,6 @@
 # Pathfinder Makefile
 # Run both web server and background worker with interleaved logs
 
-# Load .env file if it exists
-ifneq (,$(wildcard ./.env))
-    include .env
-    export
-endif
-
 PID_DIR := .pids
 WEB_PID := $(PID_DIR)/web.pid
 WORKER_PID := $(PID_DIR)/worker.pid
@@ -35,6 +29,7 @@ migrate: venv
 
 build: venv
 	@uv run python manage.py tailwind build
+	@uv run python manage.py collectstatic --noinput
 
 stop:
 	@if [ -f "$(WEB_PID)" ] && kill -0 $$(cat $(WEB_PID)) 2>/dev/null; then \
