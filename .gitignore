@@ -6,7 +6,6 @@ AGENTS_SECRET.md
 .planning/intel/
 
 # Python
-pyrightconfig.json
 __pycache__/
 *.py[cod]
 *$py.class

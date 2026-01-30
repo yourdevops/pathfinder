@@ -1,6 +1,12 @@
 # Pathfinder Makefile
 # Run both web server and background worker with interleaved logs
 
+# Load .env file if it exists
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
+
 PID_DIR := .pids
 WEB_PID := $(PID_DIR)/web.pid
 WORKER_PID := $(PID_DIR)/worker.pid

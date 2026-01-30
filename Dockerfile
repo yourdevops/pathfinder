@@ -34,8 +34,8 @@ RUN mkdir -p /app/staticfiles /app/manifests /app/data && \
 # Switch to non-root user
 USER ssp
 
-# Collect static files
-RUN uv run python manage.py collectstatic --noinput
+# Collect static files (build-time only, real SECRET_KEY injected at runtime)
+RUN DJANGO_SECRET_KEY=build-time-placeholder uv run python manage.py collectstatic --noinput
 
 # Expose port
 EXPOSE 8000
