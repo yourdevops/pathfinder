@@ -6,7 +6,7 @@ singleton that manages plugin registration and discovery.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 
 class PluginRegistry:
@@ -18,7 +18,7 @@ class PluginRegistry:
     by name or category.
     """
 
-    _plugins: Dict[str, "BasePlugin"] = {}
+    _plugins: dict[str, "BasePlugin"] = {}
 
     @classmethod
     def register(cls, plugin: "BasePlugin") -> None:
@@ -49,7 +49,7 @@ class PluginRegistry:
         return cls._plugins.get(name)
 
     @classmethod
-    def all(cls) -> Dict[str, "BasePlugin"]:
+    def all(cls) -> dict[str, "BasePlugin"]:
         """
         Get all registered plugins.
 
@@ -59,7 +59,7 @@ class PluginRegistry:
         return cls._plugins.copy()
 
     @classmethod
-    def by_category(cls, category: str) -> List["BasePlugin"]:
+    def by_category(cls, category: str) -> list["BasePlugin"]:
         """
         Get plugins filtered by category.
 
@@ -100,11 +100,11 @@ class BasePlugin(ABC):
     name: str
     display_name: str
     category: str  # 'scm', 'ci', 'deploy'
-    capabilities: List[str] = []
+    capabilities: list[str] = []
     icon: str = ""
 
     # Fields matching these patterns will be encrypted
-    sensitive_field_patterns: List[str] = [
+    sensitive_field_patterns: list[str] = [
         "password",
         "token",
         "secret",
@@ -127,7 +127,7 @@ class BasePlugin(ABC):
         return any(pattern in field_lower for pattern in self.sensitive_field_patterns)
 
     @abstractmethod
-    def get_config_schema(self) -> Dict[str, Any]:
+    def get_config_schema(self) -> dict[str, Any]:
         """
         Return the configuration schema for this plugin.
 
@@ -140,7 +140,7 @@ class BasePlugin(ABC):
         pass
 
     @abstractmethod
-    def get_wizard_forms(self) -> List[Any]:
+    def get_wizard_forms(self) -> list[Any]:
         """
         Return the wizard form classes for connection setup.
 
@@ -150,7 +150,7 @@ class BasePlugin(ABC):
         pass
 
     @abstractmethod
-    def health_check(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def health_check(self, config: dict[str, Any]) -> dict[str, Any]:
         """
         Perform a health check on the connection.
 
@@ -163,7 +163,7 @@ class BasePlugin(ABC):
         pass
 
     @abstractmethod
-    def get_urlpatterns(self) -> List[Any]:
+    def get_urlpatterns(self) -> list[Any]:
         """
         Return URL patterns for this plugin's views.
 

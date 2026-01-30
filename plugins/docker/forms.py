@@ -22,9 +22,7 @@ class DockerConnectionForm(forms.Form):
         label="Docker Socket/Host",
         help_text="Unix socket path (e.g., /var/run/docker.sock) or TCP URL (e.g., tcp://localhost:2375)",
     )
-    tls_enabled = forms.BooleanField(
-        required=False, label="Enable TLS", help_text="Enable TLS for TCP connections"
-    )
+    tls_enabled = forms.BooleanField(required=False, label="Enable TLS", help_text="Enable TLS for TCP connections")
     tls_ca_cert = forms.CharField(
         widget=forms.Textarea(attrs={"rows": 4, "class": "font-mono text-xs"}),
         required=False,
@@ -50,15 +48,9 @@ class DockerConnectionForm(forms.Form):
         if tls_enabled:
             # If TLS enabled, require certificates
             if not cleaned_data.get("tls_ca_cert"):
-                self.add_error(
-                    "tls_ca_cert", "CA certificate required when TLS is enabled"
-                )
+                self.add_error("tls_ca_cert", "CA certificate required when TLS is enabled")
             if not cleaned_data.get("tls_client_cert"):
-                self.add_error(
-                    "tls_client_cert", "Client certificate required when TLS is enabled"
-                )
+                self.add_error("tls_client_cert", "Client certificate required when TLS is enabled")
             if not cleaned_data.get("tls_client_key"):
-                self.add_error(
-                    "tls_client_key", "Client key required when TLS is enabled"
-                )
+                self.add_error("tls_client_key", "Client key required when TLS is enabled")
         return cleaned_data

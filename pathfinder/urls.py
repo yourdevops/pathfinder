@@ -16,7 +16,7 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path, include, register_converter
+from django.urls import include, path, register_converter
 from django.views.generic import RedirectView
 
 from core.converters import DnsLabelConverter
@@ -25,18 +25,18 @@ from core.converters import DnsLabelConverter
 register_converter(DnsLabelConverter, "dns")
 
 from core.urls import (  # noqa: E402
-    setup_patterns,
-    auth_patterns,
-    dashboard_patterns,
-    users_patterns,
-    groups_patterns,
     audit_patterns,
+    auth_patterns,
     ci_workflows_patterns,
     connections_patterns,
+    dashboard_patterns,
+    groups_patterns,
     projects_patterns,
-    settings_patterns,
-    services_patterns,
     resources_patterns,
+    services_patterns,
+    settings_patterns,
+    setup_patterns,
+    users_patterns,
 )
 from plugins import autodiscover  # noqa: E402
 from plugins.base import registry  # noqa: E402
@@ -48,9 +48,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("setup/", include((setup_patterns, "setup"), namespace="setup")),
     path("auth/", include((auth_patterns, "auth"), namespace="auth")),
-    path(
-        "dashboard/", include((dashboard_patterns, "dashboard"), namespace="dashboard")
-    ),
+    path("dashboard/", include((dashboard_patterns, "dashboard"), namespace="dashboard")),
     path("users/", include((users_patterns, "users"), namespace="users")),
     path("groups/", include((groups_patterns, "groups"), namespace="groups")),
     path("audit/", include((audit_patterns, "audit"), namespace="audit")),
@@ -65,9 +63,7 @@ urlpatterns = [
     path("projects/", include((projects_patterns, "projects"), namespace="projects")),
     path("settings/", include((settings_patterns, "settings"), namespace="settings")),
     path("services/", include((services_patterns, "services"), namespace="services")),
-    path(
-        "resources/", include((resources_patterns, "resources"), namespace="resources")
-    ),
+    path("resources/", include((resources_patterns, "resources"), namespace="resources")),
 ]
 
 # Add plugin-specific URLs dynamically

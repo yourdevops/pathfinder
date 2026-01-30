@@ -1,7 +1,8 @@
 from functools import wraps
-from django.shortcuts import redirect
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.shortcuts import redirect
 
 from .permissions import has_system_role
 
@@ -26,10 +27,7 @@ def operator_required(view_func):
     @wraps(view_func)
     @login_required
     def wrapper(request, *args, **kwargs):
-        if not (
-            has_system_role(request.user, "admin")
-            or has_system_role(request.user, "operator")
-        ):
+        if not (has_system_role(request.user, "admin") or has_system_role(request.user, "operator")):
             messages.error(request, "You do not have permission to access this page.")
             return redirect("auth:login")
         return view_func(request, *args, **kwargs)

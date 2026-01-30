@@ -1,5 +1,5 @@
-from django import template
 from auditlog.models import LogEntry
+from django import template
 
 register = template.Library()
 

@@ -1,22 +1,21 @@
 """Service views including creation wizard and detail pages."""
 
-from django.http import HttpResponse
-from django.views.generic import View, TemplateView, ListView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
 from django.views.decorators.vary import vary_on_headers
-
+from django.views.generic import ListView, TemplateView, View
 from formtools.wizard.views import SessionWizardView
 
-from core.models import Project, Service, GroupMembership, ProjectMembership
 from core.forms.services import (
+    ConfigurationStepForm,
     ProjectStepForm,
     RepositoryStepForm,
-    ConfigurationStepForm,
     ReviewStepForm,
 )
+from core.models import GroupMembership, Project, ProjectMembership, Service
 from core.permissions import can_access_project, has_system_role
 from core.tasks import scaffold_repository
 
@@ -31,23 +30,19 @@ class ServiceListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         user = self.request.user
         # Admin/superusers or system admins/operators see all services
-        if (
-            user.is_superuser
-            or user.is_staff
-            or has_system_role(user, ["admin", "operator"])
-        ):
+        if user.is_superuser or user.is_staff or has_system_role(user, ["admin", "operator"]):
             return Service.objects.select_related("project").order_by("-created_at")
 
         # Regular users see services from projects they have access to
         # Get user's group IDs
-        user_group_ids = GroupMembership.objects.filter(
-            user=user, group__status="active"
-        ).values_list("group_id", flat=True)
+        user_group_ids = GroupMembership.objects.filter(user=user, group__status="active").values_list(
+            "group_id", flat=True
+        )
 
         # Get project IDs where user has membership via their groups
-        accessible_project_ids = ProjectMembership.objects.filter(
-            group_id__in=user_group_ids
-        ).values_list("project_id", flat=True)
+        accessible_project_ids = ProjectMembership.objects.filter(group_id__in=user_group_ids).values_list(
+            "project_id", flat=True
+        )
 
         return (
             Service.objects.filter(project_id__in=accessible_project_ids)
@@ -87,9 +82,7 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         # Get project from URL if provided
         project_name = kwargs.get("project_name")
         if project_name:
-            self.project = get_object_or_404(
-                Project, name=project_name, status="active"
-            )
+            self.project = get_object_or_404(Project, name=project_name, status="active")
             # Check contributor permission
             access = can_access_project(request.user, self.project)
             if not access or access == "viewer":
@@ -189,9 +182,7 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         return {
             "project": project,
             "service_name": service_name,
-            "handler": f"{project.name}-{service_name}"
-            if project and service_name
-            else "",
+            "handler": f"{project.name}-{service_name}" if project and service_name else "",
             "scm_connection": repository_data.get("scm_connection"),
             "repo_mode": repository_data.get("repo_mode"),
             "repo_mode_display": "New repository"
@@ -270,9 +261,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
         service_name = kwargs.get("service_name")
 
         self.project = get_object_or_404(Project, name=project_name, status="active")
-        self.service = get_object_or_404(
-            Service, project=self.project, name=service_name
-        )
+        self.service = get_object_or_404(Service, project=self.project, name=service_name)
 
         # Check viewer permission
         self.user_project_role = can_access_project(request.user, self.project)
@@ -319,9 +308,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
 
         elif tab == "environments":
             # Show environments with deployment info (placeholder for Phase 7)
-            context["environments"] = self.project.environments.filter(
-                status="active"
-            ).order_by("order", "name")
+            context["environments"] = self.project.environments.filter(status="active").order_by("order", "name")
 
         return context
 
@@ -334,17 +321,13 @@ class ServiceDeleteView(LoginRequiredMixin, View):
         service_name = kwargs.get("service_name")
 
         self.project = get_object_or_404(Project, name=project_name, status="active")
-        self.service = get_object_or_404(
-            Service, project=self.project, name=service_name
-        )
+        self.service = get_object_or_404(Service, project=self.project, name=service_name)
 
         # Check owner permission
         role = can_access_project(request.user, self.project)
         if role != "owner":
             messages.error(request, "Only project owners can delete services.")
-            return redirect(
-                "services:detail", project_name=project_name, service_name=service_name
-            )
+            return redirect("services:detail", project_name=project_name, service_name=service_name)
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -374,9 +357,7 @@ class ServiceScaffoldStatusView(LoginRequiredMixin, View):
             "failed": "bg-red-500/20 text-red-300",
         }
 
-        status_class = status_classes.get(
-            service.scaffold_status, "bg-gray-500/20 text-gray-300"
-        )
+        status_class = status_classes.get(service.scaffold_status, "bg-gray-500/20 text-gray-300")
         status_label = service.get_scaffold_status_display()
 
         if service.scaffold_status in ("pending", "running"):

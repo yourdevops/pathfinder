@@ -5,9 +5,11 @@ This plugin provides connectivity to Docker daemons via socket or TCP,
 enabling container lifecycle management for deployments.
 """
 
-from typing import Dict, Any, List
+from typing import Any
+
 import docker
 from docker.errors import DockerException, NotFound
+
 from plugins.base import BasePlugin
 
 
@@ -25,7 +27,7 @@ class DockerPlugin(BasePlugin):
     capabilities = ["deploy", "get_status", "stop", "logs"]
     icon = "docker"
 
-    def get_config_schema(self) -> Dict[str, Any]:
+    def get_config_schema(self) -> dict[str, Any]:
         """Return configuration schema for Docker connections."""
         return {
             "socket_path": {
@@ -61,13 +63,13 @@ class DockerPlugin(BasePlugin):
             },
         }
 
-    def get_wizard_forms(self) -> List:
+    def get_wizard_forms(self) -> list:
         """Return form classes for connection setup."""
         from .forms import DockerConnectionForm
 
         return [DockerConnectionForm]  # Single form, not a wizard
 
-    def _get_docker_client(self, config: Dict[str, Any]) -> docker.DockerClient:
+    def _get_docker_client(self, config: dict[str, Any]) -> docker.DockerClient:
         """
         Get Docker client from config.
 
@@ -80,10 +82,7 @@ class DockerPlugin(BasePlugin):
         socket_path = config.get("socket_path", "/var/run/docker.sock")
 
         # Determine base URL format
-        if socket_path.startswith(("tcp://", "https://", "http://")):
-            base_url = socket_path
-        else:
-            base_url = f"unix://{socket_path}"
+        base_url = socket_path if socket_path.startswith(("tcp://", "https://", "http://")) else f"unix://{socket_path}"
 
         # TLS configuration
         tls_config = None
@@ -98,7 +97,7 @@ class DockerPlugin(BasePlugin):
 
         return docker.DockerClient(base_url=base_url, tls=tls_config)
 
-    def health_check(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def health_check(self, config: dict[str, Any]) -> dict[str, Any]:
         """
         Check Docker daemon connectivity.
 
@@ -137,9 +136,7 @@ class DockerPlugin(BasePlugin):
                 "details": {},
             }
 
-    def run_container(
-        self, config: Dict[str, Any], image: str, name: str | None = None, **kwargs
-    ) -> Dict[str, Any]:
+    def run_container(self, config: dict[str, Any], image: str, name: str | None = None, **kwargs) -> dict[str, Any]:
         """
         Run a container.
 
@@ -161,9 +158,7 @@ class DockerPlugin(BasePlugin):
             "status": container.status,
         }
 
-    def get_container_status(
-        self, config: Dict[str, Any], container_id: str
-    ) -> Dict[str, Any]:
+    def get_container_status(self, config: dict[str, Any], container_id: str) -> dict[str, Any]:
         """
         Get container status.
 
@@ -182,9 +177,7 @@ class DockerPlugin(BasePlugin):
                 "id": container.id,
                 "name": container.name,
                 "status": container.status,
-                "health": container.attrs.get("State", {})
-                .get("Health", {})
-                .get("Status", "none"),
+                "health": container.attrs.get("State", {}).get("Health", {}).get("Status", "none"),
                 "running": container.status == "running",
             }
         except NotFound:
@@ -195,9 +188,7 @@ class DockerPlugin(BasePlugin):
                 "error": "Container not found",
             }
 
-    def stop_container(
-        self, config: Dict[str, Any], container_id: str, timeout: int = 10
-    ) -> Dict[str, Any]:
+    def stop_container(self, config: dict[str, Any], container_id: str, timeout: int = 10) -> dict[str, Any]:
         """
         Stop a container.
 
@@ -214,9 +205,7 @@ class DockerPlugin(BasePlugin):
         container.stop(timeout=timeout)
         return {"status": "stopped", "id": container_id}
 
-    def get_container_logs(
-        self, config: Dict[str, Any], container_id: str, tail: int = 100
-    ) -> str:
+    def get_container_logs(self, config: dict[str, Any], container_id: str, tail: int = 100) -> str:
         """
         Get container logs.
 

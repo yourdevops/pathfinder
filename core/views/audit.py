@@ -1,7 +1,7 @@
+from auditlog.models import LogEntry
+from django.core.paginator import Paginator
 from django.shortcuts import render
 from django.views import View
-from django.core.paginator import Paginator
-from auditlog.models import LogEntry
 
 from ..decorators import AdminRequiredMixin
 
@@ -13,11 +13,7 @@ class AuditLogView(AdminRequiredMixin, View):
     paginate_by = 50
 
     def get(self, request):
-        entries = (
-            LogEntry.objects.all()
-            .select_related("actor", "content_type")
-            .order_by("-timestamp")
-        )
+        entries = LogEntry.objects.all().select_related("actor", "content_type").order_by("-timestamp")
 
         # Basic filtering
         action_filter = request.GET.get("action")

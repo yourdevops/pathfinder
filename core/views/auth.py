@@ -1,8 +1,8 @@
-from django.shortcuts import render, redirect
-from django.views import View
 from django.contrib.auth import login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse, NoReverseMatch
+from django.shortcuts import redirect, render
+from django.urls import NoReverseMatch, reverse
+from django.views import View
 
 from ..forms import LoginForm
 

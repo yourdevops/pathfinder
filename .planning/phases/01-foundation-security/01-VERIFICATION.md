@@ -143,14 +143,14 @@ The following items require manual testing to fully verify:
 
 #### 1. Complete Setup Flow (Unlock → Admin Creation)
 
-**Test:** 
+**Test:**
 1. Delete db.sqlite3
 2. Run migrations
 3. Navigate to http://localhost:8000/
 4. Read token from `secrets/initialUnlockToken`
 5. Enter token and create admin account
 
-**Expected:** 
+**Expected:**
 - Redirects to /setup/unlock/ on fresh install
 - Invalid token shows error
 - Valid token advances to /setup/register/

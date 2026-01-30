@@ -2,30 +2,30 @@
 
 # Re-export all forms from base module (previously forms.py)
 from core.forms.base import (
-    UnlockForm,
-    AdminRegistrationForm,
-    LoginForm,
-    UserCreateForm,
-    UserEditForm,
-    GroupCreateForm,
-    GroupEditForm,
-    GroupAddMemberForm,
-    ProjectCreateForm,
-    ProjectUpdateForm,
-    EnvironmentForm,
+    PROJECT_ROLE_CHOICES,
+    SYSTEM_ROLE_CHOICES,
     AddProjectMemberForm,
+    AdminRegistrationForm,
     AttachConnectionForm,
     ConnectionConfigUpdateForm,
+    EnvironmentForm,
+    GroupAddMemberForm,
+    GroupCreateForm,
+    GroupEditForm,
+    LoginForm,
+    ProjectCreateForm,
+    ProjectUpdateForm,
     SiteConfigurationForm,
-    SYSTEM_ROLE_CHOICES,
-    PROJECT_ROLE_CHOICES,
+    UnlockForm,
+    UserCreateForm,
+    UserEditForm,
 )
 
 # Service wizard forms
 from core.forms.services import (
+    ConfigurationStepForm,
     ProjectStepForm,
     RepositoryStepForm,
-    ConfigurationStepForm,
     ReviewStepForm,
 )
 

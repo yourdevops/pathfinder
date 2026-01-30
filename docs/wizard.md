@@ -66,7 +66,7 @@ Checkbox: `[ ] Initialize new repository` (default: false)
   - GitHub: repo name = service_handler
   - BitBucket: project = project-name, repo = app-name
   - Validate repo doesn't exist; block if it does with error message
-  
+
 - If unchecked: Show existing repository selector
   - Dropdown of repos from the selected SCM connection
   - Search/filter capability for large repo lists

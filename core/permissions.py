@@ -1,8 +1,9 @@
 """Project-level permission helpers and view mixins."""
 
-from django.shortcuts import redirect, get_object_or_404
 from django.contrib import messages
-from core.models import Project, ProjectMembership, GroupMembership
+from django.shortcuts import get_object_or_404, redirect
+
+from core.models import GroupMembership, Project, ProjectMembership
 
 
 def has_system_role(user, role):
@@ -17,9 +18,7 @@ def has_system_role(user, role):
     """
     if not user.is_authenticated:
         return False
-    memberships = GroupMembership.objects.filter(
-        user=user, group__status="active"
-    ).select_related("group")
+    memberships = GroupMembership.objects.filter(user=user, group__status="active").select_related("group")
 
     # Support both single role string and list of roles
     if isinstance(role, (list, tuple)):
@@ -41,13 +40,11 @@ def get_user_project_role(user, project):
         return "owner"
 
     # Get all memberships through user's groups
-    user_group_ids = GroupMembership.objects.filter(
-        user=user, group__status="active"
-    ).values_list("group_id", flat=True)
-
-    memberships = ProjectMembership.objects.filter(
-        project=project, group_id__in=user_group_ids
+    user_group_ids = GroupMembership.objects.filter(user=user, group__status="active").values_list(
+        "group_id", flat=True
     )
+
+    memberships = ProjectMembership.objects.filter(project=project, group_id__in=user_group_ids)
 
     if not memberships.exists():
         return None
@@ -83,9 +80,7 @@ class ProjectPermissionMixin:
             return redirect("projects:list")
 
         ROLE_HIERARCHY = ["viewer", "contributor", "owner"]
-        if ROLE_HIERARCHY.index(self.user_project_role) < ROLE_HIERARCHY.index(
-            self.required_role
-        ):
+        if ROLE_HIERARCHY.index(self.user_project_role) < ROLE_HIERARCHY.index(self.required_role):
             messages.error(request, "You do not have permission for this action.")
             # Changed: use name instead of uuid
             return redirect("projects:detail", project_name=self.project.name)
@@ -123,13 +118,8 @@ class OperatorRequiredMixin:
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-        if not (
-            has_system_role(request.user, "admin")
-            or has_system_role(request.user, "operator")
-        ):
-            messages.error(
-                request, "You need operator permissions to access this page."
-            )
+        if not (has_system_role(request.user, "admin") or has_system_role(request.user, "operator")):
+            messages.error(request, "You need operator permissions to access this page.")
             return redirect("projects:list")
         return super().dispatch(request, *args, **kwargs)
 

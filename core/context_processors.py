@@ -12,9 +12,7 @@ def user_roles(request):
         }
 
     roles = set()
-    memberships = GroupMembership.objects.filter(
-        user=request.user, group__status="active"
-    ).select_related("group")
+    memberships = GroupMembership.objects.filter(user=request.user, group__status="active").select_related("group")
 
     for membership in memberships:
         roles.update(membership.group.system_roles)
@@ -63,19 +61,18 @@ def navigation_context(request):
             context["active_settings_section"] = "notifications"
 
     # Check if we're in a project-scoped URL
-    if hasattr(request, "resolver_match") and request.resolver_match:
-        if "project_name" in request.resolver_match.kwargs:
-            try:
-                project = Project.objects.get(
-                    name=request.resolver_match.kwargs["project_name"]
-                )
-                context["in_project_context"] = True
-                context["current_project"] = project
-                if request.user.is_authenticated:
-                    context["current_project_role"] = get_user_project_role(
-                        request.user, project
-                    )
-            except Project.DoesNotExist:
-                pass
+    if (
+        hasattr(request, "resolver_match")
+        and request.resolver_match
+        and "project_name" in request.resolver_match.kwargs
+    ):
+        try:
+            project = Project.objects.get(name=request.resolver_match.kwargs["project_name"])
+            context["in_project_context"] = True
+            context["current_project"] = project
+            if request.user.is_authenticated:
+                context["current_project_role"] = get_user_project_role(request.user, project)
+        except Project.DoesNotExist:
+            pass
 
     return context

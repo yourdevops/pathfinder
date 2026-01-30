@@ -24,14 +24,14 @@ Service:
   - service_handler: computed as {project-name}-{app-name}
   - template: FK Blueprint
   - repository: FK Repository (nullable, set after scaffolding)
-  
+
   # Current Artifact (updated after each successful build)
   - current_artifact_ref: string (e.g., ghcr.io/org/app:abc123)
   - current_build: FK Build (nullable)
-  
+
   # Service-level Environment Variables (defaults for all deployments)
   - env_vars: array of { key, value, lock }
-  
+
   # Status
   - status: enum (draft, active)
   - created_by: string (username, denormalized)
@@ -62,19 +62,19 @@ Build:
   - build_number: int (auto-increment per app)
   - commit_sha: string (git commit, used as version)
   - commit_message: string (first line of commit message)
-  
+
   # CI Reference
   - ci_connection: FK IntegrationConnection (which CI ran this)
   - ci_job_url: string (link to CI job/run)
-  
+
   # Result
   - artifact_ref: string (e.g., ghcr.io/org/app:abc123)
   - status: enum (pending, running, success, failed)
   - error_message: text (if failed)
-  
+
   # Audit
   - created_by: string (username or "ci-webhook", denormalized)
-  
+
   # Timestamps
   - started_at: datetime
   - completed_at: datetime (nullable)
@@ -101,22 +101,22 @@ Deployment:
   - app: FK Service
   - build: FK Build
   - environment: FK Environment
-  
+
   # Deploy Reference
   - deploy_connection: FK IntegrationConnection
   - deploy_job_url: string (if pipeline mechanism)
-  
+
   # Deployment-specific Environment Variables
   - env_vars: array of { key, value }
-  
+
   # Result
   - artifact_ref: string (snapshot of deployed artifact)
   - status: enum (pending, running, success, failed, rolled_back)
   - error_message: text (if failed)
-  
+
   # Audit
   - created_by: string (username, denormalized)
-  
+
   # Timestamps
   - started_at: datetime
   - completed_at: datetime (nullable)
@@ -352,7 +352,7 @@ pipeline {
     PTF_TOKEN = credentials('ssp-webhook-token')
     IMAGE_TAG = "ghcr.io/{{ project_name }}/{{ app_name }}:${GIT_COMMIT}"
   }
-  
+
   stages {
     stage('Notify Start') {
       steps {
@@ -364,19 +364,19 @@ pipeline {
         '''
       }
     }
-    
+
     stage('Build') {
       steps {
         sh 'docker build -t ${IMAGE_TAG} .'
       }
     }
-    
+
     stage('Push') {
       steps {
         sh 'docker push ${IMAGE_TAG}'
       }
     }
-    
+
     stage('Notify Complete') {
       steps {
         sh '''
@@ -388,7 +388,7 @@ pipeline {
       }
     }
   }
-  
+
   post {
     failure {
       sh '''
@@ -420,19 +420,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Notify Pathfinder - Build Started
         run: |
           curl -X POST $PTF_WEBHOOK/started \
             -H "Authorization: Bearer ${{ secrets.PTF_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{"commit_sha": "${{ github.sha }}", "commit_message": "${{ github.event.head_commit.message }}", "ci_job_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
-      
+
       - name: Build and Push
         run: |
           docker build -t $IMAGE_TAG .
           docker push $IMAGE_TAG
-      
+
       - name: Notify Pathfinder - Build Complete
         if: success()
         run: |
@@ -440,7 +440,7 @@ jobs:
             -H "Authorization: Bearer ${{ secrets.PTF_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d '{"commit_sha": "${{ github.sha }}", "status": "success", "artifact_ref": "'$IMAGE_TAG'", "ci_job_url": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
-      
+
       - name: Notify Pathfinder - Build Failed
         if: failure()
         run: |

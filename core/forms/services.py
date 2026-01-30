@@ -1,8 +1,10 @@
 """Service creation wizard forms."""
 
 import re
+
 from django import forms
-from core.models import Project, Service, ProjectConnection
+
+from core.models import Project, ProjectConnection, Service
 
 
 class ProjectStepForm(forms.Form):
@@ -60,16 +62,12 @@ class ProjectStepForm(forms.Form):
         if project and name:
             # Check uniqueness within project
             if Service.objects.filter(project=project, name=name).exists():
-                raise forms.ValidationError(
-                    f"A service named '{name}' already exists in project '{project.name}'."
-                )
+                raise forms.ValidationError(f"A service named '{name}' already exists in project '{project.name}'.")
 
             # Check handler length (project-name + - + service-name <= 63)
             handler = f"{project.name}-{name}"
             if len(handler) > 63:
-                raise forms.ValidationError(
-                    f"Service handler '{handler}' exceeds 63 characters. Use a shorter name."
-                )
+                raise forms.ValidationError(f"Service handler '{handler}' exceeds 63 characters. Use a shorter name.")
 
         return cleaned_data
 
@@ -133,9 +131,9 @@ class RepositoryStepForm(forms.Form):
 
         # Populate SCM connections from project
         if project:
-            self.fields["scm_connection"].queryset = ProjectConnection.objects.filter(
-                project=project
-            ).select_related("connection")
+            self.fields["scm_connection"].queryset = ProjectConnection.objects.filter(project=project).select_related(
+                "connection"
+            )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -157,9 +155,7 @@ class ConfigurationStepForm(forms.Form):
     # This form handles dynamic env vars via JavaScript in template
     # The form itself just captures the JSON data
 
-    env_vars_json = forms.CharField(
-        required=False, widget=forms.HiddenInput(), initial="[]"
-    )
+    env_vars_json = forms.CharField(required=False, widget=forms.HiddenInput(), initial="[]")
 
     def __init__(self, *args, project=None, service_name=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -180,20 +176,14 @@ class ConfigurationStepForm(forms.Form):
                 if not isinstance(var, dict):
                     raise forms.ValidationError("Invalid environment variable format.")
                 if "key" not in var or "value" not in var:
-                    raise forms.ValidationError(
-                        "Each variable must have key and value."
-                    )
+                    raise forms.ValidationError("Each variable must have key and value.")
                 key = var["key"]
                 if key and not re.match(r"^[A-Z][A-Z0-9_]*$", key):
-                    raise forms.ValidationError(
-                        f'Variable key "{key}" must be uppercase with underscores only.'
-                    )
+                    raise forms.ValidationError(f'Variable key "{key}" must be uppercase with underscores only.')
 
             return env_vars
         except json.JSONDecodeError:
-            raise forms.ValidationError(
-                "Invalid JSON format for environment variables."
-            )
+            raise forms.ValidationError("Invalid JSON format for environment variables.")
 
 
 class ReviewStepForm(forms.Form):

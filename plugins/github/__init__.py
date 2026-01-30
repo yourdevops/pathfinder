@@ -7,6 +7,7 @@ via GitHub App authentication.
 """
 
 from plugins.base import registry
+
 from .plugin import GitHubPlugin
 
 # Register the plugin with the global registry

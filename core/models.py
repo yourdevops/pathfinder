@@ -12,9 +12,7 @@ class User(AbstractUser):
     """Custom user model with UUID for external references."""
 
     id = models.BigAutoField(primary_key=True)
-    uuid = models.UUIDField(
-        default=uuid.uuid4, editable=False, unique=True, db_index=True
-    )
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     status = models.CharField(
         max_length=20,
         choices=[("active", "Active"), ("inactive", "Inactive")],
@@ -38,9 +36,7 @@ class Group(models.Model):
     """Custom group model with SystemRole support."""
 
     id = models.BigAutoField(primary_key=True)
-    uuid = models.UUIDField(
-        default=uuid.uuid4, editable=False, unique=True, db_index=True
-    )
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     name = models.CharField(
         max_length=63,
         unique=True,
@@ -73,9 +69,7 @@ class Group(models.Model):
 class GroupMembership(models.Model):
     """Many-to-many relationship between User and Group."""
 
-    group = models.ForeignKey(
-        Group, on_delete=models.CASCADE, related_name="memberships"
-    )
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="memberships")
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -101,9 +95,7 @@ class Project(models.Model):
     ]
 
     id = models.BigAutoField(primary_key=True)
-    uuid = models.UUIDField(
-        default=uuid.uuid4, editable=False, unique=True, db_index=True
-    )
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     name = models.CharField(
         max_length=63,
         unique=True,
@@ -111,9 +103,7 @@ class Project(models.Model):
         help_text="DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.",
     )
     description = models.TextField(blank=True)
-    env_vars = models.JSONField(
-        default=list
-    )  # [{"key": "X", "value": "Y", "lock": false}]
+    env_vars = models.JSONField(default=list)  # [{"key": "X", "value": "Y", "lock": false}]
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
     created_by = models.CharField(max_length=150, blank=True)  # denormalized username
     created_at = models.DateTimeField(auto_now_add=True)
@@ -136,12 +126,8 @@ class Environment(models.Model):
     ]
 
     id = models.BigAutoField(primary_key=True)
-    uuid = models.UUIDField(
-        default=uuid.uuid4, editable=False, unique=True, db_index=True
-    )
-    project = models.ForeignKey(
-        Project, on_delete=models.CASCADE, related_name="environments"
-    )
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="environments")
     name = models.CharField(
         max_length=63,
         validators=[dns_label_validator],
@@ -174,12 +160,8 @@ class ProjectMembership(models.Model):
         ("viewer", "Viewer"),
     ]
 
-    project = models.ForeignKey(
-        Project, on_delete=models.CASCADE, related_name="memberships"
-    )
-    group = models.ForeignKey(
-        Group, on_delete=models.CASCADE, related_name="project_memberships"
-    )
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="memberships")
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="project_memberships")
     project_role = models.CharField(max_length=20, choices=PROJECT_ROLE_CHOICES)
     added_by = models.CharField(max_length=150, blank=True)  # denormalized username
     created_at = models.DateTimeField(auto_now_add=True)
@@ -243,9 +225,7 @@ class IntegrationConnection(models.Model):
     ]
 
     id = models.BigAutoField(primary_key=True)
-    uuid = models.UUIDField(
-        default=uuid.uuid4, editable=False, unique=True, db_index=True
-    )
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     name = models.CharField(
         max_length=63,
         unique=True,
@@ -257,15 +237,11 @@ class IntegrationConnection(models.Model):
 
     # Configuration storage
     config = models.JSONField(default=dict)  # Non-sensitive config
-    config_encrypted = models.BinaryField(
-        null=True, blank=True
-    )  # Encrypted sensitive fields
+    config_encrypted = models.BinaryField(null=True, blank=True)  # Encrypted sensitive fields
 
     # Status fields
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
-    health_status = models.CharField(
-        max_length=20, choices=HEALTH_STATUS_CHOICES, default="unknown"
-    )
+    health_status = models.CharField(max_length=20, choices=HEALTH_STATUS_CHOICES, default="unknown")
     last_health_check = models.DateTimeField(null=True, blank=True)
     last_health_message = models.TextField(blank=True)
 
@@ -333,9 +309,7 @@ class IntegrationConnection(models.Model):
 class ProjectConnection(models.Model):
     """Links SCM/CI connections to Projects."""
 
-    project = models.ForeignKey(
-        Project, on_delete=models.CASCADE, related_name="connections"
-    )
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="connections")
     connection = models.ForeignKey(
         IntegrationConnection,
         on_delete=models.CASCADE,
@@ -368,18 +342,14 @@ class ProjectConnection(models.Model):
 class EnvironmentConnection(models.Model):
     """Links deploy connections to Environments."""
 
-    environment = models.ForeignKey(
-        Environment, on_delete=models.CASCADE, related_name="connections"
-    )
+    environment = models.ForeignKey(Environment, on_delete=models.CASCADE, related_name="connections")
     connection = models.ForeignKey(
         IntegrationConnection,
         on_delete=models.CASCADE,
         related_name="environment_attachments",
     )
     is_default = models.BooleanField(default=False)
-    config_override = models.JSONField(
-        default=dict, blank=True
-    )  # Environment-specific config
+    config_override = models.JSONField(default=dict, blank=True)  # Environment-specific config
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=150, blank=True)
 
@@ -413,12 +383,8 @@ class Service(models.Model):
     ]
 
     id = models.BigAutoField(primary_key=True)
-    uuid = models.UUIDField(
-        default=uuid.uuid4, editable=False, unique=True, db_index=True
-    )
-    project = models.ForeignKey(
-        Project, on_delete=models.CASCADE, related_name="services"
-    )
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="services")
     name = models.CharField(
         max_length=63,
         validators=[dns_label_validator],
@@ -432,9 +398,7 @@ class Service(models.Model):
     repo_is_new = models.BooleanField(default=True)  # True if we created the repo
 
     # Service-level environment variables (merged with project vars at deploy time)
-    env_vars = models.JSONField(
-        default=list
-    )  # [{"key": "X", "value": "Y", "lock": bool}]
+    env_vars = models.JSONField(default=list)  # [{"key": "X", "value": "Y", "lock": bool}]
 
     # Status tracking
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
@@ -451,12 +415,8 @@ class Service(models.Model):
     scaffold_error = models.TextField(blank=True)
 
     # Build tracking (updated by Phase 6)
-    current_build_id = models.IntegerField(
-        null=True, blank=True
-    )  # Will be FK to Build in Phase 6
-    current_artifact_ref = models.CharField(
-        max_length=255, blank=True
-    )  # e.g., "registry.io/image:tag"
+    current_build_id = models.IntegerField(null=True, blank=True)  # Will be FK to Build in Phase 6
+    current_artifact_ref = models.CharField(max_length=255, blank=True)  # e.g., "registry.io/image:tag"
 
     # Audit fields
     created_by = models.CharField(max_length=150, blank=True)
@@ -523,9 +483,7 @@ class StepsRepository(models.Model):
     ]
 
     id = models.BigAutoField(primary_key=True)
-    uuid = models.UUIDField(
-        default=uuid.uuid4, editable=False, unique=True, db_index=True
-    )
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     name = models.CharField(
         max_length=63,
         unique=True,
@@ -541,9 +499,7 @@ class StepsRepository(models.Model):
         blank=True,
         related_name="steps_repositories",
     )
-    scan_status = models.CharField(
-        max_length=20, choices=SCAN_STATUS_CHOICES, default="pending"
-    )
+    scan_status = models.CharField(max_length=20, choices=SCAN_STATUS_CHOICES, default="pending")
     scan_error = models.TextField(blank=True)
     last_scanned_at = models.DateTimeField(null=True, blank=True)
     created_by = models.CharField(max_length=150, blank=True)
@@ -568,13 +524,9 @@ class RuntimeFamily(models.Model):
     """
 
     id = models.BigAutoField(primary_key=True)
-    repository = models.ForeignKey(
-        StepsRepository, on_delete=models.CASCADE, related_name="runtimes"
-    )
+    repository = models.ForeignKey(StepsRepository, on_delete=models.CASCADE, related_name="runtimes")
     name = models.CharField(max_length=63)  # e.g., 'python', 'node'
-    display_name = models.CharField(
-        max_length=100, blank=True
-    )  # e.g., 'Python', 'Node.js'
+    display_name = models.CharField(max_length=100, blank=True)  # e.g., 'Python', 'Node.js'
     versions = models.JSONField(default=list)  # e.g., ["3.11", "3.12", "3.13"]
 
     class Meta:
@@ -602,21 +554,15 @@ class CIStep(models.Model):
     ]
 
     id = models.BigAutoField(primary_key=True)
-    uuid = models.UUIDField(
-        default=uuid.uuid4, editable=False, unique=True, db_index=True
-    )
-    repository = models.ForeignKey(
-        StepsRepository, on_delete=models.CASCADE, related_name="steps"
-    )
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
+    repository = models.ForeignKey(StepsRepository, on_delete=models.CASCADE, related_name="steps")
     directory_name = models.CharField(max_length=255)  # e.g., 'setup-python'
     name = models.CharField(max_length=255)  # from action.yml 'name'
     description = models.TextField(blank=True)  # from action.yml 'description'
     phase = models.CharField(max_length=20, choices=PHASE_CHOICES, blank=True)
     runtime_constraints = models.JSONField(default=dict)  # e.g., {"python": ">=3.10"}
     tags = models.JSONField(default=list)
-    produces = models.JSONField(
-        null=True, blank=True
-    )  # e.g., {"type": "container-image"}
+    produces = models.JSONField(null=True, blank=True)  # e.g., {"type": "container-image"}
     inputs_schema = models.JSONField(default=dict)  # full inputs from action.yml
     commit_sha = models.CharField(max_length=40, blank=True)
     raw_metadata = models.JSONField(default=dict)  # full parsed action.yml
@@ -641,9 +587,7 @@ class CIWorkflow(models.Model):
     """
 
     id = models.BigAutoField(primary_key=True)
-    uuid = models.UUIDField(
-        default=uuid.uuid4, editable=False, unique=True, db_index=True
-    )
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     name = models.CharField(
         max_length=63,
         unique=True,
@@ -653,9 +597,7 @@ class CIWorkflow(models.Model):
     description = models.TextField(blank=True)
     runtime_family = models.CharField(max_length=63)  # e.g., 'python'
     runtime_version = models.CharField(max_length=20)  # e.g., '3.12'
-    artifact_type = models.CharField(
-        max_length=50, blank=True
-    )  # derived from last package step
+    artifact_type = models.CharField(max_length=50, blank=True)  # derived from last package step
     created_by = models.CharField(max_length=150, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -677,12 +619,8 @@ class CIWorkflowStep(models.Model):
     """
 
     id = models.BigAutoField(primary_key=True)
-    workflow = models.ForeignKey(
-        CIWorkflow, on_delete=models.CASCADE, related_name="workflow_steps"
-    )
-    step = models.ForeignKey(
-        CIStep, on_delete=models.PROTECT, related_name="workflow_usages"
-    )
+    workflow = models.ForeignKey(CIWorkflow, on_delete=models.CASCADE, related_name="workflow_steps")
+    step = models.ForeignKey(CIStep, on_delete=models.PROTECT, related_name="workflow_usages")
     order = models.IntegerField()
     input_config = models.JSONField(default=dict)  # per-step overrides
     created_at = models.DateTimeField(auto_now_add=True)

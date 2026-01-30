@@ -1,9 +1,9 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views import View
 from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views import View
 
 from ..decorators import AdminRequiredMixin
-from ..forms import GroupCreateForm, GroupEditForm, GroupAddMemberForm
+from ..forms import GroupAddMemberForm, GroupCreateForm, GroupEditForm
 from ..models import Group, GroupMembership, User
 
 
@@ -13,9 +13,7 @@ class GroupListView(AdminRequiredMixin, View):
     template_name = "core/groups/list.html"
 
     def get(self, request):
-        groups = (
-            Group.objects.all().prefetch_related("memberships__user").order_by("name")
-        )
+        groups = Group.objects.all().prefetch_related("memberships__user").order_by("name")
         return render(request, self.template_name, {"groups": groups})
 
 

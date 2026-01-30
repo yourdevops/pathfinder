@@ -55,7 +55,7 @@ auth:
     client_id: pathfinder-client
     # ... other OIDC config
   group_mapping:
-    "oidc-admins": 
+    "oidc-admins":
       system_roles: [admin]
     "oidc-platform-team":
       system_roles: [operator]

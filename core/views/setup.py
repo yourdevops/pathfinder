@@ -1,11 +1,11 @@
-from django.shortcuts import render, redirect
-from django.views import View
 from django.contrib.auth import login
+from django.shortcuts import redirect, render
 from django.urls import NoReverseMatch
+from django.views import View
 
-from ..forms import UnlockForm, AdminRegistrationForm
-from ..utils import verify_unlock_token, complete_setup, get_unlock_token_path
-from ..models import User, Group, GroupMembership
+from ..forms import AdminRegistrationForm, UnlockForm
+from ..models import Group, GroupMembership, User
+from ..utils import complete_setup, get_unlock_token_path, verify_unlock_token
 
 
 class UnlockView(View):
@@ -18,10 +18,9 @@ class UnlockView(View):
 
         # Security check: token must exist for session flag to be valid
         # This prevents stale sessions from bypassing unlock after db reset
-        if not token_path.exists():
+        if not token_path.exists() and "unlock_verified" in request.session:
             # Clear stale session flag if token is gone
-            if "unlock_verified" in request.session:
-                del request.session["unlock_verified"]
+            del request.session["unlock_verified"]
 
         # Check if unlock verified AND token still exists - show registration form
         if token_path.exists() and request.session.get("unlock_verified"):
@@ -47,9 +46,8 @@ class UnlockView(View):
         token_path = get_unlock_token_path()
 
         # Security check: token must exist for session flag to be valid
-        if not token_path.exists():
-            if "unlock_verified" in request.session:
-                del request.session["unlock_verified"]
+        if not token_path.exists() and "unlock_verified" in request.session:
+            del request.session["unlock_verified"]
 
         # Check if this is a registration submission (unlock verified AND token exists)
         if token_path.exists() and request.session.get("unlock_verified"):

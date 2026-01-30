@@ -6,13 +6,13 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 from core.models import (
-    User,
+    Environment,
     Group,
     GroupMembership,
-    Project,
-    Environment,
     IntegrationConnection,
+    Project,
     SiteConfiguration,
+    User,
 )
 
 
@@ -137,9 +137,7 @@ class LoginForm(forms.Form):
         password = cleaned_data.get("password")
 
         if username and password:
-            self.user_cache = authenticate(
-                self.request, username=username, password=password
-            )
+            self.user_cache = authenticate(self.request, username=username, password=password)
             if self.user_cache is None:
                 raise forms.ValidationError("Invalid username or password.")
             if not self.user_cache.is_active:
@@ -260,13 +258,8 @@ class UserEditForm(forms.Form):
 
     def clean_email(self):
         email = self.cleaned_data.get("email")
-        if self.user_instance:
-            if (
-                User.objects.filter(email=email)
-                .exclude(pk=self.user_instance.pk)
-                .exists()
-            ):
-                raise forms.ValidationError("A user with this email already exists.")
+        if self.user_instance and User.objects.filter(email=email).exclude(pk=self.user_instance.pk).exists():
+            raise forms.ValidationError("A user with this email already exists.")
         return email
 
     def clean_new_password(self):
@@ -333,11 +326,7 @@ class GroupCreateForm(forms.Form):
                 "Max 63 characters, no leading/trailing hyphens."
             )
         if Group.objects.filter(name=name).exists():
-            raise forms.ValidationError(
-                "A group named '{}' already exists. Choose a different name.".format(
-                    name
-                )
-            )
+            raise forms.ValidationError(f"A group named '{name}' already exists. Choose a different name.")
         return name
 
 
@@ -392,12 +381,8 @@ class GroupAddMemberForm(forms.Form):
         super().__init__(*args, **kwargs)
         if group:
             # Exclude users already in the group
-            existing_user_ids = GroupMembership.objects.filter(group=group).values_list(
-                "user_id", flat=True
-            )
-            self.fields["user"].queryset = User.objects.filter(status="active").exclude(
-                id__in=existing_user_ids
-            )
+            existing_user_ids = GroupMembership.objects.filter(group=group).values_list("user_id", flat=True)
+            self.fields["user"].queryset = User.objects.filter(status="active").exclude(id__in=existing_user_ids)
 
 
 class ProjectCreateForm(forms.ModelForm):
@@ -433,11 +418,7 @@ class ProjectCreateForm(forms.ModelForm):
                 "Max 63 characters, no leading/trailing hyphens."
             )
         if Project.objects.filter(name=name).exists():
-            raise forms.ValidationError(
-                "A project named '{}' already exists. Choose a different name.".format(
-                    name
-                )
-            )
+            raise forms.ValidationError(f"A project named '{name}' already exists. Choose a different name.")
         return name
 
 
@@ -503,9 +484,7 @@ class EnvironmentForm(forms.ModelForm):
         # Name cannot be changed after creation
         if self.instance and self.instance.pk:
             self.fields["name"].disabled = True
-            self.fields["name"].widget.attrs["class"] += (
-                " cursor-not-allowed opacity-50"
-            )
+            self.fields["name"].widget.attrs["class"] += " cursor-not-allowed opacity-50"
 
     def clean_name(self):
         name = self.cleaned_data["name"].lower()
@@ -551,9 +530,7 @@ class AddProjectMemberForm(forms.Form):
     def __init__(self, *args, existing_group_ids=None, **kwargs):
         super().__init__(*args, **kwargs)
         if existing_group_ids:
-            self.fields["group"].queryset = Group.objects.filter(
-                status="active"
-            ).exclude(id__in=existing_group_ids)
+            self.fields["group"].queryset = Group.objects.filter(status="active").exclude(id__in=existing_group_ids)
 
 
 class AttachConnectionForm(forms.Form):
@@ -585,9 +562,7 @@ class AttachConnectionForm(forms.Form):
             # Filter by plugin category
             from plugins.base import registry
 
-            plugin_names = [
-                p.name for p in registry.all().values() if p.category == category
-            ]
+            plugin_names = [p.name for p in registry.all().values() if p.category == category]
             qs = qs.filter(plugin_name__in=plugin_names)
         if exclude_ids:
             qs = qs.exclude(id__in=exclude_ids)

@@ -40,9 +40,7 @@ def get_encryption_key() -> bytes:
     # Check environment variable first
     env_key = os.environ.get("PTF_ENCRYPTION_KEY")
     if env_key:
-        logger.debug(
-            "Using encryption key from PTF_ENCRYPTION_KEY environment variable"
-        )
+        logger.debug("Using encryption key from PTF_ENCRYPTION_KEY environment variable")
         return env_key.encode("utf-8")
 
     # Check secrets file

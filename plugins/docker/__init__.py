@@ -6,6 +6,7 @@ enabling Docker daemon connectivity and container management.
 """
 
 from plugins.base import registry
+
 from .plugin import DockerPlugin
 
 # Register the plugin

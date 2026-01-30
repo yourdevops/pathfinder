@@ -9,7 +9,6 @@ import os
 import re
 import shutil
 import tempfile
-from typing import Optional
 from urllib.parse import urlparse
 
 import git
@@ -20,7 +19,7 @@ import yaml
 logger = logging.getLogger(__name__)
 
 
-def parse_git_url(url: str) -> Optional[dict]:
+def parse_git_url(url: str) -> dict | None:
     """
     Parse any Git URL to extract host, owner, repo.
 
@@ -106,9 +105,7 @@ def build_authenticated_git_url(git_url: str, connection=None) -> str:
                 # Get GitHub client which handles installation token
                 github_client = plugin._get_github_client_app(config)
                 # The installation token is in the requester
-                token = github_client.requester._Requester__authorizationHeader.split(
-                    " "
-                )[-1]
+                token = github_client.requester._Requester__authorizationHeader.split(" ")[-1]
             except Exception as e:
                 logger.warning(f"Failed to get GitHub App installation token: {e}")
                 # Fall back to public access
@@ -134,9 +131,7 @@ def build_authenticated_git_url(git_url: str, connection=None) -> str:
     return auth_url
 
 
-def clone_repo_shallow(
-    git_url: str, branch: str = "main", auth_url: str = None, depth: int = 1
-):
+def clone_repo_shallow(git_url: str, branch: str = "main", auth_url: str = None, depth: int = 1):
     """
     Clone a repository with shallow depth.
 
@@ -158,9 +153,7 @@ def clone_repo_shallow(
         url_to_clone = auth_url or git_url
         logger.info(f"Cloning repository (branch={branch}, depth={depth})")
 
-        repo = git.Repo.clone_from(
-            url_to_clone, temp_dir, depth=depth, branch=branch, single_branch=True
-        )
+        repo = git.Repo.clone_from(url_to_clone, temp_dir, depth=depth, branch=branch, single_branch=True)
 
         return repo, temp_dir
 
@@ -193,12 +186,10 @@ def read_manifest_from_repo(repo_path: str) -> dict:
     for name in manifest_names:
         manifest_path = os.path.join(repo_path, name)
         if os.path.exists(manifest_path):
-            with open(manifest_path, "r") as f:
+            with open(manifest_path) as f:
                 return yaml.safe_load(f)
 
-    raise FileNotFoundError(
-        f"Manifest file not found. Expected one of: {', '.join(manifest_names)}"
-    )
+    raise FileNotFoundError(f"Manifest file not found. Expected one of: {', '.join(manifest_names)}")
 
 
 def list_tags_from_repo(repo: git.Repo) -> list:
@@ -243,9 +234,7 @@ def cleanup_repo(repo: git.Repo, temp_dir: str):
     shutil.rmtree(temp_dir, ignore_errors=True)
 
 
-def compute_version_sort_key(
-    major: int, minor: int, patch: int, prerelease: str
-) -> str:
+def compute_version_sort_key(major: int, minor: int, patch: int, prerelease: str) -> str:
     """
     Compute sortable string key for version ordering.
 
@@ -300,9 +289,7 @@ def parse_version_tag(tag_name: str) -> dict:
             "patch": version.patch,
             "prerelease": prerelease,
             "is_prerelease": is_prerelease,
-            "sort_key": compute_version_sort_key(
-                version.major, version.minor, version.patch, prerelease
-            ),
+            "sort_key": compute_version_sort_key(version.major, version.minor, version.patch, prerelease),
         }
     except ValueError:
         # Non-semver tag - treat as pre-release with version 0.0.0
@@ -333,9 +320,7 @@ def get_template_variables(service) -> dict:
     }
 
 
-def apply_template_to_directory(
-    src_dir: str, dest_dir: str, variables: dict, exclude_files: list = None
-):
+def apply_template_to_directory(src_dir: str, dest_dir: str, variables: dict, exclude_files: list = None):
     """
     Copy template files and apply variable substitution.
 
@@ -398,27 +383,21 @@ def apply_template_to_directory(
             }:
                 filepath = os.path.join(root, filename)
                 try:
-                    with open(filepath, "r", encoding="utf-8") as f:
+                    with open(filepath, encoding="utf-8") as f:
                         content = f.read()
 
                     # Use Jinja2 for substitution (handles {{ var }} syntax)
-                    template = jinja2.Template(
-                        content, undefined=jinja2.StrictUndefined
-                    )
+                    template = jinja2.Template(content, undefined=jinja2.StrictUndefined)
                     rendered = template.render(**variables)
 
                     with open(filepath, "w", encoding="utf-8") as f:
                         f.write(rendered)
                 except (UnicodeDecodeError, jinja2.TemplateError) as e:
                     # Skip binary files or files with template errors
-                    logger.warning(
-                        f"Skipping template substitution for {filepath}: {e}"
-                    )
+                    logger.warning(f"Skipping template substitution for {filepath}: {e}")
 
 
-def scaffold_new_repository(
-    service, connection, template_temp_dir: str, variables: dict
-) -> dict:
+def scaffold_new_repository(service, connection, template_temp_dir: str, variables: dict) -> dict:
     """
     Scaffold a new repository from a service template.
 
@@ -495,9 +474,7 @@ def scaffold_new_repository(
         shutil.rmtree(repo_temp_dir, ignore_errors=True)
 
 
-def scaffold_existing_repository(
-    service, connection, template_temp_dir: str, variables: dict
-) -> dict:
+def scaffold_existing_repository(service, connection, template_temp_dir: str, variables: dict) -> dict:
     """
     Scaffold into existing repository with feature branch and PR.
 
@@ -599,7 +576,7 @@ def parse_runtimes_yml(repo_path: str) -> dict:
     if not os.path.exists(runtimes_path):
         return {}
 
-    with open(runtimes_path, "r") as f:
+    with open(runtimes_path) as f:
         data = yaml.safe_load(f) or {}
 
     result = {}
@@ -644,7 +621,7 @@ def scan_ci_steps(repo_path: str) -> list:
                 continue
 
         try:
-            with open(action_file, "r") as f:
+            with open(action_file) as f:
                 metadata = yaml.safe_load(f) or {}
         except yaml.YAMLError as e:
             logger.warning(f"Failed to parse action.yml in ci-steps/{entry}: {e}")

@@ -138,7 +138,7 @@ GroupMembership:
 Group: admins
   description: "System administrators"
   source: local
-  system_roles: 
+  system_roles:
     - admin
   # Full system access
 
@@ -147,7 +147,7 @@ Group: platform-operators
   description: "Platform operators with system-wide permissions"
   source: oidc
   external_id: "ssp-platform-operators"
-  system_roles: 
+  system_roles:
     - operator
   # Manages integrations and blueprints
 
@@ -232,7 +232,7 @@ User: alice
 Group: team-a-developers
   projects:
     - team-a: contributor
-    
+
 Group: senior-devs
   projects:
     - team-a: owner

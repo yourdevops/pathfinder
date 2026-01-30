@@ -11,11 +11,11 @@ from django.views import View
 from core.ci_manifest import generate_github_actions_manifest, get_compatible_steps
 from core.forms.ci_workflows import StepsRepoRegisterForm, WorkflowCreateForm
 from core.models import (
-    StepsRepository,
     CIStep,
     CIWorkflow,
     CIWorkflowStep,
     RuntimeFamily,
+    StepsRepository,
 )
 from core.permissions import OperatorRequiredMixin, has_system_role
 
@@ -26,8 +26,7 @@ class StepsRepoListView(LoginRequiredMixin, View):
     def get(self, request):
         repos = StepsRepository.objects.all().order_by("name")
         can_manage = request.user.is_authenticated and (
-            has_system_role(request.user, "admin")
-            or has_system_role(request.user, "operator")
+            has_system_role(request.user, "admin") or has_system_role(request.user, "operator")
         )
         # Annotate step counts
         for repo in repos:
@@ -106,8 +105,7 @@ class StepsRepoDetailView(LoginRequiredMixin, View):
             steps_by_phase["Other"] = uncategorized
 
         can_manage = request.user.is_authenticated and (
-            has_system_role(request.user, "admin")
-            or has_system_role(request.user, "operator")
+            has_system_role(request.user, "admin") or has_system_role(request.user, "operator")
         )
 
         return render(
@@ -165,9 +163,7 @@ class StepsCatalogView(LoginRequiredMixin, View):
     """Browse all imported CI steps organized by phase."""
 
     def get(self, request):
-        steps = (
-            CIStep.objects.all().select_related("repository").order_by("phase", "name")
-        )
+        steps = CIStep.objects.all().select_related("repository").order_by("phase", "name")
 
         phase_order = ["setup", "build", "test", "package"]
         phase_labels = {
@@ -213,11 +209,7 @@ class RuntimesView(LoginRequiredMixin, View):
     """List all runtime families grouped by repository."""
 
     def get(self, request):
-        runtimes = (
-            RuntimeFamily.objects.all()
-            .select_related("repository")
-            .order_by("repository__name", "name")
-        )
+        runtimes = RuntimeFamily.objects.all().select_related("repository").order_by("repository__name", "name")
 
         # Group by repository
         runtimes_by_repo = OrderedDict()
@@ -271,8 +263,9 @@ class WorkflowCreateView(LoginRequiredMixin, View):
         form = WorkflowCreateForm(request.POST)
         if form.is_valid():
             # Redirect to composer with params
-            from django.urls import reverse
             from urllib.parse import urlencode
+
+            from django.urls import reverse
 
             params = urlencode(
                 {
@@ -414,9 +407,7 @@ class CompatibleStepsView(LoginRequiredMixin, View):
         runtime_version = request.GET.get("runtime_version", "")
 
         if not runtime_family or not runtime_version:
-            return HttpResponse(
-                '<p class="text-dark-muted text-sm">Select a runtime to see available steps.</p>'
-            )
+            return HttpResponse('<p class="text-dark-muted text-sm">Select a runtime to see available steps.</p>')
 
         compatible, incompatible = get_compatible_steps(runtime_family, runtime_version)
 
@@ -467,14 +458,11 @@ class WorkflowDetailView(LoginRequiredMixin, View):
 
     def get(self, request, workflow_name):
         workflow = get_object_or_404(CIWorkflow, name=workflow_name)
-        workflow_steps = workflow.workflow_steps.select_related("step").order_by(
-            "order"
-        )
+        workflow_steps = workflow.workflow_steps.select_related("step").order_by("order")
         manifest_yaml = generate_github_actions_manifest(workflow)
 
         can_delete = request.user.is_authenticated and (
-            has_system_role(request.user, "admin")
-            or has_system_role(request.user, "operator")
+            has_system_role(request.user, "admin") or has_system_role(request.user, "operator")
         )
 
         return render(

@@ -1,6 +1,7 @@
 """GitHub plugin forms."""
 
 from django import forms
+
 from core.models import IntegrationConnection
 
 
@@ -110,23 +111,16 @@ class GitHubConnectionForm(forms.Form):
                 if not cleaned_data.get("app_id"):
                     self.add_error("app_id", "Required for manual GitHub App setup")
                 if not cleaned_data.get("private_key"):
-                    self.add_error(
-                        "private_key", "Required for manual GitHub App setup"
-                    )
+                    self.add_error("private_key", "Required for manual GitHub App setup")
                 if not cleaned_data.get("installation_id"):
-                    self.add_error(
-                        "installation_id", "Required for manual GitHub App setup"
-                    )
+                    self.add_error("installation_id", "Required for manual GitHub App setup")
             else:  # automatic
                 # Automatic setup requires organization
                 if not cleaned_data.get("organization"):
-                    self.add_error(
-                        "organization", "Required for automatic GitHub App setup"
-                    )
+                    self.add_error("organization", "Required for automatic GitHub App setup")
 
-        elif auth_type == "token":
-            if not cleaned_data.get("personal_token"):
-                self.add_error("personal_token", "Required for PAT authentication")
+        elif auth_type == "token" and not cleaned_data.get("personal_token"):
+            self.add_error("personal_token", "Required for PAT authentication")
 
         return cleaned_data
 
@@ -158,9 +152,7 @@ class GitHubManifestSetupForm(forms.Form):
         import re
 
         if not re.match(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$", name):
-            raise forms.ValidationError(
-                "Name must be DNS-compatible: lowercase letters, numbers, and hyphens."
-            )
+            raise forms.ValidationError("Name must be DNS-compatible: lowercase letters, numbers, and hyphens.")
         if IntegrationConnection.objects.filter(name=name).exists():
             raise forms.ValidationError("A connection with this name already exists.")
         return name

@@ -35,9 +35,7 @@ def check_connection_health(connection_id: int) -> dict:
         connection.health_status = "unknown"
         connection.last_health_message = "Plugin not available"
         connection.last_health_check = timezone.now()
-        connection.save(
-            update_fields=["health_status", "last_health_message", "last_health_check"]
-        )
+        connection.save(update_fields=["health_status", "last_health_message", "last_health_check"])
         return {"status": "unknown", "error": "Plugin missing"}
 
     # Run health check
@@ -48,7 +46,7 @@ def check_connection_health(connection_id: int) -> dict:
         logger.exception(f"Health check failed for connection {connection_id}")
         result = {
             "status": "unhealthy",
-            "message": f"Health check error: {str(e)}",
+            "message": f"Health check error: {e!s}",
             "details": {},
         }
 
@@ -56,9 +54,7 @@ def check_connection_health(connection_id: int) -> dict:
     connection.health_status = result["status"]
     connection.last_health_message = result.get("message", "")
     connection.last_health_check = timezone.now()
-    connection.save(
-        update_fields=["health_status", "last_health_message", "last_health_check"]
-    )
+    connection.save(update_fields=["health_status", "last_health_message", "last_health_check"])
 
     logger.info(f"Health check for {connection.name}: {result['status']}")
     return result
@@ -91,14 +87,10 @@ def schedule_health_checks() -> dict:
     for i, connection in enumerate(connections):
         # Calculate when this check should run
         run_after = timezone.now() + timedelta(seconds=i * delay_between)
-        check_connection_health.using(run_after=run_after).enqueue(
-            connection_id=connection.id
-        )
+        check_connection_health.using(run_after=run_after).enqueue(connection_id=connection.id)
         scheduled += 1
 
-    logger.info(
-        f"Scheduled {scheduled} health checks over {interval_seconds}s interval"
-    )
+    logger.info(f"Scheduled {scheduled} health checks over {interval_seconds}s interval")
     return {"scheduled": scheduled, "interval": interval_seconds}
 
 
@@ -134,12 +126,12 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
     Returns:
         Dict with status and repo/PR URLs
     """
-    from core.models import Service, IntegrationConnection
     from core.git_utils import (
         get_template_variables,
-        scaffold_new_repository,
         scaffold_existing_repository,
+        scaffold_new_repository,
     )
+    from core.models import IntegrationConnection, Service
 
     # Get service and connection
     try:
@@ -217,14 +209,14 @@ def scan_steps_repository(repository_id: int) -> dict:
     Returns:
         Dict with counts: {"steps": N, "runtimes": M}
     """
-    from core.models import StepsRepository, RuntimeFamily, CIStep
     from core.git_utils import (
         build_authenticated_git_url,
-        clone_repo_shallow,
         cleanup_repo,
+        clone_repo_shallow,
         parse_runtimes_yml,
         scan_ci_steps,
     )
+    from core.models import CIStep, RuntimeFamily, StepsRepository
 
     repo_obj = None
     temp_dir = None
@@ -244,9 +236,7 @@ def scan_steps_repository(repository_id: int) -> dict:
         # Build authenticated URL if connection is set
         auth_url = None
         if repository.connection:
-            auth_url = build_authenticated_git_url(
-                repository.git_url, repository.connection
-            )
+            auth_url = build_authenticated_git_url(repository.git_url, repository.connection)
 
         # Clone repository
         repo_obj, temp_dir = clone_repo_shallow(
@@ -272,9 +262,7 @@ def scan_steps_repository(repository_id: int) -> dict:
             scanned_runtime_names.add(family_name)
 
         # Delete removed runtimes
-        RuntimeFamily.objects.filter(repository=repository).exclude(
-            name__in=scanned_runtime_names
-        ).delete()
+        RuntimeFamily.objects.filter(repository=repository).exclude(name__in=scanned_runtime_names).delete()
 
         # Scan CI steps
         steps_data = scan_ci_steps(temp_dir)
@@ -303,9 +291,7 @@ def scan_steps_repository(repository_id: int) -> dict:
             scanned_dir_names.add(step_info["directory_name"])
 
         # Delete removed steps
-        CIStep.objects.filter(repository=repository).exclude(
-            directory_name__in=scanned_dir_names
-        ).delete()
+        CIStep.objects.filter(repository=repository).exclude(directory_name__in=scanned_dir_names).delete()
 
         # Mark as scanned
         repository.scan_status = "scanned"
@@ -314,8 +300,7 @@ def scan_steps_repository(repository_id: int) -> dict:
         repository.save(update_fields=["scan_status", "scan_error", "last_scanned_at"])
 
         logger.info(
-            f"Scanned steps repository {repository.name}: "
-            f"{len(steps_data)} steps, {len(runtimes_data)} runtimes"
+            f"Scanned steps repository {repository.name}: {len(steps_data)} steps, {len(runtimes_data)} runtimes"
         )
         return {"steps": len(steps_data), "runtimes": len(runtimes_data)}
 

@@ -1,68 +1,68 @@
-from .setup import UnlockView
-from .auth import LoginView, LogoutView
-from .dashboard import DashboardView
-from .users import UserListView, UserCreateView, UserEditView, UserDeleteView
-from .groups import (
-    GroupListView,
-    GroupDetailView,
-    GroupCreateView,
-    GroupEditView,
-    GroupDeleteView,
-    GroupAddMemberView,
-    GroupRemoveMemberView,
-)
 from .audit import AuditLogView
-from .placeholders import ServicesPlaceholderView, ResourcesPlaceholderView
-from .connections import (
-    ConnectionListView,
-    ConnectionDetailView,
-    ConnectionTestView,
-    ConnectionDeleteView,
-    ConnectionConfigUpdateView,
-    ConnectionCreateDispatchView,
-    PluginListView,
-)
-from .projects import (
-    ProjectListView,
-    ProjectCreateModalView,
-    ProjectCreateView,
-    ProjectDetailView,
-    ProjectUpdateView,
-    ProjectArchiveView,
-    EnvironmentCreateView,
-    EnvironmentDetailView,
-    EnvironmentUpdateView,
-    EnvironmentDeleteView,
-    AddMemberModalView,
-    RemoveMemberView,
-    ProjectEnvVarModalView,
-    ProjectEnvVarSaveView,
-    ProjectEnvVarDeleteView,
-    EnvVarModalView,
-    EnvVarSaveView,
-    EnvVarDeleteView,
-    ProjectAttachConnectionView,
-    ProjectDetachConnectionView,
-    EnvironmentAttachConnectionView,
-    EnvironmentDetachConnectionView,
-)
-from .settings import (
-    GeneralSettingsView,
-    UserManagementView,
-    AuditLogsSettingsView,
-    ApiTokensView,
-    NotificationsView,
-)
+from .auth import LoginView, LogoutView
 from .ci_workflows import (
+    RuntimesView,
+    StepDetailView,
+    StepsCatalogView,
+    StepsRepoDetailView,
     StepsRepoListView,
     StepsRepoRegisterView,
-    StepsRepoDetailView,
-    StepsRepoScanView,
     StepsRepoScanStatusView,
-    StepsCatalogView,
-    StepDetailView,
-    RuntimesView,
+    StepsRepoScanView,
 )
+from .connections import (
+    ConnectionConfigUpdateView,
+    ConnectionCreateDispatchView,
+    ConnectionDeleteView,
+    ConnectionDetailView,
+    ConnectionListView,
+    ConnectionTestView,
+    PluginListView,
+)
+from .dashboard import DashboardView
+from .groups import (
+    GroupAddMemberView,
+    GroupCreateView,
+    GroupDeleteView,
+    GroupDetailView,
+    GroupEditView,
+    GroupListView,
+    GroupRemoveMemberView,
+)
+from .placeholders import ResourcesPlaceholderView, ServicesPlaceholderView
+from .projects import (
+    AddMemberModalView,
+    EnvironmentAttachConnectionView,
+    EnvironmentCreateView,
+    EnvironmentDeleteView,
+    EnvironmentDetachConnectionView,
+    EnvironmentDetailView,
+    EnvironmentUpdateView,
+    EnvVarDeleteView,
+    EnvVarModalView,
+    EnvVarSaveView,
+    ProjectArchiveView,
+    ProjectAttachConnectionView,
+    ProjectCreateModalView,
+    ProjectCreateView,
+    ProjectDetachConnectionView,
+    ProjectDetailView,
+    ProjectEnvVarDeleteView,
+    ProjectEnvVarModalView,
+    ProjectEnvVarSaveView,
+    ProjectListView,
+    ProjectUpdateView,
+    RemoveMemberView,
+)
+from .settings import (
+    ApiTokensView,
+    AuditLogsSettingsView,
+    GeneralSettingsView,
+    NotificationsView,
+    UserManagementView,
+)
+from .setup import UnlockView
+from .users import UserCreateView, UserDeleteView, UserEditView, UserListView
 
 __all__ = [
     "UnlockView",

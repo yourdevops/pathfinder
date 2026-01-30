@@ -3,14 +3,15 @@
 import json
 import secrets
 
-from django.shortcuts import redirect, render
+import requests
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import redirect, render
 from django.views import View
-import requests
 
 from core.models import IntegrationConnection, SiteConfiguration
 from core.permissions import OperatorRequiredMixin
+
 from .forms import GitHubConnectionForm
 from .plugin import GitHubPlugin
 
@@ -199,9 +200,7 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
         connection.set_config(config)
         connection.save()
 
-        messages.success(
-            request, f'GitHub connection "{connection.name}" created successfully.'
-        )
+        messages.success(request, f'GitHub connection "{connection.name}" created successfully.')
         return redirect("connections:detail", connection_name=connection.name)
 
 
@@ -229,19 +228,12 @@ class GitHubManifestCallbackView(LoginRequiredMixin, OperatorRequiredMixin, View
             return redirect("github:create")
 
         # Exchange code for app credentials
-        github_base = (
-            manifest_data.get("base_url", "").rstrip("/") or "https://api.github.com"
-        )
-        if not github_base.startswith("https://api."):
-            # Convert web URL to API URL if needed
-            if "api/v3" not in github_base:
-                github_base = github_base.replace("https://", "https://api.")
-                if not github_base.endswith("/api/v3"):
-                    github_base = (
-                        f"{github_base}/api/v3"
-                        if "github.com" not in github_base
-                        else "https://api.github.com"
-                    )
+        github_base = manifest_data.get("base_url", "").rstrip("/") or "https://api.github.com"
+        # Convert web URL to API URL if needed
+        if not github_base.startswith("https://api.") and "api/v3" not in github_base:
+            github_base = github_base.replace("https://", "https://api.")
+            if not github_base.endswith("/api/v3"):
+                github_base = f"{github_base}/api/v3" if "github.com" not in github_base else "https://api.github.com"
 
         conversion_url = f"{github_base}/app-manifests/{code}/conversions"
 
@@ -297,9 +289,7 @@ class GitHubManifestCallbackView(LoginRequiredMixin, OperatorRequiredMixin, View
 
         # Redirect to installation
         # The app needs to be installed on the organization
-        github_web = (
-            manifest_data.get("base_url", "").rstrip("/") or "https://github.com"
-        )
+        github_web = manifest_data.get("base_url", "").rstrip("/") or "https://github.com"
         if "api" in github_web:
             github_web = github_web.replace("api.", "").replace("/api/v3", "")
 
@@ -335,9 +325,7 @@ class GitHubInstallationCallbackView(LoginRequiredMixin, OperatorRequiredMixin, 
         # For now, we'll update the most recent pending GitHub connection
         try:
             connection = (
-                IntegrationConnection.objects.filter(
-                    plugin_name="github", status="pending"
-                )
+                IntegrationConnection.objects.filter(plugin_name="github", status="pending")
                 .order_by("-created_at")
                 .first()
             )
@@ -348,9 +336,7 @@ class GitHubInstallationCallbackView(LoginRequiredMixin, OperatorRequiredMixin, 
                 connection.set_config(config)
                 connection.status = "active"
                 connection.save()
-                messages.success(
-                    request, "GitHub App installed successfully on your organization!"
-                )
+                messages.success(request, "GitHub App installed successfully on your organization!")
                 return redirect("connections:detail", connection_name=connection.name)
         except Exception as e:
             messages.error(request, f"Error completing installation: {e}")

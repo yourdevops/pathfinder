@@ -2,18 +2,19 @@
 
 from datetime import timedelta
 
-from django.shortcuts import redirect, get_object_or_404
-from django.views.generic import ListView, DetailView, View
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.contrib import messages
 from django.conf import settings
-from django.http import JsonResponse, HttpResponse
-from django.utils import timezone
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect
+from django.utils import timezone
+from django.views.generic import DetailView, ListView, View
+
 from core.models import IntegrationConnection
 from core.permissions import (
-    OperatorRequiredMixin,
     IntegrationsReadMixin,
+    OperatorRequiredMixin,
     has_system_role,
 )
 from plugins.base import registry
@@ -43,12 +44,10 @@ class ConnectionListView(LoginRequiredMixin, ListView):
             connection.category = category
 
         # Add permission context
-        context["can_manage"] = has_system_role(
-            self.request.user, "admin"
-        ) or has_system_role(self.request.user, "operator")
-        context["can_view_details"] = context["can_manage"] or has_system_role(
-            self.request.user, "auditor"
+        context["can_manage"] = has_system_role(self.request.user, "admin") or has_system_role(
+            self.request.user, "operator"
         )
+        context["can_view_details"] = context["can_manage"] or has_system_role(self.request.user, "auditor")
 
         # Lazy health check scheduling: enqueue checks for stale connections
         self._schedule_stale_health_checks()
@@ -65,15 +64,11 @@ class ConnectionListView(LoginRequiredMixin, ListView):
         """
         from core.tasks import check_connection_health
 
-        interval_seconds = getattr(
-            settings, "HEALTH_CHECK_INTERVAL", 900
-        )  # 15 min default
+        interval_seconds = getattr(settings, "HEALTH_CHECK_INTERVAL", 900)  # 15 min default
         stale_threshold = timezone.now() - timedelta(seconds=interval_seconds)
 
         # Find connections needing health check (limit to 5 to avoid flooding)
-        stale_connections = IntegrationConnection.objects.filter(
-            status="active"
-        ).filter(
+        stale_connections = IntegrationConnection.objects.filter(status="active").filter(
             # Never checked OR checked before threshold
             Q(last_health_check__isnull=True) | Q(last_health_check__lt=stale_threshold)
         )[:5]
@@ -121,9 +116,7 @@ class ConnectionDetailView(LoginRequiredMixin, IntegrationsReadMixin, DetailView
                     "editable": field_info.get("editable", False),
                     "is_set": bool(value),
                 }
-            elif value or field_info.get(
-                "editable"
-            ):  # Show non-sensitive values or editable fields
+            elif value or field_info.get("editable"):  # Show non-sensitive values or editable fields
                 display_config[field_name] = {
                     "value": value if value else "",
                     "label": field_info.get("label", field_name),
@@ -134,19 +127,16 @@ class ConnectionDetailView(LoginRequiredMixin, IntegrationsReadMixin, DetailView
         context["display_config"] = display_config
 
         # Check for usage
-        has_usage = (
-            connection.project_attachments.exists()
-            or connection.environment_attachments.exists()
-        )
+        has_usage = connection.project_attachments.exists() or connection.environment_attachments.exists()
         context["has_usage"] = has_usage
 
         # Form for editing
         context["config_form"] = ConnectionConfigUpdateForm(connection=connection)
 
         # Check if user can manage (for edit/delete buttons)
-        context["can_manage"] = has_system_role(
-            self.request.user, "admin"
-        ) or has_system_role(self.request.user, "operator")
+        context["can_manage"] = has_system_role(self.request.user, "admin") or has_system_role(
+            self.request.user, "operator"
+        )
 
         return context
 
@@ -175,9 +165,7 @@ class ConnectionTestView(LoginRequiredMixin, View):
         connection.health_status = result["status"]
         connection.last_health_check = timezone.now()
         connection.last_health_message = result.get("message", "")
-        connection.save(
-            update_fields=["health_status", "last_health_check", "last_health_message"]
-        )
+        connection.save(update_fields=["health_status", "last_health_check", "last_health_message"])
 
         # Return result for HTMX or JSON
         if request.headers.get("HX-Request"):
@@ -209,10 +197,7 @@ class ConnectionDeleteView(LoginRequiredMixin, OperatorRequiredMixin, View):
         connection = get_object_or_404(IntegrationConnection, name=connection_name)
 
         # Check for usage - prevent deletion if connection is in use
-        has_usage = (
-            connection.project_attachments.exists()
-            or connection.environment_attachments.exists()
-        )
+        has_usage = connection.project_attachments.exists() or connection.environment_attachments.exists()
         if has_usage:
             messages.error(
                 request,
@@ -244,11 +229,10 @@ class ConnectionConfigUpdateView(LoginRequiredMixin, OperatorRequiredMixin, View
             config_changed = False
             for field_name in form.editable_fields:
                 value = form.cleaned_data.get(field_name, "").strip()
-                if value:
+                if value and config.get(field_name) != value:
                     # Update if value provided (for sensitive fields, empty means keep current)
-                    if config.get(field_name) != value:
-                        config[field_name] = value
-                        config_changed = True
+                    config[field_name] = value
+                    config_changed = True
 
             if config_changed:
                 connection.set_config(config)
@@ -287,17 +271,14 @@ class PluginListView(LoginRequiredMixin, ListView):
         """Return list of plugin dicts with connection counts."""
         plugins_data = []
         for name, plugin in registry.all().items():
-            connection_count = IntegrationConnection.objects.filter(
-                plugin_name=name
-            ).count()
+            connection_count = IntegrationConnection.objects.filter(plugin_name=name).count()
             plugins_data.append(
                 {
                     "name": name,
                     "display_name": plugin.display_name,
                     "category": plugin.category,
                     "connection_count": connection_count,
-                    "can_remove": connection_count
-                    == 0,  # Only removable if no connections
+                    "can_remove": connection_count == 0,  # Only removable if no connections
                 }
             )
         return plugins_data
@@ -305,7 +286,7 @@ class PluginListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["categories"] = ["scm", "deploy", "ci"]  # For filter dropdown
-        context["can_manage"] = has_system_role(
-            self.request.user, "admin"
-        ) or has_system_role(self.request.user, "operator")
+        context["can_manage"] = has_system_role(self.request.user, "admin") or has_system_role(
+            self.request.user, "operator"
+        )
         return context

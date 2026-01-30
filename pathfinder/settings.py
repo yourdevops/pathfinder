@@ -29,9 +29,7 @@ if not SECRET_KEY:
         raise ValueError("DJANGO_SECRET_KEY environment variable is required in production")
 
 ALLOWED_HOSTS = [
-    h.strip()
-    for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
-    if h.strip()
+    h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()
 ] + ["testserver"]
 
 
@@ -80,9 +78,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = "pathfinder.urls"
 
 # Plugin template directories (plugins are not Django apps, need explicit paths)
-PLUGIN_TEMPLATE_DIRS = [
-    d for d in (BASE_DIR / "plugins").glob("*/templates") if d.is_dir()
-]
+PLUGIN_TEMPLATE_DIRS = [d for d in (BASE_DIR / "plugins").glob("*/templates") if d.is_dir()]
 
 TEMPLATES = [
     {

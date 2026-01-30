@@ -3,10 +3,10 @@
 from django import forms
 
 from core.models import (
-    StepsRepository,
-    IntegrationConnection,
     CIWorkflow,
+    IntegrationConnection,
     RuntimeFamily,
+    StepsRepository,
 )
 from core.validators import dns_label_validator
 
@@ -40,9 +40,7 @@ class StepsRepoRegisterForm(forms.Form):
         ),
     )
     connection = forms.ModelChoiceField(
-        queryset=IntegrationConnection.objects.filter(
-            plugin_name="github", status="active"
-        ),
+        queryset=IntegrationConnection.objects.filter(plugin_name="github", status="active"),
         required=False,
         empty_label="None (public repository)",
         help_text="Select a GitHub connection for private repositories.",
@@ -62,9 +60,7 @@ class StepsRepoRegisterForm(forms.Form):
     def clean_git_url(self):
         git_url = self.cleaned_data["git_url"]
         if StepsRepository.objects.filter(git_url=git_url).exists():
-            raise forms.ValidationError(
-                "A repository with this URL is already registered."
-            )
+            raise forms.ValidationError("A repository with this URL is already registered.")
         return git_url
 
 
@@ -112,23 +108,15 @@ class WorkflowCreateForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Populate runtime_family choices dynamically
-        families = (
-            RuntimeFamily.objects.values_list("name", flat=True)
-            .distinct()
-            .order_by("name")
-        )
-        family_choices = [("", "-- Select runtime --")] + [
-            (f, f.title()) for f in families
-        ]
+        families = RuntimeFamily.objects.values_list("name", flat=True).distinct().order_by("name")
+        family_choices = [("", "-- Select runtime --")] + [(f, f.title()) for f in families]
         self.fields["runtime_family"].choices = family_choices
 
         # Populate runtime_version if family is already selected (e.g. on form re-render)
         if self.data and self.data.get("runtime_family"):
             family = self.data["runtime_family"]
             versions = self._get_versions_for_family(family)
-            self.fields["runtime_version"].choices = [("", "-- Select version --")] + [
-                (v, v) for v in versions
-            ]
+            self.fields["runtime_version"].choices = [("", "-- Select version --")] + [(v, v) for v in versions]
         else:
             self.fields["runtime_version"].choices = [("", "-- Select family first --")]
 
@@ -160,7 +148,5 @@ class WorkflowCreateForm(forms.Form):
         if family and version:
             versions = self._get_versions_for_family(family)
             if version not in versions:
-                raise forms.ValidationError(
-                    "Selected version is not available for this runtime family."
-                )
+                raise forms.ValidationError("Selected version is not available for this runtime family.")
         return version

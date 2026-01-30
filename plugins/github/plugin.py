@@ -5,9 +5,9 @@ This module provides the GitHubPlugin class implementing GitHub App authenticati
 and repository operations via the PyGithub library.
 """
 
-from typing import Any, Dict, List
+from typing import Any
 
-from github import Github, GithubIntegration, Auth
+from github import Auth, Github, GithubIntegration
 from github.GithubException import GithubException
 
 from plugins.base import BasePlugin
@@ -27,7 +27,7 @@ class GitHubPlugin(BasePlugin):
     capabilities = ["list_repos", "create_repo", "create_branch", "commit", "webhooks"]
     icon = "github"  # Maps to SVG icon in templates
 
-    def get_config_schema(self) -> Dict[str, Any]:
+    def get_config_schema(self) -> dict[str, Any]:
         """Return the configuration schema for GitHub connections."""
         return {
             "auth_type": {
@@ -73,13 +73,13 @@ class GitHubPlugin(BasePlugin):
             },
         }
 
-    def get_wizard_forms(self) -> List:
+    def get_wizard_forms(self) -> list:
         """Return the form classes for connection setup."""
         from .forms import GitHubConnectionForm
 
         return [GitHubConnectionForm]
 
-    def _get_github_client_pat(self, config: Dict[str, Any]) -> Github:
+    def _get_github_client_pat(self, config: dict[str, Any]) -> Github:
         """
         Get GitHub client using Personal Access Token.
 
@@ -95,7 +95,7 @@ class GitHubPlugin(BasePlugin):
             return Github(auth=Auth.Token(token), base_url=base_url)
         return Github(auth=Auth.Token(token))
 
-    def _get_github_client_app(self, config: Dict[str, Any]) -> Github:
+    def _get_github_client_app(self, config: dict[str, Any]) -> Github:
         """
         Get authenticated GitHub client for GitHub App installation.
 
@@ -114,10 +114,7 @@ class GitHubPlugin(BasePlugin):
         auth = Auth.AppAuth(app_id, private_key)
 
         # Get GithubIntegration for installation token
-        if base_url:
-            gi = GithubIntegration(auth=auth, base_url=base_url)
-        else:
-            gi = GithubIntegration(auth=auth)
+        gi = GithubIntegration(auth=auth, base_url=base_url) if base_url else GithubIntegration(auth=auth)
 
         # Get installation access token
         installation_auth = gi.get_access_token(installation_id)
@@ -127,7 +124,7 @@ class GitHubPlugin(BasePlugin):
             return Github(auth=Auth.Token(installation_auth.token), base_url=base_url)
         return Github(auth=Auth.Token(installation_auth.token))
 
-    def _get_github_client(self, config: Dict[str, Any]) -> Github:
+    def _get_github_client(self, config: dict[str, Any]) -> Github:
         """
         Get authenticated GitHub client based on auth type.
 
@@ -144,7 +141,7 @@ class GitHubPlugin(BasePlugin):
             return self._get_github_client_pat(config)
         return self._get_github_client_app(config)
 
-    def health_check(self, config: Dict[str, Any]) -> Dict[str, Any]:
+    def health_check(self, config: dict[str, Any]) -> dict[str, Any]:
         """
         Check GitHub connection health.
 
@@ -167,15 +164,11 @@ class GitHubPlugin(BasePlugin):
                     "authenticated_user": user.login,
                     "rate_limit_remaining": rate.rate.remaining,
                     "rate_limit_limit": rate.rate.limit,
-                    "rate_limit_reset": rate.rate.reset.isoformat()
-                    if rate.rate.reset
-                    else None,
+                    "rate_limit_reset": rate.rate.reset.isoformat() if rate.rate.reset else None,
                 },
             }
         except GithubException as e:
-            error_msg = (
-                e.data.get("message", str(e)) if isinstance(e.data, dict) else str(e)
-            )
+            error_msg = e.data.get("message", str(e)) if isinstance(e.data, dict) else str(e)
             return {
                 "status": "unhealthy",
                 "message": f"GitHub API error: {error_msg}",
@@ -184,7 +177,7 @@ class GitHubPlugin(BasePlugin):
         except Exception as e:
             return {"status": "unhealthy", "message": str(e), "details": {}}
 
-    def list_repositories(self, config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def list_repositories(self, config: dict[str, Any]) -> list[dict[str, Any]]:
         """
         List all accessible repositories.
 
@@ -222,11 +215,11 @@ class GitHubPlugin(BasePlugin):
 
     def create_repository(
         self,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         name: str,
         description: str = "",
         private: bool = True,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a new repository.
 
@@ -258,11 +251,11 @@ class GitHubPlugin(BasePlugin):
 
     def create_branch(
         self,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         repo_name: str,
         branch_name: str,
         source_branch: str = "main",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a new branch from source.
 
@@ -289,13 +282,13 @@ class GitHubPlugin(BasePlugin):
 
     def create_file(
         self,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         repo_name: str,
         path: str,
         content: str,
         message: str,
         branch: str = "main",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create or update a file in the repository.
 
@@ -323,11 +316,11 @@ class GitHubPlugin(BasePlugin):
 
     def configure_webhook(
         self,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         repo_name: str,
         webhook_url: str,
-        events: List[str] = None,
-    ) -> Dict[str, Any]:
+        events: list[str] = None,
+    ) -> dict[str, Any]:
         """
         Configure webhook on repository.
 
@@ -364,13 +357,13 @@ class GitHubPlugin(BasePlugin):
 
     def create_pull_request(
         self,
-        config: Dict[str, Any],
+        config: dict[str, Any],
         repo_url: str,
         title: str,
         body: str,
         head: str,
         base: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """
         Create a pull request.
 
@@ -410,7 +403,7 @@ class GitHubPlugin(BasePlugin):
             "state": pr.state,
         }
 
-    def get_urlpatterns(self) -> List:
+    def get_urlpatterns(self) -> list:
         """Return URL patterns for this plugin's views."""
         from . import urls
 

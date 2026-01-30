@@ -63,26 +63,17 @@ def is_step_compatible(step, runtime_family: str, runtime_version: str) -> bool:
         constraint_ver = semver.Version.parse(normalized_constraint)
 
         # Map operators to comparisons
-        if operator == ">=":
-            return runtime_ver >= constraint_ver
-        elif operator == "<=":
-            return runtime_ver <= constraint_ver
-        elif operator == ">":
-            return runtime_ver > constraint_ver
-        elif operator == "<":
-            return runtime_ver < constraint_ver
-        elif operator == "==":
-            return runtime_ver == constraint_ver
-        elif operator == "!=":
-            return runtime_ver != constraint_ver
-        elif operator == "~=":
+        ops = {
+            ">=": lambda: runtime_ver >= constraint_ver,
+            "<=": lambda: runtime_ver <= constraint_ver,
+            ">": lambda: runtime_ver > constraint_ver,
+            "<": lambda: runtime_ver < constraint_ver,
+            "==": lambda: runtime_ver == constraint_ver,
+            "!=": lambda: runtime_ver != constraint_ver,
             # Compatible release: ~=3.10 means >=3.10, <4.0
-            return (
-                runtime_ver >= constraint_ver
-                and runtime_ver.major == constraint_ver.major
-            )
-        else:
-            return False
+            "~=": lambda: runtime_ver >= constraint_ver and runtime_ver.major == constraint_ver.major,
+        }
+        return ops.get(operator, lambda: False)()
     except ValueError:
         return False
 
@@ -98,9 +89,7 @@ def get_compatible_steps(runtime_family: str, runtime_version: str):
     Returns:
         Tuple of (compatible_steps, incompatible_steps), both ordered by phase then name.
     """
-    all_steps = (
-        CIStep.objects.all().select_related("repository").order_by("phase", "name")
-    )
+    all_steps = CIStep.objects.all().select_related("repository").order_by("phase", "name")
 
     compatible = []
     incompatible = []
@@ -164,18 +153,14 @@ def generate_github_actions_manifest(workflow) -> str:
     )
 
     # User-composed steps
-    for ws in workflow.workflow_steps.select_related("step__repository").order_by(
-        "order"
-    ):
+    for ws in workflow.workflow_steps.select_related("step__repository").order_by("order"):
         step = ws.step
         repo = step.repository
 
         # Build uses reference
         parsed = parse_git_url(repo.git_url)
         if parsed and parsed.get("owner") and parsed.get("repo"):
-            uses_ref = (
-                f"{parsed['owner']}/{parsed['repo']}/ci-steps/{step.directory_name}"
-            )
+            uses_ref = f"{parsed['owner']}/{parsed['repo']}/ci-steps/{step.directory_name}"
             if step.commit_sha:
                 uses_ref += f"@{step.commit_sha}"
             else:

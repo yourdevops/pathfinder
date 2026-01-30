@@ -1,11 +1,13 @@
 """Docker plugin views."""
 
-from django.shortcuts import redirect
-from django.views.generic import FormView
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import redirect
+from django.views.generic import FormView
+
 from core.models import IntegrationConnection
 from core.permissions import OperatorRequiredMixin
+
 from .forms import DockerConnectionForm
 
 
@@ -47,7 +49,5 @@ class DockerConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, Form
         connection.set_config(config)
         connection.save()
 
-        messages.success(
-            self.request, f'Docker connection "{connection.name}" created successfully.'
-        )
+        messages.success(self.request, f'Docker connection "{connection.name}" created successfully.')
         return redirect("connections:detail", connection_name=connection.name)

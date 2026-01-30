@@ -1,10 +1,10 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views import View
 from django.contrib import messages
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views import View
 
 from ..decorators import AdminRequiredMixin
 from ..forms import UserCreateForm, UserEditForm
-from ..models import User, Group, GroupMembership
+from ..models import Group, GroupMembership, User
 
 
 class UserListView(AdminRequiredMixin, View):
@@ -13,11 +13,7 @@ class UserListView(AdminRequiredMixin, View):
     template_name = "core/users/list.html"
 
     def get(self, request):
-        users = (
-            User.objects.all()
-            .prefetch_related("group_memberships__group")
-            .order_by("username")
-        )
+        users = User.objects.all().prefetch_related("group_memberships__group").order_by("username")
         return render(
             request,
             self.template_name,
@@ -45,11 +41,7 @@ class UserCreateView(AdminRequiredMixin, View):
             return redirect("users:list")
 
         # Re-render list with form errors
-        users = (
-            User.objects.all()
-            .prefetch_related("group_memberships__group")
-            .order_by("username")
-        )
+        users = User.objects.all().prefetch_related("group_memberships__group").order_by("username")
         return render(
             request,
             "core/users/list.html",

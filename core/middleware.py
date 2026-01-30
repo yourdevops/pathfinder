@@ -1,5 +1,6 @@
 from django.shortcuts import redirect
-from .utils import is_setup_complete, generate_unlock_token
+
+from .utils import generate_unlock_token, is_setup_complete
 
 
 class SetupMiddleware:

@@ -1,33 +1,33 @@
-from django.views.generic import ListView, CreateView, TemplateView, UpdateView, View
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
-from django.urls import reverse
 from django.http import HttpResponse
-from django.shortcuts import redirect, get_object_or_404, render
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.vary import vary_on_headers
-from django.contrib import messages
+from django.views.generic import CreateView, ListView, TemplateView, UpdateView, View
 
-from core.models import (
-    Project,
-    Environment,
-    ProjectMembership,
-    Group,
-    ProjectConnection,
-    EnvironmentConnection,
-)
+from core.decorators import AdminRequiredMixin
 from core.forms import (
-    ProjectCreateForm,
-    ProjectUpdateForm,
-    EnvironmentForm,
     AddProjectMemberForm,
     AttachConnectionForm,
+    EnvironmentForm,
+    ProjectCreateForm,
+    ProjectUpdateForm,
 )
-from core.decorators import AdminRequiredMixin
+from core.models import (
+    Environment,
+    EnvironmentConnection,
+    Group,
+    Project,
+    ProjectConnection,
+    ProjectMembership,
+)
 from core.permissions import (
-    ProjectViewerMixin,
     ProjectContributorMixin,
     ProjectOwnerMixin,
+    ProjectViewerMixin,
 )
 
 
@@ -106,20 +106,14 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
         if tab == "services":
             context["services"] = self.project.services.order_by("name")
         elif tab == "environments":
-            context["environments"] = self.project.environments.filter(
-                status="active"
-            ).order_by("order", "name")
+            context["environments"] = self.project.environments.filter(status="active").order_by("order", "name")
         elif tab == "settings":
             context["form"] = ProjectUpdateForm(instance=self.project)
             # Members context (merged from members tab)
-            memberships = self.project.memberships.select_related("group").order_by(
-                "project_role"
-            )
+            memberships = self.project.memberships.select_related("group").order_by("project_role")
             context["memberships"] = memberships
             context["owners"] = [m for m in memberships if m.project_role == "owner"]
-            context["contributors"] = [
-                m for m in memberships if m.project_role == "contributor"
-            ]
+            context["contributors"] = [m for m in memberships if m.project_role == "contributor"]
             context["viewers"] = [m for m in memberships if m.project_role == "viewer"]
 
         return context
@@ -136,10 +130,7 @@ class ProjectUpdateView(LoginRequiredMixin, ProjectOwnerMixin, UpdateView):
         return self.project
 
     def get_success_url(self):
-        return (
-            reverse("projects:detail", kwargs={"project_name": self.project.name})
-            + "?tab=settings"
-        )
+        return reverse("projects:detail", kwargs={"project_name": self.project.name}) + "?tab=settings"
 
     def form_valid(self, form):
         response = super().form_valid(form)
@@ -188,9 +179,7 @@ class EnvironmentDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        env = get_object_or_404(
-            Environment, name=kwargs.get("env_name"), project=self.project
-        )
+        env = get_object_or_404(Environment, name=kwargs.get("env_name"), project=self.project)
         context["environment"] = env
         context["form"] = EnvironmentForm(instance=env)
         # Get merged env vars with inheritance info
@@ -233,16 +222,14 @@ class EnvironmentUpdateView(LoginRequiredMixin, ProjectContributorMixin, View):
     """Update environment settings."""
 
     def post(self, request, *args, **kwargs):
-        env = get_object_or_404(
-            Environment, name=kwargs.get("env_name"), project=self.project
-        )
+        env = get_object_or_404(Environment, name=kwargs.get("env_name"), project=self.project)
         form = EnvironmentForm(request.POST, instance=env)
         if form.is_valid():
             # Handle is_default - ensure only one default
             if form.cleaned_data.get("is_default"):
-                Environment.objects.filter(
-                    project=self.project, is_default=True
-                ).exclude(pk=env.pk).update(is_default=False)
+                Environment.objects.filter(project=self.project, is_default=True).exclude(pk=env.pk).update(
+                    is_default=False
+                )
 
             form.save()
             messages.success(request, f'Environment "{env.name}" updated.')
@@ -268,9 +255,7 @@ class EnvironmentDeleteView(LoginRequiredMixin, ProjectOwnerMixin, View):
     """Delete an environment."""
 
     def post(self, request, *args, **kwargs):
-        env = get_object_or_404(
-            Environment, name=kwargs.get("env_name"), project=self.project
-        )
+        env = get_object_or_404(Environment, name=kwargs.get("env_name"), project=self.project)
         env_name = env.name
         was_default = env.is_default
         env.delete()
@@ -308,13 +293,10 @@ class AddMemberModalView(LoginRequiredMixin, ProjectOwnerMixin, TemplateView):
                 project_role=form.cleaned_data["project_role"],
                 added_by=request.user.username,
             )
-            messages.success(
-                request, f'Group "{form.cleaned_data["group"].name}" added to project.'
-            )
+            messages.success(request, f'Group "{form.cleaned_data["group"].name}" added to project.')
             response = HttpResponse(status=204)
             response["HX-Redirect"] = (
-                reverse("projects:detail", kwargs={"project_name": self.project.name})
-                + "?tab=settings"
+                reverse("projects:detail", kwargs={"project_name": self.project.name}) + "?tab=settings"
             )
             return response
         return self.render_to_response(self.get_context_data(form=form))
@@ -325,15 +307,10 @@ class RemoveMemberView(LoginRequiredMixin, ProjectOwnerMixin, View):
 
     def post(self, request, *args, **kwargs):
         group = get_object_or_404(Group, name=kwargs.get("group_name"))
-        membership = get_object_or_404(
-            ProjectMembership, project=self.project, group=group
-        )
+        membership = get_object_or_404(ProjectMembership, project=self.project, group=group)
         membership.delete()
         messages.success(request, f'Group "{group.name}" removed from project.')
-        return redirect(
-            reverse("projects:detail", kwargs={"project_name": self.project.name})
-            + "?tab=settings"
-        )
+        return redirect(reverse("projects:detail", kwargs={"project_name": self.project.name}) + "?tab=settings")
 
 
 # ============================================================================
@@ -349,9 +326,7 @@ class ProjectEnvVarModalView(LoginRequiredMixin, ProjectOwnerMixin, TemplateView
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["target"] = "project"
-        context["action_url"] = reverse(
-            "projects:project_env_var_save", kwargs={"project_name": self.project.name}
-        )
+        context["action_url"] = reverse("projects:project_env_var_save", kwargs={"project_name": self.project.name})
         # Check if editing existing variable
         key = self.kwargs.get("key")
         if key:
@@ -408,8 +383,7 @@ class ProjectEnvVarSaveView(LoginRequiredMixin, ProjectOwnerMixin, View):
         # Return to settings tab
         response = HttpResponse(status=204)
         response["HX-Redirect"] = (
-            reverse("projects:detail", kwargs={"project_name": self.project.name})
-            + "?tab=settings"
+            reverse("projects:detail", kwargs={"project_name": self.project.name}) + "?tab=settings"
         )
         return response
 
@@ -437,9 +411,7 @@ class EnvVarModalView(LoginRequiredMixin, ProjectContributorMixin, TemplateView)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        env = get_object_or_404(
-            Environment, name=kwargs.get("env_name"), project=self.project
-        )
+        env = get_object_or_404(Environment, name=kwargs.get("env_name"), project=self.project)
         context["environment"] = env
         context["target"] = "environment"
         context["action_url"] = reverse(
@@ -447,9 +419,7 @@ class EnvVarModalView(LoginRequiredMixin, ProjectContributorMixin, TemplateView)
             kwargs={"project_name": self.project.name, "env_name": env.name},
         )
         # Pass locked keys from project for validation hint
-        context["locked_keys"] = [
-            v["key"] for v in (self.project.env_vars or []) if v.get("lock")
-        ]
+        context["locked_keys"] = [v["key"] for v in (self.project.env_vars or []) if v.get("lock")]
         return context
 
 
@@ -459,9 +429,7 @@ class EnvVarSaveView(LoginRequiredMixin, ProjectContributorMixin, View):
     def post(self, request, *args, **kwargs):
         import re
 
-        env = get_object_or_404(
-            Environment, name=kwargs.get("env_name"), project=self.project
-        )
+        env = get_object_or_404(Environment, name=kwargs.get("env_name"), project=self.project)
 
         key = request.POST.get("key", "").strip().upper()
         value = request.POST.get("value", "")
@@ -528,9 +496,7 @@ class EnvVarDeleteView(LoginRequiredMixin, ProjectContributorMixin, View):
     """Delete an environment-level env var."""
 
     def delete(self, request, *args, **kwargs):
-        env = get_object_or_404(
-            Environment, name=kwargs.get("env_name"), project=self.project
-        )
+        env = get_object_or_404(Environment, name=kwargs.get("env_name"), project=self.project)
         key = kwargs.get("key")
         env_vars = [v for v in (env.env_vars or []) if v["key"] != key]
         env.env_vars = env_vars
@@ -563,9 +529,7 @@ class ProjectAttachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, View):
 
     def post(self, request, *args, **kwargs):
         existing_ids = self.project.connections.values_list("connection_id", flat=True)
-        form = AttachConnectionForm(
-            request.POST, category="scm", exclude_ids=list(existing_ids)
-        )
+        form = AttachConnectionForm(request.POST, category="scm", exclude_ids=list(existing_ids))
 
         if form.is_valid():
             ProjectConnection.objects.create(
@@ -583,9 +547,7 @@ class ProjectAttachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, View):
                 "core/projects/_connections_list.html",
                 {
                     "project": self.project,
-                    "connections": self.project.connections.select_related(
-                        "connection"
-                    ).all(),
+                    "connections": self.project.connections.select_related("connection").all(),
                     "user_project_role": self.user_project_role,
                 },
             )
@@ -598,9 +560,7 @@ class ProjectDetachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, View):
 
     def post(self, request, *args, **kwargs):
         connection_id = kwargs.get("connection_id")
-        attachment = get_object_or_404(
-            ProjectConnection, project=self.project, connection_id=connection_id
-        )
+        attachment = get_object_or_404(ProjectConnection, project=self.project, connection_id=connection_id)
 
         # TODO: Check if any services use this connection (Phase 5+)
         # For now, allow detachment
@@ -614,9 +574,7 @@ class ProjectDetachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, View):
                 "core/projects/_connections_list.html",
                 {
                     "project": self.project,
-                    "connections": self.project.connections.select_related(
-                        "connection"
-                    ).all(),
+                    "connections": self.project.connections.select_related("connection").all(),
                     "user_project_role": self.user_project_role,
                 },
             )
@@ -628,9 +586,7 @@ class EnvironmentAttachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, Vie
     """Attach a deploy connection to an environment."""
 
     def get(self, request, *args, **kwargs):
-        environment = get_object_or_404(
-            Environment, name=kwargs.get("env_name"), project=self.project
-        )
+        environment = get_object_or_404(Environment, name=kwargs.get("env_name"), project=self.project)
         existing_ids = environment.connections.values_list("connection_id", flat=True)
         form = AttachConnectionForm(category="deploy", exclude_ids=list(existing_ids))
 
@@ -647,13 +603,9 @@ class EnvironmentAttachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, Vie
         )
 
     def post(self, request, *args, **kwargs):
-        environment = get_object_or_404(
-            Environment, name=kwargs.get("env_name"), project=self.project
-        )
+        environment = get_object_or_404(Environment, name=kwargs.get("env_name"), project=self.project)
         existing_ids = environment.connections.values_list("connection_id", flat=True)
-        form = AttachConnectionForm(
-            request.POST, category="deploy", exclude_ids=list(existing_ids)
-        )
+        form = AttachConnectionForm(request.POST, category="deploy", exclude_ids=list(existing_ids))
 
         if form.is_valid():
             EnvironmentConnection.objects.create(
@@ -671,9 +623,7 @@ class EnvironmentAttachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, Vie
                 {
                     "environment": environment,
                     "project": self.project,
-                    "connections": environment.connections.select_related(
-                        "connection"
-                    ).all(),
+                    "connections": environment.connections.select_related("connection").all(),
                     "user_project_role": self.user_project_role,
                 },
             )
@@ -689,13 +639,9 @@ class EnvironmentDetachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, Vie
     """Detach a connection from an environment."""
 
     def post(self, request, *args, **kwargs):
-        environment = get_object_or_404(
-            Environment, name=kwargs.get("env_name"), project=self.project
-        )
+        environment = get_object_or_404(Environment, name=kwargs.get("env_name"), project=self.project)
         connection_id = kwargs.get("connection_id")
-        attachment = get_object_or_404(
-            EnvironmentConnection, environment=environment, connection_id=connection_id
-        )
+        attachment = get_object_or_404(EnvironmentConnection, environment=environment, connection_id=connection_id)
 
         attachment.delete()
         messages.success(request, "Connection detached.")
@@ -707,9 +653,7 @@ class EnvironmentDetachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, Vie
                 {
                     "environment": environment,
                     "project": self.project,
-                    "connections": environment.connections.select_related(
-                        "connection"
-                    ).all(),
+                    "connections": environment.connections.select_related("connection").all(),
                     "user_project_role": self.user_project_role,
                 },
             )
