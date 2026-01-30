@@ -7,24 +7,23 @@ Pathfinder is a lightweight internal developer platform that turns your existing
 ### Running Locally (without containers)
 
 ```bash
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Install dependencies
-pip install -r requirements.txt
+uv sync
 
 # Rebuild UI
-python manage.py tailwind build
+uv run python manage.py tailwind build
 
 # Collect static files
-python manage.py collectstatic
+uv run python manage.py collectstatic
 
 # Run database migrations
-python manage.py migrate
+uv run python manage.py migrate
 
 # Start development server
-python manage.py runserver
+make run
 ```
 
 The portal will be available at **http://localhost:8000**

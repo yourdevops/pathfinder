@@ -7,17 +7,20 @@ Pathfinder (Developer Self-Service Portal) is a Django web app for managing cont
 
 **Stack**: Django 6.x, SQLite, Docker/Podman, Gunicorn
 
+**Package Management**: uv (pyproject.toml + uv.lock). Do NOT use pip or requirements.txt.
+
 **No Backwards Compatibility Required**: This project is in early development stage. There is no need to maintain backwards compatibility for any features. When refactoring, feel free to remove deprecated code, change database schemas, and break existing functionality if it leads to a cleaner implementation.
 
-When running locally on the host, always activate venv first. 
+When running locally, use uv (no manual venv activation needed):
 ```bash
-source venv/bin/activate
+# Install/sync dependencies
+uv sync
 
 # Rebuild UI
-python manage.py tailwind build
+uv run python manage.py tailwind build
 
 # Collect static files
-python manage.py collectstatic
+uv run python manage.py collectstatic
 ```
 
 **USE Makefile** commands to run/restart app locally
