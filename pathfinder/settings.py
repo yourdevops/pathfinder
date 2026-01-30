@@ -191,8 +191,9 @@ TASKS = {
 # Content Security Policy
 SECURE_CSP = {
     "default-src": [CSP.SELF],
-    "script-src": [CSP.SELF, CSP.NONCE, "https://unpkg.com", "https://cdn.jsdelivr.net"],
+    "script-src": [CSP.SELF, CSP.NONCE],
     "style-src": [CSP.SELF, CSP.NONCE],
+    "img-src": [CSP.SELF, "data:"],
     # No iframes are used, so blocking them entirely is reasonable hardening
     "frame-src": [CSP.NONE],
     # The <object>/<embed> have no legitimate use in this app and are a classic attack vector.

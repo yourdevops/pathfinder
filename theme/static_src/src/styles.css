@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide Alpine.js elements until initialization to prevent flash of unstyled content */
+@layer base {
+  [x-cloak] {
+    display: none !important;
+  }
+}
+
+/* htmx indicator styles (moved from htmx inline injection for CSP compliance) */
+@layer base {
+  .htmx-indicator {
+    opacity: 0;
+    transition: opacity 500ms ease-in;
+  }
+  .htmx-request .htmx-indicator {
+    opacity: 1;
+  }
+  .htmx-request.htmx-indicator {
+    opacity: 1;
+  }
+}
+
 /* Custom component classes */
 @layer components {
   .btn-primary {

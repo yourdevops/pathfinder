@@ -2,7 +2,8 @@
 <aside class="fixed left-0 top-0 h-full w-64 bg-dark-surface border-r border-dark-border flex flex-col">
     <!-- Logo / Home -->
     <div class="p-4 border-b border-dark-border">
-        <a href="{% url 'dashboard:home' %}" class="text-xl font-bold text-dark-text hover:text-dark-accent transition-colors">
+        <a href="{% url 'dashboard:home' %}" class="flex items-center gap-2.5 text-xl font-bold text-dark-text hover:text-dark-accent transition-colors">
+            {% include "core/components/logo.html" %}
             Pathfinder
         </a>
     </div>
