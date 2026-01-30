@@ -9,8 +9,6 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-    - name: Notify SSP - Build Started
-      uses: ./ci-steps/ssp-notify-start
     - name: Setup Python
       uses: yourdevops/ci-steps-library/ci-steps/setup-python@8c670e1c21e0c762fb15183a78f1390f1db71a5e
     - name: Lint with Ruff
@@ -19,5 +17,3 @@ jobs:
       uses: yourdevops/ci-steps-library/ci-steps/security-scan@8c670e1c21e0c762fb15183a78f1390f1db71a5e
     - name: Test with pytest
       uses: yourdevops/ci-steps-library/ci-steps/test-pytest@8c670e1c21e0c762fb15183a78f1390f1db71a5e
-    - name: Notify SSP - Build Complete
-      uses: ./ci-steps/ssp-notify-complete
