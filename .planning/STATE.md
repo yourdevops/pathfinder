@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 Phase: 5.1 of 7 (CI Workflows Builder)
 Plan: 4 of 4 in current phase - COMPLETED (all plans)
 Status: Phase complete
-Last activity: 2026-01-30 - Completed quick task 024: Migrate to uv package management
+Last activity: 2026-01-30 - Completed quick task 025: Implement Django 6.0 native CSP policy
 
 Progress: [====================================] 100% (Phase 5.1)
 
@@ -168,9 +168,10 @@ None - Phase 5.1 complete with all CI Workflows functionality
 | 022 | Wizard improvements and helper text | 2026-01-27 | 27f64f1 | [022-fix-healthchecks-wizard-improvements](./quick/022-fix-healthchecks-wizard-improvements/) |
 | 023 | Fix CI step composer click actions not adding steps | 2026-01-29 | 754dcbb | [023-fix-ci-step-composer-click-actions-not-a](./quick/023-fix-ci-step-composer-click-actions-not-a/) |
 | 024 | Migrate to uv package management from pip | 2026-01-30 | 110bb86 | [024-migrate-to-uv-package-management-from-pi](./quick/024-migrate-to-uv-package-management-from-pi/) |
+| 025 | Implement Django 6.0 native CSP policy | 2026-01-30 | cab6d38 | [025-implement-django-6-0-native-csp-policy-w](./quick/025-implement-django-6-0-native-csp-policy-w/) |
 
 ## Session Continuity
 
 Last session: 2026-01-30
-Stopped at: Completed quick task 024
+Stopped at: Completed quick task 025
 Resume file: None
