@@ -1,8 +1,6 @@
 # Pathfinder Makefile
 # Run both web server and background worker with interleaved logs
 
-VENV := venv
-PYTHON := $(VENV)/bin/python
 PID_DIR := .pids
 WEB_PID := $(PID_DIR)/web.pid
 WORKER_PID := $(PID_DIR)/worker.pid
@@ -17,24 +15,20 @@ help:
 	@echo "  make migrate - Run database migrations"
 	@echo "  make build   - Build Tailwind CSS"
 	@echo "  make clean   - Stop processes and clean PID files"
-	@echo "  make venv    - Create virtual environment"
+	@echo "  make venv    - Install/sync dependencies with uv"
 	@echo ""
 
 venv:
-	@if [ ! -d "$(VENV)" ]; then \
-		echo "Creating virtual environment..."; \
-		python3 -m venv $(VENV); \
-		$(PYTHON) -m pip install -r requirements.txt; \
-	fi
+	@uv sync
 
 $(PID_DIR):
 	@mkdir -p $(PID_DIR)
 
 migrate: venv
-	@$(PYTHON) manage.py migrate
+	@uv run python manage.py migrate
 
 build: venv
-	@$(PYTHON) manage.py tailwind build
+	@uv run python manage.py tailwind build
 
 stop:
 	@if [ -f "$(WEB_PID)" ] && kill -0 $$(cat $(WEB_PID)) 2>/dev/null; then \
@@ -54,4 +48,4 @@ clean: stop
 	@echo "Cleaned up"
 
 run: venv $(PID_DIR) stop
-	@./scripts/run-dev.sh $(PYTHON) $(WEB_PID) $(WORKER_PID)
+	@./scripts/run-dev.sh "uv run python" $(WEB_PID) $(WORKER_PID)

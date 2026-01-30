@@ -20,7 +20,11 @@ from django.urls import path, include, register_converter
 from django.views.generic import RedirectView
 
 from core.converters import DnsLabelConverter
-from core.urls import (
+
+# Register custom URL converters BEFORE importing URL patterns that use them
+register_converter(DnsLabelConverter, "dns")
+
+from core.urls import (  # noqa: E402
     setup_patterns,
     auth_patterns,
     dashboard_patterns,
@@ -34,10 +38,8 @@ from core.urls import (
     services_patterns,
     resources_patterns,
 )
-from plugins import autodiscover
-from plugins.base import registry
-
-register_converter(DnsLabelConverter, "dns")
+from plugins import autodiscover  # noqa: E402
+from plugins.base import registry  # noqa: E402
 
 autodiscover()
 
