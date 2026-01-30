@@ -20,9 +20,6 @@ from django.urls import path, include, register_converter
 from django.views.generic import RedirectView
 
 from core.converters import DnsLabelConverter
-
-register_converter(DnsLabelConverter, "dns")
-
 from core.urls import (
     setup_patterns,
     auth_patterns,
@@ -37,10 +34,10 @@ from core.urls import (
     services_patterns,
     resources_patterns,
 )
-
-# Plugin autodiscovery
 from plugins import autodiscover
 from plugins.base import registry
+
+register_converter(DnsLabelConverter, "dns")
 
 autodiscover()
 

@@ -1,4 +1,6 @@
 import uuid
+
+from auditlog.registry import auditlog
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -695,8 +697,6 @@ class CIWorkflowStep(models.Model):
 
 
 # Register models with auditlog
-from auditlog.registry import auditlog
-
 auditlog.register(User, exclude_fields=["password", "last_login"])
 auditlog.register(Group)
 auditlog.register(GroupMembership)

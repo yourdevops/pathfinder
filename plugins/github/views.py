@@ -325,7 +325,6 @@ class GitHubInstallationCallbackView(LoginRequiredMixin, OperatorRequiredMixin, 
 
     def get(self, request):
         installation_id = request.GET.get("installation_id")
-        setup_action = request.GET.get("setup_action")
 
         if not installation_id:
             messages.error(request, "No installation ID received.")
