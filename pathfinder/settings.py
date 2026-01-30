@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 
+from django.utils.csp import CSP
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -58,6 +60,7 @@ AUTH_USER_MODEL = "core.User"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "django.middleware.csp.ContentSecurityPolicyMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -88,6 +91,7 @@ TEMPLATES = [
                 "django.contrib.messages.context_processors.messages",
                 "core.context_processors.user_roles",
                 "core.context_processors.navigation_context",
+                "django.template.context_processors.csp",
             ],
         },
     },
@@ -165,6 +169,20 @@ TASKS = {
         "BACKEND": "django_tasks.backends.database.DatabaseBackend",
         "QUEUES": ["default", "health_checks", "repository_scaffolding", "steps_scan"],
     }
+}
+
+# Content Security Policy (Django 6.0 native)
+SECURE_CSP = {
+    "default-src": [CSP.SELF],
+    "script-src": [CSP.SELF, CSP.NONCE, "https://unpkg.com", "https://cdn.jsdelivr.net"],
+    "style-src": [CSP.SELF, CSP.UNSAFE_INLINE],
+    "img-src": [CSP.SELF, "data:"],
+    "connect-src": [CSP.SELF],
+    "font-src": [CSP.SELF],
+    "frame-src": [CSP.NONE],
+    "object-src": [CSP.NONE],
+    "base-uri": [CSP.SELF],
+    "form-action": [CSP.SELF, "https://github.com"],
 }
 
 # Integration health check interval (seconds)
