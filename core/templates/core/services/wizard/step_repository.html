@@ -59,7 +59,7 @@
 </div>
 {% endif %}
 
-<script>
+<script nonce="{{ csp_nonce }}">
 // Toggle fields based on repo mode
 document.querySelectorAll('input[name="repository-repo_mode"]').forEach(function(radio) {
     radio.addEventListener('change', function() {

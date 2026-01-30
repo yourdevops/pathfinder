@@ -91,7 +91,7 @@
 </div>
 
 <!-- Warn before leaving mid-wizard -->
-<script>
+<script nonce="{{ csp_nonce }}">
 window.addEventListener('beforeunload', function(e) {
     // Only warn if form has been interacted with
     if (document.querySelector('#wizard-form').dataset.dirty === 'true') {

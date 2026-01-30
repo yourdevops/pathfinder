@@ -60,7 +60,7 @@
     {{ wizard.form.env_vars_json }}
 </div>
 
-<script>
+<script nonce="{{ csp_nonce }}">
 let envVars = [];
 
 function renderEnvVars() {
