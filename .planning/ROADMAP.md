@@ -207,11 +207,12 @@ Plans:
   3. Project settings include CI configuration section for default workflow preferences
   4. Service detail page shows CI Workflow tab with assigned workflow and manifest preview
   5. Changing a service's CI Workflow updates the repository's workflow file
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 05.2-01: TBD
-- [ ] 05.2-02: TBD
+- [ ] 05.2-01-PLAN.md — Models, migrations, and Project CI Configuration UI
+- [ ] 05.2-02-PLAN.md — Service CI tab, manifest push task, GitHubPlugin update
+- [ ] 05.2-03-PLAN.md — Service creation wizard workflow step + verification
 
 ### Phase 6: Builds
 **Goal**: GitHub Actions can report build status; services transition from draft to active on first successful build
@@ -260,7 +261,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5
 | 4.1 Replace UUID URLs with Slugs (INSERTED) | 4/4 | Complete | 2026-01-26 |
 | 5. Services | 4/4 | Complete | 2026-01-26 |
 | 5.1 CI Workflows Builder (INSERTED) | 4/4 | Complete | 2026-01-29 |
-| 5.2 CI Workflows — Project & Service Pairing (INSERTED) | 0/2 | Not started | - |
+| 5.2 CI Workflows — Project & Service Pairing (INSERTED) | 0/3 | Not started | - |
 | 6. Builds | 0/2 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
