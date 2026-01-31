@@ -131,6 +131,7 @@ Recent decisions affecting current work:
 - Phase 3.1 inserted after Phase 3: Unified sidebar navigation structure (URGENT) - 2026-01-26
 - Phase 4.1 inserted after Phase 4: Replace UUID URLs with Slugs - Use human-readable slugs instead of UUIDs in all URLs (URGENT) - 2026-01-26
 - Phase 5.1 inserted after Phase 5: CI Workflows Builder - Replace Blueprints with CI Workflows, steps catalog, workflow composer, GitHub Actions manifest preview (URGENT) - 2026-01-29
+- Phase 5.2 inserted after Phase 5.1: CI Workflows — Project & Service Pairing - Assign CI Workflows to Services, push manifests to repos, project CI config (URGENT) - 2026-01-31
 
 ### Pending Todos
 

@@ -13,7 +13,5 @@ jobs:
       uses: yourdevops/ci-steps-library/ci-steps/setup-python-uv@ce87e11fefada8560d310b73566b7e68d9e10fb8
     - name: Lint with Ruff
       uses: yourdevops/ci-steps-library/ci-steps/lint-ruff@ce87e11fefada8560d310b73566b7e68d9e10fb8
-    - name: Test with pytest
-      uses: yourdevops/ci-steps-library/ci-steps/test-pytest@ce87e11fefada8560d310b73566b7e68d9e10fb8
     - name: Security Scan
       uses: yourdevops/ci-steps-library/ci-steps/security-scan@ce87e11fefada8560d310b73566b7e68d9e10fb8

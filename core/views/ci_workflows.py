@@ -306,20 +306,15 @@ class RuntimeVersionsView(LoginRequiredMixin, View):
 
 
 class WorkflowComposerView(LoginRequiredMixin, View):
-    """Step 2: Compose workflow steps with drag-and-drop ordering."""
+    """Step 2: Compose workflow steps with drag-and-drop ordering.
 
-    def get(self, request):
-        name = request.GET.get("name", "")
-        description = request.GET.get("description", "")
-        runtime_family = request.GET.get("runtime_family", "")
-        runtime_version = request.GET.get("runtime_version", "")
+    Handles both create (GET /composer/?name=...&runtime_family=...&runtime_version=...)
+    and edit (GET /<workflow_name>/edit/) modes.
+    """
 
-        if not name or not runtime_family or not runtime_version:
-            return redirect("ci_workflows:workflow_create")
-
+    def _build_compatible_context(self, runtime_family, runtime_version):
+        """Build compatible/incompatible steps grouped by phase."""
         compatible, incompatible = get_compatible_steps(runtime_family, runtime_version)
-
-        # Group compatible steps by phase
         phase_order = ["setup", "build", "test", "package"]
         phase_labels = {
             "setup": "Setup",
@@ -332,6 +327,48 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             phase_steps = [s for s in compatible if s.phase == phase]
             if phase_steps:
                 compatible_by_phase[phase_labels[phase]] = phase_steps
+        return compatible_by_phase, incompatible, compatible
+
+    def get(self, request, workflow_name=None):
+        # Edit mode: load existing workflow
+        if workflow_name:
+            workflow = get_object_or_404(CIWorkflow, name=workflow_name)
+            name = workflow.name
+            description = workflow.description
+            runtime_family = workflow.runtime_family
+            runtime_version = workflow.runtime_version
+            workflow_uuid = str(workflow.uuid)
+
+            # Build initial steps JSON from existing workflow steps
+            workflow_steps = workflow.workflow_steps.select_related("step").order_by("order")
+            initial_steps = []
+            for ws in workflow_steps:
+                initial_steps.append(
+                    {
+                        "id": str(ws.step.uuid),
+                        "name": ws.step.name,
+                        "phase": ws.step.phase,
+                        "description": ws.step.description[:80] if ws.step.description else "",
+                        "inputs_schema": ws.step.inputs_schema or {},
+                        "order": ws.order,
+                        "input_config": ws.input_config or {},
+                        "expanded": False,
+                    }
+                )
+            initial_steps_json = json.dumps(initial_steps)
+        else:
+            # Create mode: read from query params
+            name = request.GET.get("name", "")
+            description = request.GET.get("description", "")
+            runtime_family = request.GET.get("runtime_family", "")
+            runtime_version = request.GET.get("runtime_version", "")
+            workflow_uuid = ""
+            initial_steps_json = "[]"
+
+            if not name or not runtime_family or not runtime_version:
+                return redirect("ci_workflows:workflow_create")
+
+        compatible_by_phase, incompatible, compatible = self._build_compatible_context(runtime_family, runtime_version)
 
         return render(
             request,
@@ -341,18 +378,21 @@ class WorkflowComposerView(LoginRequiredMixin, View):
                 "workflow_description": description,
                 "runtime_family": runtime_family,
                 "runtime_version": runtime_version,
+                "workflow_uuid": workflow_uuid,
+                "initial_steps_json": initial_steps_json,
                 "compatible_by_phase": compatible_by_phase,
                 "incompatible_steps": incompatible,
                 "compatible_steps": compatible,
             },
         )
 
-    def post(self, request):
+    def post(self, request, workflow_name=None):
         name = request.POST.get("name", "")
         description = request.POST.get("description", "")
         runtime_family = request.POST.get("runtime_family", "")
         runtime_version = request.POST.get("runtime_version", "")
         steps_json = request.POST.get("steps_json", "[]")
+        workflow_uuid = request.POST.get("workflow_uuid", "")
 
         if not name or not runtime_family or not runtime_version:
             return redirect("ci_workflows:workflow_create")
@@ -373,15 +413,27 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             except CIStep.DoesNotExist:
                 continue
 
-        # Create the workflow
-        workflow = CIWorkflow.objects.create(
-            name=name,
-            description=description,
-            runtime_family=runtime_family,
-            runtime_version=runtime_version,
-            artifact_type=artifact_type,
-            created_by=request.user.username,
-        )
+        if workflow_uuid:
+            # Edit mode: update existing workflow
+            workflow = get_object_or_404(CIWorkflow, uuid=workflow_uuid)
+            workflow.name = name
+            workflow.description = description
+            workflow.runtime_family = runtime_family
+            workflow.runtime_version = runtime_version
+            workflow.artifact_type = artifact_type
+            workflow.save()
+            # Replace all steps
+            workflow.workflow_steps.all().delete()
+        else:
+            # Create mode: new workflow
+            workflow = CIWorkflow.objects.create(
+                name=name,
+                description=description,
+                runtime_family=runtime_family,
+                runtime_version=runtime_version,
+                artifact_type=artifact_type,
+                created_by=request.user.username,
+            )
 
         # Create workflow steps
         for i, step_entry in enumerate(steps_data):

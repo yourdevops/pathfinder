@@ -32,16 +32,22 @@
                 </span>
             </div>
         </div>
-        {% if can_delete %}
-        <form method="post" action="{% url 'ci_workflows:workflow_delete' workflow_name=workflow.name %}"
-              onsubmit="return confirm('Are you sure you want to delete this workflow?');">
-            {% csrf_token %}
-            <button type="submit"
-                    class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm">
-                Delete Workflow
-            </button>
-        </form>
-        {% endif %}
+        <div class="flex items-center gap-3">
+            <a href="{% url 'ci_workflows:workflow_edit' workflow_name=workflow.name %}"
+               class="px-4 py-2 bg-dark-accent/20 hover:bg-dark-accent/30 text-dark-accent rounded-lg transition-colors text-sm">
+                Edit Workflow
+            </a>
+            {% if can_delete %}
+            <form method="post" action="{% url 'ci_workflows:workflow_delete' workflow_name=workflow.name %}"
+                  onsubmit="return confirm('Are you sure you want to delete this workflow?');">
+                {% csrf_token %}
+                <button type="submit"
+                        class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm">
+                    Delete Workflow
+                </button>
+            </form>
+            {% endif %}
+        </div>
     </div>
 
     <!-- Steps Section -->

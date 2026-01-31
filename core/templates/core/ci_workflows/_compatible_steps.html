@@ -21,6 +21,7 @@ Context: compatible_by_phase (OrderedDict), incompatible_steps (list), runtime_f
     <div class="space-y-1.5">
         {% for step in phase_steps %}
         <div class="flex items-center gap-2 p-2 rounded-lg border border-dark-border hover:border-dark-accent/50 transition-colors cursor-pointer group"
+             x-show="!isStepSelected('{{ step.uuid }}')"
              data-step-id="{{ step.uuid }}"
              data-step-name="{{ step.name }}"
              data-step-phase="{{ step.phase }}"

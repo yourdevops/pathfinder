@@ -1,15 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}Compose Workflow: {{ workflow_name }} - Pathfinder{% endblock %}
+{% block title %}{% if workflow_uuid %}Edit{% else %}Compose{% endif %} Workflow: {{ workflow_name }} - Pathfinder{% endblock %}
 
 {% block content %}
 <div class="p-8" x-data="workflowComposer">
     <!-- Page Header -->
     <div class="mb-6">
+        {% if workflow_uuid %}
+        <a href="{% url 'ci_workflows:workflow_detail' workflow_name=workflow_name %}" class="text-dark-muted hover:text-dark-text text-sm transition-colors">
+            &larr; Back to Workflow
+        </a>
+        <h1 class="text-2xl font-bold text-dark-text mt-2">Edit Workflow: {{ workflow_name }}</h1>
+        {% else %}
         <a href="{% url 'ci_workflows:workflow_create' %}" class="text-dark-muted hover:text-dark-text text-sm transition-colors">
             &larr; Back to Create
         </a>
         <h1 class="text-2xl font-bold text-dark-text mt-2">Compose Workflow: {{ workflow_name }}</h1>
+        {% endif %}
         <div class="flex items-center gap-3 mt-2">
             <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-500/20 text-blue-400">
                 {{ runtime_family }} {{ runtime_version }}
@@ -41,16 +48,17 @@
                         </div>
                     </template>
 
-                    <div class="space-y-2">
+                    <div class="space-y-2" @dragover="onDragOver($event)" @drop="onDrop($event)" @dragleave="onDragLeave()">
                         <template x-for="(step, index) in steps" :key="step.id + '-' + index">
-                            <div class="bg-dark-bg border rounded-lg transition-all duration-150"
-                                 :class="dragOverClass(index)"
-                                 draggable="true"
-                                 @dragstart="onDragStart($event, index)"
-                                 @dragover="onDragOver($event, index)"
-                                 @dragleave="onDragLeave()"
-                                 @drop="onDrop($event, index)"
-                                 @dragend="onDragEnd()">
+                            <div>
+                                <!-- Drop indicator line above this item -->
+                                <div class="transition-all duration-150 rounded-full mx-4"
+                                     :class="dropLineClass(index)"></div>
+                                <div class="bg-dark-bg border border-dark-border rounded-lg transition-opacity duration-150"
+                                     :class="dragIndex === index ? 'opacity-50' : ''"
+                                     draggable="true"
+                                     @dragstart="onDragStart($event, index)"
+                                     @dragend="onDragEnd()">
                                 <!-- Step Header -->
                                 <div class="flex items-center gap-3 p-3">
                                     <!-- Drag handle -->
@@ -123,22 +131,27 @@
                                     </template>
                                 </div>
                             </div>
+                            </div>
                         </template>
+                        <!-- Drop indicator after last item -->
+                        <div class="transition-all duration-150 rounded-full mx-4"
+                             :class="dropLineClass(steps.length)"></div>
                     </div>
                 </div>
 
                 <!-- Save Form -->
                 <div class="p-4 border-t border-dark-border" x-show="steps.length > 0">
-                    <form method="post" action="{% url 'ci_workflows:workflow_composer' %}">
+                    <form method="post" action="{% if workflow_uuid %}{% url 'ci_workflows:workflow_edit' workflow_name=workflow_name %}{% else %}{% url 'ci_workflows:workflow_composer' %}{% endif %}">
                         {% csrf_token %}
                         <input type="hidden" name="name" value="{{ workflow_name }}">
                         <input type="hidden" name="description" value="{{ workflow_description }}">
                         <input type="hidden" name="runtime_family" value="{{ runtime_family }}">
                         <input type="hidden" name="runtime_version" value="{{ runtime_version }}">
+                        {% if workflow_uuid %}<input type="hidden" name="workflow_uuid" value="{{ workflow_uuid }}">{% endif %}
                         <input type="hidden" name="steps_json" :value="stepsJson()">
                         <button type="submit"
                                 class="w-full px-6 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors">
-                            Save Workflow
+                            {% if workflow_uuid %}Update Workflow{% else %}Save Workflow{% endif %}
                         </button>
                     </form>
                 </div>
@@ -165,10 +178,11 @@
 {% block scripts %}
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('alpine:init', () => {
+    const _initialSteps = {{ initial_steps_json|safe }};
     Alpine.data('workflowComposer', () => ({
-        steps: [],
+        steps: _initialSteps,
         dragIndex: -1,
-        dragOverIndex: -1,
+        dropIndex: -1,  // insertion gap: 0 = before first, N = after last
         addStep(step) {
             if (this.steps.find(s => s.id === step.id)) return;
             this.steps.push({...step, order: this.steps.length, input_config: {}, expanded: false});
@@ -207,6 +221,9 @@ document.addEventListener('alpine:init', () => {
         stepsJson() {
             return JSON.stringify(this.steps);
         },
+        isStepSelected(id) {
+            return this.steps.some(s => s.id === id);
+        },
         addStepFromEl(el) {
             this.addStep({
                 id: el.dataset.stepId,
@@ -222,36 +239,49 @@ document.addEventListener('alpine:init', () => {
             event.dataTransfer.effectAllowed = 'move';
             event.dataTransfer.setData('text/plain', String(index));
         },
-        onDragOver(event, index) {
+        onDragOver(event) {
+            if (this.dragIndex === -1) return;
             event.preventDefault();
             event.dataTransfer.dropEffect = 'move';
-            this.dragOverIndex = index;
+            // Find which gap the cursor is closest to by checking item midpoints
+            const container = event.currentTarget;
+            const items = container.querySelectorAll('[draggable="true"]');
+            let gap = items.length; // default: after last
+            for (let i = 0; i < items.length; i++) {
+                const rect = items[i].getBoundingClientRect();
+                if (event.clientY < rect.top + rect.height / 2) {
+                    gap = i;
+                    break;
+                }
+            }
+            this.dropIndex = gap;
         },
         onDragLeave() {
-            this.dragOverIndex = -1;
+            this.dropIndex = -1;
         },
-        onDrop(event, toIndex) {
+        onDrop(event) {
             event.preventDefault();
             const fromIndex = this.dragIndex;
-            if (fromIndex === -1 || fromIndex === toIndex) {
-                this.dragIndex = -1;
-                this.dragOverIndex = -1;
-                return;
-            }
+            let toIndex = this.dropIndex;
+            this.dragIndex = -1;
+            this.dropIndex = -1;
+            if (fromIndex === -1 || toIndex === -1) return;
+            // Adjust for removal shifting indices
+            if (toIndex > fromIndex) toIndex--;
+            if (fromIndex === toIndex) return;
             const item = this.steps.splice(fromIndex, 1)[0];
             this.steps.splice(toIndex, 0, item);
             this.updateOrders();
-            this.dragIndex = -1;
-            this.dragOverIndex = -1;
         },
         onDragEnd() {
             this.dragIndex = -1;
-            this.dragOverIndex = -1;
+            this.dropIndex = -1;
         },
-        dragOverClass(index) {
-            if (this.dragIndex === index) return 'border-dark-border opacity-50';
-            if (this.dragOverIndex === index) return 'border-dark-accent border-2';
-            return 'border-dark-border';
+        dropLineClass(gapIndex) {
+            if (this.dropIndex !== gapIndex) return 'h-0';
+            // Don't show line directly above or below the dragged item (no-op drop)
+            if (gapIndex === this.dragIndex || gapIndex === this.dragIndex + 1) return 'h-0';
+            return 'h-0.5 my-1 bg-dark-accent';
         }
     }));
 });

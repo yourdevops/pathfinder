@@ -152,6 +152,11 @@ ci_workflows_patterns = [
         name="workflow_manifest",
     ),
     path(
+        "<dns:workflow_name>/edit/",
+        WorkflowComposerView.as_view(),
+        name="workflow_edit",
+    ),
+    path(
         "<dns:workflow_name>/delete/",
         WorkflowDeleteView.as_view(),
         name="workflow_delete",

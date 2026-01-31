@@ -144,13 +144,13 @@ def generate_github_actions_manifest(workflow) -> str:
         }
     )
 
-    # Auto-inject: SSP Notify Start
-    steps_list.append(
-        {
-            "name": "Notify SSP - Build Started",
-            "uses": "./ci-steps/ssp-notify-start",
-        }
-    )
+    # # Auto-inject: SSP Notify Start
+    # steps_list.append(
+    #     {
+    #         "name": "Notify SSP - Build Started",
+    #         "uses": "./ci-steps/ssp-notify-start",
+    #     }
+    # )
 
     # User-composed steps
     for ws in workflow.workflow_steps.select_related("step__repository").order_by("order"):
@@ -177,12 +177,12 @@ def generate_github_actions_manifest(workflow) -> str:
 
         steps_list.append(step_entry)
 
-    # Auto-inject: SSP Notify Complete
-    steps_list.append(
-        {
-            "name": "Notify SSP - Build Complete",
-            "uses": "./ci-steps/ssp-notify-complete",
-        }
-    )
+    # # Auto-inject: SSP Notify Complete
+    # steps_list.append(
+    #     {
+    #         "name": "Notify SSP - Build Complete",
+    #         "uses": "./ci-steps/ssp-notify-complete",
+    #     }
+    # )
 
     return yaml.dump(manifest, default_flow_style=False, sort_keys=False)

@@ -20,6 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4.1: Replace UUID URLs with Slugs** (INSERTED) - Use name-based slugs in URLs instead of UUIDs
 - [x] **Phase 5: Services** - Creation wizard, repository scaffolding, service management
 - [x] **Phase 5.1: CI Workflows Builder** (INSERTED) - Steps catalog, workflow composer, GitHub Actions manifest preview
+- [ ] **Phase 5.2: CI Workflows — Project & Service Pairing** (INSERTED) - Assign workflows to services, push manifests to repos
 - [ ] **Phase 6: Builds** - Webhook ingestion, build tracking, service activation
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
@@ -191,6 +192,27 @@ Plans:
 - [x] 05.1-03-PLAN.md — Workflow composer with runtime compatibility filtering
 - [x] 05.1-04-PLAN.md — Manifest generation, workflow list and detail views
 
+### Phase 5.2: CI Workflows — Project & Service Pairing (INSERTED)
+**Goal**: Services can be paired with CI Workflows; projects gain CI configuration capabilities enabling the build pipeline connection in Phase 6
+**Depends on**: Phase 5.1
+**Requirements**: None (continuation of CI Workflows integration per docs/ci-workflows.md)
+**Scope Notes**:
+  - Connect CI Workflows to Services (assign workflow to service)
+  - Project-level CI configuration (default workflow, CI settings)
+  - Push generated GitHub Actions manifest to service repository
+  - Service detail shows assigned CI Workflow with manifest preview
+**Success Criteria** (what must be TRUE):
+  1. User can assign a CI Workflow to a Service from the service detail page
+  2. Assigned workflow's generated GitHub Actions manifest can be pushed to the service's repository
+  3. Project settings include CI configuration section for default workflow preferences
+  4. Service detail page shows CI Workflow tab with assigned workflow and manifest preview
+  5. Changing a service's CI Workflow updates the repository's workflow file
+**Plans**: TBD
+
+Plans:
+- [ ] 05.2-01: TBD
+- [ ] 05.2-02: TBD
+
 ### Phase 6: Builds
 **Goal**: GitHub Actions can report build status; services transition from draft to active on first successful build
 **Depends on**: Phase 5
@@ -226,7 +248,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 6 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -238,6 +260,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 6
 | 4.1 Replace UUID URLs with Slugs (INSERTED) | 4/4 | Complete | 2026-01-26 |
 | 5. Services | 4/4 | Complete | 2026-01-26 |
 | 5.1 CI Workflows Builder (INSERTED) | 4/4 | Complete | 2026-01-29 |
+| 5.2 CI Workflows — Project & Service Pairing (INSERTED) | 0/2 | Not started | - |
 | 6. Builds | 0/2 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
