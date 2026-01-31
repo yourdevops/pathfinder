@@ -1,0 +1,45 @@
+{% extends "core/services/wizard/base.html" %}
+
+{% block wizard_content %}
+<div class="space-y-6">
+    <!-- Step description -->
+    <div class="p-4 border border-dark-border rounded-lg bg-blue-900/10">
+        <p class="text-sm text-dark-text">
+            Select a CI Workflow for this service. Only workflows approved for the selected project are shown.
+        </p>
+    </div>
+
+    <!-- CI Workflow dropdown -->
+    <div>
+        <label for="id_workflow-ci_workflow" class="block text-sm font-medium text-dark-text mb-2">
+            {{ wizard.form.ci_workflow.label }}
+        </label>
+        {{ wizard.form.ci_workflow }}
+        {% if wizard.form.ci_workflow.errors %}
+        <p class="mt-1 text-sm text-red-400">{{ wizard.form.ci_workflow.errors.0 }}</p>
+        {% endif %}
+        <p class="mt-2 text-sm text-dark-muted">{{ wizard.form.ci_workflow.help_text }}</p>
+    </div>
+
+    <!-- Helper info -->
+    <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">
+        <p class="text-sm font-medium text-dark-text mb-2">What are CI Workflows?</p>
+        <p class="text-sm text-dark-muted">
+            CI Workflows define the build, test, and deploy pipeline for your service.
+            When assigned, a GitHub Actions manifest will be generated and can be pushed
+            to your repository.
+        </p>
+    </div>
+
+    <!-- Skip note -->
+    <div class="flex items-start gap-2 text-sm text-dark-muted">
+        <svg class="w-4 h-4 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p>
+            This step is optional. You can skip it by selecting "No CI Workflow" and assign
+            a workflow later from the service's CI tab.
+        </p>
+    </div>
+</div>
+{% endblock %}

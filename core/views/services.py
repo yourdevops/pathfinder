@@ -15,6 +15,7 @@ from core.forms.services import (
     ProjectStepForm,
     RepositoryStepForm,
     ReviewStepForm,
+    WorkflowSelectionForm,
 )
 from core.models import (
     GroupMembership,
@@ -62,6 +63,7 @@ WIZARD_FORMS = [
     ("project", ProjectStepForm),
     ("repository", RepositoryStepForm),
     ("configuration", ConfigurationStepForm),
+    ("workflow", WorkflowSelectionForm),
     ("review", ReviewStepForm),
 ]
 
@@ -69,6 +71,7 @@ WIZARD_TEMPLATES = {
     "project": "core/services/wizard/step_project.html",
     "repository": "core/services/wizard/step_repository.html",
     "configuration": "core/services/wizard/step_configuration.html",
+    "workflow": "core/services/wizard/step_workflow.html",
     "review": "core/services/wizard/step_review.html",
 }
 
@@ -76,12 +79,13 @@ STEP_TITLES = {
     "project": "Service",
     "repository": "Repository",
     "configuration": "Configuration",
+    "workflow": "CI Workflow",
     "review": "Review",
 }
 
 
 class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
-    """4-step service creation wizard (project, repository, configuration, review)."""
+    """5-step service creation wizard (project, repository, configuration, workflow, review)."""
 
     form_list = WIZARD_FORMS
 
@@ -124,6 +128,11 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
             if project_data:
                 kwargs["project"] = project_data.get("project") or self.project
                 kwargs["service_name"] = project_data.get("name")
+
+        elif step == "workflow":
+            project_data = self.get_cleaned_data_for_step("project")
+            if project_data:
+                kwargs["project"] = project_data.get("project") or self.project
 
         return kwargs
 
@@ -182,9 +191,11 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         project_data = self.get_cleaned_data_for_step("project") or {}
         repository_data = self.get_cleaned_data_for_step("repository") or {}
         config_data = self.get_cleaned_data_for_step("configuration") or {}
+        workflow_data = self.get_cleaned_data_for_step("workflow") or {}
 
         project = project_data.get("project") or self.project
         service_name = project_data.get("name")
+        ci_workflow = workflow_data.get("ci_workflow")
 
         return {
             "project": project,
@@ -198,6 +209,8 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
             "existing_repo_url": repository_data.get("existing_repo_url"),
             "branch": repository_data.get("branch"),
             "env_vars": config_data.get("env_vars_json", []),
+            "ci_workflow": ci_workflow,
+            "ci_workflow_name": ci_workflow.name if ci_workflow else "None",
         }
 
     def done(self, form_list, form_dict, **kwargs):
@@ -231,6 +244,10 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
             repo_url = existing_repo_url
             repo_is_new = False
 
+        # Get workflow selection
+        workflow_data = form_dict["workflow"].cleaned_data
+        ci_workflow = workflow_data.get("ci_workflow")
+
         # Create Service record
         service = Service.objects.create(
             project=project,
@@ -239,6 +256,7 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
             repo_branch=branch,
             repo_is_new=repo_is_new,
             env_vars=env_vars,
+            ci_workflow=ci_workflow,
             status="draft",
             scaffold_status="pending",
             created_by=self.request.user.username,

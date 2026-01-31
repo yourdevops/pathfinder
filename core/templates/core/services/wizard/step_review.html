@@ -43,6 +43,12 @@
         {% endif %}
     </div>
 
+    <!-- CI Workflow -->
+    <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">
+        <p class="text-sm text-dark-muted">CI Workflow</p>
+        <p class="text-dark-text font-medium mt-1">{{ review_data.ci_workflow_name }}</p>
+    </div>
+
     <!-- Environment Variables -->
     {% if review_data.env_vars %}
     <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">

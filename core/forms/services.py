@@ -4,7 +4,14 @@ import re
 
 from django import forms
 
-from core.models import Project, ProjectConnection, Service
+from core.models import (
+    CIWorkflow,
+    Project,
+    ProjectCIConfig,
+    ProjectConnection,
+    Service,
+    get_available_workflows_for_project,
+)
 
 
 class ProjectStepForm(forms.Form):
@@ -186,8 +193,37 @@ class ConfigurationStepForm(forms.Form):
             raise forms.ValidationError("Invalid JSON format for environment variables.") from err
 
 
+class WorkflowSelectionForm(forms.Form):
+    """Step 4: Select a CI Workflow for the service."""
+
+    ci_workflow = forms.ModelChoiceField(
+        queryset=CIWorkflow.objects.none(),
+        required=False,
+        empty_label="No CI Workflow",
+        widget=forms.Select(
+            attrs={
+                "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text",
+            }
+        ),
+        label="CI Workflow",
+        help_text="Select a CI Workflow to assign to this service. Only workflows approved for the project are shown.",
+    )
+
+    def __init__(self, *args, project=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if project:
+            self.fields["ci_workflow"].queryset = get_available_workflows_for_project(project)
+            # Pre-select the project's default workflow if configured
+            try:
+                ci_config = project.ci_config
+                if ci_config.default_workflow:
+                    self.fields["ci_workflow"].initial = ci_config.default_workflow
+            except ProjectCIConfig.DoesNotExist:
+                pass
+
+
 class ReviewStepForm(forms.Form):
-    """Step 4: Review and confirm service creation."""
+    """Step 5: Review and confirm service creation."""
 
     # No fields - this is a read-only review step
     # The template displays all collected data
