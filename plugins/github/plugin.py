@@ -314,6 +314,45 @@ class GitHubPlugin(BasePlugin):
             "commit_sha": result["commit"].sha,
         }
 
+    def update_or_create_file(
+        self,
+        config: dict[str, Any],
+        repo_name: str,
+        path: str,
+        content: str,
+        message: str,
+        branch: str = "main",
+    ) -> dict[str, Any]:
+        """
+        Create or update a file in a GitHub repository.
+
+        If the file already exists on the given branch, it is updated.
+        Otherwise, a new file is created.
+
+        Args:
+            config: The decrypted configuration dictionary.
+            repo_name: Full repository name (owner/repo).
+            path: File path within the repository.
+            content: File content.
+            message: Commit message.
+            branch: Target branch.
+
+        Returns:
+            Dictionary with file path, SHA, and commit SHA.
+        """
+        g = self._get_github_client(config)
+        repo = g.get_repo(repo_name)
+        try:
+            existing = repo.get_contents(path, ref=branch)
+            result = repo.update_file(path, message, content, existing.sha, branch=branch)
+        except Exception:
+            result = repo.create_file(path, message, content, branch=branch)
+        return {
+            "path": result["content"].path,
+            "sha": result["content"].sha,
+            "commit_sha": result["commit"].sha,
+        }
+
     def configure_webhook(
         self,
         config: dict[str, Any],
