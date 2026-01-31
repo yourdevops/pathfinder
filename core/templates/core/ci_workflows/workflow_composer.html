@@ -3,50 +3,7 @@
 {% block title %}Compose Workflow: {{ workflow_name }} - Pathfinder{% endblock %}
 
 {% block content %}
-<div class="p-8" x-data="{
-    steps: [],
-    addStep(step) {
-        // Prevent adding the same step twice
-        if (this.steps.find(s => s.id === step.id)) return;
-        this.steps.push({...step, order: this.steps.length, input_config: {}, expanded: false});
-        this.updateOrders();
-    },
-    removeStep(index) {
-        this.steps.splice(index, 1);
-        this.updateOrders();
-    },
-    moveUp(index) {
-        if (index > 0) {
-            [this.steps[index-1], this.steps[index]] = [this.steps[index], this.steps[index-1]];
-            this.updateOrders();
-        }
-    },
-    moveDown(index) {
-        if (index < this.steps.length - 1) {
-            [this.steps[index], this.steps[index+1]] = [this.steps[index+1], this.steps[index]];
-            this.updateOrders();
-        }
-    },
-    updateOrders() {
-        this.steps.forEach((s, i) => s.order = i);
-    },
-    toggleExpand(index) {
-        this.steps[index].expanded = !this.steps[index].expanded;
-    },
-    updateStepConfig(index, inputName, value) {
-        if (!this.steps[index].input_config) this.steps[index].input_config = {};
-        this.steps[index].input_config[inputName] = value;
-    },
-    phaseBadgeColor(phase) {
-        const colors = {
-            'setup': 'bg-blue-500/20 text-blue-400',
-            'build': 'bg-yellow-500/20 text-yellow-400',
-            'test': 'bg-green-500/20 text-green-400',
-            'package': 'bg-purple-500/20 text-purple-400',
-        };
-        return colors[phase] || 'bg-gray-500/20 text-gray-400';
-    }
-}">
+<div class="p-8" x-data="workflowComposer">
     <!-- Page Header -->
     <div class="mb-6">
         <a href="{% url 'ci_workflows:workflow_create' %}" class="text-dark-muted hover:text-dark-text text-sm transition-colors">
@@ -99,7 +56,7 @@
                                         <button @click="toggleExpand(index)"
                                                 class="p-1 text-dark-muted hover:text-dark-text transition-colors"
                                                 title="Configure inputs"
-                                                x-show="step.inputs_schema && Object.keys(step.inputs_schema).length > 0">
+                                                x-show="hasInputs(step)">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -136,31 +93,31 @@
 
                                 <!-- Step Config (expandable) -->
                                 <div x-show="step.expanded" x-transition class="border-t border-dark-border p-3 bg-dark-surface/50">
-                                    <template x-if="step.inputs_schema && Object.keys(step.inputs_schema).length > 0">
+                                    <template x-if="hasInputs(step)">
                                         <div class="space-y-3">
-                                            <template x-for="[inputName, inputDef] in Object.entries(step.inputs_schema)" :key="inputName">
+                                            <template x-for="entry in inputEntries(step)" :key="entry.name">
                                                 <div>
                                                     <label class="block text-xs font-medium text-dark-text mb-1">
-                                                        <span x-text="inputName"></span>
-                                                        <span x-show="inputDef.required" class="text-red-400">*</span>
+                                                        <span x-text="entry.name"></span>
+                                                        <span x-show="entry.def.required" class="text-red-400">*</span>
                                                     </label>
-                                                    <template x-if="inputDef.type === 'boolean'">
+                                                    <template x-if="entry.def.type === 'boolean'">
                                                         <label class="flex items-center gap-2">
                                                             <input type="checkbox"
                                                                    class="rounded border-dark-border bg-dark-surface text-dark-accent focus:ring-dark-accent"
-                                                                   :checked="step.input_config[inputName] !== undefined ? step.input_config[inputName] : (inputDef.default || false)"
-                                                                   @change="updateStepConfig(index, inputName, $event.target.checked)">
-                                                            <span class="text-xs text-dark-muted" x-text="inputDef.description || ''"></span>
+                                                                   :checked="step.input_config[entry.name] !== undefined ? step.input_config[entry.name] : (entry.def.default || false)"
+                                                                   @change="updateStepConfig(index, entry.name, $event.target.checked)">
+                                                            <span class="text-xs text-dark-muted" x-text="entry.def.description || ''"></span>
                                                         </label>
                                                     </template>
-                                                    <template x-if="inputDef.type !== 'boolean'">
+                                                    <template x-if="entry.def.type !== 'boolean'">
                                                         <div>
                                                             <input type="text"
                                                                    class="w-full px-3 py-1.5 text-sm bg-dark-bg border border-dark-border rounded text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent"
-                                                                   :value="step.input_config[inputName] !== undefined ? step.input_config[inputName] : (inputDef.default || '')"
-                                                                   @input="updateStepConfig(index, inputName, $event.target.value)"
-                                                                   :placeholder="inputDef.default || ''">
-                                                            <p class="text-xs text-dark-muted mt-0.5" x-text="inputDef.description || ''" x-show="inputDef.description"></p>
+                                                                   :value="step.input_config[entry.name] !== undefined ? step.input_config[entry.name] : (entry.def.default || '')"
+                                                                   @input="updateStepConfig(index, entry.name, $event.target.value)"
+                                                                   :placeholder="entry.def.default || ''">
+                                                            <p class="text-xs text-dark-muted mt-0.5" x-text="entry.def.description || ''" x-show="entry.def.description"></p>
                                                         </div>
                                                     </template>
                                                 </div>
@@ -181,7 +138,7 @@
                         <input type="hidden" name="description" value="{{ workflow_description }}">
                         <input type="hidden" name="runtime_family" value="{{ runtime_family }}">
                         <input type="hidden" name="runtime_version" value="{{ runtime_version }}">
-                        <input type="hidden" name="steps_json" :value="JSON.stringify(steps)">
+                        <input type="hidden" name="steps_json" :value="stepsJson()">
                         <button type="submit"
                                 class="w-full px-6 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors">
                             Save Workflow
@@ -206,4 +163,64 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ csp_nonce }}">
+document.addEventListener('alpine:init', () => {
+    Alpine.data('workflowComposer', () => ({
+        steps: [],
+        addStep(step) {
+            if (this.steps.find(s => s.id === step.id)) return;
+            this.steps.push({...step, order: this.steps.length, input_config: {}, expanded: false});
+            this.updateOrders();
+        },
+        removeStep(index) {
+            this.steps.splice(index, 1);
+            this.updateOrders();
+        },
+        moveUp(index) {
+            if (index > 0) {
+                [this.steps[index-1], this.steps[index]] = [this.steps[index], this.steps[index-1]];
+                this.updateOrders();
+            }
+        },
+        moveDown(index) {
+            if (index < this.steps.length - 1) {
+                [this.steps[index], this.steps[index+1]] = [this.steps[index+1], this.steps[index]];
+                this.updateOrders();
+            }
+        },
+        updateOrders() {
+            this.steps.forEach((s, i) => s.order = i);
+        },
+        toggleExpand(index) {
+            this.steps[index].expanded = !this.steps[index].expanded;
+        },
+        updateStepConfig(index, inputName, value) {
+            if (!this.steps[index].input_config) this.steps[index].input_config = {};
+            this.steps[index].input_config[inputName] = value;
+        },
+        phaseBadgeColor(phase) {
+            const colors = {
+                'setup': 'bg-blue-500/20 text-blue-400',
+                'build': 'bg-yellow-500/20 text-yellow-400',
+                'test': 'bg-green-500/20 text-green-400',
+                'package': 'bg-purple-500/20 text-purple-400',
+            };
+            return colors[phase] || 'bg-gray-500/20 text-gray-400';
+        },
+        hasInputs(step) {
+            return step.inputs_schema && Object.keys(step.inputs_schema).length > 0;
+        },
+        inputEntries(step) {
+            if (!step.inputs_schema) return [];
+            return Object.entries(step.inputs_schema).map(([name, def]) => ({name, def}));
+        },
+        stepsJson() {
+            return JSON.stringify(this.steps);
+        }
+    }));
+});
+</script>
 {% endblock %}
