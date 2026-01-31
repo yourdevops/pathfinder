@@ -43,9 +43,24 @@
 
                     <div class="space-y-2">
                         <template x-for="(step, index) in steps" :key="step.id + '-' + index">
-                            <div class="bg-dark-bg border border-dark-border rounded-lg">
+                            <div class="bg-dark-bg border rounded-lg transition-all duration-150"
+                                 :class="dragOverClass(index)"
+                                 draggable="true"
+                                 @dragstart="onDragStart($event, index)"
+                                 @dragover="onDragOver($event, index)"
+                                 @dragleave="onDragLeave()"
+                                 @drop="onDrop($event, index)"
+                                 @dragend="onDragEnd()">
                                 <!-- Step Header -->
                                 <div class="flex items-center gap-3 p-3">
+                                    <!-- Drag handle -->
+                                    <span class="cursor-grab active:cursor-grabbing text-dark-muted hover:text-dark-text" title="Drag to reorder">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                            <circle cx="9" cy="5" r="1.5"/><circle cx="15" cy="5" r="1.5"/>
+                                            <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+                                            <circle cx="9" cy="19" r="1.5"/><circle cx="15" cy="19" r="1.5"/>
+                                        </svg>
+                                    </span>
                                     <span class="text-dark-muted text-sm font-mono w-6 text-center" x-text="index + 1"></span>
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" :class="phaseBadgeColor(step.phase)" x-text="step.phase"></span>
                                     <span class="text-dark-text font-medium flex-1" x-text="step.name"></span>
@@ -60,24 +75,6 @@
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            </svg>
-                                        </button>
-                                        <!-- Move up -->
-                                        <button @click="moveUp(index)"
-                                                class="p-1 text-dark-muted hover:text-dark-text transition-colors disabled:opacity-30"
-                                                :disabled="index === 0"
-                                                title="Move up">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-                                            </svg>
-                                        </button>
-                                        <!-- Move down -->
-                                        <button @click="moveDown(index)"
-                                                class="p-1 text-dark-muted hover:text-dark-text transition-colors disabled:opacity-30"
-                                                :disabled="index === steps.length - 1"
-                                                title="Move down">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                             </svg>
                                         </button>
                                         <!-- Remove -->
@@ -170,6 +167,8 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('workflowComposer', () => ({
         steps: [],
+        dragIndex: -1,
+        dragOverIndex: -1,
         addStep(step) {
             if (this.steps.find(s => s.id === step.id)) return;
             this.steps.push({...step, order: this.steps.length, input_config: {}, expanded: false});
@@ -178,18 +177,6 @@ document.addEventListener('alpine:init', () => {
         removeStep(index) {
             this.steps.splice(index, 1);
             this.updateOrders();
-        },
-        moveUp(index) {
-            if (index > 0) {
-                [this.steps[index-1], this.steps[index]] = [this.steps[index], this.steps[index-1]];
-                this.updateOrders();
-            }
-        },
-        moveDown(index) {
-            if (index < this.steps.length - 1) {
-                [this.steps[index], this.steps[index+1]] = [this.steps[index+1], this.steps[index]];
-                this.updateOrders();
-            }
         },
         updateOrders() {
             this.steps.forEach((s, i) => s.order = i);
@@ -228,6 +215,43 @@ document.addEventListener('alpine:init', () => {
                 description: el.dataset.stepDescription,
                 inputs_schema: JSON.parse(el.dataset.stepInputs || '{}')
             });
+        },
+        // Drag and drop
+        onDragStart(event, index) {
+            this.dragIndex = index;
+            event.dataTransfer.effectAllowed = 'move';
+            event.dataTransfer.setData('text/plain', String(index));
+        },
+        onDragOver(event, index) {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = 'move';
+            this.dragOverIndex = index;
+        },
+        onDragLeave() {
+            this.dragOverIndex = -1;
+        },
+        onDrop(event, toIndex) {
+            event.preventDefault();
+            const fromIndex = this.dragIndex;
+            if (fromIndex === -1 || fromIndex === toIndex) {
+                this.dragIndex = -1;
+                this.dragOverIndex = -1;
+                return;
+            }
+            const item = this.steps.splice(fromIndex, 1)[0];
+            this.steps.splice(toIndex, 0, item);
+            this.updateOrders();
+            this.dragIndex = -1;
+            this.dragOverIndex = -1;
+        },
+        onDragEnd() {
+            this.dragIndex = -1;
+            this.dragOverIndex = -1;
+        },
+        dragOverClass(index) {
+            if (this.dragIndex === index) return 'border-dark-border opacity-50';
+            if (this.dragOverIndex === index) return 'border-dark-accent border-2';
+            return 'border-dark-border';
         }
     }));
 });
