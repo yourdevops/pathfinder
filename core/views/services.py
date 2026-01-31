@@ -298,7 +298,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
 
     def get_template_names(self):
         tab = self.request.GET.get("tab", "details")
-        valid_tabs = ["details", "ci", "builds", "environments"]
+        valid_tabs = ["details", "ci", "builds", "environments", "settings"]
         if tab not in valid_tabs:
             tab = "details"
 
@@ -309,7 +309,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         tab = self.request.GET.get("tab", "details")
-        valid_tabs = ["details", "ci", "builds", "environments"]
+        valid_tabs = ["details", "ci", "builds", "environments", "settings"]
         if tab not in valid_tabs:
             tab = "details"
 
@@ -349,6 +349,10 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
         elif tab == "environments":
             # Show environments with deployment info (placeholder for Phase 7)
             context["environments"] = self.project.environments.filter(status="active").order_by("order", "name")
+
+        elif tab == "settings":
+            context["merged_env_vars"] = self.service.get_merged_env_vars()
+            context["can_edit"] = self.user_project_role in ("contributor", "owner")
 
         return context
 
