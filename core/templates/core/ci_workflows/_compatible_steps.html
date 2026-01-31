@@ -21,13 +21,12 @@ Context: compatible_by_phase (OrderedDict), incompatible_steps (list), runtime_f
     <div class="space-y-1.5">
         {% for step in phase_steps %}
         <div class="flex items-center gap-2 p-2 rounded-lg border border-dark-border hover:border-dark-accent/50 transition-colors cursor-pointer group"
-             @click="addStep({
-                 id: '{{ step.uuid }}',
-                 name: '{{ step.name|escapejs }}',
-                 phase: '{{ step.phase }}',
-                 description: '{{ step.description|escapejs|truncatechars:80 }}',
-                 inputs_schema: {{ step.inputs_schema|to_json }}
-             })">
+             data-step-id="{{ step.uuid }}"
+             data-step-name="{{ step.name }}"
+             data-step-phase="{{ step.phase }}"
+             data-step-description="{{ step.description|truncatechars:80 }}"
+             data-step-inputs="{{ step.inputs_schema|to_json }}"
+             @click="addStepFromEl($el)">
             <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-dark-text truncate">{{ step.name }}</p>
                 {% if step.description %}

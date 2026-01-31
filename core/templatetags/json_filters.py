@@ -1,7 +1,6 @@
 import json
 
 from django import template
-from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -17,5 +16,5 @@ def to_json(value):
         inputs_schema: {{ step.inputs_schema|to_json }}
     """
     if value is None:
-        return mark_safe("{}")
-    return mark_safe(json.dumps(value))
+        return "{}"
+    return json.dumps(value)

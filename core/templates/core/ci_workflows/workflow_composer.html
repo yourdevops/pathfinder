@@ -219,6 +219,15 @@ document.addEventListener('alpine:init', () => {
         },
         stepsJson() {
             return JSON.stringify(this.steps);
+        },
+        addStepFromEl(el) {
+            this.addStep({
+                id: el.dataset.stepId,
+                name: el.dataset.stepName,
+                phase: el.dataset.stepPhase,
+                description: el.dataset.stepDescription,
+                inputs_schema: JSON.parse(el.dataset.stepInputs || '{}')
+            });
         }
     }));
 });
