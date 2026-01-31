@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 Phase: 5.2 of 7 (CI Workflows - Project & Service Pairing)
 Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-31 - Completed 05.2-02-PLAN.md (Service CI Tab & Manifest Push)
+Last activity: 2026-01-31 - Completed quick task 027: Fix service links and context in project view
 
 Progress: [====================================] 100% (Phase 5.1) | [========================            ] 67% (Phase 5.2)
 
