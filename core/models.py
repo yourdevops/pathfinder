@@ -414,6 +414,26 @@ class Service(models.Model):
     )
     scaffold_error = models.TextField(blank=True)
 
+    # CI Workflow assignment
+    ci_workflow = models.ForeignKey(
+        "CIWorkflow",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="services",
+    )
+    ci_manifest_status = models.CharField(
+        max_length=20,
+        choices=[
+            ("never_pushed", "Never Pushed"),
+            ("synced", "Synced"),
+            ("out_of_date", "Out of Date"),
+        ],
+        default="never_pushed",
+    )
+    ci_manifest_pushed_at = models.DateTimeField(null=True, blank=True)
+    ci_manifest_pr_url = models.URLField(max_length=500, blank=True)
+
     # Build tracking (updated by Phase 6)
     current_build_id = models.IntegerField(null=True, blank=True)  # Will be FK to Build in Phase 6
     current_artifact_ref = models.CharField(max_length=255, blank=True)  # e.g., "registry.io/image:tag"
@@ -435,6 +455,13 @@ class Service(models.Model):
     def handler(self):
         """Return service handler: {project-name}-{service-name}."""
         return f"{self.project.name}-{self.name}"
+
+    @property
+    def ci_manifest_out_of_date(self):
+        """Check if the manifest needs re-pushing."""
+        if not self.ci_workflow or not self.ci_manifest_pushed_at:
+            return False
+        return self.ci_workflow.updated_at > self.ci_manifest_pushed_at
 
     def get_merged_env_vars(self):
         """Return service env vars merged with project vars."""
@@ -598,6 +625,11 @@ class CIWorkflow(models.Model):
     runtime_family = models.CharField(max_length=63)  # e.g., 'python'
     runtime_version = models.CharField(max_length=20)  # e.g., '3.12'
     artifact_type = models.CharField(max_length=50, blank=True)  # derived from last package step
+    status = models.CharField(
+        max_length=20,
+        choices=[("published", "Published"), ("draft", "Draft")],
+        default="published",
+    )
     created_by = models.CharField(max_length=150, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -634,6 +666,66 @@ class CIWorkflowStep(models.Model):
         return f"{self.workflow.name} - Step {self.order}: {self.step.name}"
 
 
+class ProjectApprovedWorkflow(models.Model):
+    """
+    Links approved CI workflows to a project (M2M through table).
+
+    Project admins approve specific workflows for use by services
+    within their project.
+    """
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="approved_workflows")
+    workflow = models.ForeignKey(CIWorkflow, on_delete=models.CASCADE, related_name="project_approvals")
+    approved_by = models.CharField(max_length=150, blank=True)  # denormalized username
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "core_project_approved_workflow"
+        unique_together = ["project", "workflow"]
+
+    def __str__(self):
+        return f"{self.project.name} -> {self.workflow.name}"
+
+
+class ProjectCIConfig(models.Model):
+    """
+    Per-project CI configuration (OneToOne).
+
+    Stores project-level CI settings like the default workflow
+    and whether to auto-approve all published workflows.
+    """
+
+    project = models.OneToOneField(Project, on_delete=models.CASCADE, related_name="ci_config")
+    default_workflow = models.ForeignKey(
+        CIWorkflow,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="default_for_projects",
+    )
+    approve_all_published = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "core_project_ci_config"
+
+    def __str__(self):
+        return f"CI Config for {self.project.name}"
+
+
+def get_available_workflows_for_project(project):
+    """Return queryset of CI workflows available for a project."""
+    try:
+        ci_config = project.ci_config
+    except ProjectCIConfig.DoesNotExist:
+        ci_config = None
+    if ci_config and ci_config.approve_all_published:
+        return CIWorkflow.objects.filter(status="published")
+    approved_ids = project.approved_workflows.values_list("workflow_id", flat=True)
+    return CIWorkflow.objects.filter(id__in=approved_ids, status="published")
+
+
 # Register models with auditlog
 auditlog.register(User, exclude_fields=["password", "last_login"])
 auditlog.register(Group)
@@ -650,3 +742,5 @@ auditlog.register(StepsRepository)
 auditlog.register(CIStep)
 auditlog.register(CIWorkflow)
 auditlog.register(CIWorkflowStep)
+auditlog.register(ProjectApprovedWorkflow)
+auditlog.register(ProjectCIConfig)
