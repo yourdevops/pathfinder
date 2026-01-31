@@ -30,7 +30,10 @@
                     onclick="window.location='{% url 'projects:service_detail' project_name=project.name service_name=service.name %}'">
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-2">
-                            <span class="text-dark-text font-medium">{{ service.name }}</span>
+                            <a href="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}"
+                               class="text-dark-text hover:text-dark-accent font-medium transition-colors">
+                                {{ service.name }}
+                            </a>
                             {% if service.scaffold_status == 'running' %}
                             <span class="px-2 py-0.5 text-xs bg-blue-500/20 text-blue-300 rounded animate-pulse">
                                 Scaffolding...
