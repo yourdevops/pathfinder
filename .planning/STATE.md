@@ -172,9 +172,10 @@ None - Phase 5.2 plans 01-02 complete, plan 03 remaining
 | 024 | Migrate to uv package management from pip | 2026-01-30 | 110bb86 | [024-migrate-to-uv-package-management-from-pi](./quick/024-migrate-to-uv-package-management-from-pi/) |
 | 025 | Implement Django 6.0 native CSP policy | 2026-01-30 | cab6d38 | [025-implement-django-6-0-native-csp-policy-w](./quick/025-implement-django-6-0-native-csp-policy-w/) |
 | 026 | Fix Alpine CSP parser error in CI Workflow Composer | 2026-01-31 | e019b6c | [026-fix-alpine-csp-parser-error-in-ci-workfl](./quick/026-fix-alpine-csp-parser-error-in-ci-workfl/) |
+| 027 | Fix service links and context in project | 2026-01-31 | d7d340f | [027-fix-service-links-and-context-in-project](./quick/027-fix-service-links-and-context-in-project/) |
 
 ## Session Continuity
 
 Last session: 2026-01-31
-Stopped at: Completed 05.2-02-PLAN.md
+Stopped at: Completed quick-027
 Resume file: None
