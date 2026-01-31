@@ -16,11 +16,15 @@ from core.forms import (
     ProjectCreateForm,
     ProjectUpdateForm,
 )
+from core.forms.ci_workflows import ApproveWorkflowForm, ProjectCIConfigForm
 from core.models import (
+    CIWorkflow,
     Environment,
     EnvironmentConnection,
     Group,
     Project,
+    ProjectApprovedWorkflow,
+    ProjectCIConfig,
     ProjectConnection,
     ProjectMembership,
 )
@@ -115,6 +119,27 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
             context["owners"] = [m for m in memberships if m.project_role == "owner"]
             context["contributors"] = [m for m in memberships if m.project_role == "contributor"]
             context["viewers"] = [m for m in memberships if m.project_role == "viewer"]
+            # CI Configuration context
+            try:
+                ci_config = self.project.ci_config
+            except ProjectCIConfig.DoesNotExist:
+                ci_config = None
+            context["ci_config"] = ci_config
+            context["ci_config_form"] = ProjectCIConfigForm(
+                project=self.project,
+                initial={
+                    "default_workflow": ci_config.default_workflow if ci_config else None,
+                    "approve_all_published": ci_config.approve_all_published if ci_config else False,
+                },
+            )
+            context["approved_workflows"] = self.project.approved_workflows.select_related("workflow").order_by(
+                "workflow__name"
+            )
+            already_approved_ids = self.project.approved_workflows.values_list("workflow_id", flat=True)
+            context["available_workflows"] = CIWorkflow.objects.filter(status="published").exclude(
+                id__in=already_approved_ids
+            )
+            context["approve_workflow_form"] = ApproveWorkflowForm(project=self.project)
 
         return context
 
@@ -663,3 +688,88 @@ class EnvironmentDetachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, Vie
             project_name=self.project.name,
             env_name=environment.name,
         )
+
+
+# ============================================================================
+# Project CI Configuration Views
+# ============================================================================
+
+
+def _render_ci_config_section(request, project, user_project_role):
+    """Helper to render the CI config partial for HTMX responses."""
+    try:
+        ci_config = project.ci_config
+    except ProjectCIConfig.DoesNotExist:
+        ci_config = None
+
+    approved_workflows = project.approved_workflows.select_related("workflow").order_by("workflow__name")
+    already_approved_ids = project.approved_workflows.values_list("workflow_id", flat=True)
+
+    context = {
+        "project": project,
+        "user_project_role": user_project_role,
+        "ci_config": ci_config,
+        "ci_config_form": ProjectCIConfigForm(
+            project=project,
+            initial={
+                "default_workflow": ci_config.default_workflow if ci_config else None,
+                "approve_all_published": ci_config.approve_all_published if ci_config else False,
+            },
+        ),
+        "approved_workflows": approved_workflows,
+        "available_workflows": CIWorkflow.objects.filter(status="published").exclude(id__in=already_approved_ids),
+        "approve_workflow_form": ApproveWorkflowForm(project=project),
+    }
+    return render(request, "core/projects/_ci_config_section.html", context)
+
+
+class ProjectCIConfigView(LoginRequiredMixin, ProjectOwnerMixin, View):
+    """Update project CI configuration (default workflow, approve-all toggle)."""
+
+    def post(self, request, *args, **kwargs):
+        ci_config, _ = ProjectCIConfig.objects.get_or_create(project=self.project)
+
+        form = ProjectCIConfigForm(request.POST, project=self.project)
+        if form.is_valid():
+            ci_config.default_workflow = form.cleaned_data["default_workflow"]
+            ci_config.approve_all_published = form.cleaned_data["approve_all_published"]
+            ci_config.save()
+            messages.success(request, "CI configuration updated.")
+
+        return _render_ci_config_section(request, self.project, self.user_project_role)
+
+
+class ProjectApproveWorkflowView(LoginRequiredMixin, ProjectOwnerMixin, View):
+    """Add a workflow to the project's approved list."""
+
+    def post(self, request, *args, **kwargs):
+        form = ApproveWorkflowForm(request.POST, project=self.project)
+        if form.is_valid():
+            workflow = form.cleaned_data["workflow"]
+            ProjectApprovedWorkflow.objects.get_or_create(
+                project=self.project,
+                workflow=workflow,
+                defaults={"approved_by": request.user.username},
+            )
+            messages.success(request, f'Workflow "{workflow.name}" approved.')
+
+        return _render_ci_config_section(request, self.project, self.user_project_role)
+
+
+class ProjectRemoveApprovedWorkflowView(LoginRequiredMixin, ProjectOwnerMixin, View):
+    """Remove a workflow from the project's approved list."""
+
+    def delete(self, request, *args, **kwargs):
+        workflow_id = kwargs.get("workflow_id")
+        ProjectApprovedWorkflow.objects.filter(project=self.project, workflow_id=workflow_id).delete()
+
+        # If the removed workflow was the default, clear it
+        try:
+            ci_config = self.project.ci_config
+            if ci_config.default_workflow_id == workflow_id:
+                ci_config.default_workflow = None
+                ci_config.save()
+        except ProjectCIConfig.DoesNotExist:
+            pass
+
+        return _render_ci_config_section(request, self.project, self.user_project_role)

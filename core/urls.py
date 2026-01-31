@@ -33,8 +33,10 @@ from .views import (
     LogoutView,
     NotificationsView,
     PluginListView,
+    ProjectApproveWorkflowView,
     ProjectArchiveView,
     ProjectAttachConnectionView,
+    ProjectCIConfigView,
     ProjectCreateModalView,
     ProjectCreateView,
     ProjectDetachConnectionView,
@@ -43,6 +45,7 @@ from .views import (
     ProjectEnvVarModalView,
     ProjectEnvVarSaveView,
     ProjectListView,
+    ProjectRemoveApprovedWorkflowView,
     ProjectUpdateView,
     RemoveMemberView,
     ResourcesPlaceholderView,
@@ -288,6 +291,22 @@ projects_patterns = [
         "<dns:project_name>/environments/<dns:env_name>/connections/<int:connection_id>/detach/",
         EnvironmentDetachConnectionView.as_view(),
         name="env_detach_connection",
+    ),
+    # CI Configuration
+    path(
+        "<dns:project_name>/settings/ci-config/",
+        ProjectCIConfigView.as_view(),
+        name="project_ci_config",
+    ),
+    path(
+        "<dns:project_name>/settings/approve-workflow/",
+        ProjectApproveWorkflowView.as_view(),
+        name="project_approve_workflow",
+    ),
+    path(
+        "<dns:project_name>/settings/remove-workflow/<int:workflow_id>/",
+        ProjectRemoveApprovedWorkflowView.as_view(),
+        name="project_remove_workflow",
     ),
     # Services (project-scoped)
     path(

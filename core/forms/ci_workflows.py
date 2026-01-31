@@ -5,6 +5,7 @@ from django import forms
 from core.models import (
     CIWorkflow,
     IntegrationConnection,
+    ProjectApprovedWorkflow,
     RuntimeFamily,
     StepsRepository,
 )
@@ -150,3 +151,48 @@ class WorkflowCreateForm(forms.Form):
             if version not in versions:
                 raise forms.ValidationError("Selected version is not available for this runtime family.")
         return version
+
+
+class ProjectCIConfigForm(forms.Form):
+    """Form for project-level CI configuration."""
+
+    default_workflow = forms.ModelChoiceField(
+        queryset=CIWorkflow.objects.none(),
+        required=False,
+        empty_label="-- No default --",
+        widget=forms.Select(attrs={"class": DARK_SELECT}),
+    )
+    approve_all_published = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "rounded border-dark-border bg-dark-bg text-dark-accent focus:ring-dark-accent",
+            }
+        ),
+    )
+
+    def __init__(self, *args, project=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if project:
+            from core.models import get_available_workflows_for_project
+
+            self.fields["default_workflow"].queryset = get_available_workflows_for_project(project)
+
+
+class ApproveWorkflowForm(forms.Form):
+    """Form for adding a workflow to the project's approved list."""
+
+    workflow = forms.ModelChoiceField(
+        queryset=CIWorkflow.objects.none(),
+        widget=forms.Select(attrs={"class": DARK_SELECT}),
+    )
+
+    def __init__(self, *args, project=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if project:
+            already_approved_ids = ProjectApprovedWorkflow.objects.filter(project=project).values_list(
+                "workflow_id", flat=True
+            )
+            self.fields["workflow"].queryset = CIWorkflow.objects.filter(status="published").exclude(
+                id__in=already_approved_ids
+            )
