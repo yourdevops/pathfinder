@@ -9,13 +9,20 @@ from django.views.decorators.vary import vary_on_headers
 from django.views.generic import ListView, TemplateView, View
 from formtools.wizard.views import SessionWizardView
 
+from core.ci_manifest import generate_github_actions_manifest
 from core.forms.services import (
     ConfigurationStepForm,
     ProjectStepForm,
     RepositoryStepForm,
     ReviewStepForm,
 )
-from core.models import GroupMembership, Project, ProjectMembership, Service
+from core.models import (
+    GroupMembership,
+    Project,
+    ProjectMembership,
+    Service,
+    get_available_workflows_for_project,
+)
 from core.permissions import can_access_project, has_system_role
 from core.tasks import scaffold_repository
 
@@ -273,7 +280,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
 
     def get_template_names(self):
         tab = self.request.GET.get("tab", "details")
-        valid_tabs = ["details", "builds", "environments"]
+        valid_tabs = ["details", "ci", "builds", "environments"]
         if tab not in valid_tabs:
             tab = "details"
 
@@ -284,7 +291,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         tab = self.request.GET.get("tab", "details")
-        valid_tabs = ["details", "builds", "environments"]
+        valid_tabs = ["details", "ci", "builds", "environments"]
         if tab not in valid_tabs:
             tab = "details"
 
@@ -301,6 +308,21 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
             context["merged_env_vars"] = self.service.get_merged_env_vars()
             # Can edit if contributor or owner
             context["can_edit"] = self.user_project_role in ("contributor", "owner")
+
+        elif tab == "ci":
+            # CI Workflow tab context
+            context["ci_workflow"] = self.service.ci_workflow
+            context["ci_manifest_status"] = self.service.ci_manifest_status
+            context["ci_manifest_out_of_date"] = self.service.ci_manifest_out_of_date
+            context["ci_manifest_pr_url"] = self.service.ci_manifest_pr_url
+            context["ci_manifest_pushed_at"] = self.service.ci_manifest_pushed_at
+            context["available_workflows"] = get_available_workflows_for_project(self.project)
+            context["can_edit"] = self.user_project_role in ("contributor", "owner")
+            # Generate manifest preview if workflow is assigned
+            if self.service.ci_workflow:
+                context["manifest_yaml"] = generate_github_actions_manifest(self.service.ci_workflow)
+            else:
+                context["manifest_yaml"] = None
 
         elif tab == "builds":
             # Placeholder for Phase 6
@@ -369,3 +391,113 @@ class ServiceScaffoldStatusView(LoginRequiredMixin, View):
             html = f'<span class="px-2 py-1 text-xs rounded {status_class}">Scaffold: {status_label}</span>'
 
         return HttpResponse(html)
+
+
+class ServiceAssignWorkflowView(LoginRequiredMixin, View):
+    """Assign or change the CI Workflow for a service."""
+
+    def dispatch(self, request, *args, **kwargs):
+        project_name = kwargs.get("project_name")
+        service_name = kwargs.get("service_name")
+
+        self.project = get_object_or_404(Project, name=project_name, status="active")
+        self.service = get_object_or_404(Service, project=self.project, name=service_name)
+
+        # Check contributor permission
+        role = can_access_project(request.user, self.project)
+        if not role or role == "viewer":
+            messages.error(request, "You don't have permission to modify this service.")
+            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        from core.models import CIWorkflow
+
+        workflow_id = request.POST.get("ci_workflow")
+
+        if workflow_id:
+            # Validate workflow is in project's approved list
+            available = get_available_workflows_for_project(self.project)
+            try:
+                workflow = available.get(id=workflow_id)
+            except CIWorkflow.DoesNotExist:
+                messages.error(request, "Selected workflow is not approved for this project.")
+                return redirect(
+                    "projects:service_detail",
+                    project_name=self.project.name,
+                    service_name=self.service.name,
+                )
+
+            # Check if workflow changed and manifest was previously pushed
+            old_workflow = self.service.ci_workflow
+            self.service.ci_workflow = workflow
+
+            if old_workflow and old_workflow != workflow and self.service.ci_manifest_status == "synced":
+                self.service.ci_manifest_status = "out_of_date"
+
+            self.service.save(update_fields=["ci_workflow", "ci_manifest_status", "updated_at"])
+            messages.success(request, f'CI Workflow updated to "{workflow.name}".')
+        else:
+            # Unassign workflow
+            self.service.ci_workflow = None
+            self.service.save(update_fields=["ci_workflow", "updated_at"])
+            messages.success(request, "CI Workflow unassigned.")
+
+        return redirect(
+            f"{self.service.get_absolute_url()}?tab=ci"
+            if hasattr(self.service, "get_absolute_url")
+            else f"/projects/{self.project.name}/services/{self.service.name}/?tab=ci"
+        )
+
+
+class ServicePushManifestView(LoginRequiredMixin, View):
+    """Enqueue push_ci_manifest background task for a service."""
+
+    def dispatch(self, request, *args, **kwargs):
+        project_name = kwargs.get("project_name")
+        service_name = kwargs.get("service_name")
+
+        self.project = get_object_or_404(Project, name=project_name, status="active")
+        self.service = get_object_or_404(Service, project=self.project, name=service_name)
+
+        # Check contributor permission
+        role = can_access_project(request.user, self.project)
+        if not role or role == "viewer":
+            messages.error(request, "You don't have permission to modify this service.")
+            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        from core.models import ProjectConnection
+        from core.tasks import push_ci_manifest
+
+        # Guard: service must have a workflow assigned
+        if not self.service.ci_workflow:
+            messages.error(request, "No CI Workflow assigned. Assign a workflow first.")
+            return redirect(f"/projects/{self.project.name}/services/{self.service.name}/?tab=ci")
+
+        # Guard: service must have a repo_url
+        if not self.service.repo_url:
+            messages.error(request, "Service has no repository URL. Repository must be set up first.")
+            return redirect(f"/projects/{self.project.name}/services/{self.service.name}/?tab=ci")
+
+        # Guard: project must have an SCM connection
+        scm_connection = (
+            ProjectConnection.objects.filter(project=self.project, is_default=True, connection__plugin_name="github")
+            .select_related("connection")
+            .first()
+        )
+
+        if not scm_connection:
+            messages.error(
+                request, "No SCM connection configured for this project. Add a GitHub connection in project settings."
+            )
+            return redirect(f"/projects/{self.project.name}/services/{self.service.name}/?tab=ci")
+
+        # Enqueue the task
+        push_ci_manifest.enqueue(service_id=self.service.id)
+        messages.success(request, "CI manifest push started. A pull request will be created shortly.")
+
+        return redirect(f"/projects/{self.project.name}/services/{self.service.name}/?tab=ci")

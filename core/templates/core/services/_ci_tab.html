@@ -1,0 +1,128 @@
+<div class="space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-2xl font-bold text-dark-text">CI Workflow</h1>
+        <p class="text-dark-muted mt-1">Manage the CI workflow assigned to this service.</p>
+    </div>
+
+    <!-- Assigned Workflow Section -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg">
+        <div class="p-4 border-b border-dark-border">
+            <h2 class="text-lg font-semibold text-dark-text">Assigned Workflow</h2>
+        </div>
+        <div class="p-4">
+            {% if can_edit %}
+            <form method="post" action="{% url 'projects:service_assign_workflow' project_name=project.name service_name=service.name %}">
+                {% csrf_token %}
+                <div class="flex items-center gap-3">
+                    <select name="ci_workflow"
+                            class="flex-1 bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent">
+                        <option value="">-- No workflow --</option>
+                        {% for wf in available_workflows %}
+                        <option value="{{ wf.id }}" {% if ci_workflow and ci_workflow.id == wf.id %}selected{% endif %}>
+                            {{ wf.name }} ({{ wf.runtime_family }} {{ wf.runtime_version }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit"
+                            class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors">
+                        Save
+                    </button>
+                </div>
+            </form>
+            {% else %}
+            <p class="text-dark-text">
+                {% if ci_workflow %}
+                    <span class="font-medium">{{ ci_workflow.name }}</span>
+                    <span class="text-dark-muted ml-2">({{ ci_workflow.runtime_family }} {{ ci_workflow.runtime_version }})</span>
+                {% else %}
+                    <span class="text-dark-muted">No workflow assigned</span>
+                {% endif %}
+            </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Manifest Status Section -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg">
+        <div class="p-4 border-b border-dark-border">
+            <h2 class="text-lg font-semibold text-dark-text">Manifest Status</h2>
+        </div>
+        <div class="p-4">
+            <div class="flex items-center gap-4">
+                <!-- Status Badge -->
+                {% if ci_manifest_status == "never_pushed" %}
+                <span class="px-2 py-1 text-xs rounded bg-gray-500/20 text-gray-300">Never Pushed</span>
+                {% elif ci_manifest_status == "synced" and not ci_manifest_out_of_date %}
+                <span class="px-2 py-1 text-xs rounded bg-green-500/20 text-green-300">Synced</span>
+                {% elif ci_manifest_status == "out_of_date" or ci_manifest_out_of_date %}
+                <span class="px-2 py-1 text-xs rounded bg-amber-500/20 text-amber-300">Out of Date</span>
+                {% else %}
+                <span class="px-2 py-1 text-xs rounded bg-gray-500/20 text-gray-300">{{ ci_manifest_status|title }}</span>
+                {% endif %}
+
+                <!-- Last pushed timestamp -->
+                {% if ci_manifest_pushed_at %}
+                <span class="text-sm text-dark-muted">
+                    Last pushed: {{ ci_manifest_pushed_at|timesince }} ago
+                </span>
+                {% endif %}
+
+                <!-- PR Link -->
+                {% if ci_manifest_pr_url %}
+                <a href="{{ ci_manifest_pr_url }}" target="_blank"
+                   class="text-sm text-dark-accent hover:underline">
+                    View Pull Request
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Push Manifest Section -->
+    {% if can_edit %}
+    <div class="bg-dark-surface border border-dark-border rounded-lg">
+        <div class="p-4 border-b border-dark-border">
+            <h2 class="text-lg font-semibold text-dark-text">Push to Repository</h2>
+        </div>
+        <div class="p-4">
+            <p class="text-sm text-dark-muted mb-4">
+                Push the generated CI manifest to the service repository. This creates a feature branch and opens a pull request with the workflow configuration.
+            </p>
+            <form method="post" action="{% url 'projects:service_push_manifest' project_name=project.name service_name=service.name %}">
+                {% csrf_token %}
+                <button type="submit"
+                        {% if not ci_workflow %}disabled{% endif %}
+                        class="px-4 py-2 rounded-lg transition-colors
+                            {% if ci_workflow %}bg-dark-accent hover:bg-dark-accent/80 text-white{% else %}bg-gray-600 text-gray-400 cursor-not-allowed{% endif %}">
+                    Push Manifest
+                </button>
+                {% if not ci_workflow %}
+                <span class="text-sm text-dark-muted ml-3">Assign a workflow first to enable pushing.</span>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Manifest Preview Section -->
+    {% if manifest_yaml %}
+    <div class="bg-dark-surface border border-dark-border rounded-lg">
+        <div class="p-4 border-b border-dark-border">
+            <h2 class="text-lg font-semibold text-dark-text">Manifest Preview</h2>
+            <p class="text-sm text-dark-muted mt-1">
+                Generated GitHub Actions workflow: <code class="text-dark-accent">.github/workflows/{{ service.handler }}.yml</code>
+            </p>
+        </div>
+        <div class="p-4">
+            <pre class="bg-dark-bg rounded-lg p-4 text-sm font-mono text-dark-text overflow-x-auto"><code>{{ manifest_yaml }}</code></pre>
+        </div>
+    </div>
+    {% elif not ci_workflow %}
+    <div class="bg-dark-surface border border-dark-border rounded-lg">
+        <div class="p-4">
+            <p class="text-dark-muted text-center py-4">Assign a CI Workflow to see the generated manifest preview.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>

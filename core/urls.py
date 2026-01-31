@@ -76,10 +76,12 @@ from .views.ci_workflows import (
     WorkflowManifestView,
 )
 from .views.services import (
+    ServiceAssignWorkflowView,
     ServiceCreateWizard,
     ServiceDeleteView,
     ServiceDetailView,
     ServiceListView,
+    ServicePushManifestView,
     ServiceScaffoldStatusView,
 )
 
@@ -328,6 +330,16 @@ projects_patterns = [
         "<dns:project_name>/services/<dns:service_name>/scaffold-status/",
         ServiceScaffoldStatusView.as_view(),
         name="service_scaffold_status",
+    ),
+    path(
+        "<dns:project_name>/services/<dns:service_name>/ci/assign-workflow/",
+        ServiceAssignWorkflowView.as_view(),
+        name="service_assign_workflow",
+    ),
+    path(
+        "<dns:project_name>/services/<dns:service_name>/ci/push-manifest/",
+        ServicePushManifestView.as_view(),
+        name="service_push_manifest",
     ),
 ]
 
