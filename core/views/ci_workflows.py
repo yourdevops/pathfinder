@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 
-from core.ci_manifest import generate_github_actions_manifest, get_compatible_steps
+from core.ci_manifest import get_compatible_steps
 from core.forms.ci_workflows import StepsRepoRegisterForm, WorkflowCreateForm
 from core.models import (
     CIStep,
@@ -18,6 +18,7 @@ from core.models import (
     StepsRepository,
 )
 from core.permissions import OperatorRequiredMixin, has_system_role
+from plugins.base import get_ci_plugin_for_engine
 
 
 class StepsRepoListView(LoginRequiredMixin, View):
@@ -517,7 +518,10 @@ class WorkflowDetailView(LoginRequiredMixin, View):
     def get(self, request, workflow_name):
         workflow = get_object_or_404(CIWorkflow, name=workflow_name)
         workflow_steps = workflow.workflow_steps.select_related("step").order_by("order")
-        manifest_yaml = generate_github_actions_manifest(workflow)
+        first_step = workflow_steps.first()
+        engine = first_step.step.engine if first_step else "github_actions"
+        ci_plugin = get_ci_plugin_for_engine(engine)
+        manifest_yaml = ci_plugin.generate_manifest(workflow) if ci_plugin else "# No CI plugin available"
 
         can_delete = request.user.is_authenticated and (
             has_system_role(request.user, "admin") or has_system_role(request.user, "operator")
@@ -544,7 +548,10 @@ class WorkflowManifestView(LoginRequiredMixin, View):
 
     def get(self, request, workflow_name):
         workflow = get_object_or_404(CIWorkflow, name=workflow_name)
-        manifest_yaml = generate_github_actions_manifest(workflow)
+        first_step = workflow.workflow_steps.select_related("step").first()
+        engine = first_step.step.engine if first_step else "github_actions"
+        ci_plugin = get_ci_plugin_for_engine(engine)
+        manifest_yaml = ci_plugin.generate_manifest(workflow) if ci_plugin else "# No CI plugin available"
         return render(
             request,
             "core/ci_workflows/_manifest_preview.html",

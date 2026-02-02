@@ -343,9 +343,9 @@ def push_ci_manifest(service_id: int) -> dict:
     Returns:
         Dict with status and PR URL, or error information.
     """
-    from core.ci_manifest import generate_github_actions_manifest
     from core.git_utils import parse_git_url
     from core.models import ProjectConnection, Service
+    from plugins.base import get_ci_plugin_for_engine
 
     try:
         service = Service.objects.select_related("project", "ci_workflow").get(id=service_id)
@@ -359,8 +359,15 @@ def push_ci_manifest(service_id: int) -> dict:
         return {"error": "No CI workflow assigned"}
 
     try:
-        # Generate manifest YAML
-        manifest_yaml = generate_github_actions_manifest(service.ci_workflow)
+        # Resolve CI plugin from workflow steps engine
+        first_step = service.ci_workflow.workflow_steps.select_related("step").first()
+        engine = first_step.step.engine if first_step else "github_actions"
+        ci_plugin = get_ci_plugin_for_engine(engine)
+        if not ci_plugin:
+            return {"error": f"No CI plugin for engine: {engine}"}
+
+        # Generate manifest YAML via plugin
+        manifest_yaml = ci_plugin.generate_manifest(service.ci_workflow)
 
         # Resolve SCM connection
         project_connection = (
@@ -401,7 +408,7 @@ def push_ci_manifest(service_id: int) -> dict:
             logger.info(f"Branch {feature_branch} may already exist, continuing")
 
         # Write manifest file
-        manifest_path = f".github/workflows/{service.handler}.yml"
+        manifest_path = ci_plugin.manifest_path(service)
         plugin.update_or_create_file(
             config,
             repo_name,

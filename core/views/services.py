@@ -9,7 +9,6 @@ from django.views.decorators.vary import vary_on_headers
 from django.views.generic import ListView, TemplateView, View
 from formtools.wizard.views import SessionWizardView
 
-from core.ci_manifest import generate_github_actions_manifest
 from core.forms.services import (
     ConfigurationStepForm,
     ProjectStepForm,
@@ -26,6 +25,7 @@ from core.models import (
 )
 from core.permissions import can_access_project, get_user_project_role, has_system_role
 from core.tasks import scaffold_repository
+from plugins.base import get_ci_plugin_for_engine
 
 
 class ServiceListView(LoginRequiredMixin, ListView):
@@ -338,7 +338,12 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
             context["can_edit"] = self.user_project_role in ("contributor", "owner")
             # Generate manifest preview if workflow is assigned
             if self.service.ci_workflow:
-                context["manifest_yaml"] = generate_github_actions_manifest(self.service.ci_workflow)
+                first_step = self.service.ci_workflow.workflow_steps.select_related("step").first()
+                engine = first_step.step.engine if first_step else "github_actions"
+                ci_plugin = get_ci_plugin_for_engine(engine)
+                context["manifest_yaml"] = (
+                    ci_plugin.generate_manifest(self.service.ci_workflow) if ci_plugin else "# No CI plugin available"
+                )
             else:
                 context["manifest_yaml"] = None
 
