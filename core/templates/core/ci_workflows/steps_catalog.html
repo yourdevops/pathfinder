@@ -56,38 +56,7 @@
 
     <!-- Steps Table -->
     <div class="bg-dark-surface border border-dark-border rounded-lg overflow-hidden"
-         x-data="{
-            sortCol: 'phase',
-            sortDir: 'asc',
-            sort(col) {
-                if (this.sortCol === col) {
-                    this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
-                } else {
-                    this.sortCol = col;
-                    this.sortDir = 'asc';
-                }
-                this.sortRows();
-            },
-            sortRows() {
-                const tbody = document.getElementById('steps-table-body');
-                const rows = Array.from(tbody.querySelectorAll('tr[data-sort-name]'));
-                const col = this.sortCol;
-                const dir = this.sortDir === 'asc' ? 1 : -1;
-                rows.sort((a, b) => {
-                    const aVal = a.getAttribute('data-sort-' + col) || '';
-                    const bVal = b.getAttribute('data-sort-' + col) || '';
-                    if (col === 'phase') {
-                        return (parseInt(aVal) - parseInt(bVal)) * dir;
-                    }
-                    return aVal.localeCompare(bVal) * dir;
-                });
-                rows.forEach(row => tbody.appendChild(row));
-            },
-            arrowClass(col) {
-                if (this.sortCol !== col) return 'opacity-0';
-                return this.sortDir === 'asc' ? '' : 'rotate-180';
-            }
-         }">
+         x-data="stepsCatalogSort">
         <table class="w-full">
             <thead>
                 <tr class="border-b border-dark-border text-left text-sm text-dark-muted">
@@ -140,6 +109,41 @@
 
 {% block scripts %}
 <script nonce="{{ csp_nonce }}">
+Alpine.data('stepsCatalogSort', function () {
+    return {
+        sortCol: 'phase',
+        sortDir: 'asc',
+        sort: function (col) {
+            if (this.sortCol === col) {
+                this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                this.sortCol = col;
+                this.sortDir = 'asc';
+            }
+            this.sortRows();
+        },
+        sortRows: function () {
+            var tbody = document.getElementById('steps-table-body');
+            var rows = Array.from(tbody.querySelectorAll('tr[data-sort-name]'));
+            var col = this.sortCol;
+            var dir = this.sortDir === 'asc' ? 1 : -1;
+            rows.sort(function (a, b) {
+                var aVal = a.getAttribute('data-sort-' + col) || '';
+                var bVal = b.getAttribute('data-sort-' + col) || '';
+                if (col === 'phase') {
+                    return (parseInt(aVal) - parseInt(bVal)) * dir;
+                }
+                return aVal.localeCompare(bVal) * dir;
+            });
+            rows.forEach(function (row) { tbody.appendChild(row); });
+        },
+        arrowClass: function (col) {
+            if (this.sortCol !== col) return 'opacity-0';
+            return this.sortDir === 'asc' ? '' : 'rotate-180';
+        }
+    };
+});
+
 // When HTMX swaps in new table rows, re-apply sort if active
 document.body.addEventListener('htmx:afterSwap', function(event) {
     if (event.detail.target && event.detail.target.id === 'steps-table-body') {

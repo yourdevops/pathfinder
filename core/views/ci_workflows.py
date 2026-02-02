@@ -264,7 +264,7 @@ class StepDetailView(LoginRequiredMixin, View):
             base_url = step.repository.git_url.rstrip("/")
             if base_url.endswith(".git"):
                 base_url = base_url[:-4]
-            source_url = f"{base_url}/blob/{step.commit_sha}/{step.directory_name}/{engine_file}"
+            source_url = f"{base_url}/blob/{step.commit_sha}/ci-steps/{step.directory_name}/{engine_file}"
 
         return render(
             request,
