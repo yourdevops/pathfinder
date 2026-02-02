@@ -54,6 +54,26 @@
                     <dt class="text-sm text-dark-muted">Commit SHA</dt>
                     <dd class="text-dark-text font-mono text-sm">{{ step.commit_sha|truncatechars:12 }}</dd>
                 </div>
+                {% if source_url %}
+                <div>
+                    <dt class="text-sm text-dark-muted">Source</dt>
+                    <dd>
+                        <a href="{{ source_url }}" target="_blank" rel="noopener noreferrer"
+                           class="text-dark-accent hover:text-dark-accent/80 transition-colors text-sm font-mono inline-flex items-center gap-1">
+                            {{ step.directory_name }}/{{ engine_file }}@{{ step.commit_sha|truncatechars:8 }}
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                        </a>
+                    </dd>
+                </div>
+                {% endif %}
+                {% if engine_display %}
+                <div>
+                    <dt class="text-sm text-dark-muted">CI Engine</dt>
+                    <dd class="text-dark-text text-sm">{{ engine_display }}</dd>
+                </div>
+                {% endif %}
             </dl>
         </div>
 

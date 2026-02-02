@@ -253,11 +253,27 @@ class StepDetailView(LoginRequiredMixin, View):
 
     def get(self, request, step_uuid):
         step = get_object_or_404(CIStep, uuid=step_uuid)
+
+        # Build source URL for the step's file in its repository
+        ci_plugin = get_ci_plugin_for_engine(step.engine)
+        engine_file = ci_plugin.engine_file_name if ci_plugin else "action.yml"
+        engine_display = ci_plugin.engine_display_name if ci_plugin else step.engine
+
+        source_url = ""
+        if step.commit_sha and step.repository:
+            base_url = step.repository.git_url.rstrip("/")
+            if base_url.endswith(".git"):
+                base_url = base_url[:-4]
+            source_url = f"{base_url}/blob/{step.commit_sha}/{step.directory_name}/{engine_file}"
+
         return render(
             request,
             "core/ci_workflows/step_detail.html",
             {
                 "step": step,
+                "source_url": source_url,
+                "engine_file": engine_file,
+                "engine_display": engine_display,
             },
         )
 
