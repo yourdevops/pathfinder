@@ -73,6 +73,34 @@
                 window.location.href = row.dataset.href;
             }
         });
+
+        // Global confirm modal: open via data-confirm-modal="<id>", close via .confirm-modal-close or backdrop
+        document.addEventListener("click", function(e) {
+            var trigger = e.target.closest("[data-confirm-modal]");
+            if (trigger) {
+                e.preventDefault();
+                var modal = document.getElementById(trigger.getAttribute("data-confirm-modal"));
+                if (modal) modal.classList.remove("hidden");
+                return;
+            }
+            var closeBtn = e.target.closest(".confirm-modal-close");
+            if (closeBtn) {
+                var m = closeBtn.closest(".fixed.inset-0.z-50");
+                if (m) m.classList.add("hidden");
+                return;
+            }
+            if (e.target.classList.contains("confirm-modal-backdrop")) {
+                var m = e.target.closest(".fixed.inset-0.z-50");
+                if (m) m.classList.add("hidden");
+            }
+        });
+        document.addEventListener("keydown", function(e) {
+            if (e.key === "Escape") {
+                document.querySelectorAll(".fixed.inset-0.z-50:not(.hidden)").forEach(function(el) {
+                    el.classList.add("hidden");
+                });
+            }
+        });
     </script>
 </body>
 </html>
