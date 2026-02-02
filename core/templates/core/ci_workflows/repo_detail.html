@@ -34,6 +34,12 @@
                 </button>
             </form>
             {% endif %}
+            {% if can_delete %}
+            <button type="button" data-confirm-modal="confirm-delete-repo"
+                    class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm">
+                Delete Repository
+            </button>
+            {% endif %}
         </div>
     </div>
 
@@ -87,6 +93,29 @@
     </div>
     {% endif %}
 
+    <!-- Workflows Using Steps -->
+    {% if workflows_using %}
+    <div class="mb-6">
+        <h2 class="text-lg font-semibold text-dark-text mb-3">Workflows Using Steps ({{ workflows_using|length }})</h2>
+        <div class="bg-dark-surface border border-dark-border rounded-lg divide-y divide-dark-border">
+            {% for wf in workflows_using %}
+            <a href="{% url 'ci_workflows:workflow_detail' workflow_name=wf.name %}"
+               class="flex items-center justify-between p-4 hover:bg-dark-border/30 transition-colors block">
+                <div>
+                    <span class="text-dark-text font-medium">{{ wf.name }}</span>
+                    {% if wf.description %}
+                    <span class="text-dark-muted text-sm ml-2">{{ wf.description|truncatechars:60 }}</span>
+                    {% endif %}
+                </div>
+                <svg class="w-4 h-4 text-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Imported Steps by Phase -->
     <div>
         <h2 class="text-lg font-semibold text-dark-text mb-3">Imported Steps ({{ total_steps }})</h2>
@@ -122,5 +151,9 @@
         </div>
         {% endif %}
     </div>
+
+    {% if can_delete %}
+    {% include "core/components/_confirm_modal.html" with confirm_id="confirm-delete-repo" confirm_title="Delete Repository" confirm_message="Are you sure you want to delete this repository and all its imported steps? This cannot be undone." confirm_action=repo_delete_url confirm_button_text="Delete Repository" %}
+    {% endif %}
 </div>
 {% endblock %}
