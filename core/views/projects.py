@@ -566,8 +566,7 @@ class ProjectAttachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, View):
             messages.success(request, "Connection attached successfully.")
 
         if request.headers.get("HX-Request"):
-            # Return updated connections list partial
-            return render(
+            response = render(
                 request,
                 "core/projects/_connections_list.html",
                 {
@@ -576,6 +575,8 @@ class ProjectAttachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, View):
                     "user_project_role": self.user_project_role,
                 },
             )
+            response["HX-Trigger"] = "closeModal"
+            return response
 
         return redirect("projects:detail", project_name=self.project.name)
 
@@ -642,7 +643,7 @@ class EnvironmentAttachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, Vie
             messages.success(request, "Connection attached successfully.")
 
         if request.headers.get("HX-Request"):
-            return render(
+            response = render(
                 request,
                 "core/projects/_env_connections_list.html",
                 {
@@ -652,6 +653,8 @@ class EnvironmentAttachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, Vie
                     "user_project_role": self.user_project_role,
                 },
             )
+            response["HX-Trigger"] = "closeModal"
+            return response
 
         return redirect(
             "projects:environment_detail",
