@@ -30,6 +30,20 @@
                 <p class="text-dark-muted text-xs mt-1">{{ form.name.help_text }}</p>
             </div>
 
+            <!-- CI Engine -->
+            <div>
+                <label for="id_engine" class="block text-sm font-medium text-dark-text mb-1">
+                    CI Engine
+                </label>
+                {{ form.engine }}
+                {% if form.engine.errors %}
+                <p class="text-red-400 text-sm mt-1">{{ form.engine.errors.0 }}</p>
+                {% endif %}
+                {% if form.engine.help_text %}
+                <p class="text-dark-muted text-xs mt-1">{{ form.engine.help_text }}</p>
+                {% endif %}
+            </div>
+
             <!-- Git URL -->
             <div>
                 <label for="id_git_url" class="block text-sm font-medium text-dark-text mb-1">
