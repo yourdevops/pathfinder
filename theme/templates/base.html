@@ -26,6 +26,7 @@
         // Ensure dark mode class is set before render to prevent flash
         document.documentElement.classList.add('dark');
     </script>
+
 </head>
 <body class="bg-dark-bg text-dark-text min-h-screen">
     {% if user.is_authenticated %}
@@ -53,5 +54,25 @@
     </main>
 
     {% block scripts %}{% endblock %}
+    <script nonce="{{ csp_nonce }}">
+        // Close modals via HTMX HX-Trigger response header
+        document.body.addEventListener("closeModal", function() {
+            document.querySelectorAll('.fixed.inset-0.z-50').forEach(function(el) { el.remove(); });
+        });
+
+        // Global data-confirm handler for delete/destructive forms
+        document.addEventListener("submit", function(e) {
+            var msg = e.target.dataset.confirm;
+            if (msg && !confirm(msg)) e.preventDefault();
+        });
+
+        // Global data-href handler for clickable table rows
+        document.addEventListener("click", function(e) {
+            var row = e.target.closest("tr[data-href]");
+            if (row && !e.target.closest("a, button")) {
+                window.location.href = row.dataset.href;
+            }
+        });
+    </script>
 </body>
 </html>
