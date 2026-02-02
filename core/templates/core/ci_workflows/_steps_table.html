@@ -1,6 +1,6 @@
 {% for step in steps %}
 <tr class="border-b border-dark-border/50 hover:bg-dark-border/30 cursor-pointer transition-colors"
-    onclick="window.location.href='{% url 'ci_workflows:step_detail' step_uuid=step.uuid %}'"
+    data-href="{% url 'ci_workflows:step_detail' step_uuid=step.uuid %}"
     data-sort-name="{{ step.name|lower }}"
     data-sort-phase="{{ step.phase_order|default:'4' }}"
     data-sort-engine="{{ step.engine_display|default:step.engine|lower }}"
