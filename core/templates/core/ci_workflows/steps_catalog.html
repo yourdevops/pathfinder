@@ -109,6 +109,7 @@
 
 {% block scripts %}
 <script nonce="{{ csp_nonce }}">
+document.addEventListener('alpine:init', function () {
 Alpine.data('stepsCatalogSort', function () {
     return {
         sortCol: 'phase',
@@ -143,6 +144,7 @@ Alpine.data('stepsCatalogSort', function () {
         }
     };
 });
+}); // alpine:init
 
 // When HTMX swaps in new table rows, re-apply sort if active
 document.body.addEventListener('htmx:afterSwap', function(event) {
