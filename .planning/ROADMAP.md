@@ -21,6 +21,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: Services** - Creation wizard, repository scaffolding, service management
 - [x] **Phase 5.1: CI Workflows Builder** (INSERTED) - Steps catalog, workflow composer, GitHub Actions manifest preview
 - [ ] **Phase 5.2: CI Workflows — Project & Service Pairing** (INSERTED) - Assign workflows to services, push manifests to repos
+- [ ] **Phase 5.3: CI Steps Redesign** (INSERTED) - Plugin-based CI capabilities, engine-agnostic step discovery, clean core/git_utils.py
 - [ ] **Phase 6: Builds** - Webhook ingestion, build tracking, service activation
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
@@ -214,6 +215,37 @@ Plans:
 - [ ] 05.2-02-PLAN.md — Service CI tab, manifest push task, GitHubPlugin update
 - [ ] 05.2-03-PLAN.md — Service creation wizard workflow step + verification
 
+### Phase 5.3: CI Steps Redesign (INSERTED)
+**Goal**: CI capabilities are delivered through the plugin system; step discovery is engine-agnostic; core/git_utils.py contains only generic git operations; plugin-specific actions (manifest generation, step file parsing, manifest paths) live in plugin implementations
+**Depends on**: Phase 5.2
+**Requirements**: None (architectural redesign per docs/ci-steps-redesign.md)
+**Scope Notes**:
+  - One steps repository per CI engine with auto-discovery (no mandatory directory structure)
+  - CI capability interface on BasePlugin: engine_file_name, parse_step_file, generate_manifest, manifest_path
+  - Move manifest generation from core/ci_manifest.py into CI plugin implementations
+  - Move step scanning from core/git_utils.py into core/ci_steps.py (engine-agnostic)
+  - Refactor push_ci_manifest task to resolve SCM and CI capabilities separately
+  - StepsRepository model gains engine field (not tied to plugin connection)
+  - CIStep model gains engine and inputs_schema fields
+  - Clean core/git_utils.py to carry only generic git actions
+  - Remove top-level Runtimes nav; add filters by Engine, Runtime, Runtime Version on Steps page
+  - Steps and Repositories pages use table layout instead of cards
+**Success Criteria** (what must be TRUE):
+  1. CI-capable plugins define engine_file_name, parse_step_file, generate_manifest, and manifest_path
+  2. Step scanning walks repository for engine-native files using plugin-provided filename, not hardcoded patterns
+  3. Manifest generation lives in plugin implementations, not in core
+  4. core/git_utils.py contains only generic git operations (clone, checkout, commit, push); no CI-specific logic
+  5. StepsRepository has an engine string field; scanning works without a CI plugin connection
+  6. Steps catalog supports filtering by engine, runtime, and runtime version
+  7. push_ci_manifest resolves CI capability (manifest generation) and SCM capability (file push) independently
+  8. Steps and Repositories pages use table layout with engine column
+**Plans**: 3 plans
+
+Plans:
+- [ ] 05.3-01-PLAN.md — CICapableMixin, GitHubPlugin CI implementation, model migrations, core/ci_steps.py, clean git_utils.py
+- [ ] 05.3-02-PLAN.md — Refactor tasks, views, forms; remove RuntimesView and Runtimes nav
+- [ ] 05.3-03-PLAN.md — Table layouts for Steps and Repositories pages, HTMX filter dropdowns
+
 ### Phase 6: Builds
 **Goal**: GitHub Actions can report build status; services transition from draft to active on first successful build
 **Depends on**: Phase 5
@@ -249,7 +281,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 6 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -262,6 +294,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5
 | 5. Services | 4/4 | Complete | 2026-01-26 |
 | 5.1 CI Workflows Builder (INSERTED) | 4/4 | Complete | 2026-01-29 |
 | 5.2 CI Workflows — Project & Service Pairing (INSERTED) | 0/3 | Not started | - |
+| 5.3 CI Steps Redesign (INSERTED) | 0/3 | Not started | - |
 | 6. Builds | 0/2 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
