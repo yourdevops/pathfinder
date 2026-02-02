@@ -27,7 +27,7 @@
             <tbody class="divide-y divide-dark-border">
                 {% for service in services %}
                 <tr class="hover:bg-dark-border/30 cursor-pointer"
-                    onclick="window.location='{% url 'projects:service_detail' project_name=project.name service_name=service.name %}'">
+                    data-href="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}"
                     <td class="px-4 py-3">
                         <div class="flex items-center gap-2">
                             <a href="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}"
