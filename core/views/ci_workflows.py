@@ -3,10 +3,12 @@
 import json
 from collections import OrderedDict
 
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Case, IntegerField, Value, When
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views import View
 
 from core.ci_manifest import get_compatible_steps, is_step_compatible
@@ -113,6 +115,9 @@ class StepsRepoDetailView(LoginRequiredMixin, View):
             has_system_role(request.user, "admin") or has_system_role(request.user, "operator")
         )
 
+        workflows_using = CIWorkflow.objects.filter(workflow_steps__step__repository=repo).distinct().order_by("name")
+        can_delete = can_manage and not workflows_using.exists()
+
         return render(
             request,
             "core/ci_workflows/repo_detail.html",
@@ -122,6 +127,9 @@ class StepsRepoDetailView(LoginRequiredMixin, View):
                 "runtimes": runtimes,
                 "total_steps": steps.count(),
                 "can_manage": can_manage,
+                "workflows_using": workflows_using,
+                "can_delete": can_delete,
+                "repo_delete_url": reverse("ci_workflows:repo_delete", kwargs={"repo_name": repo.name}),
             },
         )
 
@@ -162,6 +170,18 @@ class StepsRepoScanStatusView(LoginRequiredMixin, View):
                 "repo": repo,
             },
         )
+
+
+class StepsRepoDeleteView(OperatorRequiredMixin, View):
+    """Delete a steps repository and all its steps."""
+
+    def post(self, request, repo_name):
+        repo = get_object_or_404(StepsRepository, name=repo_name)
+        if CIWorkflowStep.objects.filter(step__repository=repo).exists():
+            messages.error(request, "Cannot delete repository: its steps are used by workflows.")
+            return redirect("ci_workflows:repo_detail", repo_name=repo.name)
+        repo.delete()
+        return redirect("ci_workflows:repo_list")
 
 
 def _filter_steps(request):
@@ -313,8 +333,6 @@ class WorkflowCreateView(LoginRequiredMixin, View):
         if form.is_valid():
             # Redirect to composer with params
             from urllib.parse import urlencode
-
-            from django.urls import reverse
 
             params = urlencode(
                 {
@@ -591,12 +609,13 @@ class WorkflowDetailView(LoginRequiredMixin, View):
         ci_plugin = get_ci_plugin_for_engine(engine)
         manifest_yaml = ci_plugin.generate_manifest(workflow) if ci_plugin else "# No CI plugin available"
 
-        can_delete = request.user.is_authenticated and (
-            has_system_role(request.user, "admin") or has_system_role(request.user, "operator")
-        )
-
         # Services using this workflow
         services_using = workflow.services.select_related("project").order_by("project__name", "name")
+
+        is_operator = request.user.is_authenticated and (
+            has_system_role(request.user, "admin") or has_system_role(request.user, "operator")
+        )
+        can_delete = is_operator and not services_using.exists()
 
         return render(
             request,
@@ -607,6 +626,7 @@ class WorkflowDetailView(LoginRequiredMixin, View):
                 "manifest_yaml": manifest_yaml,
                 "can_delete": can_delete,
                 "services_using": services_using,
+                "workflow_delete_url": reverse("ci_workflows:workflow_delete", kwargs={"workflow_name": workflow.name}),
             },
         )
 
@@ -634,5 +654,8 @@ class WorkflowDeleteView(OperatorRequiredMixin, View):
 
     def post(self, request, workflow_name):
         workflow = get_object_or_404(CIWorkflow, name=workflow_name)
+        if workflow.services.exists():
+            messages.error(request, "Cannot delete workflow: it is still used by services.")
+            return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
         workflow.delete()
         return redirect("ci_workflows:workflow_list")
