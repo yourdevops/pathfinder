@@ -126,6 +126,8 @@ Recent decisions affecting current work:
 | 05.1-04 | parse_git_url for manifest step uses references | Extract owner/repo from git URL for GitHub Actions uses: format |
 | 05.1-04 | sort_keys=False for YAML manifest | Preserves conventional GitHub Actions key ordering (name, on, jobs) |
 | 05.1-04 | Auto-injected checkout and notify steps | Bracket user steps with checkout, ssp-notify-start, ssp-notify-complete |
+| 05.3 | Plugin-specific CI actions in plugins, not core | GitHub manifest gen, step parsing, manifest paths belong in GitHubPlugin; core handles only engine-agnostic logic |
+| 05.3 | core/git_utils.py = generic git only | No CI-specific logic in git_utils.py; only clone, checkout, commit, push, branch operations |
 
 ### Roadmap Evolution
 
@@ -133,6 +135,7 @@ Recent decisions affecting current work:
 - Phase 4.1 inserted after Phase 4: Replace UUID URLs with Slugs - Use human-readable slugs instead of UUIDs in all URLs (URGENT) - 2026-01-26
 - Phase 5.1 inserted after Phase 5: CI Workflows Builder - Replace Blueprints with CI Workflows, steps catalog, workflow composer, GitHub Actions manifest preview (URGENT) - 2026-01-29
 - Phase 5.2 inserted after Phase 5.1: CI Workflows — Project & Service Pairing - Assign CI Workflows to Services, push manifests to repos, project CI config (URGENT) - 2026-01-31
+- Phase 5.3 inserted after Phase 5.2: CI Steps Redesign - Plugin-based CI capabilities, engine-agnostic step discovery, clean core/git_utils.py (URGENT) - 2026-02-02
 
 ### Pending Todos
 

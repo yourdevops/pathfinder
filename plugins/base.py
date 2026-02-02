@@ -81,6 +81,41 @@ class PluginRegistry:
 registry = PluginRegistry
 
 
+class CICapableMixin:
+    """Mixin for plugins that provide CI engine capabilities."""
+
+    @property
+    def engine_name(self) -> str:
+        """CI engine identifier, e.g., 'github_actions'."""
+        raise NotImplementedError
+
+    @property
+    def engine_display_name(self) -> str:
+        """Human-readable engine name, e.g., 'GitHub Actions'."""
+        raise NotImplementedError
+
+    @property
+    def engine_file_name(self) -> str:
+        """Filename to discover in step repos, e.g., 'action.yml'."""
+        raise NotImplementedError
+
+    def parse_step_file(self, file_content: dict) -> dict:
+        """Parse engine-native step file and extract x-pathfinder metadata.
+
+        Returns dict with: name, description, inputs, phase, runtime_constraints,
+        tags, produces, raw_metadata.
+        """
+        raise NotImplementedError
+
+    def generate_manifest(self, workflow) -> str:
+        """Generate CI manifest YAML string for a CIWorkflow instance."""
+        raise NotImplementedError
+
+    def manifest_path(self, service) -> str:
+        """Return the file path where manifest should be placed in the service repo."""
+        raise NotImplementedError
+
+
 class BasePlugin(ABC):
     """
     Abstract base class for all integration plugins.
@@ -171,3 +206,20 @@ class BasePlugin(ABC):
             List of URL patterns to be included in the application.
         """
         pass
+
+
+def get_ci_plugin_for_engine(engine_name: str):
+    """Find the installed plugin that provides a given CI engine."""
+    for plugin in PluginRegistry.all().values():
+        if isinstance(plugin, CICapableMixin) and plugin.engine_name == engine_name:
+            return plugin
+    return None
+
+
+def get_available_engines() -> list[tuple[str, str]]:
+    """Return list of (engine_name, display_name) for all installed CI-capable plugins."""
+    engines = []
+    for plugin in PluginRegistry.all().values():
+        if isinstance(plugin, CICapableMixin):
+            engines.append((plugin.engine_name, plugin.engine_display_name))
+    return sorted(engines, key=lambda x: x[1])

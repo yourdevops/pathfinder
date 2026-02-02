@@ -10,22 +10,112 @@ from typing import Any
 from github import Auth, Github, GithubIntegration
 from github.GithubException import GithubException
 
-from plugins.base import BasePlugin
+from plugins.base import BasePlugin, CICapableMixin
 
 
-class GitHubPlugin(BasePlugin):
+class GitHubPlugin(CICapableMixin, BasePlugin):
     """
     GitHub integration plugin using GitHub App authentication.
 
     Supports repository management, branch creation, file commits,
-    and webhook configuration via the GitHub API.
+    webhook configuration, and CI manifest generation via the GitHub API.
     """
 
     name = "github"
     display_name = "GitHub"
     category = "scm"
-    capabilities = ["list_repos", "create_repo", "create_branch", "commit", "webhooks"]
+    capabilities = ["list_repos", "create_repo", "create_branch", "commit", "webhooks", "ci"]
     icon = "github"  # Maps to SVG icon in templates
+
+    # --- CICapableMixin implementation ---
+
+    @property
+    def engine_name(self) -> str:
+        return "github_actions"
+
+    @property
+    def engine_display_name(self) -> str:
+        return "GitHub Actions"
+
+    @property
+    def engine_file_name(self) -> str:
+        return "action.yml"
+
+    def parse_step_file(self, file_content: dict) -> dict:
+        """Parse GitHub Actions action.yml content and extract x-pathfinder metadata."""
+        pathfinder = file_content.get("x-pathfinder", {})
+        return {
+            "name": file_content.get("name", ""),
+            "description": file_content.get("description", ""),
+            "inputs": file_content.get("inputs", {}),
+            "phase": pathfinder.get("phase", ""),
+            "runtime_constraints": pathfinder.get("runtimes", {}),
+            "tags": pathfinder.get("tags", []),
+            "produces": pathfinder.get("produces"),
+            "raw_metadata": file_content,
+        }
+
+    def generate_manifest(self, workflow) -> str:
+        """Generate a GitHub Actions workflow YAML for a CIWorkflow instance."""
+        import yaml
+
+        from core.git_utils import parse_git_url
+
+        manifest = {
+            "name": f"CI - {workflow.name}",
+            "on": {
+                "push": {"branches": ["main"]},
+            },
+            "jobs": {
+                "build": {
+                    "runs-on": "ubuntu-latest",
+                    "steps": [],
+                },
+            },
+        }
+
+        steps_list = manifest["jobs"]["build"]["steps"]
+
+        # Auto-inject: checkout
+        steps_list.append(
+            {
+                "name": "Checkout",
+                "uses": "actions/checkout@v4",
+            }
+        )
+
+        # User-composed steps
+        for ws in workflow.workflow_steps.select_related("step__repository").order_by("order"):
+            step = ws.step
+            repo = step.repository
+
+            # Build uses reference
+            parsed = parse_git_url(repo.git_url)
+            if parsed and parsed.get("owner") and parsed.get("repo"):
+                uses_ref = f"{parsed['owner']}/{parsed['repo']}/ci-steps/{step.directory_name}"
+                if step.commit_sha:
+                    uses_ref += f"@{step.commit_sha}"
+                else:
+                    uses_ref += "@main"
+            else:
+                uses_ref = f"./ci-steps/{step.directory_name}"
+
+            step_entry = {
+                "name": step.name,
+                "uses": uses_ref,
+            }
+            if ws.input_config:
+                step_entry["with"] = ws.input_config
+
+            steps_list.append(step_entry)
+
+        return yaml.dump(manifest, default_flow_style=False, sort_keys=False)
+
+    def manifest_path(self, service) -> str:
+        """Return the file path where manifest should be placed in the service repo."""
+        return f".github/workflows/{service.handler}.yml"
+
+    # --- BasePlugin implementation ---
 
     def get_config_schema(self) -> dict[str, Any]:
         """Return the configuration schema for GitHub connections."""
