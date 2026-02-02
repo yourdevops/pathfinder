@@ -1,7 +1,6 @@
 from .audit import AuditLogView
 from .auth import LoginView, LogoutView
 from .ci_workflows import (
-    RuntimesView,
     StepDetailView,
     StepsCatalogView,
     StepsRepoDetailView,
@@ -9,6 +8,7 @@ from .ci_workflows import (
     StepsRepoRegisterView,
     StepsRepoScanStatusView,
     StepsRepoScanView,
+    StepsTableView,
 )
 from .connections import (
     ConnectionConfigUpdateView,
@@ -116,7 +116,6 @@ __all__ = [
     "ProjectUpdateView",
     "RemoveMemberView",
     "ResourcesPlaceholderView",
-    "RuntimesView",
     "ServicesPlaceholderView",
     "StepDetailView",
     "StepsCatalogView",
@@ -125,6 +124,7 @@ __all__ = [
     "StepsRepoRegisterView",
     "StepsRepoScanStatusView",
     "StepsRepoScanView",
+    "StepsTableView",
     "UnlockView",
     "UserCreateView",
     "UserDeleteView",

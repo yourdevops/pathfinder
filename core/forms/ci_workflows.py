@@ -25,7 +25,7 @@ class StepsRepoRegisterForm(forms.Form):
         help_text="DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.",
         widget=forms.TextInput(
             attrs={
-                "class": "w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent",
+                "class": DARK_INPUT,
                 "placeholder": "e.g., pathfinder-steps",
             }
         ),
@@ -35,10 +35,15 @@ class StepsRepoRegisterForm(forms.Form):
         help_text="HTTPS URL of the Git repository containing CI step definitions.",
         widget=forms.URLInput(
             attrs={
-                "class": "w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent",
+                "class": DARK_INPUT,
                 "placeholder": "https://github.com/org/ci-steps-repo",
             }
         ),
+    )
+    engine = forms.ChoiceField(
+        choices=[],
+        widget=forms.Select(attrs={"class": DARK_SELECT}),
+        help_text="CI engine for the steps in this repository.",
     )
     connection = forms.ModelChoiceField(
         queryset=IntegrationConnection.objects.filter(plugin_name="github", status="active"),
@@ -47,10 +52,20 @@ class StepsRepoRegisterForm(forms.Form):
         help_text="Select a GitHub connection for private repositories.",
         widget=forms.Select(
             attrs={
-                "class": "w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:border-dark-accent",
+                "class": DARK_SELECT,
             }
         ),
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from plugins.base import get_available_engines
+
+        engine_choices = get_available_engines()
+        if engine_choices:
+            self.fields["engine"].choices = engine_choices
+        else:
+            self.fields["engine"].choices = [("", "No CI engines available")]
 
     def clean_name(self):
         name = self.cleaned_data["name"]

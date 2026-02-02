@@ -64,10 +64,6 @@
                    class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors {% if '/ci-workflows/steps' in request.path %}bg-dark-border/50 text-dark-text{% else %}text-dark-muted hover:bg-dark-border/50 hover:text-dark-text{% endif %}">
                     Steps
                 </a>
-                <a href="{% url 'ci_workflows:runtimes' %}"
-                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors {% if '/ci-workflows/runtimes' in request.path %}bg-dark-border/50 text-dark-text{% else %}text-dark-muted hover:bg-dark-border/50 hover:text-dark-text{% endif %}">
-                    Runtimes
-                </a>
                 <a href="{% url 'ci_workflows:repo_list' %}"
                    class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors {% if '/ci-workflows/repos' in request.path %}bg-dark-border/50 text-dark-text{% else %}text-dark-muted hover:bg-dark-border/50 hover:text-dark-text{% endif %}">
                     Repositories

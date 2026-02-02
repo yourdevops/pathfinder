@@ -1,4 +1,4 @@
-"""CI Workflows views: repository management, steps catalog, runtimes, workflow composer."""
+"""CI Workflows views: repository management, steps catalog, workflow composer."""
 
 import json
 from collections import OrderedDict
@@ -8,7 +8,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 
-from core.ci_manifest import get_compatible_steps
+from core.ci_manifest import get_compatible_steps, is_step_compatible
 from core.forms.ci_workflows import StepsRepoRegisterForm, WorkflowCreateForm
 from core.models import (
     CIStep,
@@ -18,7 +18,7 @@ from core.models import (
     StepsRepository,
 )
 from core.permissions import OperatorRequiredMixin, has_system_role
-from plugins.base import get_ci_plugin_for_engine
+from plugins.base import get_available_engines, get_ci_plugin_for_engine
 
 
 class StepsRepoListView(LoginRequiredMixin, View):
@@ -29,10 +29,12 @@ class StepsRepoListView(LoginRequiredMixin, View):
         can_manage = request.user.is_authenticated and (
             has_system_role(request.user, "admin") or has_system_role(request.user, "operator")
         )
-        # Annotate step counts
+        # Annotate step counts and engine display
         for repo in repos:
             repo.step_count = repo.steps.count()
             repo.runtime_count = repo.runtimes.count()
+            plugin = get_ci_plugin_for_engine(repo.engine)
+            repo.engine_display = plugin.engine_display_name if plugin else repo.engine
         return render(
             request,
             "core/ci_workflows/repo_list.html",
@@ -62,6 +64,7 @@ class StepsRepoRegisterView(OperatorRequiredMixin, View):
             repo = StepsRepository.objects.create(
                 name=form.cleaned_data["name"],
                 git_url=form.cleaned_data["git_url"],
+                engine=form.cleaned_data["engine"],
                 connection=form.cleaned_data.get("connection"),
                 created_by=request.user.username,
             )
@@ -160,36 +163,71 @@ class StepsRepoScanStatusView(LoginRequiredMixin, View):
         )
 
 
+def _filter_steps(request):
+    """Apply engine/runtime/version filters to CIStep queryset and return filtered list + filter context."""
+    steps = CIStep.objects.all().select_related("repository").order_by("phase", "name")
+
+    selected_engine = request.GET.get("engine", "")
+    selected_runtime = request.GET.get("runtime", "")
+    selected_runtime_version = request.GET.get("runtime_version", "")
+
+    if selected_engine:
+        steps = steps.filter(engine=selected_engine)
+
+    steps_list = list(steps)
+
+    if selected_runtime and selected_runtime_version:
+        steps_list = [s for s in steps_list if is_step_compatible(s, selected_runtime, selected_runtime_version)]
+    elif selected_runtime:
+        steps_list = [s for s in steps_list if selected_runtime in (s.runtime_constraints or {})]
+
+    # Collect distinct runtimes from all steps
+    all_runtimes = set()
+    for s in CIStep.objects.values_list("runtime_constraints", flat=True):
+        if s:
+            all_runtimes.update(s.keys())
+
+    # Collect runtime versions from RuntimeFamily if a runtime is selected
+    runtime_versions = []
+    if selected_runtime:
+        for rt in RuntimeFamily.objects.filter(name=selected_runtime):
+            for v in rt.versions:
+                if str(v) not in runtime_versions:
+                    runtime_versions.append(str(v))
+        runtime_versions.sort(reverse=True)
+
+    engines = get_available_engines()
+
+    return {
+        "steps": steps_list,
+        "engines": engines,
+        "runtimes": sorted(all_runtimes),
+        "selected_engine": selected_engine,
+        "selected_runtime": selected_runtime,
+        "selected_runtime_version": selected_runtime_version,
+        "runtime_versions": runtime_versions,
+    }
+
+
 class StepsCatalogView(LoginRequiredMixin, View):
-    """Browse all imported CI steps organized by phase."""
+    """Browse all imported CI steps with engine/runtime filtering."""
 
     def get(self, request):
-        steps = CIStep.objects.all().select_related("repository").order_by("phase", "name")
+        context = _filter_steps(request)
 
-        phase_order = ["setup", "build", "test", "package"]
-        phase_labels = {
-            "setup": "Setup",
-            "build": "Build",
-            "test": "Test",
-            "package": "Package",
-        }
-        steps_by_phase = OrderedDict()
-        for phase in phase_order:
-            phase_steps = [s for s in steps if s.phase == phase]
-            steps_by_phase[phase_labels[phase]] = phase_steps
-        # Uncategorized
-        uncategorized = [s for s in steps if s.phase not in phase_order]
-        if uncategorized:
-            steps_by_phase["Other"] = uncategorized
+        # HTMX partial request for table body
+        if request.headers.get("HX-Request") and request.headers.get("HX-Target") == "steps-table-body":
+            return render(request, "core/ci_workflows/_steps_table.html", context)
 
-        return render(
-            request,
-            "core/ci_workflows/steps_catalog.html",
-            {
-                "steps_by_phase": steps_by_phase,
-                "total_steps": steps.count(),
-            },
-        )
+        return render(request, "core/ci_workflows/steps_catalog.html", context)
+
+
+class StepsTableView(LoginRequiredMixin, View):
+    """HTMX endpoint: return filtered steps table partial."""
+
+    def get(self, request):
+        context = _filter_steps(request)
+        return render(request, "core/ci_workflows/_steps_table.html", context)
 
 
 class StepDetailView(LoginRequiredMixin, View):
@@ -202,30 +240,6 @@ class StepDetailView(LoginRequiredMixin, View):
             "core/ci_workflows/step_detail.html",
             {
                 "step": step,
-            },
-        )
-
-
-class RuntimesView(LoginRequiredMixin, View):
-    """List all runtime families grouped by repository."""
-
-    def get(self, request):
-        runtimes = RuntimeFamily.objects.all().select_related("repository").order_by("repository__name", "name")
-
-        # Group by repository
-        runtimes_by_repo = OrderedDict()
-        for rt in runtimes:
-            repo_name = rt.repository.name
-            if repo_name not in runtimes_by_repo:
-                runtimes_by_repo[repo_name] = []
-            runtimes_by_repo[repo_name].append(rt)
-
-        return render(
-            request,
-            "core/ci_workflows/runtimes.html",
-            {
-                "runtimes_by_repo": runtimes_by_repo,
-                "total_runtimes": runtimes.count(),
             },
         )
 

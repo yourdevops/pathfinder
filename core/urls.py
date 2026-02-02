@@ -58,7 +58,6 @@ from .views import (
 )
 from .views.ci_workflows import (
     CompatibleStepsView,
-    RuntimesView,
     RuntimeVersionsView,
     StepConfigView,
     StepDetailView,
@@ -68,6 +67,7 @@ from .views.ci_workflows import (
     StepsRepoRegisterView,
     StepsRepoScanStatusView,
     StepsRepoScanView,
+    StepsTableView,
     WorkflowComposerView,
     WorkflowCreateView,
     WorkflowDeleteView,
@@ -147,8 +147,8 @@ ci_workflows_patterns = [
         name="repo_scan_status",
     ),
     path("steps/", StepsCatalogView.as_view(), name="steps_catalog"),
+    path("steps/table/", StepsTableView.as_view(), name="steps_table"),
     path("steps/<uuid:step_uuid>/", StepDetailView.as_view(), name="step_detail"),
-    path("runtimes/", RuntimesView.as_view(), name="runtimes"),
     # Dynamic workflow paths (must be after all fixed paths to avoid URL conflicts)
     path("<dns:workflow_name>/", WorkflowDetailView.as_view(), name="workflow_detail"),
     path(
