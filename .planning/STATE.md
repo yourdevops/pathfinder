@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 Phase: 5.3 of 7 (CI Steps Redesign)
 Plan: 3 of 3 in current phase
 Status: Phase complete
-Last activity: 2026-02-02 - Completed quick task 029: CI Steps and Workflows UI improvements
+Last activity: 2026-02-02 - Completed quick task 030: Usage tracking, deletion modal
 
 Progress: [====================================] 100% (Phase 5.1) | [========================            ] 67% (Phase 5.2) | [====================================] 100% (Phase 5.3)
 
@@ -180,9 +180,10 @@ None -- Phase 5.3 complete (all 3 plans done)
 | 028 | Address CSP violation findings | 2026-02-02 | a9d5afd | [028-address-csp-violation-findings](./quick/028-address-csp-violation-findings/) |
 | 029 | CI Steps and Workflows UI improvements | 2026-02-02 | 511943b | [029-ci-steps-and-workflows-ui-improvements](./quick/029-ci-steps-and-workflows-ui-improvements/) |
 | 029 | CI Steps and Workflows UI improvements | 2026-02-02 | 38657f1 | [029-ci-steps-and-workflows-ui-improvements](./quick/029-ci-steps-and-workflows-ui-improvements/) |
+| 030 | Usage tracking, deletion & confirmation modal | 2026-02-02 | 1e9aa64 | [030-usage-tracking-deletion-modal](./quick/030-usage-tracking-deletion-modal/) |
 
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed quick task 029
+Stopped at: Completed quick task 030
 Resume file: None
