@@ -89,6 +89,41 @@
         {% endif %}
     </div>
 
+    <!-- Services Using This Workflow -->
+    <div class="mb-8">
+        <h2 class="text-lg font-semibold text-dark-text mb-4">Services Using This Workflow</h2>
+        {% if services_using %}
+        <div class="bg-dark-surface border border-dark-border rounded-lg divide-y divide-dark-border">
+            {% for svc in services_using %}
+            <a href="{% url 'projects:service_detail' project_name=svc.project.name service_name=svc.name %}"
+               class="flex items-center justify-between p-4 hover:bg-dark-border/30 transition-colors">
+                <div>
+                    <span class="text-dark-text font-medium">{{ svc.name }}</span>
+                    <span class="text-dark-muted text-sm ml-2">in {{ svc.project.name }}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    {% if svc.ci_manifest_status == "synced" and not svc.ci_manifest_out_of_date %}
+                    <span class="px-2 py-0.5 text-xs rounded bg-green-500/20 text-green-300">Synced</span>
+                    {% elif svc.ci_manifest_out_of_date %}
+                    <span class="px-2 py-0.5 text-xs rounded bg-amber-500/20 text-amber-300">Out of Date</span>
+                    {% elif svc.ci_manifest_status == "never_pushed" %}
+                    <span class="px-2 py-0.5 text-xs rounded bg-gray-500/20 text-gray-300">Never Pushed</span>
+                    {% endif %}
+                    <svg class="w-4 h-4 text-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="bg-dark-surface border border-dark-border rounded-lg p-8 text-center">
+            <p class="text-dark-muted">No services are using this workflow yet.</p>
+            <p class="text-dark-muted text-sm mt-1">Assign this workflow from a service's CI tab.</p>
+        </div>
+        {% endif %}
+    </div>
+
     <!-- Generated Manifest Section -->
     <div>
         <div class="flex items-center justify-between mb-4">

@@ -327,7 +327,8 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             phase_steps = [s for s in compatible if s.phase == phase]
             if phase_steps:
                 compatible_by_phase[phase_labels[phase]] = phase_steps
-        return compatible_by_phase, incompatible, compatible
+        step_inputs_map = {str(s.uuid): s.inputs_schema or {} for s in compatible}
+        return compatible_by_phase, incompatible, compatible, step_inputs_map
 
     def get(self, request, workflow_name=None):
         # Edit mode: load existing workflow
@@ -355,7 +356,7 @@ class WorkflowComposerView(LoginRequiredMixin, View):
                         "expanded": False,
                     }
                 )
-            initial_steps_json = json.dumps(initial_steps)
+            initial_steps_json = initial_steps
         else:
             # Create mode: read from query params
             name = request.GET.get("name", "")
@@ -363,12 +364,14 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             runtime_family = request.GET.get("runtime_family", "")
             runtime_version = request.GET.get("runtime_version", "")
             workflow_uuid = ""
-            initial_steps_json = "[]"
+            initial_steps_json = []
 
             if not name or not runtime_family or not runtime_version:
                 return redirect("ci_workflows:workflow_create")
 
-        compatible_by_phase, incompatible, compatible = self._build_compatible_context(runtime_family, runtime_version)
+        compatible_by_phase, incompatible, compatible, step_inputs_map = self._build_compatible_context(
+            runtime_family, runtime_version
+        )
 
         return render(
             request,
@@ -383,6 +386,7 @@ class WorkflowComposerView(LoginRequiredMixin, View):
                 "compatible_by_phase": compatible_by_phase,
                 "incompatible_steps": incompatible,
                 "compatible_steps": compatible,
+                "step_inputs_map": step_inputs_map,
             },
         )
 
@@ -475,6 +479,7 @@ class CompatibleStepsView(LoginRequiredMixin, View):
             phase_steps = [s for s in compatible if s.phase == phase]
             if phase_steps:
                 compatible_by_phase[phase_labels[phase]] = phase_steps
+        step_inputs_map = {str(s.uuid): s.inputs_schema or {} for s in compatible}
 
         return render(
             request,
@@ -482,6 +487,7 @@ class CompatibleStepsView(LoginRequiredMixin, View):
             {
                 "compatible_by_phase": compatible_by_phase,
                 "incompatible_steps": incompatible,
+                "step_inputs_map": step_inputs_map,
                 "runtime_family": runtime_family,
                 "runtime_version": runtime_version,
             },
@@ -517,6 +523,9 @@ class WorkflowDetailView(LoginRequiredMixin, View):
             has_system_role(request.user, "admin") or has_system_role(request.user, "operator")
         )
 
+        # Services using this workflow
+        services_using = workflow.services.select_related("project").order_by("project__name", "name")
+
         return render(
             request,
             "core/ci_workflows/workflow_detail.html",
@@ -525,6 +534,7 @@ class WorkflowDetailView(LoginRequiredMixin, View):
                 "workflow_steps": workflow_steps,
                 "manifest_yaml": manifest_yaml,
                 "can_delete": can_delete,
+                "services_using": services_using,
             },
         )
 

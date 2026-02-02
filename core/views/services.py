@@ -24,7 +24,7 @@ from core.models import (
     Service,
     get_available_workflows_for_project,
 )
-from core.permissions import can_access_project, has_system_role
+from core.permissions import can_access_project, get_user_project_role, has_system_role
 from core.tasks import scaffold_repository
 
 
@@ -289,8 +289,8 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
         self.service = get_object_or_404(Service, project=self.project, name=service_name)
 
         # Check viewer permission
-        self.user_project_role = can_access_project(request.user, self.project)
-        if not self.user_project_role:
+        self.user_project_role = get_user_project_role(request.user, self.project)
+        if not self.user_project_role or not can_access_project(request.user, self.project):
             messages.error(request, "You don't have permission to view this service.")
             return redirect("projects:list")
 

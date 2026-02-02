@@ -176,9 +176,10 @@
 {% endblock %}
 
 {% block scripts %}
+{{ initial_steps_json|json_script:"initial-steps-data" }}
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('alpine:init', () => {
-    const _initialSteps = {{ initial_steps_json|safe }};
+    const _initialSteps = JSON.parse(document.getElementById('initial-steps-data').textContent);
     Alpine.data('workflowComposer', () => ({
         steps: _initialSteps,
         dragIndex: -1,
@@ -225,12 +226,13 @@ document.addEventListener('alpine:init', () => {
             return this.steps.some(s => s.id === id);
         },
         addStepFromEl(el) {
+            const inputsMap = JSON.parse(document.getElementById('step-inputs-map').textContent);
             this.addStep({
                 id: el.dataset.stepId,
                 name: el.dataset.stepName,
                 phase: el.dataset.stepPhase,
                 description: el.dataset.stepDescription,
-                inputs_schema: JSON.parse(el.dataset.stepInputs || '{}')
+                inputs_schema: inputsMap[el.dataset.stepId] || {}
             });
         },
         // Drag and drop

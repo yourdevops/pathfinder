@@ -1,8 +1,8 @@
 {% comment %}
 HTMX partial: compatible and incompatible steps grouped by phase.
-Context: compatible_by_phase (OrderedDict), incompatible_steps (list), runtime_family, runtime_version
+Context: compatible_by_phase (OrderedDict), incompatible_steps (list), step_inputs_map (dict), runtime_family, runtime_version
 {% endcomment %}
-{% load json_filters %}
+{{ step_inputs_map|json_script:"step-inputs-map" }}
 
 {% for phase_label, phase_steps in compatible_by_phase.items %}
 <div class="mb-4">
@@ -26,7 +26,6 @@ Context: compatible_by_phase (OrderedDict), incompatible_steps (list), runtime_f
              data-step-name="{{ step.name }}"
              data-step-phase="{{ step.phase }}"
              data-step-description="{{ step.description|truncatechars:80 }}"
-             data-step-inputs="{{ step.inputs_schema|to_json }}"
              @click="addStepFromEl($el)">
             <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-dark-text truncate">{{ step.name }}</p>
