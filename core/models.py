@@ -519,6 +519,11 @@ class StepsRepository(models.Model):
     )
     git_url = models.URLField(max_length=500, unique=True)
     default_branch = models.CharField(max_length=100, default="main")
+    engine = models.CharField(
+        max_length=63,
+        default="github_actions",
+        help_text="CI engine identifier, e.g., github_actions",
+    )
     connection = models.ForeignKey(
         IntegrationConnection,
         on_delete=models.SET_NULL,
@@ -583,6 +588,11 @@ class CIStep(models.Model):
     id = models.BigAutoField(primary_key=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     repository = models.ForeignKey(StepsRepository, on_delete=models.CASCADE, related_name="steps")
+    engine = models.CharField(
+        max_length=63,
+        default="github_actions",
+        help_text="CI engine this step belongs to",
+    )
     directory_name = models.CharField(max_length=255)  # e.g., 'setup-python'
     name = models.CharField(max_length=255)  # from action.yml 'name'
     description = models.TextField(blank=True)  # from action.yml 'description'
