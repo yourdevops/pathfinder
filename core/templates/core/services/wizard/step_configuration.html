@@ -61,30 +61,27 @@
 </div>
 
 <script nonce="{{ csp_nonce }}">
-let envVars = [];
+var envVars = [];
+var container = document.getElementById('env-vars-container');
 
 function renderEnvVars() {
-    const container = document.getElementById('env-vars-container');
     container.innerHTML = '';
 
-    envVars.forEach((v, i) => {
-        const row = document.createElement('div');
+    envVars.forEach(function(v, i) {
+        var row = document.createElement('div');
         row.className = 'flex items-center gap-2 p-2 bg-dark-bg border border-dark-border rounded';
-        row.innerHTML = `
-            <input type="text" value="${v.key}" placeholder="KEY"
-                   class="flex-1 px-2 py-1 bg-dark-surface border border-dark-border rounded text-dark-text text-sm font-mono"
-                   onchange="updateEnvVar(${i}, 'key', this.value)">
-            <span class="text-dark-muted">=</span>
-            <input type="text" value="${v.value}" placeholder="value"
-                   class="flex-1 px-2 py-1 bg-dark-surface border border-dark-border rounded text-dark-text text-sm"
-                   onchange="updateEnvVar(${i}, 'value', this.value)">
-            <button type="button" onclick="removeEnvVar(${i})"
-                    class="p-1 text-dark-muted hover:text-red-400 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        `;
+        row.innerHTML = '<input type="text" value="' + v.key + '" placeholder="KEY"' +
+            ' class="flex-1 px-2 py-1 bg-dark-surface border border-dark-border rounded text-dark-text text-sm font-mono"' +
+            ' data-action="update-key" data-index="' + i + '">' +
+            '<span class="text-dark-muted">=</span>' +
+            '<input type="text" value="' + v.value + '" placeholder="value"' +
+            ' class="flex-1 px-2 py-1 bg-dark-surface border border-dark-border rounded text-dark-text text-sm"' +
+            ' data-action="update-value" data-index="' + i + '">' +
+            '<button type="button" data-action="remove" data-index="' + i + '"' +
+            ' class="p-1 text-dark-muted hover:text-red-400 transition-colors">' +
+            '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+            '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />' +
+            '</svg></button>';
         container.appendChild(row);
     });
 
@@ -110,11 +107,28 @@ function removeEnvVar(index) {
     renderEnvVars();
 }
 
+// Event delegation for dynamically generated inputs
+container.addEventListener('change', function(e) {
+    var idx = parseInt(e.target.dataset.index);
+    if (e.target.dataset.action === 'update-key') {
+        updateEnvVar(idx, 'key', e.target.value);
+    } else if (e.target.dataset.action === 'update-value') {
+        updateEnvVar(idx, 'value', e.target.value);
+    }
+});
+
+container.addEventListener('click', function(e) {
+    var btn = e.target.closest('[data-action="remove"]');
+    if (btn) {
+        removeEnvVar(parseInt(btn.dataset.index));
+    }
+});
+
 document.getElementById('add-env-var-btn').addEventListener('click', addEnvVar);
 
 // Initialize from existing data
 document.addEventListener('DOMContentLoaded', function() {
-    const existing = document.getElementById('id_configuration-env_vars_json').value;
+    var existing = document.getElementById('id_configuration-env_vars_json').value;
     if (existing && existing !== '[]') {
         try {
             envVars = JSON.parse(existing);
