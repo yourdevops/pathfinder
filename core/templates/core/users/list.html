@@ -3,10 +3,10 @@
 {% block title %}Users - Pathfinder{% endblock %}
 
 {% block content %}
-<div class="p-8">
+<div class="p-8" x-data>
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold">Users</h1>
-        <button onclick="document.getElementById('createModal').classList.remove('hidden')"
+        <button @click="$store.createModal.open = true"
                 class="btn-primary">
             Create User
         </button>
@@ -56,7 +56,7 @@
                             </a>
                             {% if user != request.user %}
                             <form method="post" action="{% url 'users:delete' user.uuid %}" class="inline"
-                                  onsubmit="return confirm('Are you sure you want to delete {{ user.username }}?');">
+                                  data-confirm="Are you sure you want to delete {{ user.username }}?">
                                 {% csrf_token %}
                                 <button type="submit" class="text-red-400 hover:text-red-300">Delete</button>
                             </form>
@@ -77,11 +77,13 @@
 </div>
 
 <!-- Create User Modal -->
-<div id="createModal" class="fixed inset-0 bg-black/50 flex items-center justify-center {% if not show_modal %}hidden{% endif %} z-50">
+<div id="createModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+     x-data x-show="$store.createModal.open" x-cloak
+     @keydown.escape.window="$store.createModal.open = false">
     <div class="card w-full max-w-md mx-4">
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold">Create User</h2>
-            <button onclick="document.getElementById('createModal').classList.add('hidden')"
+            <button @click="$store.createModal.open = false"
                     class="text-dark-muted hover:text-dark-text">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -139,7 +141,7 @@
 
             <div class="flex justify-end space-x-3 pt-4">
                 <button type="button"
-                        onclick="document.getElementById('createModal').classList.add('hidden')"
+                        @click="$store.createModal.open = false"
                         class="btn-secondary">
                     Cancel
                 </button>
@@ -150,4 +152,10 @@
         </form>
     </div>
 </div>
+
+<script nonce="{{ csp_nonce }}">
+document.addEventListener('alpine:init', function() {
+    Alpine.store('createModal', { open: {{ show_modal|yesno:"true,false" }} });
+});
+</script>
 {% endblock %}
