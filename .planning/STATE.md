@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 Phase: 5.2 of 7 (CI Workflows - Project & Service Pairing)
 Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-31 - Completed quick task 027: Fix service links and context in project view
+Last activity: 2026-02-02 - Completed quick task 028: Address CSP violation findings
 
 Progress: [====================================] 100% (Phase 5.1) | [========================            ] 67% (Phase 5.2)
 
@@ -140,7 +140,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None - Phase 5.2 plans 01-02 complete, plan 03 remaining
+None -- Phase 5.2 plans 01-02 complete, plan 03 remaining
 
 ### Quick Tasks Completed
 
@@ -173,9 +173,10 @@ None - Phase 5.2 plans 01-02 complete, plan 03 remaining
 | 025 | Implement Django 6.0 native CSP policy | 2026-01-30 | cab6d38 | [025-implement-django-6-0-native-csp-policy-w](./quick/025-implement-django-6-0-native-csp-policy-w/) |
 | 026 | Fix Alpine CSP parser error in CI Workflow Composer | 2026-01-31 | e019b6c | [026-fix-alpine-csp-parser-error-in-ci-workfl](./quick/026-fix-alpine-csp-parser-error-in-ci-workfl/) |
 | 027 | Fix service links and context in project | 2026-01-31 | d7d340f | [027-fix-service-links-and-context-in-project](./quick/027-fix-service-links-and-context-in-project/) |
+| 028 | Address CSP violation findings | 2026-02-02 | a9d5afd | [028-address-csp-violation-findings](./quick/028-address-csp-violation-findings/) |
 
 ## Session Continuity
 
-Last session: 2026-01-31
-Stopped at: Completed quick-027
+Last session: 2026-02-02
+Stopped at: Completed quick-028
 Resume file: None
