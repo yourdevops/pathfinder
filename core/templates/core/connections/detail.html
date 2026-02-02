@@ -326,7 +326,7 @@
                 </p>
             </div>
             <form method="post" action="{% url 'connections:delete' connection_name=connection.name %}"
-                  onsubmit="return confirm('Are you sure you want to delete this connection? This action cannot be undone.');">
+                  data-confirm="Are you sure you want to delete this connection? This action cannot be undone.">
                 {% csrf_token %}
                 <button type="submit"
                         {% if has_usage %}disabled{% endif %}

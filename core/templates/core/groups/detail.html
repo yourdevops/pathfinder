@@ -19,7 +19,7 @@
             <a href="{% url 'groups:edit' group_name=group.name %}" class="btn-secondary">Edit</a>
             {% if group.name != 'admins' %}
             <form method="post" action="{% url 'groups:delete' group_name=group.name %}" class="inline"
-                  onsubmit="return confirm('Are you sure you want to delete this group?');">
+                  data-confirm="Are you sure you want to delete this group?">
                 {% csrf_token %}
                 <button type="submit" class="btn-secondary text-red-400 hover:text-red-300">Delete</button>
             </form>
@@ -91,7 +91,7 @@
                         </div>
                     </div>
                     <form method="post" action="{% url 'groups:remove_member' group_name=group.name user_uuid=membership.user.uuid %}"
-                          onsubmit="return confirm('Remove {{ membership.user.username }} from this group?');">
+                          data-confirm="Remove {{ membership.user.username }} from this group?">
                         {% csrf_token %}
                         <button type="submit" class="text-red-400 hover:text-red-300 text-sm">Remove</button>
                     </form>

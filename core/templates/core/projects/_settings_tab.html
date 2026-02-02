@@ -192,7 +192,7 @@
                             </div>
                             {% if user_project_role == 'owner' %}
                             <form method="post" action="{% url 'projects:remove_member' project_name=project.name group_name=membership.group.name %}"
-                                  onsubmit="return confirm('Remove {{ membership.group.name }} from this project?');">
+                                  data-confirm="Remove {{ membership.group.name }} from this project?">
                                 {% csrf_token %}
                                 <button type="submit" class="text-dark-muted hover:text-red-400 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -225,7 +225,7 @@
                             </div>
                             {% if user_project_role == 'owner' %}
                             <form method="post" action="{% url 'projects:remove_member' project_name=project.name group_name=membership.group.name %}"
-                                  onsubmit="return confirm('Remove {{ membership.group.name }} from this project?');">
+                                  data-confirm="Remove {{ membership.group.name }} from this project?">
                                 {% csrf_token %}
                                 <button type="submit" class="text-dark-muted hover:text-red-400 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -258,7 +258,7 @@
                             </div>
                             {% if user_project_role == 'owner' %}
                             <form method="post" action="{% url 'projects:remove_member' project_name=project.name group_name=membership.group.name %}"
-                                  onsubmit="return confirm('Remove {{ membership.group.name }} from this project?');">
+                                  data-confirm="Remove {{ membership.group.name }} from this project?">
                                 {% csrf_token %}
                                 <button type="submit" class="text-dark-muted hover:text-red-400 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -303,7 +303,7 @@
                     <p class="text-dark-muted text-sm">Mark the project as archived. It will be hidden from the project list.</p>
                 </div>
                 <form method="post" action="{% url 'projects:archive' project_name=project.name %}"
-                      onsubmit="return confirm('Are you sure you want to archive this project? This action can be undone by an administrator.');">
+                      data-confirm="Are you sure you want to archive this project? This action can be undone by an administrator.">
                     {% csrf_token %}
                     <button type="submit" class="px-4 py-2 border border-red-500/50 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
                         Archive Project

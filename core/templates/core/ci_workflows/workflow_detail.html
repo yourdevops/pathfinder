@@ -39,7 +39,7 @@
             </a>
             {% if can_delete %}
             <form method="post" action="{% url 'ci_workflows:workflow_delete' workflow_name=workflow.name %}"
-                  onsubmit="return confirm('Are you sure you want to delete this workflow?');">
+                  data-confirm="Are you sure you want to delete this workflow?">
                 {% csrf_token %}
                 <button type="submit"
                         class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm">
