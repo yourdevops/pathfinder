@@ -7,6 +7,7 @@ schedule_health_checks periodically.
 """
 
 import logging
+import os
 from datetime import timedelta
 
 from django.conf import settings
@@ -209,12 +210,11 @@ def scan_steps_repository(repository_id: int) -> dict:
     Returns:
         Dict with counts: {"steps": N, "runtimes": M}
     """
+    from core.ci_steps import parse_runtimes_yml
     from core.git_utils import (
         build_authenticated_git_url,
         cleanup_repo,
         clone_repo_shallow,
-        parse_runtimes_yml,
-        scan_ci_steps,
     )
     from core.models import CIStep, RuntimeFamily, StepsRepository
 
@@ -264,20 +264,32 @@ def scan_steps_repository(repository_id: int) -> dict:
         # Delete removed runtimes
         RuntimeFamily.objects.filter(repository=repository).exclude(name__in=scanned_runtime_names).delete()
 
-        # Scan CI steps
-        steps_data = scan_ci_steps(temp_dir)
+        # Scan CI steps using engine-agnostic discovery + plugin parsing
+        from core.ci_steps import discover_steps
+        from plugins.base import get_ci_plugin_for_engine
+
+        engine = repository.engine
+        ci_plugin = get_ci_plugin_for_engine(engine)
+        if ci_plugin:
+            raw_steps = discover_steps(temp_dir, ci_plugin.engine_file_name)
+        else:
+            raw_steps = []
+            logger.warning(f"No CI plugin found for engine '{engine}', skipping step scan")
 
         # Get HEAD commit SHA
         head_sha = repo_obj.head.commit.hexsha
 
         # Create/update CIStep records
         scanned_dir_names = set()
-        for step_info in steps_data:
+        for raw_step in raw_steps:
+            step_info = ci_plugin.parse_step_file(raw_step["raw_content"])
+            dir_name = os.path.basename(raw_step["directory_path"])
             CIStep.objects.update_or_create(
                 repository=repository,
-                directory_name=step_info["directory_name"],
+                directory_name=dir_name,
                 defaults={
-                    "name": step_info["name"],
+                    "engine": engine,
+                    "name": step_info["name"] or dir_name,
                     "description": step_info["description"],
                     "phase": step_info["phase"],
                     "runtime_constraints": step_info["runtime_constraints"],
@@ -288,7 +300,7 @@ def scan_steps_repository(repository_id: int) -> dict:
                     "raw_metadata": step_info["raw_metadata"],
                 },
             )
-            scanned_dir_names.add(step_info["directory_name"])
+            scanned_dir_names.add(dir_name)
 
         # Delete removed steps
         CIStep.objects.filter(repository=repository).exclude(directory_name__in=scanned_dir_names).delete()
@@ -300,9 +312,9 @@ def scan_steps_repository(repository_id: int) -> dict:
         repository.save(update_fields=["scan_status", "scan_error", "last_scanned_at"])
 
         logger.info(
-            f"Scanned steps repository {repository.name}: {len(steps_data)} steps, {len(runtimes_data)} runtimes"
+            f"Scanned steps repository {repository.name}: {len(scanned_dir_names)} steps, {len(runtimes_data)} runtimes"
         )
-        return {"steps": len(steps_data), "runtimes": len(runtimes_data)}
+        return {"steps": len(scanned_dir_names), "runtimes": len(runtimes_data)}
 
     except Exception as e:
         error_msg = str(e)

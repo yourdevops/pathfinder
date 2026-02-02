@@ -179,7 +179,6 @@ def read_manifest_from_repo(repo_path: str) -> dict:
         FileNotFoundError: If no manifest file found
         yaml.YAMLError: If manifest is invalid YAML
     """
-    import os
 
     manifest_names = ["ssp-template.yaml", "pathfinder-template.yaml"]
 
@@ -330,7 +329,6 @@ def apply_template_to_directory(src_dir: str, dest_dir: str, variables: dict, ex
         variables: Dict of template variables for substitution
         exclude_files: Files to skip (e.g., manifest files)
     """
-    import os
 
     if exclude_files is None:
         exclude_files = ["ssp-template.yaml", "pathfinder-template.yaml", ".git"]
@@ -558,89 +556,3 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str, va
     finally:
         # Cleanup
         shutil.rmtree(repo_temp_dir, ignore_errors=True)
-
-
-def parse_runtimes_yml(repo_path: str) -> dict:
-    """
-    Parse runtimes.yml from a steps repository.
-
-    Supports both formats:
-      - {family: {versions: [...]}}
-      - {family: [...]}
-
-    Returns:
-        Dict mapping family name to list of version strings.
-        e.g., {"python": ["3.11", "3.12", "3.13"], "node": ["18", "20", "22"]}
-    """
-    runtimes_path = os.path.join(repo_path, "runtimes.yml")
-    if not os.path.exists(runtimes_path):
-        return {}
-
-    with open(runtimes_path) as f:
-        data = yaml.safe_load(f) or {}
-
-    result = {}
-    for family, config in data.items():
-        if isinstance(config, dict) and "versions" in config:
-            # Format: {family: {versions: [...]}}
-            result[family] = [str(v) for v in config["versions"]]
-        elif isinstance(config, list):
-            # Format: {family: [...]}
-            result[family] = [str(v) for v in config]
-
-    return result
-
-
-def scan_ci_steps(repo_path: str) -> list:
-    """
-    Scan ci-steps/ directory for step definitions.
-
-    Walks ci-steps/ looking for subdirectories containing action.yml
-    (or action.yaml as fallback). Parses each file and extracts
-    standard GitHub Actions fields plus x-pathfinder metadata.
-
-    Returns:
-        Sorted list of dicts with step metadata from action.yml files.
-    """
-    steps_dir = os.path.join(repo_path, "ci-steps")
-    if not os.path.isdir(steps_dir):
-        return []
-
-    steps = []
-    for entry in sorted(os.listdir(steps_dir)):
-        step_dir = os.path.join(steps_dir, entry)
-        if not os.path.isdir(step_dir):
-            continue
-
-        # Look for action.yml, fallback to action.yaml
-        action_file = os.path.join(step_dir, "action.yml")
-        if not os.path.exists(action_file):
-            action_file = os.path.join(step_dir, "action.yaml")
-            if not os.path.exists(action_file):
-                logger.warning(f"No action.yml found in ci-steps/{entry}, skipping")
-                continue
-
-        try:
-            with open(action_file) as f:
-                metadata = yaml.safe_load(f) or {}
-        except yaml.YAMLError as e:
-            logger.warning(f"Failed to parse action.yml in ci-steps/{entry}: {e}")
-            continue
-
-        pathfinder = metadata.get("x-pathfinder", {})
-
-        steps.append(
-            {
-                "directory_name": entry,
-                "name": metadata.get("name", entry),
-                "description": metadata.get("description", ""),
-                "inputs": metadata.get("inputs", {}),
-                "phase": pathfinder.get("phase", ""),
-                "runtime_constraints": pathfinder.get("runtimes", {}),
-                "tags": pathfinder.get("tags", []),
-                "produces": pathfinder.get("produces"),
-                "raw_metadata": metadata,
-            }
-        )
-
-    return steps
