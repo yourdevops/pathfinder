@@ -4,6 +4,7 @@ import json
 from collections import OrderedDict
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Case, IntegerField, Value, When
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
@@ -165,7 +166,20 @@ class StepsRepoScanStatusView(LoginRequiredMixin, View):
 
 def _filter_steps(request):
     """Apply engine/runtime/version filters to CIStep queryset and return filtered list + filter context."""
-    steps = CIStep.objects.all().select_related("repository").order_by("phase", "name")
+    phase_ordering = Case(
+        When(phase="setup", then=Value(0)),
+        When(phase="test", then=Value(1)),
+        When(phase="build", then=Value(2)),
+        When(phase="package", then=Value(3)),
+        default=Value(4),
+        output_field=IntegerField(),
+    )
+    steps = (
+        CIStep.objects.all()
+        .select_related("repository")
+        .annotate(phase_order=phase_ordering)
+        .order_by("phase_order", "name")
+    )
 
     selected_engine = request.GET.get("engine", "")
     selected_runtime = request.GET.get("runtime", "")
@@ -181,6 +195,12 @@ def _filter_steps(request):
     elif selected_runtime:
         steps_list = [s for s in steps_list if selected_runtime in (s.runtime_constraints or {})]
 
+    # Annotate engine display names
+    engines = get_available_engines()
+    engine_display_map = dict(engines)
+    for s in steps_list:
+        s.engine_display = engine_display_map.get(s.engine, s.engine)
+
     # Collect distinct runtimes from all steps
     all_runtimes = set()
     for s in CIStep.objects.values_list("runtime_constraints", flat=True):
@@ -195,8 +215,6 @@ def _filter_steps(request):
                 if str(v) not in runtime_versions:
                     runtime_versions.append(str(v))
         runtime_versions.sort(reverse=True)
-
-    engines = get_available_engines()
 
     return {
         "steps": steps_list,
@@ -304,7 +322,7 @@ class RuntimeVersionsView(LoginRequiredMixin, View):
     """HTMX endpoint: return version <option> elements for a runtime family."""
 
     def get(self, request):
-        family = request.GET.get("runtime_family", "")
+        family = request.GET.get("runtime_family", "") or request.GET.get("runtime", "")
         if not family:
             return HttpResponse('<option value="">-- Select family first --</option>')
 

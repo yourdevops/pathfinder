@@ -1,6 +1,10 @@
 {% for step in steps %}
 <tr class="border-b border-dark-border/50 hover:bg-dark-border/30 cursor-pointer transition-colors"
-    onclick="window.location.href='{% url 'ci_workflows:step_detail' step_uuid=step.uuid %}'">
+    onclick="window.location.href='{% url 'ci_workflows:step_detail' step_uuid=step.uuid %}'"
+    data-sort-name="{{ step.name|lower }}"
+    data-sort-phase="{{ step.phase_order|default:'4' }}"
+    data-sort-engine="{{ step.engine_display|default:step.engine|lower }}"
+    data-sort-repo="{{ step.repository.name|lower }}">
     <td class="py-3 px-4">
         <span class="text-dark-text font-medium">{{ step.name }}</span>
         {% if step.description %}<p class="text-dark-muted text-xs mt-0.5">{{ step.description|truncatechars:60 }}</p>{% endif %}
@@ -8,7 +12,7 @@
     <td class="py-3 px-4">
         <span class="text-xs px-2 py-0.5 rounded bg-dark-border/50 text-dark-muted capitalize">{{ step.get_phase_display|default:"\u2014" }}</span>
     </td>
-    <td class="py-3 px-4 text-sm text-dark-muted">{{ step.engine|default:"\u2014" }}</td>
+    <td class="py-3 px-4 text-sm text-dark-muted">{{ step.engine_display|default:"\u2014" }}</td>
     <td class="py-3 px-4 text-sm text-dark-muted">
         {% for family, constraint in step.runtime_constraints.items %}{{ family }}{% if not forloop.last %}, {% endif %}{% empty %}&mdash;{% endfor %}
     </td>

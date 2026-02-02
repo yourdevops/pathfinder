@@ -32,14 +32,16 @@
                 hx-target="#steps-table-body"
                 hx-include="[name='engine'],[name='runtime'],[name='runtime_version']"
                 hx-trigger="change"
-                class="bg-dark-surface border border-dark-border rounded-lg text-dark-text text-sm px-3 py-2 focus:outline-none focus:border-dark-accent">
+                hx-get-2="{% url 'ci_workflows:runtime_versions' %}"
+                class="bg-dark-surface border border-dark-border rounded-lg text-dark-text text-sm px-3 py-2 focus:outline-none focus:border-dark-accent"
+                id="runtime-filter">
             <option value="">All Runtimes</option>
             {% for rt in runtimes %}
             <option value="{{ rt }}" {% if rt == selected_runtime %}selected{% endif %}>{{ rt }}</option>
             {% endfor %}
         </select>
 
-        <select name="runtime_version"
+        <select name="runtime_version" id="version-filter"
                 hx-get="{% url 'ci_workflows:steps_table' %}"
                 hx-target="#steps-table-body"
                 hx-include="[name='engine'],[name='runtime'],[name='runtime_version']"
@@ -53,16 +55,64 @@
     </div>
 
     <!-- Steps Table -->
-    <div class="bg-dark-surface border border-dark-border rounded-lg overflow-hidden">
+    <div class="bg-dark-surface border border-dark-border rounded-lg overflow-hidden"
+         x-data="{
+            sortCol: 'phase',
+            sortDir: 'asc',
+            sort(col) {
+                if (this.sortCol === col) {
+                    this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    this.sortCol = col;
+                    this.sortDir = 'asc';
+                }
+                this.sortRows();
+            },
+            sortRows() {
+                const tbody = document.getElementById('steps-table-body');
+                const rows = Array.from(tbody.querySelectorAll('tr[data-sort-name]'));
+                const col = this.sortCol;
+                const dir = this.sortDir === 'asc' ? 1 : -1;
+                rows.sort((a, b) => {
+                    const aVal = a.getAttribute('data-sort-' + col) || '';
+                    const bVal = b.getAttribute('data-sort-' + col) || '';
+                    if (col === 'phase') {
+                        return (parseInt(aVal) - parseInt(bVal)) * dir;
+                    }
+                    return aVal.localeCompare(bVal) * dir;
+                });
+                rows.forEach(row => tbody.appendChild(row));
+            },
+            arrowClass(col) {
+                if (this.sortCol !== col) return 'opacity-0';
+                return this.sortDir === 'asc' ? '' : 'rotate-180';
+            }
+         }">
         <table class="w-full">
             <thead>
                 <tr class="border-b border-dark-border text-left text-sm text-dark-muted">
-                    <th class="py-3 px-4 font-medium">Name</th>
-                    <th class="py-3 px-4 font-medium">Phase</th>
-                    <th class="py-3 px-4 font-medium">Engine</th>
+                    <th class="py-3 px-4 font-medium cursor-pointer hover:text-dark-text select-none" @click="sort('name')">
+                        <span class="inline-flex items-center gap-1">Name
+                            <svg class="w-3 h-3 transition-transform" :class="arrowClass('name')" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+                        </span>
+                    </th>
+                    <th class="py-3 px-4 font-medium cursor-pointer hover:text-dark-text select-none" @click="sort('phase')">
+                        <span class="inline-flex items-center gap-1">Phase
+                            <svg class="w-3 h-3 transition-transform" :class="arrowClass('phase')" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+                        </span>
+                    </th>
+                    <th class="py-3 px-4 font-medium cursor-pointer hover:text-dark-text select-none" @click="sort('engine')">
+                        <span class="inline-flex items-center gap-1">CI Engine
+                            <svg class="w-3 h-3 transition-transform" :class="arrowClass('engine')" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+                        </span>
+                    </th>
                     <th class="py-3 px-4 font-medium">Runtimes</th>
                     <th class="py-3 px-4 font-medium">Tags</th>
-                    <th class="py-3 px-4 font-medium">Repository</th>
+                    <th class="py-3 px-4 font-medium cursor-pointer hover:text-dark-text select-none" @click="sort('repo')">
+                        <span class="inline-flex items-center gap-1">Repository
+                            <svg class="w-3 h-3 transition-transform" :class="arrowClass('repo')" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+                        </span>
+                    </th>
                 </tr>
             </thead>
             <tbody id="steps-table-body">
@@ -86,4 +136,29 @@
     </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ csp_nonce }}">
+// When HTMX swaps in new table rows, re-apply sort if active
+document.body.addEventListener('htmx:afterSwap', function(event) {
+    if (event.detail.target && event.detail.target.id === 'steps-table-body') {
+        // Also trigger dynamic version loading when runtime changes
+        const runtimeSelect = document.getElementById('runtime-filter');
+        const versionSelect = document.getElementById('version-filter');
+        if (runtimeSelect && versionSelect) {
+            const runtime = runtimeSelect.value;
+            if (runtime) {
+                fetch('{% url "ci_workflows:runtime_versions" %}?runtime=' + encodeURIComponent(runtime))
+                    .then(r => r.text())
+                    .then(html => {
+                        versionSelect.innerHTML = '<option value="">All Versions</option>' + html;
+                    });
+            } else {
+                versionSelect.innerHTML = '<option value="">All Versions</option>';
+            }
+        }
+    }
+});
+</script>
 {% endblock %}
