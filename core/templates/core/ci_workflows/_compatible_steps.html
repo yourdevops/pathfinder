@@ -33,6 +33,15 @@ Context: compatible_by_phase (OrderedDict), incompatible_steps (list), step_inpu
                 <p class="text-xs text-dark-muted truncate">{{ step.description|truncatechars:60 }}</p>
                 {% endif %}
             </div>
+            <a href="{% url 'ci_workflows:step_detail' step_uuid=step.uuid %}"
+               target="_blank" rel="noopener noreferrer"
+               class="p-1 text-dark-muted hover:text-dark-accent transition-colors flex-shrink-0"
+               title="View step details"
+               @click.stop>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </a>
             <button class="p-1 text-dark-muted group-hover:text-dark-accent transition-colors flex-shrink-0" title="Add to workflow">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />

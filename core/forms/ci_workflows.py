@@ -104,6 +104,10 @@ class WorkflowCreateForm(forms.Form):
             }
         ),
     )
+    engine = forms.ChoiceField(
+        choices=[],
+        widget=forms.Select(attrs={"class": DARK_SELECT}),
+    )
     runtime_family = forms.ChoiceField(
         choices=[],
         widget=forms.Select(
@@ -123,8 +127,23 @@ class WorkflowCreateForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Populate runtime_family choices dynamically
-        families = RuntimeFamily.objects.values_list("name", flat=True).distinct().order_by("name")
+        # Populate engine choices
+        from plugins.base import get_available_engines
+
+        engine_choices = [("", "-- Select CI engine --"), *get_available_engines()]
+        self.fields["engine"].choices = engine_choices
+
+        # Populate runtime_family choices based on selected engine or all
+        if self.data and self.data.get("engine"):
+            engine = self.data["engine"]
+            families = (
+                RuntimeFamily.objects.filter(repository__engine=engine)
+                .values_list("name", flat=True)
+                .distinct()
+                .order_by("name")
+            )
+        else:
+            families = RuntimeFamily.objects.values_list("name", flat=True).distinct().order_by("name")
         family_choices = [("", "-- Select runtime --")] + [(f, f.title()) for f in families]
         self.fields["runtime_family"].choices = family_choices
 

@@ -58,6 +58,7 @@ from .views import (
 )
 from .views.ci_workflows import (
     CompatibleStepsView,
+    EngineRuntimesView,
     RuntimeVersionsView,
     StepConfigView,
     StepDetailView,
@@ -137,6 +138,7 @@ ci_workflows_patterns = [
     path("compatible-steps/", CompatibleStepsView.as_view(), name="compatible_steps"),
     path("step-config/<uuid:step_uuid>/", StepConfigView.as_view(), name="step_config"),
     path("runtime-versions/", RuntimeVersionsView.as_view(), name="runtime_versions"),
+    path("engine-runtimes/", EngineRuntimesView.as_view(), name="engine_runtimes"),
     path("repos/", StepsRepoListView.as_view(), name="repo_list"),
     path("repos/register/", StepsRepoRegisterView.as_view(), name="repo_register"),
     path("repos/<dns:repo_name>/", StepsRepoDetailView.as_view(), name="repo_detail"),

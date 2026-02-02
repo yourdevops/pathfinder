@@ -92,7 +92,7 @@ class StepsRepoDetailView(LoginRequiredMixin, View):
         runtimes = repo.runtimes.all().order_by("name")
 
         # Group steps by phase
-        phase_order = ["setup", "build", "test", "package"]
+        phase_order = ["setup", "test", "build", "package"]
         phase_labels = {
             "setup": "Setup",
             "build": "Build",
@@ -320,6 +320,7 @@ class WorkflowCreateView(LoginRequiredMixin, View):
                 {
                     "name": form.cleaned_data["name"],
                     "description": form.cleaned_data.get("description", ""),
+                    "engine": form.cleaned_data["engine"],
                     "runtime_family": form.cleaned_data["runtime_family"],
                     "runtime_version": form.cleaned_data["runtime_version"],
                 }
@@ -354,6 +355,25 @@ class RuntimeVersionsView(LoginRequiredMixin, View):
         return HttpResponse("\n".join(options))
 
 
+class EngineRuntimesView(LoginRequiredMixin, View):
+    """HTMX endpoint: return runtime family <option> elements for a selected engine."""
+
+    def get(self, request):
+        engine = request.GET.get("engine", "")
+        if not engine:
+            return HttpResponse('<option value="">-- Select engine first --</option>')
+        families = (
+            RuntimeFamily.objects.filter(repository__engine=engine)
+            .values_list("name", flat=True)
+            .distinct()
+            .order_by("name")
+        )
+        options = ['<option value="">-- Select runtime --</option>']
+        for f in families:
+            options.append(f'<option value="{f}">{f.title()}</option>')
+        return HttpResponse("\n".join(options))
+
+
 class WorkflowComposerView(LoginRequiredMixin, View):
     """Step 2: Compose workflow steps with drag-and-drop ordering.
 
@@ -364,7 +384,7 @@ class WorkflowComposerView(LoginRequiredMixin, View):
     def _build_compatible_context(self, runtime_family, runtime_version):
         """Build compatible/incompatible steps grouped by phase."""
         compatible, incompatible = get_compatible_steps(runtime_family, runtime_version)
-        phase_order = ["setup", "build", "test", "package"]
+        phase_order = ["setup", "test", "build", "package"]
         phase_labels = {
             "setup": "Setup",
             "build": "Build",
@@ -516,7 +536,7 @@ class CompatibleStepsView(LoginRequiredMixin, View):
 
         compatible, incompatible = get_compatible_steps(runtime_family, runtime_version)
 
-        phase_order = ["setup", "build", "test", "package"]
+        phase_order = ["setup", "test", "build", "package"]
         phase_labels = {
             "setup": "Setup",
             "build": "Build",
