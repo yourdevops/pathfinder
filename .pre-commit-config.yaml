@@ -1,6 +1,11 @@
 exclude: '^theme/static/js/vendor/'
 
 repos:
+  - repo: https://github.com/adamchainz/django-upgrade
+    rev: "1.29.1"
+    hooks:
+      - id: django-upgrade
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -14,11 +19,6 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.14
     hooks:
-      - id: ruff
+      - id: ruff-check
         args: [--fix]
       - id: ruff-format
-
-  - repo: https://github.com/adamchainz/django-upgrade
-    rev: "1.29.1"
-    hooks:
-      - id: django-upgrade
