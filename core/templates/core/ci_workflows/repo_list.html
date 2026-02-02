@@ -37,7 +37,7 @@
             <tbody>
                 {% for repo in repos %}
                 <tr class="border-b border-dark-border/50 hover:bg-dark-border/30 cursor-pointer transition-colors"
-                    onclick="window.location.href='{% url 'ci_workflows:repo_detail' repo_name=repo.name %}'">
+                    data-href="{% url 'ci_workflows:repo_detail' repo_name=repo.name %}"
                     <td class="py-3 px-4 text-dark-text font-medium">{{ repo.name }}</td>
                     <td class="py-3 px-4 text-sm text-dark-muted">{{ repo.engine_display|default:repo.engine }}</td>
                     <td class="py-3 px-4 text-sm text-dark-muted truncate max-w-xs">{{ repo.git_url }}</td>
