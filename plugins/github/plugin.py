@@ -636,3 +636,76 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
             "author_email": commit.commit.author.email if commit.commit.author else None,
             "authored_date": commit.commit.author.date if commit.commit.author else None,
         }
+
+    def get_workflow_run_jobs(self, config: dict[str, Any], repo_name: str, run_id: int) -> list[dict[str, Any]]:
+        """
+        Fetch jobs for a workflow run from GitHub API.
+
+        Args:
+            config: The decrypted configuration dictionary.
+            repo_name: Full repository name (owner/repo).
+            run_id: The workflow run ID.
+
+        Returns:
+            List of job dictionaries with id, name, status, conclusion, steps.
+        """
+        g = self._get_github_client(config)
+        repo = g.get_repo(repo_name)
+        run = repo.get_workflow_run(run_id)
+        jobs = run.jobs()
+
+        result = []
+        for job in jobs:
+            steps = []
+            for step in job.steps:
+                steps.append(
+                    {
+                        "name": step.name,
+                        "status": step.status,
+                        "conclusion": step.conclusion,
+                        "number": step.number,
+                    }
+                )
+            result.append(
+                {
+                    "id": job.id,
+                    "name": job.name,
+                    "status": job.status,
+                    "conclusion": job.conclusion,
+                    "started_at": job.started_at,
+                    "completed_at": job.completed_at,
+                    "steps": steps,
+                }
+            )
+        return result
+
+    def get_job_logs(self, config: dict[str, Any], repo_name: str, job_id: int) -> str | None:
+        """
+        Fetch job logs from GitHub Actions.
+
+        PyGithub doesn't expose the logs endpoint directly, so we make a raw API request.
+
+        Args:
+            config: The decrypted configuration dictionary.
+            repo_name: Full repository name (owner/repo).
+            job_id: The job ID.
+
+        Returns:
+            Plain text log content, or None if unavailable.
+        """
+        import requests
+
+        g = self._get_github_client(config)
+        # Get token from the client's auth
+        token = g._Github__requester._Requester__auth.token
+        base_url = config.get("base_url", "https://api.github.com")
+        url = f"{base_url}/repos/{repo_name}/actions/jobs/{job_id}/logs"
+        headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.v3+json"}
+        try:
+            resp = requests.get(url, headers=headers, allow_redirects=True, timeout=30)
+            if resp.status_code == 200:
+                return resp.text
+            # 410 Gone means logs expired
+            return None
+        except Exception:
+            return None
