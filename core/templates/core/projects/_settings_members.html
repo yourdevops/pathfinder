@@ -1,0 +1,134 @@
+<!-- Project Members Section -->
+<div class="bg-dark-surface border border-dark-border rounded-lg">
+    <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-semibold text-dark-text">Project Members</h2>
+            <p class="text-dark-muted text-sm mt-1">Groups with access to this project.</p>
+        </div>
+        {% if user_project_role == 'owner' %}
+        <button hx-get="{% url 'projects:add_member_modal' project_name=project.name %}"
+                hx-target="body"
+                hx-swap="beforeend"
+                class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Group
+        </button>
+        {% endif %}
+    </div>
+    <div class="p-6">
+        {% if memberships %}
+        <div class="space-y-4">
+            <!-- Owners -->
+            {% if owners %}
+            <div>
+                <h3 class="text-sm font-semibold text-dark-muted uppercase tracking-wider mb-3">Owners</h3>
+                <ul class="space-y-2">
+                    {% for membership in owners %}
+                    <li class="flex items-center justify-between py-2 px-3 bg-dark-bg/30 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-dark-accent/20 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-dark-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </div>
+                            <span class="text-dark-text">{{ membership.group.name }}</span>
+                            <span class="text-dark-muted text-sm">({{ membership.group.memberships.count }} member{{ membership.group.memberships.count|pluralize }})</span>
+                        </div>
+                        {% if user_project_role == 'owner' %}
+                        <form method="post" action="{% url 'projects:remove_member' project_name=project.name group_name=membership.group.name %}"
+                              data-confirm="Remove {{ membership.group.name }} from this project?">
+                            {% csrf_token %}
+                            <button type="submit" class="text-dark-muted hover:text-red-400 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Contributors -->
+            {% if contributors %}
+            <div>
+                <h3 class="text-sm font-semibold text-dark-muted uppercase tracking-wider mb-3">Contributors</h3>
+                <ul class="space-y-2">
+                    {% for membership in contributors %}
+                    <li class="flex items-center justify-between py-2 px-3 bg-dark-bg/30 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </div>
+                            <span class="text-dark-text">{{ membership.group.name }}</span>
+                            <span class="text-dark-muted text-sm">({{ membership.group.memberships.count }} member{{ membership.group.memberships.count|pluralize }})</span>
+                        </div>
+                        {% if user_project_role == 'owner' %}
+                        <form method="post" action="{% url 'projects:remove_member' project_name=project.name group_name=membership.group.name %}"
+                              data-confirm="Remove {{ membership.group.name }} from this project?">
+                            {% csrf_token %}
+                            <button type="submit" class="text-dark-muted hover:text-red-400 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Viewers -->
+            {% if viewers %}
+            <div>
+                <h3 class="text-sm font-semibold text-dark-muted uppercase tracking-wider mb-3">Viewers</h3>
+                <ul class="space-y-2">
+                    {% for membership in viewers %}
+                    <li class="flex items-center justify-between py-2 px-3 bg-dark-bg/30 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-gray-500/20 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </div>
+                            <span class="text-dark-text">{{ membership.group.name }}</span>
+                            <span class="text-dark-muted text-sm">({{ membership.group.memberships.count }} member{{ membership.group.memberships.count|pluralize }})</span>
+                        </div>
+                        {% if user_project_role == 'owner' %}
+                        <form method="post" action="{% url 'projects:remove_member' project_name=project.name group_name=membership.group.name %}"
+                              data-confirm="Remove {{ membership.group.name }} from this project?">
+                            {% csrf_token %}
+                            <button type="submit" class="text-dark-muted hover:text-red-400 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <svg class="w-12 h-12 mx-auto text-dark-muted mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <p class="text-dark-muted">No groups assigned to this project.</p>
+            {% if user_project_role == 'owner' %}
+            <p class="text-dark-muted text-sm mt-1">Add groups to give users access.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>

@@ -29,7 +29,6 @@ from .groups import (
     GroupListView,
     GroupRemoveMemberView,
 )
-from .placeholders import ResourcesPlaceholderView, ServicesPlaceholderView
 from .projects import (
     AddMemberModalView,
     EnvironmentAttachConnectionView,
@@ -115,8 +114,6 @@ __all__ = [
     "ProjectRemoveApprovedWorkflowView",
     "ProjectUpdateView",
     "RemoveMemberView",
-    "ResourcesPlaceholderView",
-    "ServicesPlaceholderView",
     "StepDetailView",
     "StepsCatalogView",
     "StepsRepoDetailView",

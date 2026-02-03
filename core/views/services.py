@@ -255,9 +255,11 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         workflow_data = form_dict["workflow"].cleaned_data
         ci_workflow = workflow_data.get("ci_workflow")
 
-        # Create Service record
-        # scaffold_status: "pending" if CI workflow selected (will scaffold), "not_required" if no workflow
-        scaffold_status = "pending" if ci_workflow else "not_required"
+        # Determine if scaffolding is needed:
+        # - NEW repos: always scaffold (to create the repo), CI manifest optional
+        # - EXISTING repos: only scaffold if CI workflow selected (to push manifest via PR)
+        needs_scaffold = repo_is_new or ci_workflow
+        scaffold_status = "pending" if needs_scaffold else "not_required"
 
         service = Service.objects.create(
             project=project,
@@ -272,20 +274,23 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
             created_by=self.request.user.username,
         )
 
-        # Only scaffold if CI workflow selected (otherwise nothing to push)
-        if ci_workflow:
+        if needs_scaffold:
             scaffold_repository.enqueue(
                 service_id=service.id,
                 scm_connection_id=scm_connection.connection.id,
             )
-            messages.success(
-                self.request,
-                f'Service "{service_name}" created. Repository scaffolding in progress...',
-            )
+            if repo_is_new:
+                if ci_workflow:
+                    msg = f'Service "{service_name}" created. Repository scaffolding with CI workflow in progress...'
+                else:
+                    msg = f'Service "{service_name}" created. Repository creation in progress...'
+            else:
+                msg = f'Service "{service_name}" created. CI manifest scaffolding in progress...'
+            messages.success(self.request, msg)
         else:
             messages.success(
                 self.request,
-                f'Service "{service_name}" created in Draft status. Assign a CI Workflow to scaffold the repository.',
+                f'Service "{service_name}" created. You can assign a CI Workflow later to push a manifest.',
             )
 
         return redirect("projects:detail", project_name=project.name)
@@ -388,10 +393,10 @@ class ServiceDeleteView(LoginRequiredMixin, View):
         self.service = get_object_or_404(Service, project=self.project, name=service_name)
 
         # Check owner permission
-        role = can_access_project(request.user, self.project)
+        role = get_user_project_role(request.user, self.project)
         if role != "owner":
             messages.error(request, "Only project owners can delete services.")
-            return redirect("services:detail", project_name=project_name, service_name=service_name)
+            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
 
         return super().dispatch(request, *args, **kwargs)
 

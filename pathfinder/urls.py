@@ -32,7 +32,6 @@ from core.urls import (  # noqa: E402
     dashboard_patterns,
     groups_patterns,
     projects_patterns,
-    resources_patterns,
     services_patterns,
     settings_patterns,
     setup_patterns,
@@ -63,7 +62,6 @@ urlpatterns = [
     path("projects/", include((projects_patterns, "projects"), namespace="projects")),
     path("settings/", include((settings_patterns, "settings"), namespace="settings")),
     path("services/", include((services_patterns, "services"), namespace="services")),
-    path("resources/", include((resources_patterns, "resources"), namespace="resources")),
 ]
 
 # Add plugin-specific URLs dynamically

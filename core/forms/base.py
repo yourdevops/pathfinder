@@ -6,6 +6,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 from core.models import (
+    CIWorkflow,
     Environment,
     Group,
     GroupMembership,
@@ -435,7 +436,30 @@ class ProjectCreateForm(forms.ModelForm):
 
 
 class ProjectUpdateForm(forms.ModelForm):
-    """Form for updating project settings."""
+    """Form for updating project settings including CI configuration."""
+
+    # CI configuration fields
+    approve_all_published = forms.BooleanField(
+        required=False,
+        widget=forms.CheckboxInput(
+            attrs={
+                "class": "sr-only peer",
+            }
+        ),
+    )
+    default_workflow = forms.ModelChoiceField(
+        queryset=CIWorkflow.objects.none(),
+        required=False,
+        empty_label="-- No default --",
+        widget=forms.Select(
+            attrs={
+                "class": (
+                    "w-full px-4 py-2 bg-dark-surface border border-dark-border"
+                    " rounded-lg text-dark-text focus:outline-none focus:border-dark-accent"
+                ),
+            }
+        ),
+    )
 
     class Meta:
         model = Project
@@ -461,6 +485,15 @@ class ProjectUpdateForm(forms.ModelForm):
                 }
             ),
         }
+
+    def __init__(self, *args, project=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Use the instance or explicit project parameter
+        proj = project or self.instance
+        if proj and proj.pk:
+            from core.models import get_available_workflows_for_project
+
+            self.fields["default_workflow"].queryset = get_available_workflows_for_project(proj)
 
 
 class EnvironmentForm(forms.ModelForm):

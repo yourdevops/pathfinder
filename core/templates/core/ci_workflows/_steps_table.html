@@ -10,7 +10,7 @@
         {% if step.description %}<p class="text-dark-muted text-xs mt-0.5">{{ step.description|truncatechars:60 }}</p>{% endif %}
     </td>
     <td class="py-3 px-4">
-        <span class="text-xs px-2 py-0.5 rounded bg-dark-border/50 text-dark-muted capitalize">{{ step.get_phase_display|default:"\u2014" }}</span>
+        <span class="text-xs px-2 py-0.5 rounded capitalize {% if step.phase == 'setup' %}bg-blue-500/20 text-blue-400{% elif step.phase == 'build' %}bg-yellow-500/20 text-yellow-400{% elif step.phase == 'test' %}bg-green-500/20 text-green-400{% elif step.phase == 'package' %}bg-purple-500/20 text-purple-400{% else %}bg-dark-border/50 text-dark-muted{% endif %}">{{ step.get_phase_display|default:"—" }}</span>
     </td>
     <td class="py-3 px-4 text-sm text-dark-muted">{{ step.engine_display|default:"\u2014" }}</td>
     <td class="py-3 px-4 text-sm text-dark-muted">

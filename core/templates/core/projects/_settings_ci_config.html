@@ -1,0 +1,31 @@
+<!-- CI Configuration Section -->
+<div class="bg-dark-surface border border-dark-border rounded-lg mb-8">
+    <div class="px-6 py-4 border-b border-dark-border">
+        <h2 class="text-lg font-semibold text-dark-text">CI Configuration</h2>
+        <p class="text-dark-muted text-sm mt-1">Manage which CI workflows are available for services in this project.</p>
+    </div>
+    <div class="p-6 space-y-4">
+        <!-- Approve All Published Toggle -->
+        <div class="flex items-center justify-between py-3 px-4 bg-dark-bg/30 rounded-lg">
+            <div>
+                <label for="id_approve_all_published" class="text-dark-text font-medium">Approve All Published Workflows</label>
+                <p class="text-dark-muted text-sm mt-0.5">Automatically make all published workflows available to services in this project.</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox"
+                       name="approve_all_published"
+                       id="id_approve_all_published"
+                       {% if form.approve_all_published.value %}checked{% endif %}
+                       class="sr-only peer">
+                <div class="w-11 h-6 bg-dark-border rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-dark-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-dark-accent"></div>
+            </label>
+        </div>
+
+        <!-- Default Workflow Dropdown -->
+        <div>
+            <label for="id_default_workflow" class="block text-sm font-medium text-dark-text mb-1">Default CI Workflow</label>
+            <p class="text-dark-muted text-xs mb-2">Pre-selected workflow when creating new services in this project.</p>
+            {{ form.default_workflow }}
+        </div>
+    </div>
+</div>

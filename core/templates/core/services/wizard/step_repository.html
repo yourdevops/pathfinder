@@ -68,7 +68,7 @@ document.querySelectorAll('input[name="repository-repo_mode"]').forEach(function
         document.getElementById('existing-repo-field').classList.toggle('hidden', isNew);
         document.getElementById('branch-label').textContent = isNew ? 'Main Branch' : 'Base Branch';
         document.getElementById('branch-hint').textContent = isNew
-            ? 'Target branch for the new repository'
+            ? 'Main branch for the new repository'
             : 'Base branch for the feature branch (PR will target this)';
     });
 });

@@ -50,6 +50,9 @@ class ProjectStepForm(forms.Form):
             self.fields["project"].initial = project
             self.fields["project"].queryset = Project.objects.filter(pk=project.pk)
             self.fields["project"].widget.attrs["disabled"] = True
+            # Disabled fields don't submit values, so make it not required
+            # The clean() method will use self.initial_project instead
+            self.fields["project"].required = False
 
     def clean_name(self):
         name = self.cleaned_data["name"].lower()
@@ -63,7 +66,10 @@ class ProjectStepForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
+        # Use initial_project when field is disabled (disabled fields don't submit values)
         project = cleaned_data.get("project") or self.initial_project
+        # Ensure project is in cleaned_data for subsequent wizard steps
+        cleaned_data["project"] = project
         name = cleaned_data.get("name")
 
         if project and name:

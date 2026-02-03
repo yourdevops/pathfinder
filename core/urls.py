@@ -48,7 +48,6 @@ from .views import (
     ProjectRemoveApprovedWorkflowView,
     ProjectUpdateView,
     RemoveMemberView,
-    ResourcesPlaceholderView,
     UnlockView,
     UserCreateView,
     UserDeleteView,
@@ -176,11 +175,6 @@ ci_workflows_patterns = [
 services_patterns = [
     path("", ServiceListView.as_view(), name="list"),
     path("create/", ServiceCreateWizard.as_view(), name="create"),
-]
-
-# Resources placeholder URLs (to be replaced in future version)
-resources_patterns = [
-    path("", ResourcesPlaceholderView.as_view(), name="list"),
 ]
 
 # Connection URLs (real implementation)

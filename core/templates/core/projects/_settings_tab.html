@@ -1,315 +1,116 @@
 <!-- Settings Tab Content -->
-<div class="space-y-8">
-    <!-- Basic Info Section -->
-    <div class="bg-dark-surface border border-dark-border rounded-lg">
-        <div class="px-6 py-4 border-b border-dark-border">
-            <h2 class="text-lg font-semibold text-dark-text">Project Information</h2>
-            <p class="text-dark-muted text-sm mt-1">Update your project's basic information.</p>
-        </div>
-        <form method="post" action="{% url 'projects:update' project_name=project.name %}" class="p-6 space-y-4">
+<div>
+    <!-- Sticky Header with Project info and Save/Cancel buttons -->
+    {% include "core/projects/_settings_dirty_banner.html" %}
+
+    <div class="p-8 space-y-8">
+        <!-- Combined Settings Form -->
+        <form id="settings-form"
+              method="post"
+              action="{% url 'projects:update' project_name=project.name %}">
             {% csrf_token %}
-            <div>
-                <label class="block text-sm font-medium text-dark-text mb-1">Name</label>
-                <input type="text" value="{{ project.name }}" disabled
-                       class="w-full px-3 py-2 bg-dark-bg/50 border border-dark-border rounded-lg text-dark-muted cursor-not-allowed">
-                <p class="text-dark-muted text-xs mt-1">Project names cannot be changed after creation.</p>
-            </div>
-            <div>
-                <label for="id_description" class="block text-sm font-medium text-dark-text mb-1">Description</label>
-                {{ form.description }}
-                {% if form.description.errors %}
-                <p class="text-red-400 text-sm mt-1">{{ form.description.errors.0 }}</p>
-                {% endif %}
-            </div>
-            <div>
-                <label for="id_status" class="block text-sm font-medium text-dark-text mb-1">Status</label>
-                {{ form.status }}
-                {% if form.status.errors %}
-                <p class="text-red-400 text-sm mt-1">{{ form.status.errors.0 }}</p>
-                {% endif %}
-            </div>
-            <div class="pt-4">
-                <button type="submit" class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors">
-                    Save Changes
-                </button>
-            </div>
+
+            <!-- Basic Info Section -->
+            {% include "core/projects/_settings_project_info.html" %}
+
+            {% if user_project_role == 'owner' %}
+            <!-- CI Configuration Section -->
+            {% include "core/projects/_settings_ci_config.html" %}
+            {% endif %}
         </form>
-    </div>
 
-    <!-- Environment Variables Section -->
-    <div class="bg-dark-surface border border-dark-border rounded-lg">
-        <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between">
-            <div>
-                <h2 class="text-lg font-semibold text-dark-text">Project Environment Variables</h2>
-                <p class="text-dark-muted text-sm mt-1">Variables set here are inherited by all environments. Lock variables to prevent override.</p>
-            </div>
-            {% if user_project_role == 'owner' %}
-            <button hx-get="{% url 'projects:project_env_var_modal' project_name=project.name %}"
-                    hx-target="body"
-                    hx-swap="beforeend"
-                    class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Add Variable
-            </button>
-            {% endif %}
-        </div>
-        <div class="p-6">
-            {% if project.env_vars %}
-            <div class="overflow-x-auto">
-                <table class="w-full" id="project-env-vars-table">
-                    <thead>
-                        <tr class="border-b border-dark-border">
-                            <th class="px-4 py-2 text-left text-xs font-semibold text-dark-muted uppercase tracking-wider">Key</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold text-dark-muted uppercase tracking-wider">Value</th>
-                            <th class="px-4 py-2 text-left text-xs font-semibold text-dark-muted uppercase tracking-wider">Locked</th>
-                            <th class="px-4 py-2 text-right text-xs font-semibold text-dark-muted uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-dark-border">
-                        {% for var in project.env_vars %}
-                        <tr class="hover:bg-dark-border/30">
-                            <td class="px-4 py-3">
-                                <code class="text-dark-text font-mono">{{ var.key }}</code>
-                            </td>
-                            <td class="px-4 py-3">
-                                <code class="text-dark-muted font-mono text-sm">{{ var.value|truncatechars:40 }}</code>
-                            </td>
-                            <td class="px-4 py-3">
-                                {% if var.lock %}
-                                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" title="Locked - cannot be overridden in environments">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                                {% else %}
-                                <span class="text-dark-muted">-</span>
-                                {% endif %}
-                            </td>
-                            <td class="px-4 py-3 text-right">
-                                {% if user_project_role == 'owner' %}
-                                <div class="flex items-center justify-end gap-2">
-                                    <button hx-get="{% url 'projects:project_env_var_edit' project_name=project.name key=var.key %}"
-                                            hx-target="body"
-                                            hx-swap="beforeend"
-                                            class="text-dark-muted hover:text-dark-accent transition-colors"
-                                            title="Edit variable">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                    </button>
-                                    <button hx-delete="{% url 'projects:project_env_var_delete' project_name=project.name key=var.key %}"
-                                            hx-confirm="Delete variable {{ var.key }}?"
-                                            hx-target="closest tr"
-                                            hx-swap="outerHTML"
-                                            class="text-dark-muted hover:text-red-400 transition-colors"
-                                            title="Delete variable">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </div>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="text-center py-8">
-                <svg class="w-12 h-12 mx-auto text-dark-muted mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <p class="text-dark-muted">No project-level environment variables defined.</p>
-                <p class="text-dark-muted text-sm mt-1">Add variables here to share them across all environments.</p>
-            </div>
-            {% endif %}
-        </div>
-    </div>
+        <!-- Environment Variables Section -->
+        {% include "core/projects/_settings_env_vars.html" %}
 
-    <!-- SCM Connections Section -->
-    <div class="bg-dark-surface border border-dark-border rounded-lg">
-        <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between">
-            <div>
-                <h2 class="text-lg font-semibold text-dark-text">SCM Connections</h2>
-                <p class="text-dark-muted text-sm mt-1">Source code management connections for this project (GitHub, GitLab, etc.).</p>
-            </div>
-            {% if user_project_role == 'owner' %}
-            <button hx-get="{% url 'projects:project_attach_connection' project_name=project.name %}"
-                    hx-target="body"
-                    hx-swap="beforeend"
-                    class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Add Connection
-            </button>
-            {% endif %}
-        </div>
-        <div class="p-6">
-            {% include "core/projects/_connections_list.html" with connections=project.connections.all %}
-        </div>
-    </div>
+        <!-- SCM Connections Section -->
+        {% include "core/projects/_settings_scm_connections.html" %}
 
-    <!-- Members Section -->
-    <div class="bg-dark-surface border border-dark-border rounded-lg">
-        <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between">
-            <div>
-                <h2 class="text-lg font-semibold text-dark-text">Project Members</h2>
-                <p class="text-dark-muted text-sm mt-1">Groups with access to this project.</p>
-            </div>
-            {% if user_project_role == 'owner' %}
-            <button hx-get="{% url 'projects:add_member_modal' project_name=project.name %}"
-                    hx-target="body"
-                    hx-swap="beforeend"
-                    class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                </svg>
-                Add Group
-            </button>
-            {% endif %}
-        </div>
-        <div class="p-6">
-            {% if memberships %}
-            <div class="space-y-4">
-                <!-- Owners -->
-                {% if owners %}
-                <div>
-                    <h3 class="text-sm font-semibold text-dark-muted uppercase tracking-wider mb-3">Owners</h3>
-                    <ul class="space-y-2">
-                        {% for membership in owners %}
-                        <li class="flex items-center justify-between py-2 px-3 bg-dark-bg/30 rounded-lg">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full bg-dark-accent/20 flex items-center justify-center">
-                                    <svg class="w-4 h-4 text-dark-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                </div>
-                                <span class="text-dark-text">{{ membership.group.name }}</span>
-                                <span class="text-dark-muted text-sm">({{ membership.group.memberships.count }} member{{ membership.group.memberships.count|pluralize }})</span>
-                            </div>
-                            {% if user_project_role == 'owner' %}
-                            <form method="post" action="{% url 'projects:remove_member' project_name=project.name group_name=membership.group.name %}"
-                                  data-confirm="Remove {{ membership.group.name }} from this project?">
-                                {% csrf_token %}
-                                <button type="submit" class="text-dark-muted hover:text-red-400 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
-                            </form>
-                            {% endif %}
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
+        <!-- Members Section -->
+        {% include "core/projects/_settings_members.html" %}
 
-                <!-- Contributors -->
-                {% if contributors %}
-                <div>
-                    <h3 class="text-sm font-semibold text-dark-muted uppercase tracking-wider mb-3">Contributors</h3>
-                    <ul class="space-y-2">
-                        {% for membership in contributors %}
-                        <li class="flex items-center justify-between py-2 px-3 bg-dark-bg/30 rounded-lg">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center">
-                                    <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                </div>
-                                <span class="text-dark-text">{{ membership.group.name }}</span>
-                                <span class="text-dark-muted text-sm">({{ membership.group.memberships.count }} member{{ membership.group.memberships.count|pluralize }})</span>
-                            </div>
-                            {% if user_project_role == 'owner' %}
-                            <form method="post" action="{% url 'projects:remove_member' project_name=project.name group_name=membership.group.name %}"
-                                  data-confirm="Remove {{ membership.group.name }} from this project?">
-                                {% csrf_token %}
-                                <button type="submit" class="text-dark-muted hover:text-red-400 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
-                            </form>
-                            {% endif %}
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
+        {% if user_project_role == 'owner' %}
+        <!-- Approved Workflows Section -->
+        {% include "core/projects/_approved_workflows_section.html" %}
+        {% endif %}
 
-                <!-- Viewers -->
-                {% if viewers %}
-                <div>
-                    <h3 class="text-sm font-semibold text-dark-muted uppercase tracking-wider mb-3">Viewers</h3>
-                    <ul class="space-y-2">
-                        {% for membership in viewers %}
-                        <li class="flex items-center justify-between py-2 px-3 bg-dark-bg/30 rounded-lg">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full bg-gray-500/20 flex items-center justify-center">
-                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                </div>
-                                <span class="text-dark-text">{{ membership.group.name }}</span>
-                                <span class="text-dark-muted text-sm">({{ membership.group.memberships.count }} member{{ membership.group.memberships.count|pluralize }})</span>
-                            </div>
-                            {% if user_project_role == 'owner' %}
-                            <form method="post" action="{% url 'projects:remove_member' project_name=project.name group_name=membership.group.name %}"
-                                  data-confirm="Remove {{ membership.group.name }} from this project?">
-                                {% csrf_token %}
-                                <button type="submit" class="text-dark-muted hover:text-red-400 transition-colors">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
-                            </form>
-                            {% endif %}
-                        </li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-            </div>
-            {% else %}
-            <div class="text-center py-8">
-                <svg class="w-12 h-12 mx-auto text-dark-muted mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <p class="text-dark-muted">No groups assigned to this project.</p>
-                {% if user_project_role == 'owner' %}
-                <p class="text-dark-muted text-sm mt-1">Add groups to give users access.</p>
-                {% endif %}
-            </div>
-            {% endif %}
-        </div>
-    </div>
-
-    <!-- CI Configuration Section -->
-    {% include "core/projects/_ci_config_section.html" %}
-
-    <!-- Danger Zone -->
-    <div class="bg-dark-surface border border-red-500/30 rounded-lg">
-        <div class="px-6 py-4 border-b border-red-500/30">
-            <h2 class="text-lg font-semibold text-red-400">Danger Zone</h2>
-            <p class="text-dark-muted text-sm mt-1">Irreversible and destructive actions.</p>
-        </div>
-        <div class="p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-dark-text font-medium">Archive this project</h3>
-                    <p class="text-dark-muted text-sm">Mark the project as archived. It will be hidden from the project list.</p>
-                </div>
-                <form method="post" action="{% url 'projects:archive' project_name=project.name %}"
-                      data-confirm="Are you sure you want to archive this project? This action can be undone by an administrator.">
-                    {% csrf_token %}
-                    <button type="submit" class="px-4 py-2 border border-red-500/50 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
-                        Archive Project
-                    </button>
-                </form>
-            </div>
-        </div>
+        <!-- Danger Zone -->
+        {% include "core/projects/_settings_danger_zone.html" %}
     </div>
 </div>
+
+<script nonce="{{ csp_nonce }}">
+(function() {
+    var form = document.getElementById('settings-form');
+    var dirtyActions = document.getElementById('settings-dirty-actions');
+    var cancelBtn = document.getElementById('settings-cancel-btn');
+    if (!form || !dirtyActions || !cancelBtn) return;
+
+    var initialValues = {};
+
+    function storeInitialValues() {
+        initialValues = {};
+        var formData = new FormData(form);
+        formData.forEach(function(value, key) {
+            if (key !== 'csrfmiddlewaretoken') {
+                initialValues[key] = value;
+            }
+        });
+        var checkboxes = form.querySelectorAll('input[type="checkbox"]');
+        for (var i = 0; i < checkboxes.length; i++) {
+            if (!checkboxes[i].checked) {
+                initialValues[checkboxes[i].name] = '';
+            }
+        }
+    }
+
+    function checkDirty() {
+        var formData = new FormData(form);
+        var currentValues = {};
+        formData.forEach(function(value, key) {
+            if (key !== 'csrfmiddlewaretoken') {
+                currentValues[key] = value;
+            }
+        });
+        var checkboxes = form.querySelectorAll('input[type="checkbox"]');
+        for (var i = 0; i < checkboxes.length; i++) {
+            if (!checkboxes[i].checked) {
+                currentValues[checkboxes[i].name] = '';
+            }
+        }
+
+        var isDirty = false;
+        for (var key in initialValues) {
+            if (currentValues[key] !== initialValues[key]) {
+                isDirty = true;
+                break;
+            }
+        }
+
+        if (isDirty) {
+            dirtyActions.classList.remove('hidden');
+        } else {
+            dirtyActions.classList.add('hidden');
+        }
+    }
+
+    function resetForm() {
+        for (var key in initialValues) {
+            var field = form.querySelector('[name="' + key + '"]');
+            if (field) {
+                if (field.type === 'checkbox') {
+                    field.checked = initialValues[key] === 'on';
+                } else {
+                    field.value = initialValues[key];
+                }
+            }
+        }
+        dirtyActions.classList.add('hidden');
+    }
+
+    storeInitialValues();
+
+    form.addEventListener('input', checkDirty);
+    form.addEventListener('change', checkDirty);
+    cancelBtn.addEventListener('click', resetForm);
+})();
+</script>

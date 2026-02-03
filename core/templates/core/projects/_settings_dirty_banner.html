@@ -1,0 +1,23 @@
+<!-- Settings Header - Sticky header with Project info, Save/Cancel appear on changes -->
+<div id="settings-header"
+     class="sticky top-0 z-50 bg-dark-bg border-b border-dark-border px-8 py-4">
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-dark-text">{{ project.name }}</h1>
+            <p class="text-dark-muted text-sm mt-0.5">{{ project.description|default:"No description" }}</p>
+        </div>
+        <div id="settings-dirty-actions" class="flex items-center gap-3 hidden">
+            <span class="text-amber-400 text-sm mr-2">Unsaved changes</span>
+            <button type="button"
+                    id="settings-cancel-btn"
+                    class="px-4 py-2 border border-dark-border text-dark-text hover:bg-dark-surface rounded-lg transition-colors">
+                Cancel
+            </button>
+            <button type="submit"
+                    form="settings-form"
+                    class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors">
+                Save Changes
+            </button>
+        </div>
+    </div>
+</div>

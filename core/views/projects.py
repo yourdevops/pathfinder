@@ -112,7 +112,19 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
         elif tab == "environments":
             context["environments"] = self.project.environments.filter(status="active").order_by("order", "name")
         elif tab == "settings":
-            context["form"] = ProjectUpdateForm(instance=self.project)
+            # Initialize form with CI config values
+            try:
+                ci_config = self.project.ci_config
+                initial = {
+                    "approve_all_published": ci_config.approve_all_published,
+                    "default_workflow": ci_config.default_workflow,
+                }
+            except ProjectCIConfig.DoesNotExist:
+                initial = {
+                    "approve_all_published": False,
+                    "default_workflow": None,
+                }
+            context["form"] = ProjectUpdateForm(instance=self.project, project=self.project, initial=initial)
             # Members context (merged from members tab)
             memberships = self.project.memberships.select_related("group").order_by("project_role")
             context["memberships"] = memberships
@@ -145,7 +157,7 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
 
 
 class ProjectUpdateView(LoginRequiredMixin, ProjectOwnerMixin, UpdateView):
-    """Update project settings."""
+    """Update project settings including CI configuration."""
 
     model = Project
     form_class = ProjectUpdateForm
@@ -154,11 +166,33 @@ class ProjectUpdateView(LoginRequiredMixin, ProjectOwnerMixin, UpdateView):
     def get_object(self, queryset=None):
         return self.project
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["project"] = self.project
+        return kwargs
+
+    def get_initial(self):
+        initial = super().get_initial()
+        # Set CI config initial values
+        try:
+            ci_config = self.project.ci_config
+            initial["approve_all_published"] = ci_config.approve_all_published
+            initial["default_workflow"] = ci_config.default_workflow
+        except ProjectCIConfig.DoesNotExist:
+            initial["approve_all_published"] = False
+            initial["default_workflow"] = None
+        return initial
+
     def get_success_url(self):
         return reverse("projects:detail", kwargs={"project_name": self.project.name}) + "?tab=settings"
 
     def form_valid(self, form):
         response = super().form_valid(form)
+        # Save CI configuration
+        ci_config, _ = ProjectCIConfig.objects.get_or_create(project=self.project)
+        ci_config.approve_all_published = form.cleaned_data.get("approve_all_published", False)
+        ci_config.default_workflow = form.cleaned_data.get("default_workflow")
+        ci_config.save()
         messages.success(self.request, "Project settings updated.")
         return response
 
@@ -698,8 +732,8 @@ class EnvironmentDetachConnectionView(LoginRequiredMixin, ProjectOwnerMixin, Vie
 # ============================================================================
 
 
-def _render_ci_config_section(request, project, user_project_role):
-    """Helper to render the CI config partial for HTMX responses."""
+def _render_approved_workflows_section(request, project, user_project_role):
+    """Helper to render the approved workflows partial for HTMX responses."""
     try:
         ci_config = project.ci_config
     except ProjectCIConfig.DoesNotExist:
@@ -712,18 +746,11 @@ def _render_ci_config_section(request, project, user_project_role):
         "project": project,
         "user_project_role": user_project_role,
         "ci_config": ci_config,
-        "ci_config_form": ProjectCIConfigForm(
-            project=project,
-            initial={
-                "default_workflow": ci_config.default_workflow if ci_config else None,
-                "approve_all_published": ci_config.approve_all_published if ci_config else False,
-            },
-        ),
         "approved_workflows": approved_workflows,
         "available_workflows": CIWorkflow.objects.filter(status="published").exclude(id__in=already_approved_ids),
         "approve_workflow_form": ApproveWorkflowForm(project=project),
     }
-    return render(request, "core/projects/_ci_config_section.html", context)
+    return render(request, "core/projects/_approved_workflows_section.html", context)
 
 
 class ProjectCIConfigView(LoginRequiredMixin, ProjectOwnerMixin, View):
@@ -739,7 +766,7 @@ class ProjectCIConfigView(LoginRequiredMixin, ProjectOwnerMixin, View):
             ci_config.save()
             messages.success(request, "CI configuration updated.")
 
-        return _render_ci_config_section(request, self.project, self.user_project_role)
+        return _render_approved_workflows_section(request, self.project, self.user_project_role)
 
 
 class ProjectApproveWorkflowView(LoginRequiredMixin, ProjectOwnerMixin, View):
@@ -756,7 +783,7 @@ class ProjectApproveWorkflowView(LoginRequiredMixin, ProjectOwnerMixin, View):
             )
             messages.success(request, f'Workflow "{workflow.name}" approved.')
 
-        return _render_ci_config_section(request, self.project, self.user_project_role)
+        return _render_approved_workflows_section(request, self.project, self.user_project_role)
 
 
 class ProjectRemoveApprovedWorkflowView(LoginRequiredMixin, ProjectOwnerMixin, View):
@@ -775,4 +802,4 @@ class ProjectRemoveApprovedWorkflowView(LoginRequiredMixin, ProjectOwnerMixin, V
         except ProjectCIConfig.DoesNotExist:
             pass
 
-        return _render_ci_config_section(request, self.project, self.user_project_role)
+        return _render_approved_workflows_section(request, self.project, self.user_project_role)

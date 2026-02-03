@@ -1,0 +1,65 @@
+<!-- Approved Workflows Section (standalone, uses HTMX) -->
+<div id="approved-workflows-section" class="bg-dark-surface border border-dark-border rounded-lg">
+    <div class="px-6 py-4 border-b border-dark-border">
+        <h2 class="text-lg font-semibold text-dark-text">Approved Workflows</h2>
+        <p class="text-dark-muted text-sm mt-1">Workflows that are individually approved for this project.</p>
+    </div>
+    <div class="p-6">
+        {% if approved_workflows %}
+        <div class="space-y-2 mb-4">
+            {% for approval in approved_workflows %}
+            <div class="flex items-center justify-between py-2 px-3 bg-dark-bg/30 rounded-lg">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center">
+                        <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="text-dark-text font-medium">{{ approval.workflow.name }}</span>
+                        <span class="text-dark-muted text-xs ml-2">{{ approval.workflow.runtime_family }} {{ approval.workflow.runtime_version }}</span>
+                        {% if ci_config and ci_config.default_workflow_id == approval.workflow.id %}
+                        <span class="ml-2 px-2 py-0.5 text-xs rounded bg-dark-accent/20 text-dark-accent">Default</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <button hx-delete="{% url 'projects:project_remove_workflow' project_name=project.name workflow_id=approval.workflow.id %}"
+                        hx-target="#approved-workflows-section"
+                        hx-swap="outerHTML"
+                        hx-confirm="Remove {{ approval.workflow.name }} from approved workflows?"
+                        class="text-dark-muted hover:text-red-400 transition-colors"
+                        title="Remove from approved list">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-dark-muted text-sm mb-4">No workflows have been individually approved yet.</p>
+        {% endif %}
+
+        <!-- Add Workflow Form -->
+        {% if available_workflows %}
+        <form hx-post="{% url 'projects:project_approve_workflow' project_name=project.name %}"
+              hx-target="#approved-workflows-section"
+              hx-swap="outerHTML"
+              class="flex items-end gap-3">
+            {% csrf_token %}
+            <div class="flex-1">
+                <label class="block text-xs font-medium text-dark-muted mb-1">Add Workflow</label>
+                {{ approve_workflow_form.workflow }}
+            </div>
+            <button type="submit" class="px-4 py-2 bg-dark-surface border border-dark-border hover:border-dark-accent text-dark-text rounded-lg transition-colors text-sm flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Approve
+            </button>
+        </form>
+        {% elif not approved_workflows %}
+        <p class="text-dark-muted text-sm">No published workflows available. Create workflows in the CI Workflows section first.</p>
+        {% endif %}
+    </div>
+</div>

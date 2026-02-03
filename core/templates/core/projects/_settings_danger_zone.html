@@ -1,0 +1,22 @@
+<!-- Danger Zone Section -->
+<div class="bg-dark-surface border border-red-500/30 rounded-lg">
+    <div class="px-6 py-4 border-b border-red-500/30">
+        <h2 class="text-lg font-semibold text-red-400">Danger Zone</h2>
+        <p class="text-dark-muted text-sm mt-1">Irreversible and destructive actions.</p>
+    </div>
+    <div class="p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="text-dark-text font-medium">Archive this project</h3>
+                <p class="text-dark-muted text-sm">Mark the project as archived. It will be hidden from the project list.</p>
+            </div>
+            <form method="post" action="{% url 'projects:archive' project_name=project.name %}"
+                  data-confirm="Are you sure you want to archive this project? This action can be undone by an administrator.">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 border border-red-500/50 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors">
+                    Archive Project
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
