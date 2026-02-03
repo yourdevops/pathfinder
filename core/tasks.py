@@ -347,6 +347,133 @@ def scan_steps_repository(repository_id: int) -> dict:
             cleanup_repo(repo_obj, temp_dir)
 
 
+def activate_service_on_first_success(build):
+    """
+    Transition service from draft to active on first successful build.
+
+    Args:
+        build: The Build instance that succeeded.
+    """
+    from core.models import Build
+
+    service = build.service
+    if service.status != "draft":
+        return  # Already active or in error state
+
+    # Check if this is actually the first success
+    has_prior_success = Build.objects.filter(service=service, status="success").exclude(id=build.id).exists()
+
+    if has_prior_success:
+        return  # Not the first success
+
+    # Activate the service
+    service.status = "active"
+    service.current_build_id = build.id
+    service.save(update_fields=["status", "current_build_id", "updated_at"])
+    logger.info(f"Service {service.name} activated on first successful build {build.id}")
+
+
+@task(queue_name="build_updates")
+def poll_build_details(
+    run_id: int,
+    repo_name: str,
+    connection_id: int,
+    service_id: int,
+    artifact_ref: str = "",
+) -> dict:
+    """
+    Poll GitHub API for workflow run details and update Build record.
+
+    Fetches the workflow run details from GitHub, retrieves the commit message,
+    and creates or updates the Build record.
+
+    Args:
+        run_id: The GitHub workflow run ID.
+        repo_name: Full repository name (owner/repo).
+        connection_id: ID of the IntegrationConnection to use.
+        service_id: ID of the Service associated with the build.
+        artifact_ref: Artifact reference for deployment (optional).
+
+    Returns:
+        Dict with build_id, status, and created flag.
+    """
+    from core.models import Build, IntegrationConnection, Service
+
+    try:
+        connection = IntegrationConnection.objects.get(id=connection_id)
+    except IntegrationConnection.DoesNotExist:
+        logger.error(f"Connection {connection_id} not found")
+        return {"error": "Connection not found"}
+
+    try:
+        service = Service.objects.get(id=service_id)
+    except Service.DoesNotExist:
+        logger.error(f"Service {service_id} not found")
+        return {"error": "Service not found"}
+
+    plugin = connection.get_plugin()
+    if not plugin:
+        logger.error(f"Plugin not available for connection {connection.name}")
+        return {"error": "Plugin not available"}
+
+    # Fetch run details from GitHub
+    try:
+        run_data = plugin.get_workflow_run(connection.get_config(), repo_name, run_id)
+    except Exception as e:
+        logger.exception(f"Failed to fetch workflow run {run_id}")
+        return {"error": str(e)}
+
+    # Fetch commit message from GitHub API
+    commit_message = ""
+    head_sha = run_data.get("head_sha", "")
+    if head_sha:
+        try:
+            commit_data = plugin.get_commit(connection.get_config(), repo_name, head_sha)
+            # Get first line of commit message
+            full_message = commit_data.get("message", "")
+            commit_message = full_message.split("\n")[0] if full_message else ""
+        except Exception as e:
+            logger.warning(f"Failed to fetch commit {head_sha}: {e}")
+            # Continue without commit message - not critical
+
+    # Map GitHub status to our status
+    status = Build.map_github_status(run_data["status"], run_data.get("conclusion"))
+
+    # Calculate duration if completed
+    duration = None
+    completed_at = None
+    if run_data["status"] == "completed" and run_data["created_at"] and run_data["updated_at"]:
+        completed_at = run_data["updated_at"]
+        duration = int((completed_at - run_data["created_at"]).total_seconds())
+
+    # Update or create Build record
+    build, created = Build.objects.update_or_create(
+        github_run_id=run_id,
+        defaults={
+            "service": service,
+            "run_number": run_data.get("run_number"),
+            "status": status,
+            "commit_sha": head_sha,
+            "commit_message": commit_message,
+            "branch": run_data.get("head_branch", ""),
+            "author": run_data.get("actor", {}).get("login", ""),
+            "author_avatar_url": run_data.get("actor", {}).get("avatar_url", ""),
+            "ci_job_url": run_data.get("html_url", ""),
+            "artifact_ref": artifact_ref,
+            "started_at": run_data.get("created_at"),
+            "completed_at": completed_at,
+            "duration_seconds": duration,
+        },
+    )
+
+    # Activate service on first successful build
+    if status == "success":
+        activate_service_on_first_success(build)
+
+    logger.info(f"Build {build.id} {'created' if created else 'updated'}: {status}")
+    return {"build_id": build.id, "status": status, "created": created}
+
+
 @task(queue_name="repository_scaffolding")
 def push_ci_manifest(service_id: int) -> dict:
     """

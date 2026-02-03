@@ -537,3 +537,61 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
         from . import urls
 
         return urls.urlpatterns
+
+    def get_workflow_run(self, config: dict[str, Any], repo_name: str, run_id: int) -> dict[str, Any]:
+        """
+        Fetch workflow run details from GitHub API.
+
+        Args:
+            config: The decrypted configuration dictionary.
+            repo_name: Full repository name (owner/repo).
+            run_id: The workflow run ID.
+
+        Returns:
+            Dictionary with workflow run details.
+        """
+        g = self._get_github_client(config)
+        repo = g.get_repo(repo_name)
+        run = repo.get_workflow_run(run_id)
+
+        return {
+            "id": run.id,
+            "run_number": run.run_number,
+            "head_sha": run.head_sha,
+            "head_branch": run.head_branch,
+            "status": run.status,  # queued, in_progress, completed
+            "conclusion": run.conclusion,  # success, failure, cancelled, etc.
+            "created_at": run.created_at,
+            "updated_at": run.updated_at,
+            "html_url": run.html_url,
+            "name": run.name,
+            "event": run.event,
+            "actor": {
+                "login": run.actor.login if run.actor else None,
+                "avatar_url": run.actor.avatar_url if run.actor else None,
+            },
+        }
+
+    def get_commit(self, config: dict[str, Any], repo_name: str, commit_sha: str) -> dict[str, Any]:
+        """
+        Fetch commit details from GitHub API.
+
+        Args:
+            config: The decrypted configuration dictionary.
+            repo_name: Full repository name (owner/repo).
+            commit_sha: The commit SHA.
+
+        Returns:
+            Dictionary with commit details.
+        """
+        g = self._get_github_client(config)
+        repo = g.get_repo(repo_name)
+        commit = repo.get_commit(commit_sha)
+
+        return {
+            "sha": commit.sha,
+            "message": commit.commit.message,  # Full commit message
+            "author_name": commit.commit.author.name if commit.commit.author else None,
+            "author_email": commit.commit.author.email if commit.commit.author else None,
+            "authored_date": commit.commit.author.date if commit.commit.author else None,
+        }
