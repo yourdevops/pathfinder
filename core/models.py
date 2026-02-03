@@ -775,6 +775,10 @@ class Build(models.Model):
     # CI job reference
     ci_job_url = models.URLField(max_length=500, blank=True)
 
+    # Failed step information (populated when build fails)
+    failed_job_name = models.CharField(max_length=255, blank=True)
+    failed_step_name = models.CharField(max_length=255, blank=True)
+
     # Artifact reference for Phase 7 deployment
     artifact_ref = models.CharField(max_length=255, blank=True)
 

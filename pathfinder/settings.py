@@ -189,7 +189,7 @@ SECURE_CSP = {
     "default-src": [CSP.SELF],
     "script-src": [CSP.SELF, CSP.NONCE],
     "style-src": [CSP.SELF, CSP.NONCE],
-    "img-src": [CSP.SELF, "data:"],
+    "img-src": [CSP.SELF, "data:", "https://avatars.githubusercontent.com"],
     # No iframes are used, so blocking them entirely is reasonable hardening
     "frame-src": [CSP.NONE],
     # The <object>/<embed> have no legitimate use in this app and are a classic attack vector.
@@ -198,6 +198,15 @@ SECURE_CSP = {
     "base-uri": [CSP.SELF],
     "form-action": [CSP.SELF],
     "frame-ancestors": [CSP.NONE],
+}
+
+# Cache configuration (for build logs)
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": BASE_DIR / ".cache",
+        "TIMEOUT": 300,  # 5 minutes
+    }
 }
 
 # Integration health check interval (seconds)
