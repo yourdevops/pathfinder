@@ -735,6 +735,88 @@ class ProjectCIConfig(models.Model):
         return f"CI Config for {self.project.name}"
 
 
+class Build(models.Model):
+    """
+    A CI/CD build for a service.
+
+    Tracks GitHub Actions workflow runs and their status.
+    Created via webhook when builds start/complete.
+    """
+
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("running", "Running"),
+        ("success", "Success"),
+        ("failed", "Failed"),
+        ("cancelled", "Cancelled"),
+    ]
+
+    id = models.BigAutoField(primary_key=True)
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
+    service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name="builds")
+
+    # GitHub Actions identifiers
+    github_run_id = models.BigIntegerField(unique=True, db_index=True)
+    run_number = models.IntegerField(null=True, blank=True)
+
+    # Build status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+
+    # Commit information
+    commit_sha = models.CharField(max_length=40, blank=True)
+    commit_message = models.TextField(blank=True)
+    branch = models.CharField(max_length=100, blank=True)
+
+    # Actor information (who triggered the build)
+    author = models.CharField(max_length=150, blank=True)
+    author_avatar_url = models.URLField(max_length=500, blank=True)
+
+    # CI job reference
+    ci_job_url = models.URLField(max_length=500, blank=True)
+
+    # Artifact reference for Phase 7 deployment
+    artifact_ref = models.CharField(max_length=255, blank=True)
+
+    # Timing
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    duration_seconds = models.IntegerField(null=True, blank=True)
+
+    # Audit fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "core_build"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Build #{self.run_number or self.github_run_id} ({self.status})"
+
+    @staticmethod
+    def map_github_status(status: str, conclusion: str | None) -> str:
+        """
+        Map GitHub workflow run status to Build status.
+
+        Args:
+            status: GitHub status (queued, in_progress, completed)
+            conclusion: GitHub conclusion (success, failure, cancelled, etc.)
+
+        Returns:
+            Build status string
+        """
+        if status in ("queued", "in_progress"):
+            return "running"
+        if status == "completed" and conclusion:
+            conclusion_map = {
+                "success": "success",
+                "failure": "failed",
+                "cancelled": "cancelled",
+            }
+            return conclusion_map.get(conclusion, "pending")
+        return "pending"
+
+
 def get_available_workflows_for_project(project):
     """Return queryset of CI workflows available for a project."""
     try:
@@ -765,3 +847,4 @@ auditlog.register(CIWorkflow)
 auditlog.register(CIWorkflowStep)
 auditlog.register(ProjectApprovedWorkflow)
 auditlog.register(ProjectCIConfig)
+auditlog.register(Build)
