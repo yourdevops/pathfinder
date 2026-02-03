@@ -256,11 +256,11 @@ Plans:
   3. Build record shows commit SHA, status, artifact ref, and CI job URL
   4. Service status transitions from "draft" to "active" after first successful build
   5. User can view build history for a service showing all builds with statuses
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
+- [ ] 06-01-PLAN.md — Build model, webhook endpoint with HMAC auth, poll_build_details task, service activation
+- [ ] 06-02-PLAN.md — Build history UI with table layout, filtering, pagination, HTMX auto-refresh
 
 ### Phase 7: Deployments
 **Goal**: Developers can deploy services to environments; Docker plugin runs containers
@@ -300,4 +300,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-01-29 (Phase 5.1 complete - 4 plans executed)*
+*Last updated: 2026-02-03 (Phase 6 planned - 2 plans created)*
