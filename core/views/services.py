@@ -750,6 +750,82 @@ class ServicePushManifestView(LoginRequiredMixin, View):
 class BuildLogsView(LoginRequiredMixin, View):
     """HTMX endpoint to fetch and cache build logs."""
 
+    # Error patterns to detect and highlight
+    ERROR_PATTERNS = ["error", "failed", "failure", "exception", "traceback", "fatal"]
+
+    def _is_error_line(self, line: str) -> bool:
+        """Check if a line contains error-related keywords."""
+        lower_line = line.lower()
+        return any(pattern in lower_line for pattern in self.ERROR_PATTERNS)
+
+    def _extract_error_context(self, logs: str, context_lines: int = 50) -> tuple[list[dict], bool]:
+        """
+        Extract log lines around errors for failed builds.
+
+        Returns tuple of (log_lines, was_truncated) where log_lines is a list of
+        dicts with 'text' and 'is_error' keys.
+        """
+        lines = logs.split("\n")
+        total_lines = len(lines)
+
+        # For short logs, show everything
+        if total_lines <= context_lines * 2:
+            return [{"text": line, "is_error": self._is_error_line(line)} for line in lines], False
+
+        # Find lines with errors
+        error_indices = [i for i, line in enumerate(lines) if self._is_error_line(line)]
+
+        if not error_indices:
+            # No errors found, show last N lines
+            result_lines = lines[-context_lines:]
+            return [{"text": line, "is_error": False} for line in result_lines], True
+
+        # Build ranges around error lines
+        ranges_to_include = set()
+        for idx in error_indices:
+            start = max(0, idx - 10)  # 10 lines before error
+            end = min(total_lines, idx + 20)  # 20 lines after error
+            for i in range(start, end):
+                ranges_to_include.add(i)
+
+        # Also include the last 30 lines (often contain summary)
+        for i in range(max(0, total_lines - 30), total_lines):
+            ranges_to_include.add(i)
+
+        # Sort indices and build result with gap markers
+        sorted_indices = sorted(ranges_to_include)
+        result = []
+        prev_idx = -1
+
+        for idx in sorted_indices:
+            # Add gap marker if there's a discontinuity
+            if prev_idx >= 0 and idx > prev_idx + 1:
+                result.append({"text": "... (lines omitted) ...", "is_error": False})
+            result.append({"text": lines[idx], "is_error": self._is_error_line(lines[idx])})
+            prev_idx = idx
+
+        return result, True
+
+    def _process_logs(self, logs: str, build_status: str) -> tuple[list[dict], bool]:
+        """
+        Process logs for display.
+
+        For failed builds: extract error context.
+        For successful builds: show last 100 lines.
+        """
+        if not logs:
+            return [], False
+
+        if build_status == "failed":
+            return self._extract_error_context(logs)
+
+        # For non-failed builds, show last 100 lines
+        lines = logs.split("\n")
+        if len(lines) <= 100:
+            return [{"text": line, "is_error": False} for line in lines], False
+
+        return [{"text": line, "is_error": False} for line in lines[-100:]], True
+
     def get(self, request, project_name, service_name, build_uuid):
         from django.core.cache import cache
 
@@ -769,11 +845,14 @@ class BuildLogsView(LoginRequiredMixin, View):
         cache_key = f"build_logs_{build_uuid}"
         cached = cache.get(cache_key)
         if cached:
+            log_lines, truncated = self._process_logs(cached.get("logs"), build.status)
             return render(
                 request,
                 "core/services/_build_logs_partial.html",
                 {
-                    "logs": cached["logs"],
+                    "logs": cached.get("logs"),
+                    "log_lines": log_lines,
+                    "logs_truncated": truncated,
                     "failed_job_name": build.failed_job_name,
                     "failed_step_name": build.failed_step_name,
                     "build": build,
@@ -838,14 +917,19 @@ class BuildLogsView(LoginRequiredMixin, View):
             with contextlib.suppress(Exception):
                 logs = plugin.get_job_logs(config, repo_name, job_id_for_logs)
 
-        # Cache result
-        cache.set(cache_key, {"logs": logs}, 300)
+        # Cache raw logs
+        cache.set(cache_key, {"logs": logs})
+
+        # Process logs for display
+        log_lines, truncated = self._process_logs(logs, build.status)
 
         return render(
             request,
             "core/services/_build_logs_partial.html",
             {
                 "logs": logs,
+                "log_lines": log_lines,
+                "logs_truncated": truncated,
                 "failed_job_name": build.failed_job_name,
                 "failed_step_name": build.failed_step_name,
                 "build": build,

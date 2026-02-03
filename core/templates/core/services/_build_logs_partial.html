@@ -18,9 +18,18 @@
         </span>
     </div>
     {% endif %}
-    <div class="bg-gray-950 rounded-lg p-3 max-h-96 overflow-auto">
-        <pre class="text-xs text-gray-300 whitespace-pre-wrap font-mono">{{ logs }}</pre>
+    <div class="bg-gray-950 rounded-lg p-3 max-h-[60vh] overflow-auto">
+        <pre class="text-xs font-mono leading-relaxed">{% for line in log_lines %}{% if line.is_error %}<span class="text-red-400 bg-red-500/10 block px-1 -mx-1">{{ line.text }}</span>{% else %}<span class="text-gray-300">{{ line.text }}</span>
+{% endif %}{% endfor %}</pre>
     </div>
+    {% if logs_truncated %}
+    <p class="text-xs text-dark-muted mt-2">
+        Showing error context only.
+        {% if build.ci_job_url %}
+        <a href="{{ build.ci_job_url }}" target="_blank" rel="noopener noreferrer" class="text-dark-accent hover:underline">View full logs on GitHub</a>.
+        {% endif %}
+    </p>
+    {% endif %}
 </div>
 {% else %}
 <div class="p-4 text-dark-muted text-sm">
