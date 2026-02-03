@@ -3,6 +3,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
+from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
@@ -371,12 +372,35 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
 
         elif tab == "builds":
             # Get builds for this service
-            builds_qs = Build.objects.filter(service=self.service).order_by("-created_at")
+            builds_qs = Build.objects.filter(service=self.service)
+
+            # Apply search filter
+            search_query = self.request.GET.get("q", "").strip()
+            if search_query:
+                builds_qs = builds_qs.filter(
+                    Q(commit_sha__icontains=search_query) | Q(commit_message__icontains=search_query)
+                )
+            context["search_query"] = search_query
 
             # Apply status filter if provided
             status_filter = self.request.GET.get("status", "all")
             if status_filter and status_filter != "all":
                 builds_qs = builds_qs.filter(status=status_filter)
+
+            # Apply sorting (default: newest first)
+            sort_by = self.request.GET.get("sort", "-started_at")
+            valid_sorts = [
+                "started_at",
+                "-started_at",
+                "status",
+                "-status",
+                "duration_seconds",
+                "-duration_seconds",
+            ]
+            if sort_by not in valid_sorts:
+                sort_by = "-started_at"
+            builds_qs = builds_qs.order_by(sort_by)
+            context["sort_by"] = sort_by
 
             # Paginate (20 per page per CONTEXT.md)
             paginator = Paginator(builds_qs, 20)
