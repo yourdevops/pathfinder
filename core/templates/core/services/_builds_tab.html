@@ -1,15 +1,34 @@
-<div class="space-y-6">
-    <h1 class="text-2xl font-bold text-dark-text">Builds</h1>
+<div id="builds-tab-content" class="space-y-6"{% if has_running_builds %} hx-get="?tab=builds{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}" hx-trigger="every 5s" hx-target="#builds-tab-content" hx-swap="innerHTML"{% endif %}>
+    <!-- Header with title and filter -->
+    <div class="flex items-center justify-between">
+        <h1 class="text-2xl font-bold text-dark-text">Builds</h1>
 
-    {% if builds %}
-    <!-- Build list will be populated in Phase 6 -->
-    {% else %}
+        {% if has_any_builds %}
+        <div class="flex items-center gap-2">
+            <label for="status-filter" class="text-sm text-dark-muted">Status:</label>
+            <select id="status-filter"
+                    class="bg-dark-surface border border-dark-border rounded px-3 py-1.5 text-sm text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent"
+                    hx-get="?tab=builds"
+                    hx-target="#builds-tab-content"
+                    hx-swap="innerHTML"
+                    hx-push-url="true"
+                    name="status">
+                {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if not has_any_builds %}
+    <!-- Empty state when no builds exist -->
     <div class="bg-dark-surface border border-dark-border rounded-lg p-12 text-center">
         <svg class="w-12 h-12 mx-auto text-dark-muted mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
         </svg>
         <h2 class="text-xl font-semibold text-dark-text mb-2">No builds yet</h2>
-        <p class="text-dark-muted">Builds will appear here once the CI pipeline runs.</p>
+        <p class="text-dark-muted">Builds will appear here when your CI workflow runs.</p>
 
         {% if service.scaffold_status == 'success' and service.repo_url %}
         <p class="text-dark-muted mt-4">
@@ -20,6 +39,84 @@
             to trigger a build.
         </p>
         {% endif %}
+    </div>
+
+    {% elif builds %}
+    <!-- Build table -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg overflow-hidden">
+        <table class="w-full">
+            <thead class="bg-gray-800">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Commit</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Branch</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Author</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Started</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Duration</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-dark-border">
+                {% for build in builds %}
+                {% include "core/services/_build_row.html" with build=build %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav class="flex items-center justify-between">
+        <div class="text-sm text-dark-muted">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            ({{ page_obj.paginator.count }} total builds)
+        </div>
+        <div class="flex gap-2">
+            {% if page_obj.has_previous %}
+            <a href="?tab=builds&page={{ page_obj.previous_page_number }}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}"
+               hx-get="?tab=builds&page={{ page_obj.previous_page_number }}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}"
+               hx-target="#builds-tab-content"
+               hx-swap="innerHTML"
+               hx-push-url="true"
+               class="px-4 py-2 bg-dark-surface border border-dark-border rounded text-sm text-dark-text hover:bg-gray-800 transition-colors">
+                Previous
+            </a>
+            {% else %}
+            <span class="px-4 py-2 bg-dark-surface border border-dark-border rounded text-sm text-dark-muted cursor-not-allowed opacity-50">
+                Previous
+            </span>
+            {% endif %}
+
+            {% if page_obj.has_next %}
+            <a href="?tab=builds&page={{ page_obj.next_page_number }}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}"
+               hx-get="?tab=builds&page={{ page_obj.next_page_number }}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}"
+               hx-target="#builds-tab-content"
+               hx-swap="innerHTML"
+               hx-push-url="true"
+               class="px-4 py-2 bg-dark-surface border border-dark-border rounded text-sm text-dark-text hover:bg-gray-800 transition-colors">
+                Next
+            </a>
+            {% else %}
+            <span class="px-4 py-2 bg-dark-surface border border-dark-border rounded text-sm text-dark-muted cursor-not-allowed opacity-50">
+                Next
+            </span>
+            {% endif %}
+        </div>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <!-- No builds matching filter -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg p-8 text-center">
+        <p class="text-dark-muted">No builds matching the selected filter.</p>
+        <a href="?tab=builds&status=all"
+           hx-get="?tab=builds&status=all"
+           hx-target="#builds-tab-content"
+           hx-swap="innerHTML"
+           hx-push-url="true"
+           class="text-dark-accent hover:underline text-sm mt-2 inline-block">
+            Show all builds
+        </a>
     </div>
     {% endif %}
 </div>
