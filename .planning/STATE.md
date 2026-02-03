@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 5.3 in progress - CI Steps Redesign
+**Current focus:** Phase 6 in progress - Builds
 
 ## Current Position
 
-Phase: 5.3 of 7 (CI Steps Redesign)
-Plan: 3 of 3 in current phase
-Status: Phase complete
-Last activity: 2026-02-03 - Completed quick task 031: Service wizard fixes and dev workflow
+Phase: 6 of 7 (Builds)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-03 - Completed 06-01-PLAN.md (Webhook Infrastructure)
 
-Progress: [====================================] 100% (Phase 5.1) | [========================            ] 67% (Phase 5.2) | [====================================] 100% (Phase 5.3)
+Progress: [====================                ] 50% (Phase 6)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 40
+- Total plans completed: 41
 - Average duration: 4 min
-- Total execution time: 3.12 hours
+- Total execution time: 3.17 hours
 
 **By Phase:**
 
@@ -37,9 +37,10 @@ Progress: [====================================] 100% (Phase 5.1) | [===========
 | 05.1-ci-workflows-builder | 4 | 29 min | 7.25 min |
 | 05.2-ci-workflows-pairing | 2 | 7 min | 3.5 min |
 | 05.3-ci-steps-redesign | 3 | 10 min | 3.3 min |
+| 06-builds | 1 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 05.2-01 (4 min), 05.2-02 (3 min), 05.3-01 (4 min), 05.3-02 (4 min), 05.3-03 (2 min)
+- Last 5 plans: 05.3-01 (4 min), 05.3-02 (4 min), 05.3-03 (2 min), 06-01 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -129,6 +130,10 @@ Recent decisions affecting current work:
 | 05.1-04 | Auto-injected checkout and notify steps | Bracket user steps with checkout, ssp-notify-start, ssp-notify-complete |
 | 05.3 | Plugin-specific CI actions in plugins, not core | GitHub manifest gen, step parsing, manifest paths belong in GitHubPlugin; core handles only engine-agnostic logic |
 | 05.3 | core/git_utils.py = generic git only | No CI-specific logic in git_utils.py; only clone, checkout, commit, push, branch operations |
+| 06-01 | Webhook returns 200 OK always | Security - prevents enumeration of valid/invalid payloads |
+| 06-01 | Service identification by workflow name or repo URL | Match "CI - {name}" pattern from manifest, fallback to repo_url |
+| 06-01 | artifact_ref stored for Phase 7 deployment | Extracted from webhook payload for future use |
+| 06-01 | commit_message stores first line only | Display brevity in UI |
 
 ### Roadmap Evolution
 
@@ -144,7 +149,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None -- Phase 5.3 complete (all 3 plans done)
+None -- Phase 06-01 complete, ready for 06-02
 
 ### Quick Tasks Completed
 
@@ -186,5 +191,5 @@ None -- Phase 5.3 complete (all 3 plans done)
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed quick task 031
+Stopped at: Completed 06-01-PLAN.md (Webhook Infrastructure)
 Resume file: None
