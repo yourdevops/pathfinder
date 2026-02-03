@@ -2,6 +2,7 @@
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.paginator import Paginator
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.utils.decorators import method_decorator
@@ -17,6 +18,7 @@ from core.forms.services import (
     WorkflowSelectionForm,
 )
 from core.models import (
+    Build,
     GroupMembership,
     Project,
     ProjectMembership,
@@ -368,8 +370,36 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
                 context["manifest_yaml"] = None
 
         elif tab == "builds":
-            # Placeholder for Phase 6
-            context["builds"] = []  # Will be populated in Phase 6
+            # Get builds for this service
+            builds_qs = Build.objects.filter(service=self.service).order_by("-created_at")
+
+            # Apply status filter if provided
+            status_filter = self.request.GET.get("status", "all")
+            if status_filter and status_filter != "all":
+                builds_qs = builds_qs.filter(status=status_filter)
+
+            # Paginate (20 per page per CONTEXT.md)
+            paginator = Paginator(builds_qs, 20)
+            page_number = self.request.GET.get("page", 1)
+            page_obj = paginator.get_page(page_number)
+
+            context["builds"] = page_obj
+            context["page_obj"] = page_obj
+            context["status_filter"] = status_filter
+            context["status_choices"] = [
+                ("all", "All"),
+                ("running", "Running"),
+                ("success", "Success"),
+                ("failed", "Failed"),
+            ]
+
+            # Check if any builds are in progress (for auto-refresh)
+            context["has_running_builds"] = Build.objects.filter(
+                service=self.service, status__in=["pending", "running"]
+            ).exists()
+
+            # Empty state check
+            context["has_any_builds"] = Build.objects.filter(service=self.service).exists()
 
         elif tab == "environments":
             # Show environments with deployment info (placeholder for Phase 7)
