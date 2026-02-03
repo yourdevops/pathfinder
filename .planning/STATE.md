@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 Phase: 5.3 of 7 (CI Steps Redesign)
 Plan: 3 of 3 in current phase
 Status: Phase complete
-Last activity: 2026-02-02 - Completed quick task 030: Usage tracking, deletion modal
+Last activity: 2026-02-03 - Completed quick task 031: Service wizard fixes and dev workflow
 
 Progress: [====================================] 100% (Phase 5.1) | [========================            ] 67% (Phase 5.2) | [====================================] 100% (Phase 5.3)
 
@@ -181,9 +181,10 @@ None -- Phase 5.3 complete (all 3 plans done)
 | 029 | CI Steps and Workflows UI improvements | 2026-02-02 | 511943b | [029-ci-steps-and-workflows-ui-improvements](./quick/029-ci-steps-and-workflows-ui-improvements/) |
 | 029 | CI Steps and Workflows UI improvements | 2026-02-02 | 38657f1 | [029-ci-steps-and-workflows-ui-improvements](./quick/029-ci-steps-and-workflows-ui-improvements/) |
 | 030 | Usage tracking, deletion & confirmation modal | 2026-02-02 | 1e9aa64 | [030-usage-tracking-deletion-modal](./quick/030-usage-tracking-deletion-modal/) |
+| 031 | Service wizard fixes and dev workflow | 2026-02-03 | 74b85e9 | [031-service-wizard-fixes-and-dev-workflow-su](./quick/031-service-wizard-fixes-and-dev-workflow-su/) |
 
 ## Session Continuity
 
-Last session: 2026-02-02
-Stopped at: Completed quick task 030
+Last session: 2026-02-03
+Stopped at: Completed quick task 031
 Resume file: None
