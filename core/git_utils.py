@@ -402,7 +402,8 @@ def scaffold_new_repository(service, connection, template_temp_dir: str, variabl
     1. Create empty repo via SCM plugin
     2. Clone the new repo
     3. Apply template with variable substitution (if template dir provided)
-    4. Commit and push to main branch
+    4. Generate CI manifest if workflow assigned
+    5. Commit and push to main branch
 
     Args:
         service: Service model instance
@@ -413,6 +414,8 @@ def scaffold_new_repository(service, connection, template_temp_dir: str, variabl
     Returns:
         Dict with repo_url and status
     """
+    from plugins.base import get_ci_plugin_for_engine
+
     plugin = connection.get_plugin()
     config = connection.get_config()
 
@@ -440,6 +443,30 @@ def scaffold_new_repository(service, connection, template_temp_dir: str, variabl
         # Apply template if provided
         if template_temp_dir:
             apply_template_to_directory(template_temp_dir, repo_temp_dir, variables)
+
+        # Generate CI manifest if workflow is assigned
+        if service.ci_workflow:
+            # Get CI plugin for the workflow's engine
+            first_step = service.ci_workflow.workflow_steps.select_related("step").first()
+            engine = first_step.step.engine if first_step else "github_actions"
+            ci_plugin = get_ci_plugin_for_engine(engine)
+
+            if ci_plugin:
+                manifest_yaml = ci_plugin.generate_manifest(service.ci_workflow)
+                manifest_path = ci_plugin.manifest_path(service)
+
+                # Create directory structure and write manifest
+                manifest_full_path = os.path.join(repo_temp_dir, manifest_path)
+                os.makedirs(os.path.dirname(manifest_full_path), exist_ok=True)
+                with open(manifest_full_path, "w") as f:
+                    f.write(manifest_yaml)
+                logger.info(f"Generated CI manifest at {manifest_path}")
+
+        # Create a minimal README if nothing else exists
+        readme_path = os.path.join(repo_temp_dir, "README.md")
+        if not os.path.exists(readme_path) and not template_temp_dir:
+            with open(readme_path, "w") as f:
+                f.write(f"# {service.name}\n\nService managed by Pathfinder.\n")
 
         # Git add all files
         repo.index.add("*")
@@ -479,8 +506,9 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str, va
     1. Clone existing repo
     2. Create feature/{service-name} branch
     3. Apply template with variable substitution (if template dir provided)
-    4. Commit and push feature branch
-    5. Create PR to base branch
+    4. Generate CI manifest if workflow assigned
+    5. Commit and push feature branch
+    6. Create PR to base branch
 
     Args:
         service: Service model instance
@@ -491,6 +519,8 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str, va
     Returns:
         Dict with pr_url and status
     """
+    from plugins.base import get_ci_plugin_for_engine
+
     plugin = connection.get_plugin()
     config = connection.get_config()
 
@@ -512,6 +542,22 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str, va
         # Apply template if provided
         if template_temp_dir:
             apply_template_to_directory(template_temp_dir, repo_temp_dir, variables)
+
+        # Generate CI manifest if workflow is assigned
+        if service.ci_workflow:
+            first_step = service.ci_workflow.workflow_steps.select_related("step").first()
+            engine = first_step.step.engine if first_step else "github_actions"
+            ci_plugin = get_ci_plugin_for_engine(engine)
+
+            if ci_plugin:
+                manifest_yaml = ci_plugin.generate_manifest(service.ci_workflow)
+                manifest_path = ci_plugin.manifest_path(service)
+
+                manifest_full_path = os.path.join(repo_temp_dir, manifest_path)
+                os.makedirs(os.path.dirname(manifest_full_path), exist_ok=True)
+                with open(manifest_full_path, "w") as f:
+                    f.write(manifest_yaml)
+                logger.info(f"Generated CI manifest at {manifest_path}")
 
         # Check if there are changes
         if not repo.is_dirty() and not repo.untracked_files:

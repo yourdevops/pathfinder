@@ -160,7 +160,6 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
         variables = get_template_variables(service)
 
         # Scaffold based on mode
-        # Note: Template-based scaffolding. CI Workflow template support to be added in future phase.
         if service.repo_is_new:
             result = scaffold_new_repository(
                 service=service,
@@ -181,7 +180,26 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
         # Mark as success
         service.scaffold_status = "success"
         service.scaffold_error = ""
-        service.save(update_fields=["scaffold_status", "scaffold_error", "repo_url"])
+        update_fields = ["scaffold_status", "scaffold_error", "repo_url"]
+
+        # If CI workflow was included in scaffolding, update manifest status
+        if service.ci_workflow:
+            service.ci_manifest_pushed_at = timezone.now()
+            update_fields.append("ci_manifest_pushed_at")
+
+            if service.repo_is_new:
+                # New repo: manifest pushed directly to main
+                service.ci_manifest_status = "synced"
+                update_fields.append("ci_manifest_status")
+            else:
+                # Existing repo: manifest pushed via PR
+                pr_url = result.get("pr_url", "")
+                if pr_url:
+                    service.ci_manifest_status = "synced"
+                    service.ci_manifest_pr_url = pr_url
+                    update_fields.extend(["ci_manifest_status", "ci_manifest_pr_url"])
+
+        service.save(update_fields=update_fields)
 
         logger.info(f"Successfully scaffolded service {service.id}: {service.name}")
         return result
