@@ -72,6 +72,3 @@ Thumbs.db
 manifests/*.yml
 manifests/*.yaml
 !manifests/.gitkeep
-
-# Django file cache
-.cache/

@@ -200,12 +200,16 @@ SECURE_CSP = {
     "frame-ancestors": [CSP.NONE],
 }
 
+# Cache configuration (file-based)
+CACHE_DIR = DATA_DIR / "cache"
+CACHE_DIR.mkdir(exist_ok=True)
+
 # Cache configuration (for build logs)
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-        "LOCATION": BASE_DIR / ".cache",
-        "TIMEOUT": 300,  # 5 minutes
+        "LOCATION": CACHE_DIR,
+        "TIMEOUT": 3600,  # 60 minutes
     }
 }
 
