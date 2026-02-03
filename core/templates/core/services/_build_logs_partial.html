@@ -26,7 +26,7 @@
         {% endif %}
     </div>
     {% endif %}
-    <div x-data x-ref="logWrapper" class="relative">
+    <div x-data x-ref="logWrapper" class="relative w-full min-w-0">
         <!-- Scroll controls -->
         <div class="absolute top-2 right-2 z-10 flex gap-1">
             <button @click="$refs.logs.scrollTo({top: 0, behavior: 'smooth'})"
@@ -44,9 +44,9 @@
                 </svg>
             </button>
         </div>
-        <!-- Log container -->
-        <div x-ref="logs" class="bg-gray-950 rounded-lg p-3 max-h-[60vh] overflow-auto scrollbar-visible">
-            <pre class="text-xs font-mono leading-relaxed whitespace-pre">{% for line in log_lines %}{% if line.is_error %}<span class="log-error">{{ line.text }}</span>{% elif line.is_warning %}<span class="log-warning">{{ line.text }}</span>{% else %}<span class="text-gray-300">{{ line.text }}</span>{% endif %}
+        <!-- Log container - constrained width with both scrollbars -->
+        <div x-ref="logs" class="bg-gray-950 rounded-lg p-3 max-h-[60vh] overflow-auto">
+            <pre class="text-xs font-mono leading-relaxed whitespace-pre m-0">{% for line in log_lines %}{% if line.is_error %}<span class="log-error">{{ line.text }}</span>{% elif line.is_warning %}<span class="log-warning">{{ line.text }}</span>{% else %}<span class="text-gray-300">{{ line.text }}</span>{% endif %}
 {% endfor %}</pre>
         </div>
     </div>
