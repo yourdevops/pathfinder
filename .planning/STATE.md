@@ -191,9 +191,10 @@ None -- Phase 06 complete, ready for Phase 07 (Deploy)
 | 029 | CI Steps and Workflows UI improvements | 2026-02-02 | 38657f1 | [029-ci-steps-and-workflows-ui-improvements](./quick/029-ci-steps-and-workflows-ui-improvements/) |
 | 030 | Usage tracking, deletion & confirmation modal | 2026-02-02 | 1e9aa64 | [030-usage-tracking-deletion-modal](./quick/030-usage-tracking-deletion-modal/) |
 | 031 | Service wizard fixes and dev workflow | 2026-02-03 | 74b85e9 | [031-service-wizard-fixes-and-dev-workflow-su](./quick/031-service-wizard-fixes-and-dev-workflow-su/) |
+| 032 | Add webhook registration to manifest | 2026-02-03 | 769b991 | [032-add-webhook-registration-to-the-manifest](./quick/032-add-webhook-registration-to-the-manifest/) |
 
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 06-02-PLAN.md (Build History UI) - Phase 6 complete
+Stopped at: Completed quick-032 (Webhook registration to manifest)
 Resume file: None
