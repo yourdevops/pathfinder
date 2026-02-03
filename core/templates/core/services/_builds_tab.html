@@ -194,3 +194,29 @@
     </div>
     {% endif %}
 </div>
+
+<!-- Copy button handler - CSP-safe, uses document-level delegation -->
+<script nonce="{{ request.csp_nonce }}">
+(function() {
+    // Attach once at document level for all copy buttons - survives HTMX swaps
+    if (!document.body.dataset.copyListenerReady) {
+        document.body.dataset.copyListenerReady = 'true';
+        document.body.addEventListener('click', function(e) {
+            var btn = e.target.closest('.copy-btn');
+            if (!btn) return;
+            e.stopPropagation();
+            var text = btn.dataset.copy;
+            var copyIcon = btn.querySelector('.copy-icon');
+            var checkIcon = btn.querySelector('.check-icon');
+            navigator.clipboard.writeText(text).then(function() {
+                if (copyIcon) copyIcon.classList.add('hidden');
+                if (checkIcon) checkIcon.classList.remove('hidden');
+                setTimeout(function() {
+                    if (copyIcon) copyIcon.classList.remove('hidden');
+                    if (checkIcon) checkIcon.classList.add('hidden');
+                }, 2000);
+            });
+        });
+    }
+})();
+</script>
