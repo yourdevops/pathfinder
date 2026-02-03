@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 6 of 7 (Builds)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-03 - Completed 06-01-PLAN.md (Webhook Infrastructure)
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-03 - Completed 06-02-PLAN.md (Build History UI)
 
-Progress: [====================                ] 50% (Phase 6)
+Progress: [========================================] 100% (Phase 6)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 41
+- Total plans completed: 42
 - Average duration: 4 min
-- Total execution time: 3.17 hours
+- Total execution time: 3.2 hours
 
 **By Phase:**
 
@@ -37,10 +37,10 @@ Progress: [====================                ] 50% (Phase 6)
 | 05.1-ci-workflows-builder | 4 | 29 min | 7.25 min |
 | 05.2-ci-workflows-pairing | 2 | 7 min | 3.5 min |
 | 05.3-ci-steps-redesign | 3 | 10 min | 3.3 min |
-| 06-builds | 1 | 3 min | 3 min |
+| 06-builds | 2 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 05.3-01 (4 min), 05.3-02 (4 min), 05.3-03 (2 min), 06-01 (3 min)
+- Last 5 plans: 05.3-02 (4 min), 05.3-03 (2 min), 06-01 (3 min), 06-02 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -134,6 +134,10 @@ Recent decisions affecting current work:
 | 06-01 | Service identification by workflow name or repo URL | Match "CI - {name}" pattern from manifest, fallback to repo_url |
 | 06-01 | artifact_ref stored for Phase 7 deployment | Extracted from webhook payload for future use |
 | 06-01 | commit_message stores first line only | Display brevity in UI |
+| 06-02 | HTMX polling every 5s for running builds | Balances responsiveness vs server load |
+| 06-02 | Status filter with hx-push-url | URL state for browser history support |
+| 06-02 | Avatar fallback to first letter initial | Graceful degradation when no avatar_url |
+| 06-02 | Duration with widthratio template tag | Avoids custom template filters |
 
 ### Roadmap Evolution
 
@@ -149,7 +153,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None -- Phase 06-01 complete, ready for 06-02
+None -- Phase 06 complete, ready for Phase 07 (Deploy)
 
 ### Quick Tasks Completed
 
@@ -191,5 +195,5 @@ None -- Phase 06-01 complete, ready for 06-02
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 06-01-PLAN.md (Webhook Infrastructure)
+Stopped at: Completed 06-02-PLAN.md (Build History UI) - Phase 6 complete
 Resume file: None
