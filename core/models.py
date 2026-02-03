@@ -434,6 +434,7 @@ class Service(models.Model):
     )
     ci_manifest_pushed_at = models.DateTimeField(null=True, blank=True)
     ci_manifest_pr_url = models.URLField(max_length=500, blank=True)
+    webhook_registered = models.BooleanField(default=False)
 
     # Build tracking (updated by Phase 6)
     current_build_id = models.IntegerField(null=True, blank=True)  # Will be FK to Build in Phase 6

@@ -578,11 +578,34 @@ def push_ci_manifest(service_id: int) -> dict:
 
         pr_url = pr_result.get("html_url", "")
 
+        # Register webhook for build notifications
+        from core.models import SiteConfiguration
+
+        site_config = SiteConfiguration.get_instance()
+        if site_config and site_config.external_url:
+            webhook_url = f"{site_config.external_url.rstrip('/')}/webhooks/build/"
+            try:
+                plugin.configure_webhook(
+                    config,
+                    repo_name,
+                    webhook_url,
+                    events=["workflow_run"],
+                )
+                service.webhook_registered = True
+                logger.info(f"Registered webhook for service {service.name}")
+            except Exception as e:
+                # Log but don't fail the manifest push
+                logger.warning(f"Failed to register webhook for service {service.name}: {e}")
+        else:
+            logger.warning(f"External URL not configured, skipping webhook registration for {service.name}")
+
         # Update service status
         service.ci_manifest_status = "synced"
         service.ci_manifest_pushed_at = timezone.now()
         service.ci_manifest_pr_url = pr_url
-        service.save(update_fields=["ci_manifest_status", "ci_manifest_pushed_at", "ci_manifest_pr_url"])
+        service.save(
+            update_fields=["ci_manifest_status", "ci_manifest_pushed_at", "ci_manifest_pr_url", "webhook_registered"]
+        )
 
         logger.info(f"Successfully pushed CI manifest for service {service.name}: {pr_url}")
         return {"status": "success", "pr_url": pr_url}
