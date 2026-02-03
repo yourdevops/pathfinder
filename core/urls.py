@@ -78,6 +78,7 @@ from .views.ci_workflows import (
     WorkflowManifestView,
 )
 from .views.services import (
+    BuildLogsView,
     ServiceAssignWorkflowView,
     ServiceCreateWizard,
     ServiceDeleteView,
@@ -351,6 +352,11 @@ projects_patterns = [
         "<dns:project_name>/services/<dns:service_name>/sync-builds/",
         ServiceSyncBuildsView.as_view(),
         name="service_sync_builds",
+    ),
+    path(
+        "<dns:project_name>/services/<dns:service_name>/builds/<uuid:build_uuid>/logs/",
+        BuildLogsView.as_view(),
+        name="service_build_logs",
     ),
 ]
 

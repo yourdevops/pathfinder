@@ -5,7 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
 from django.views.decorators.vary import vary_on_headers
 from django.views.generic import ListView, TemplateView, View
@@ -745,3 +745,109 @@ class ServicePushManifestView(LoginRequiredMixin, View):
         messages.success(request, "CI manifest push started. A pull request will be created shortly.")
 
         return redirect(f"/projects/{self.project.name}/services/{self.service.name}/?tab=ci")
+
+
+class BuildLogsView(LoginRequiredMixin, View):
+    """HTMX endpoint to fetch and cache build logs."""
+
+    def get(self, request, project_name, service_name, build_uuid):
+        from django.core.cache import cache
+
+        from core.git_utils import parse_git_url
+        from core.models import ProjectConnection
+
+        project = get_object_or_404(Project, name=project_name, status="active")
+        service = get_object_or_404(Service, project=project, name=service_name)
+        build = get_object_or_404(Build, uuid=build_uuid, service=service)
+
+        # Check permissions
+        role = get_user_project_role(request.user, project)
+        if not role:
+            return HttpResponse("Access denied", status=403)
+
+        # Check cache first
+        cache_key = f"build_logs_{build_uuid}"
+        cached = cache.get(cache_key)
+        if cached:
+            return render(
+                request,
+                "core/services/_build_logs_partial.html",
+                {
+                    "logs": cached["logs"],
+                    "failed_job_name": build.failed_job_name,
+                    "failed_step_name": build.failed_step_name,
+                    "build": build,
+                },
+            )
+
+        # Need to fetch from GitHub
+        if not service.repo_url:
+            return render(request, "core/services/_build_logs_partial.html", {"error": "No repository configured"})
+
+        project_connection = (
+            ProjectConnection.objects.filter(project=project, is_default=True).select_related("connection").first()
+        )
+        if not project_connection:
+            return render(request, "core/services/_build_logs_partial.html", {"error": "No SCM connection configured"})
+
+        connection = project_connection.connection
+        plugin = connection.get_plugin()
+        config = connection.get_config()
+
+        parsed = parse_git_url(service.repo_url)
+        if not parsed:
+            return render(request, "core/services/_build_logs_partial.html", {"error": "Invalid repository URL"})
+
+        repo_name = f"{parsed['owner']}/{parsed['repo']}"
+
+        # Fetch jobs to find failed one and get job_id for logs
+        try:
+            jobs = plugin.get_workflow_run_jobs(config, repo_name, build.github_run_id)
+        except Exception as e:
+            return render(request, "core/services/_build_logs_partial.html", {"error": f"Failed to fetch jobs: {e}"})
+
+        # Find failed job/step and update build if not already set
+        failed_job = None
+        failed_step = None
+        job_id_for_logs = None
+
+        for job in jobs:
+            if job["conclusion"] == "failure":
+                failed_job = job["name"]
+                job_id_for_logs = job["id"]
+                for step in job.get("steps", []):
+                    if step["conclusion"] == "failure":
+                        failed_step = step["name"]
+                        break
+                break
+            # Also capture the first job for logs if no failure
+            if job_id_for_logs is None:
+                job_id_for_logs = job["id"]
+
+        # Update build with failed info if not set
+        if build.status == "failed" and not build.failed_job_name and failed_job:
+            build.failed_job_name = failed_job
+            build.failed_step_name = failed_step or ""
+            build.save(update_fields=["failed_job_name", "failed_step_name", "updated_at"])
+
+        # Fetch logs
+        logs = None
+        if job_id_for_logs:
+            import contextlib
+
+            with contextlib.suppress(Exception):
+                logs = plugin.get_job_logs(config, repo_name, job_id_for_logs)
+
+        # Cache result
+        cache.set(cache_key, {"logs": logs}, 300)
+
+        return render(
+            request,
+            "core/services/_build_logs_partial.html",
+            {
+                "logs": logs,
+                "failed_job_name": build.failed_job_name,
+                "failed_step_name": build.failed_step_name,
+                "build": build,
+            },
+        )
