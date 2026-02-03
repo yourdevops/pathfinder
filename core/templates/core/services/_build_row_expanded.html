@@ -1,0 +1,124 @@
+{% load humanize %}
+<tr x-show="expanded" x-collapse class="bg-gray-950">
+    <td colspan="6" class="px-4 py-4">
+        <div class="bg-gray-900 rounded-lg p-4 space-y-3">
+            <!-- Build info header -->
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="text-sm font-medium text-dark-text">Build #{{ build.run_number|default:build.github_run_id }}</span>
+                    {% if build.artifact_ref %}
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-xs">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                        </svg>
+                        {{ build.artifact_ref }}
+                    </span>
+                    {% endif %}
+                </div>
+                {% if build.ci_job_url %}
+                <a href="{{ build.ci_job_url }}" target="_blank" rel="noopener noreferrer" @click.stop
+                   class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-dark-surface border border-dark-border rounded text-sm text-dark-accent hover:bg-gray-800 transition-colors">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    View on GitHub
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Status-specific content -->
+            {% if build.status == 'failed' %}
+            <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
+                <div class="flex items-center gap-2 text-red-300 mb-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="font-medium">Build Failed</span>
+                </div>
+                <p class="text-sm text-dark-muted">
+                    The build failed after {{ build.duration_seconds|default:0 }}s.
+                    {% if build.ci_job_url %}
+                    <a href="{{ build.ci_job_url }}" target="_blank" rel="noopener noreferrer" @click.stop class="text-dark-accent hover:underline">View full logs on GitHub</a> to see the error details.
+                    {% endif %}
+                </p>
+            </div>
+            {% elif build.status == 'cancelled' %}
+            <div class="bg-gray-500/10 border border-gray-500/30 rounded-lg p-3">
+                <div class="flex items-center gap-2 text-gray-400 mb-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="font-medium">Build Cancelled</span>
+                </div>
+                <p class="text-sm text-dark-muted">
+                    This build was cancelled
+                    {% if build.author %}by {{ build.author }}{% endif %}
+                    {% if build.duration_seconds %}after {{ build.duration_seconds }}s{% endif %}.
+                </p>
+            </div>
+            {% elif build.status == 'running' or build.status == 'pending' %}
+            <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+                <div class="flex items-center gap-2 text-blue-300 mb-2">
+                    <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span class="font-medium">Build in Progress</span>
+                </div>
+                <p class="text-sm text-dark-muted">
+                    {% if build.started_at %}
+                    Started {{ build.started_at|timesince }} ago.
+                    {% else %}
+                    Waiting to start...
+                    {% endif %}
+                    {% if build.ci_job_url %}
+                    <a href="{{ build.ci_job_url }}" target="_blank" rel="noopener noreferrer" @click.stop class="text-dark-accent hover:underline">Watch live on GitHub</a>.
+                    {% endif %}
+                </p>
+            </div>
+            {% elif build.status == 'success' %}
+            <div class="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+                <div class="flex items-center gap-2 text-green-300 mb-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    <span class="font-medium">Build Successful</span>
+                </div>
+                <p class="text-sm text-dark-muted">
+                    Completed in {{ build.duration_seconds|default:0 }}s
+                    {% if build.artifact_ref %}
+                    with artifact <code class="px-1 py-0.5 bg-dark-surface rounded text-purple-300">{{ build.artifact_ref }}</code>
+                    {% endif %}.
+                </p>
+            </div>
+            {% endif %}
+
+            <!-- Timing details -->
+            <div class="grid grid-cols-3 gap-4 text-sm">
+                <div>
+                    <span class="text-dark-muted block">Started</span>
+                    <span class="text-dark-text">
+                        {% if build.started_at %}
+                        {{ build.started_at|date:"M d, Y H:i" }} UTC
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+                <div>
+                    <span class="text-dark-muted block">Completed</span>
+                    <span class="text-dark-text">
+                        {% if build.completed_at %}
+                        {{ build.completed_at|date:"M d, Y H:i" }} UTC
+                        {% else %}
+                        -
+                        {% endif %}
+                    </span>
+                </div>
+                <div>
+                    <span class="text-dark-muted block">Commit</span>
+                    <code class="text-blue-400">{{ build.commit_sha }}</code>
+                </div>
+            </div>
+        </div>
+    </td>
+</tr>

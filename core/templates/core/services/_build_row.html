@@ -1,5 +1,5 @@
 {% load humanize %}
-<tr id="build-row-{{ build.id }}" class="bg-gray-900 hover:bg-gray-800 transition-colors">
+<tr id="build-row-{{ build.id }}" @click="expanded = !expanded" class="bg-gray-900 hover:bg-gray-800 transition-colors cursor-pointer">
     <!-- Status -->
     <td class="px-4 py-3 whitespace-nowrap">
         {% if build.status == 'pending' or build.status == 'running' %}
@@ -61,7 +61,7 @@
     <td class="px-4 py-3 whitespace-nowrap">
         <div class="flex items-center gap-2">
             {% if build.author_avatar_url %}
-            <img src="{{ build.author_avatar_url }}" alt="{{ build.author }}" class="w-5 h-5 rounded-full">
+            <img src="{{ build.author_avatar_url }}" alt="" class="w-5 h-5 rounded-full">
             {% else %}
             <div class="w-5 h-5 rounded-full bg-dark-accent flex items-center justify-center text-xs text-white uppercase">
                 {{ build.author|slice:":1"|default:"?" }}
@@ -84,37 +84,29 @@
 
     <!-- Duration -->
     <td class="px-4 py-3 whitespace-nowrap">
-        {% if build.duration_seconds %}
-        <span class="text-sm text-dark-muted">
-            {% widthratio build.duration_seconds 60 1 as minutes %}
-            {% widthratio build.duration_seconds 3600 1 as hours %}
-            {% if hours > 0 %}
-                {{ hours }}h {{ minutes }}m
-            {% elif minutes > 0 %}
-                {{ minutes }}m
-            {% else %}
-                {{ build.duration_seconds }}s
-            {% endif %}
-        </span>
-        {% elif build.status == 'running' or build.status == 'pending' %}
-        <span class="text-sm text-dark-muted italic">running...</span>
-        {% else %}
-        <span class="text-sm text-dark-muted">-</span>
-        {% endif %}
-    </td>
-
-    <!-- Actions -->
-    <td class="px-4 py-3 whitespace-nowrap">
-        {% if build.ci_job_url %}
-        <a href="{{ build.ci_job_url }}" target="_blank" rel="noopener noreferrer"
-           class="inline-flex items-center gap-1 text-sm text-dark-accent hover:text-blue-300 transition-colors">
-            View
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+        <div class="flex items-center justify-between">
+            <span class="text-sm text-dark-muted">
+                {% if build.duration_seconds %}
+                    {% widthratio build.duration_seconds 60 1 as minutes %}
+                    {% widthratio build.duration_seconds 3600 1 as hours %}
+                    {% if hours > 0 %}
+                        {{ hours }}h {{ minutes }}m
+                    {% elif minutes > 0 %}
+                        {{ minutes }}m
+                    {% else %}
+                        {{ build.duration_seconds }}s
+                    {% endif %}
+                {% elif build.status == 'running' or build.status == 'pending' %}
+                    <span class="italic">running...</span>
+                {% else %}
+                    -
+                {% endif %}
+            </span>
+            <!-- Expand indicator -->
+            <svg class="w-4 h-4 text-dark-muted transition-transform duration-200" :class="{ 'rotate-180': expanded }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
             </svg>
-        </a>
-        {% else %}
-        <span class="text-sm text-dark-muted">-</span>
-        {% endif %}
+        </div>
     </td>
 </tr>
+{% include "core/services/_build_row_expanded.html" with build=build %}
