@@ -572,6 +572,47 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
             },
         }
 
+    def list_workflow_runs(self, config: dict[str, Any], repo_name: str, per_page: int = 10) -> list[dict[str, Any]]:
+        """
+        List recent workflow runs for a repository.
+
+        Used for manual polling when webhooks are unavailable.
+
+        Args:
+            config: The decrypted configuration dictionary.
+            repo_name: Full repository name (owner/repo).
+            per_page: Number of runs to fetch (default 10).
+
+        Returns:
+            List of workflow run dictionaries.
+        """
+        g = self._get_github_client(config)
+        repo = g.get_repo(repo_name)
+        runs = repo.get_workflow_runs()[:per_page]
+
+        result = []
+        for run in runs:
+            result.append(
+                {
+                    "id": run.id,
+                    "run_number": run.run_number,
+                    "head_sha": run.head_sha,
+                    "head_branch": run.head_branch,
+                    "status": run.status,
+                    "conclusion": run.conclusion,
+                    "created_at": run.created_at,
+                    "updated_at": run.updated_at,
+                    "html_url": run.html_url,
+                    "name": run.name,
+                    "event": run.event,
+                    "actor": {
+                        "login": run.actor.login if run.actor else None,
+                        "avatar_url": run.actor.avatar_url if run.actor else None,
+                    },
+                }
+            )
+        return result
+
     def get_commit(self, config: dict[str, Any], repo_name: str, commit_sha: str) -> dict[str, Any]:
         """
         Fetch commit details from GitHub API.
