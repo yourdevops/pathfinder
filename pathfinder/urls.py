@@ -36,6 +36,7 @@ from core.urls import (  # noqa: E402
     settings_patterns,
     setup_patterns,
     users_patterns,
+    webhooks_patterns,
 )
 from plugins import autodiscover  # noqa: E402
 from plugins.base import registry  # noqa: E402
@@ -62,6 +63,7 @@ urlpatterns = [
     path("projects/", include((projects_patterns, "projects"), namespace="projects")),
     path("settings/", include((settings_patterns, "settings"), namespace="settings")),
     path("services/", include((services_patterns, "services"), namespace="services")),
+    path("webhooks/", include((webhooks_patterns, "webhooks"), namespace="webhooks")),
 ]
 
 # Add plugin-specific URLs dynamically

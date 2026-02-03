@@ -54,6 +54,7 @@ from .views import (
     UserEditView,
     UserListView,
     UserManagementView,
+    webhooks,
 )
 from .views.ci_workflows import (
     CompatibleStepsView,
@@ -348,4 +349,9 @@ settings_patterns = [
     path("audit-logs/", AuditLogsSettingsView.as_view(), name="audit_logs"),
     path("api-tokens/", ApiTokensView.as_view(), name="api_tokens"),
     path("notifications/", NotificationsView.as_view(), name="notifications"),
+]
+
+# Webhooks URLs
+webhooks_patterns = [
+    path("build/", webhooks.build_webhook, name="build_webhook"),
 ]
