@@ -69,4 +69,12 @@
   .scrollbar-visible::-webkit-scrollbar-thumb:hover {
     background: #6b7280;
   }
+
+  /* Log line highlighting for errors and warnings */
+  .log-error {
+    @apply text-red-400 bg-red-500/10 block px-1 -mx-1;
+  }
+  .log-warning {
+    @apply text-yellow-400 bg-yellow-500/10 block px-1 -mx-1;
+  }
 }

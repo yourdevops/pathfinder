@@ -752,11 +752,18 @@ class BuildLogsView(LoginRequiredMixin, View):
 
     # Error patterns to detect and highlight
     ERROR_PATTERNS = ["error", "failed", "failure", "exception", "traceback", "fatal"]
+    # Warning patterns for yellow highlighting
+    WARNING_PATTERNS = ["warning", "warn", "deprecated"]
 
     def _is_error_line(self, line: str) -> bool:
         """Check if a line contains error-related keywords."""
         lower_line = line.lower()
         return any(pattern in lower_line for pattern in self.ERROR_PATTERNS)
+
+    def _is_warning_line(self, line: str) -> bool:
+        """Check if a line contains warning-related keywords."""
+        lower_line = line.lower()
+        return any(pattern in lower_line for pattern in self.WARNING_PATTERNS)
 
     def _extract_step_logs(self, logs: str, step_name: str) -> str | None:
         """
@@ -820,26 +827,35 @@ class BuildLogsView(LoginRequiredMixin, View):
 
         For failed builds: extract only the failed step's logs.
         For successful builds: show last 100 lines.
+
+        Returns list of dicts with: text, is_error, is_warning
         """
         if not logs:
             return [], False
+
+        def classify_line(line: str) -> dict:
+            """Classify a line as error, warning, or normal."""
+            is_error = self._is_error_line(line)
+            # Only mark as warning if not already an error (error takes precedence)
+            is_warning = not is_error and self._is_warning_line(line)
+            return {"text": line, "is_error": is_error, "is_warning": is_warning}
 
         if build_status == "failed" and failed_step_name:
             # Try to extract only the failed step's logs
             step_logs = self._extract_step_logs(logs, failed_step_name)
             if step_logs:
                 lines = step_logs.split("\n")
-                return [{"text": line, "is_error": self._is_error_line(line)} for line in lines], False
+                return [classify_line(line) for line in lines], False
 
-        # Fallback: show all logs with error highlighting
+        # Fallback: show all logs with error/warning highlighting
         lines = logs.split("\n")
 
         # For non-failed or if step extraction failed, show last 200 lines
         max_lines = 200
         if len(lines) <= max_lines:
-            return [{"text": line, "is_error": self._is_error_line(line)} for line in lines], False
+            return [classify_line(line) for line in lines], False
 
-        return [{"text": line, "is_error": self._is_error_line(line)} for line in lines[-max_lines:]], True
+        return [classify_line(line) for line in lines[-max_lines:]], True
 
     def get(self, request, project_name, service_name, build_uuid):
         from django.core.cache import cache

@@ -26,9 +26,29 @@
         {% endif %}
     </div>
     {% endif %}
-    <div class="bg-gray-950 rounded-lg p-3 max-h-[60vh] overflow-auto scrollbar-visible">
-        <pre class="text-xs font-mono leading-relaxed">{% for line in log_lines %}{% if line.is_error %}<span class="text-red-400 bg-red-500/10 block px-1 -mx-1">{{ line.text }}</span>{% else %}<span class="text-gray-300">{{ line.text }}</span>
-{% endif %}{% endfor %}</pre>
+    <div x-data="{ logContainer: null }" x-init="logContainer = $refs.logs" class="relative">
+        <!-- Scroll controls -->
+        <div class="absolute top-2 right-2 z-10 flex gap-1">
+            <button @click="logContainer.scrollTo({top: 0, behavior: 'smooth'})"
+                    class="p-1.5 bg-gray-800/90 rounded hover:bg-gray-700 text-gray-400 hover:text-gray-200 transition-colors"
+                    title="Scroll to top">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                </svg>
+            </button>
+            <button @click="logContainer.scrollTo({top: logContainer.scrollHeight, behavior: 'smooth'})"
+                    class="p-1.5 bg-gray-800/90 rounded hover:bg-gray-700 text-gray-400 hover:text-gray-200 transition-colors"
+                    title="Scroll to bottom">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+        </div>
+        <!-- Log container -->
+        <div x-ref="logs" class="bg-gray-950 rounded-lg p-3 max-h-[60vh] overflow-auto scrollbar-visible">
+            <pre class="text-xs font-mono leading-relaxed whitespace-pre">{% for line in log_lines %}{% if line.is_error %}<span class="log-error">{{ line.text }}</span>{% elif line.is_warning %}<span class="log-warning">{{ line.text }}</span>{% else %}<span class="text-gray-300">{{ line.text }}</span>{% endif %}
+{% endfor %}</pre>
+        </div>
     </div>
 </div>
 {% else %}
