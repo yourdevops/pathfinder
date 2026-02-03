@@ -38,6 +38,39 @@
         </div>
     </div>
 
+    <!-- Webhook Configuration -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg">
+        <div class="p-4 border-b border-dark-border flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-dark-text">Webhook Configuration</h2>
+            {% if service.webhook_registered %}
+            <span class="px-2 py-1 text-xs rounded bg-green-500/20 text-green-300">Configured</span>
+            {% else %}
+            <span class="px-2 py-1 text-xs rounded bg-amber-500/20 text-amber-300">Not Configured</span>
+            {% endif %}
+        </div>
+        <div class="p-4">
+            {% if service.webhook_registered %}
+            <p class="text-dark-muted">Webhook is configured. Build status updates will be received automatically.</p>
+            {% else %}
+            <p class="text-dark-muted mb-4">Webhook is not configured. Build status updates will not be received until the webhook is registered.</p>
+            {% if can_edit %}
+            <form method="post" action="{% url 'projects:service_register_webhook' project_name=project.name service_name=service.name %}">
+                {% csrf_token %}
+                <button type="submit"
+                        {% if not service.repo_url %}disabled{% endif %}
+                        class="px-4 py-2 rounded-lg transition-colors
+                            {% if service.repo_url %}bg-dark-accent hover:bg-dark-accent/80 text-white{% else %}bg-gray-600 text-gray-400 cursor-not-allowed{% endif %}">
+                    Register Webhook
+                </button>
+                {% if not service.repo_url %}
+                <span class="text-sm text-dark-muted ml-3">Repository URL required.</span>
+                {% endif %}
+            </form>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
     <!-- Danger Zone (owner only) -->
     {% if user_project_role == 'owner' %}
     <div class="bg-dark-surface border border-red-500/30 rounded-lg">

@@ -528,6 +528,69 @@ class ServiceAssignWorkflowView(LoginRequiredMixin, View):
         )
 
 
+class ServiceRegisterWebhookView(LoginRequiredMixin, View):
+    """Manually register webhook for a service."""
+
+    def post(self, request, project_name, service_name):
+        from core.git_utils import parse_git_url
+        from core.models import ProjectConnection, SiteConfiguration
+
+        project = get_object_or_404(Project, name=project_name, status="active")
+        service = get_object_or_404(Service, project=project, name=service_name)
+
+        # Check permissions
+        role = get_user_project_role(request.user, project)
+        if role not in ["owner", "contributor"]:
+            messages.error(request, "You don't have permission to configure webhooks.")
+            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+        # Get site config for webhook URL
+        site_config = SiteConfiguration.get_instance()
+        if not site_config or not site_config.external_url:
+            messages.error(request, "External URL not configured. Go to Settings > General to configure it.")
+            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+        # Get SCM connection
+        project_connection = (
+            ProjectConnection.objects.filter(project=project, is_default=True).select_related("connection").first()
+        )
+        if not project_connection:
+            messages.error(request, "No SCM connection configured for this project.")
+            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+        connection = project_connection.connection
+        plugin = connection.get_plugin()
+        config = connection.get_config()
+
+        if not plugin:
+            messages.error(request, "SCM plugin not available.")
+            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+        # Parse repo URL
+        parsed = parse_git_url(service.repo_url)
+        if not parsed:
+            messages.error(request, "Invalid repository URL.")
+            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+        repo_name = f"{parsed['owner']}/{parsed['repo']}"
+        webhook_url = f"{site_config.external_url.rstrip('/')}/webhooks/build/"
+
+        try:
+            plugin.configure_webhook(
+                config,
+                repo_name,
+                webhook_url,
+                events=["workflow_run"],
+            )
+            service.webhook_registered = True
+            service.save(update_fields=["webhook_registered", "updated_at"])
+            messages.success(request, "Webhook registered successfully.")
+        except Exception as e:
+            messages.error(request, f"Failed to register webhook: {e}")
+
+        return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+
 class ServicePushManifestView(LoginRequiredMixin, View):
     """Enqueue push_ci_manifest background task for a service."""
 

@@ -84,6 +84,7 @@ from .views.services import (
     ServiceDetailView,
     ServiceListView,
     ServicePushManifestView,
+    ServiceRegisterWebhookView,
     ServiceScaffoldStatusView,
 )
 
@@ -339,6 +340,11 @@ projects_patterns = [
         "<dns:project_name>/services/<dns:service_name>/ci/push-manifest/",
         ServicePushManifestView.as_view(),
         name="service_push_manifest",
+    ),
+    path(
+        "<dns:project_name>/services/<dns:service_name>/register-webhook/",
+        ServiceRegisterWebhookView.as_view(),
+        name="service_register_webhook",
     ),
 ]
 
