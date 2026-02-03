@@ -204,17 +204,43 @@
         document.body.addEventListener('click', function(e) {
             var btn = e.target.closest('.copy-btn');
             if (!btn) return;
+            e.preventDefault();
             e.stopPropagation();
             var text = btn.dataset.copy;
+            if (!text) return;
             var copyIcon = btn.querySelector('.copy-icon');
             var checkIcon = btn.querySelector('.check-icon');
-            navigator.clipboard.writeText(text).then(function() {
+            // Try clipboard API, fallback to execCommand
+            var copyPromise;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                copyPromise = navigator.clipboard.writeText(text);
+            } else {
+                // Fallback for non-secure contexts
+                copyPromise = new Promise(function(resolve, reject) {
+                    var textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    try {
+                        document.execCommand('copy');
+                        resolve();
+                    } catch (err) {
+                        reject(err);
+                    }
+                    document.body.removeChild(textarea);
+                });
+            }
+            copyPromise.then(function() {
                 if (copyIcon) copyIcon.classList.add('hidden');
                 if (checkIcon) checkIcon.classList.remove('hidden');
                 setTimeout(function() {
                     if (copyIcon) copyIcon.classList.remove('hidden');
                     if (checkIcon) checkIcon.classList.add('hidden');
                 }, 2000);
+            }).catch(function(err) {
+                console.error('Copy failed:', err);
             });
         });
     }

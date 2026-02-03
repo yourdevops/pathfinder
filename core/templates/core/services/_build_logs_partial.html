@@ -26,17 +26,17 @@
         {% endif %}
     </div>
     {% endif %}
-    <div x-data="{ logContainer: null }" x-init="logContainer = $refs.logs" class="relative">
+    <div x-data x-ref="logWrapper" class="relative">
         <!-- Scroll controls -->
         <div class="absolute top-2 right-2 z-10 flex gap-1">
-            <button @click="logContainer.scrollTo({top: 0, behavior: 'smooth'})"
+            <button @click="$refs.logs.scrollTo({top: 0, behavior: 'smooth'})"
                     class="p-1.5 bg-gray-800/90 rounded hover:bg-gray-700 text-gray-400 hover:text-gray-200 transition-colors"
                     title="Scroll to top">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
                 </svg>
             </button>
-            <button @click="logContainer.scrollTo({top: logContainer.scrollHeight, behavior: 'smooth'})"
+            <button @click="$refs.logs.scrollTo({top: $refs.logs.scrollHeight, behavior: 'smooth'})"
                     class="p-1.5 bg-gray-800/90 rounded hover:bg-gray-700 text-gray-400 hover:text-gray-200 transition-colors"
                     title="Scroll to bottom">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
