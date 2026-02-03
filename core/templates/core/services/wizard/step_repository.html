@@ -44,7 +44,7 @@
 
     <!-- Branch -->
     <div>
-        <label class="block text-sm font-medium text-dark-text mb-2">Branch</label>
+        <label id="branch-label" class="block text-sm font-medium text-dark-text mb-2">Main Branch</label>
         {{ wizard.form.branch }}
         <p class="mt-1 text-sm text-dark-muted" id="branch-hint">Target branch for the new repository</p>
         {% if wizard.form.branch.errors %}
@@ -66,6 +66,7 @@ document.querySelectorAll('input[name="repository-repo_mode"]').forEach(function
         const isNew = this.value === 'new';
         document.getElementById('new-repo-preview').classList.toggle('hidden', !isNew);
         document.getElementById('existing-repo-field').classList.toggle('hidden', isNew);
+        document.getElementById('branch-label').textContent = isNew ? 'Main Branch' : 'Base Branch';
         document.getElementById('branch-hint').textContent = isNew
             ? 'Target branch for the new repository'
             : 'Base branch for the feature branch (PR will target this)';

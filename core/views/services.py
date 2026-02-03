@@ -62,24 +62,24 @@ class ServiceListView(LoginRequiredMixin, ListView):
 WIZARD_FORMS = [
     ("project", ProjectStepForm),
     ("repository", RepositoryStepForm),
-    ("configuration", ConfigurationStepForm),
     ("workflow", WorkflowSelectionForm),
+    ("configuration", ConfigurationStepForm),
     ("review", ReviewStepForm),
 ]
 
 WIZARD_TEMPLATES = {
     "project": "core/services/wizard/step_project.html",
     "repository": "core/services/wizard/step_repository.html",
-    "configuration": "core/services/wizard/step_configuration.html",
     "workflow": "core/services/wizard/step_workflow.html",
+    "configuration": "core/services/wizard/step_configuration.html",
     "review": "core/services/wizard/step_review.html",
 }
 
 STEP_TITLES = {
     "project": "Service",
     "repository": "Repository",
-    "configuration": "Configuration",
     "workflow": "CI Workflow",
+    "configuration": "Configuration",
     "review": "Review",
 }
 

@@ -138,9 +138,13 @@ class RepositoryStepForm(forms.Form):
 
         # Populate SCM connections from project
         if project:
-            self.fields["scm_connection"].queryset = ProjectConnection.objects.filter(project=project).select_related(
-                "connection"
-            )
+            queryset = ProjectConnection.objects.filter(project=project).select_related("connection")
+            self.fields["scm_connection"].queryset = queryset
+
+            # Auto-select default SCM connection if one exists
+            default_connection = queryset.filter(is_default=True).first()
+            if default_connection:
+                self.fields["scm_connection"].initial = default_connection
 
     def clean(self):
         cleaned_data = super().clean()
