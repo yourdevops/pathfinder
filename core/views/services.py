@@ -528,6 +528,86 @@ class ServiceAssignWorkflowView(LoginRequiredMixin, View):
         )
 
 
+class ServiceSyncBuildsView(LoginRequiredMixin, View):
+    """Manually poll GitHub for recent workflow runs."""
+
+    def post(self, request, project_name, service_name):
+        from core.git_utils import parse_git_url
+        from core.models import ProjectConnection
+        from core.tasks import poll_build_details
+
+        project = get_object_or_404(Project, name=project_name, status="active")
+        service = get_object_or_404(Service, project=project, name=service_name)
+
+        # Check permissions (viewer can trigger sync)
+        role = get_user_project_role(request.user, project)
+        if not role:
+            messages.error(request, "You don't have permission to access this service.")
+            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+        # Guard: service must have a repo_url
+        if not service.repo_url:
+            messages.error(request, "Service has no repository URL.")
+            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+        # Get SCM connection
+        project_connection = (
+            ProjectConnection.objects.filter(project=project, is_default=True).select_related("connection").first()
+        )
+        if not project_connection:
+            messages.error(request, "No SCM connection configured for this project.")
+            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+        connection = project_connection.connection
+        plugin = connection.get_plugin()
+        config = connection.get_config()
+
+        if not plugin:
+            messages.error(request, "SCM plugin not available.")
+            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+        # Parse repo URL
+        parsed = parse_git_url(service.repo_url)
+        if not parsed:
+            messages.error(request, "Invalid repository URL.")
+            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+        repo_name = f"{parsed['owner']}/{parsed['repo']}"
+
+        try:
+            # Fetch recent workflow runs
+            runs = plugin.list_workflow_runs(config, repo_name, per_page=10)
+
+            # Filter to runs matching our CI workflow naming convention
+            workflow_name_prefix = f"CI - {service.ci_workflow.name}" if service.ci_workflow else None
+
+            queued = 0
+            for run_data in runs:
+                # Skip if workflow name doesn't match (when CI workflow is assigned)
+                if workflow_name_prefix and not run_data["name"].startswith("CI - "):
+                    continue
+
+                # Enqueue polling task for each run
+                poll_build_details.enqueue(
+                    run_id=run_data["id"],
+                    repo_name=repo_name,
+                    connection_id=connection.id,
+                    service_id=service.id,
+                    artifact_ref="",  # Will be fetched by the task
+                )
+                queued += 1
+
+            if queued > 0:
+                messages.success(request, f"Syncing {queued} workflow run(s) from GitHub...")
+            else:
+                messages.info(request, "No matching workflow runs found.")
+
+        except Exception as e:
+            messages.error(request, f"Failed to fetch workflow runs: {e}")
+
+        return redirect(f"/projects/{project_name}/services/{service_name}/?tab=builds")
+
+
 class ServiceRegisterWebhookView(LoginRequiredMixin, View):
     """Manually register webhook for a service."""
 

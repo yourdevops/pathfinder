@@ -86,6 +86,7 @@ from .views.services import (
     ServicePushManifestView,
     ServiceRegisterWebhookView,
     ServiceScaffoldStatusView,
+    ServiceSyncBuildsView,
 )
 
 # Setup URLs
@@ -345,6 +346,11 @@ projects_patterns = [
         "<dns:project_name>/services/<dns:service_name>/register-webhook/",
         ServiceRegisterWebhookView.as_view(),
         name="service_register_webhook",
+    ),
+    path(
+        "<dns:project_name>/services/<dns:service_name>/sync-builds/",
+        ServiceSyncBuildsView.as_view(),
+        name="service_sync_builds",
     ),
 ]
 
