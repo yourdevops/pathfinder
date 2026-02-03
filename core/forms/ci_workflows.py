@@ -124,6 +124,17 @@ class WorkflowCreateForm(forms.Form):
             }
         ),
     )
+    dev_workflow = forms.ChoiceField(
+        choices=CIWorkflow.DEV_WORKFLOW_CHOICES,
+        initial="trunk_based",
+        help_text="Development workflow pattern. More options coming soon.",
+        widget=forms.Select(
+            attrs={
+                "class": DARK_SELECT,
+                "disabled": "disabled",
+            }
+        ),
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

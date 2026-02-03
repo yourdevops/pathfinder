@@ -623,6 +623,10 @@ class CIWorkflow(models.Model):
     setup -> build -> test -> package.
     """
 
+    DEV_WORKFLOW_CHOICES = [
+        ("trunk_based", "Trunk-Based Development"),
+    ]
+
     id = models.BigAutoField(primary_key=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     name = models.CharField(
@@ -635,6 +639,12 @@ class CIWorkflow(models.Model):
     runtime_family = models.CharField(max_length=63)  # e.g., 'python'
     runtime_version = models.CharField(max_length=20)  # e.g., '3.12'
     artifact_type = models.CharField(max_length=50, blank=True)  # derived from last package step
+    dev_workflow = models.CharField(
+        max_length=50,
+        choices=DEV_WORKFLOW_CHOICES,
+        default="trunk_based",
+        help_text="Development workflow pattern",
+    )
     status = models.CharField(
         max_length=20,
         choices=[("published", "Published"), ("draft", "Draft")],
