@@ -194,9 +194,10 @@ None -- Phase 06 complete, ready for Phase 07 (Deploy)
 | 032 | Add webhook registration to manifest | 2026-02-03 | 769b991 | [032-add-webhook-registration-to-the-manifest](./quick/032-add-webhook-registration-to-the-manifest/) |
 | 033 | Add manual poll for build jobs when webhooks unavailable | 2026-02-03 | 976e6d4 | [033-add-manual-poll-for-build-jobs-when-webh](./quick/033-add-manual-poll-for-build-jobs-when-webh/) |
 | 034 | Builds UI/UX fixes (sort, search, expand) | 2026-02-03 | 672c9b5 | [034-builds-ui-ux-fixes](./quick/034-builds-ui-ux-fixes/) |
+| 035 | Build logs with failed step detection | 2026-02-03 | d85d6e6 | [035-build-logs-with-failed-step-detection](./quick/035-build-logs-with-failed-step-detection/) |
 
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed quick-034 (Builds UI/UX fixes)
+Stopped at: Completed quick-035 (Build logs with failed step detection)
 Resume file: None
