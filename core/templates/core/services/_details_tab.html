@@ -6,8 +6,8 @@
             <p class="text-dark-muted mt-1">{{ service.description|default:"No description" }}</p>
         </div>
         <div class="flex items-center gap-2">
-            <!-- Scaffold Status (if not success) -->
-            {% if service.scaffold_status != 'success' %}
+            <!-- Scaffold Status (only show pending/running/failed) -->
+            {% if service.scaffold_status == 'pending' or service.scaffold_status == 'running' or service.scaffold_status == 'failed' %}
             <span class="px-2 py-1 text-xs rounded
                 {% if service.scaffold_status == 'pending' %}bg-gray-500/20 text-gray-300
                 {% elif service.scaffold_status == 'running' %}bg-blue-500/20 text-blue-300

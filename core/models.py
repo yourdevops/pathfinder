@@ -405,6 +405,7 @@ class Service(models.Model):
     scaffold_status = models.CharField(
         max_length=20,
         choices=[
+            ("not_required", "Not Required"),
             ("pending", "Pending"),
             ("running", "Running"),
             ("success", "Success"),

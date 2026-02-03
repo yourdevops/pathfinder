@@ -256,6 +256,9 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         ci_workflow = workflow_data.get("ci_workflow")
 
         # Create Service record
+        # scaffold_status: "pending" if CI workflow selected (will scaffold), "not_required" if no workflow
+        scaffold_status = "pending" if ci_workflow else "not_required"
+
         service = Service.objects.create(
             project=project,
             name=service_name,
@@ -265,20 +268,25 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
             env_vars=env_vars,
             ci_workflow=ci_workflow,
             status="draft",
-            scaffold_status="pending",
+            scaffold_status=scaffold_status,
             created_by=self.request.user.username,
         )
 
-        # Enqueue scaffolding task
-        scaffold_repository.enqueue(
-            service_id=service.id,
-            scm_connection_id=scm_connection.connection.id,
-        )
-
-        messages.success(
-            self.request,
-            f'Service "{service_name}" created. Repository scaffolding in progress...',
-        )
+        # Only scaffold if CI workflow selected (otherwise nothing to push)
+        if ci_workflow:
+            scaffold_repository.enqueue(
+                service_id=service.id,
+                scm_connection_id=scm_connection.connection.id,
+            )
+            messages.success(
+                self.request,
+                f'Service "{service_name}" created. Repository scaffolding in progress...',
+            )
+        else:
+            messages.success(
+                self.request,
+                f'Service "{service_name}" created in Draft status. Assign a CI Workflow to scaffold the repository.',
+            )
 
         return redirect("projects:detail", project_name=project.name)
 
