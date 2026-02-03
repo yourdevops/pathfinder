@@ -758,73 +758,88 @@ class BuildLogsView(LoginRequiredMixin, View):
         lower_line = line.lower()
         return any(pattern in lower_line for pattern in self.ERROR_PATTERNS)
 
-    def _extract_error_context(self, logs: str, context_lines: int = 50) -> tuple[list[dict], bool]:
+    def _extract_step_logs(self, logs: str, step_name: str) -> str | None:
         """
-        Extract log lines around errors for failed builds.
+        Extract logs for a specific step from GitHub Actions job logs.
 
-        Returns tuple of (log_lines, was_truncated) where log_lines is a list of
-        dicts with 'text' and 'is_error' keys.
+        GitHub Actions logs have format:
+        TIMESTAMP ##[group]Step Name
+        ...log content...
+        TIMESTAMP ##[endgroup]
+
+        Args:
+            logs: Full job logs from GitHub API
+            step_name: Name of the step to extract
+
+        Returns:
+            Extracted step logs or None if not found
         """
+        import re
+
         lines = logs.split("\n")
-        total_lines = len(lines)
+        result_lines = []
+        in_target_step = False
+        found_step = False
 
-        # For short logs, show everything
-        if total_lines <= context_lines * 2:
-            return [{"text": line, "is_error": self._is_error_line(line)} for line in lines], False
+        for line in lines:
+            # Check for step start marker: ##[group]Step Name
+            if "##[group]" in line:
+                # Extract step name from the line
+                match = re.search(r"##\[group\](.+)$", line)
+                if match:
+                    current_step = match.group(1).strip()
+                    # Check if this is our target step (fuzzy match)
+                    if step_name and (
+                        step_name.lower() in current_step.lower() or current_step.lower() in step_name.lower()
+                    ):
+                        in_target_step = True
+                        found_step = True
+                        result_lines.append(f"=== Step: {current_step} ===")
+                        continue
 
-        # Find lines with errors
-        error_indices = [i for i, line in enumerate(lines) if self._is_error_line(line)]
+            # Check for step end marker
+            if "##[endgroup]" in line:
+                if in_target_step:
+                    in_target_step = False
+                    # Don't break - there might be post-step content
+                continue
 
-        if not error_indices:
-            # No errors found, show last N lines
-            result_lines = lines[-context_lines:]
-            return [{"text": line, "is_error": False} for line in result_lines], True
+            # Collect lines if we're in the target step
+            if in_target_step:
+                # Clean up timestamp prefix if present (e.g., "2024-01-01T12:00:00.0000000Z ")
+                cleaned = re.sub(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d+Z\s*", "", line)
+                result_lines.append(cleaned)
 
-        # Build ranges around error lines
-        ranges_to_include = set()
-        for idx in error_indices:
-            start = max(0, idx - 10)  # 10 lines before error
-            end = min(total_lines, idx + 20)  # 20 lines after error
-            for i in range(start, end):
-                ranges_to_include.add(i)
+        if found_step and result_lines:
+            return "\n".join(result_lines)
+        return None
 
-        # Also include the last 30 lines (often contain summary)
-        for i in range(max(0, total_lines - 30), total_lines):
-            ranges_to_include.add(i)
-
-        # Sort indices and build result with gap markers
-        sorted_indices = sorted(ranges_to_include)
-        result = []
-        prev_idx = -1
-
-        for idx in sorted_indices:
-            # Add gap marker if there's a discontinuity
-            if prev_idx >= 0 and idx > prev_idx + 1:
-                result.append({"text": "... (lines omitted) ...", "is_error": False})
-            result.append({"text": lines[idx], "is_error": self._is_error_line(lines[idx])})
-            prev_idx = idx
-
-        return result, True
-
-    def _process_logs(self, logs: str, build_status: str) -> tuple[list[dict], bool]:
+    def _process_logs(self, logs: str, build_status: str, failed_step_name: str = "") -> tuple[list[dict], bool]:
         """
         Process logs for display.
 
-        For failed builds: extract error context.
+        For failed builds: extract only the failed step's logs.
         For successful builds: show last 100 lines.
         """
         if not logs:
             return [], False
 
-        if build_status == "failed":
-            return self._extract_error_context(logs)
+        if build_status == "failed" and failed_step_name:
+            # Try to extract only the failed step's logs
+            step_logs = self._extract_step_logs(logs, failed_step_name)
+            if step_logs:
+                lines = step_logs.split("\n")
+                return [{"text": line, "is_error": self._is_error_line(line)} for line in lines], False
 
-        # For non-failed builds, show last 100 lines
+        # Fallback: show all logs with error highlighting
         lines = logs.split("\n")
-        if len(lines) <= 100:
-            return [{"text": line, "is_error": False} for line in lines], False
 
-        return [{"text": line, "is_error": False} for line in lines[-100:]], True
+        # For non-failed or if step extraction failed, show last 200 lines
+        max_lines = 200
+        if len(lines) <= max_lines:
+            return [{"text": line, "is_error": self._is_error_line(line)} for line in lines], False
+
+        return [{"text": line, "is_error": self._is_error_line(line)} for line in lines[-max_lines:]], True
 
     def get(self, request, project_name, service_name, build_uuid):
         from django.core.cache import cache
@@ -845,7 +860,7 @@ class BuildLogsView(LoginRequiredMixin, View):
         cache_key = f"build_logs_{build_uuid}"
         cached = cache.get(cache_key)
         if cached:
-            log_lines, truncated = self._process_logs(cached.get("logs"), build.status)
+            log_lines, truncated = self._process_logs(cached.get("logs"), build.status, build.failed_step_name)
             return render(
                 request,
                 "core/services/_build_logs_partial.html",
@@ -920,8 +935,11 @@ class BuildLogsView(LoginRequiredMixin, View):
         # Cache raw logs
         cache.set(cache_key, {"logs": logs})
 
-        # Process logs for display
-        log_lines, truncated = self._process_logs(logs, build.status)
+        # Use updated failed_step_name (either from DB or just set)
+        step_name = build.failed_step_name or failed_step or ""
+
+        # Process logs for display - extract only failed step if available
+        log_lines, truncated = self._process_logs(logs, build.status, step_name)
 
         return render(
             request,
