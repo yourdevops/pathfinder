@@ -9,16 +9,78 @@
         </p>
     </div>
 
-    <!-- CI Workflow dropdown -->
+    <!-- CI Workflow dropdown with view all link and refresh -->
     <div>
-        <label for="id_workflow-ci_workflow" class="block text-sm font-medium text-dark-text mb-2">
-            {{ wizard.form.ci_workflow.label }}
-        </label>
+        <div class="flex items-center justify-between mb-2">
+            <label for="id_workflow-ci_workflow" class="block text-sm font-medium text-dark-text">
+                {{ wizard.form.ci_workflow.label }}
+            </label>
+            <div class="flex items-center gap-3">
+                <a href="{% url 'ci_workflows:workflow_list' %}" target="_blank"
+                   class="text-xs text-dark-accent hover:text-dark-accent/80 transition-colors flex items-center gap-1">
+                    View all workflows
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                </a>
+                <button type="button" onclick="location.reload()"
+                        class="text-xs text-dark-muted hover:text-dark-text transition-colors flex items-center gap-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+        </div>
         {{ wizard.form.ci_workflow }}
         {% if wizard.form.ci_workflow.errors %}
         <p class="mt-1 text-sm text-red-400">{{ wizard.form.ci_workflow.errors.0 }}</p>
         {% endif %}
         <p class="mt-2 text-sm text-dark-muted">{{ wizard.form.ci_workflow.help_text }}</p>
+    </div>
+
+    <!-- Workflow details preview (shown when workflow selected) -->
+    <div id="workflow-preview" class="hidden p-4 bg-dark-bg border border-dark-border rounded-lg">
+        <p class="text-sm font-medium text-dark-text mb-3">Workflow Details</p>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+                <span class="text-dark-muted">Runtime:</span>
+                <span id="preview-runtime" class="text-dark-text ml-2"></span>
+            </div>
+            <div>
+                <span class="text-dark-muted">Version:</span>
+                <span id="preview-version" class="text-dark-text ml-2"></span>
+            </div>
+            <div class="col-span-2" id="preview-description-container">
+                <span class="text-dark-muted">Description:</span>
+                <span id="preview-description" class="text-dark-text ml-2"></span>
+            </div>
+            <div class="col-span-2" id="preview-dev-workflow-container">
+                <span class="text-dark-muted">Development Workflow:</span>
+                <a id="preview-dev-workflow" href="https://trunkbaseddevelopment.com/" target="_blank"
+                   class="text-dark-accent hover:text-dark-accent/80 ml-2 inline-flex items-center gap-1">
+                    Trunk-Based Development
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Draft warning (shown when no workflow selected) -->
+    <div id="no-workflow-warning" class="hidden p-4 border border-amber-500/50 rounded-lg bg-amber-900/20">
+        <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-amber-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+                <p class="text-sm font-medium text-amber-300">Service will be saved in Draft status</p>
+                <p class="text-sm text-amber-200/70 mt-1">
+                    Services without a CI Workflow will be saved in Draft status. A CI Workflow is required to transition to Active status.
+                </p>
+            </div>
+        </div>
     </div>
 
     <!-- Helper info -->
@@ -42,4 +104,47 @@
         </p>
     </div>
 </div>
+
+<!-- Workflow data for JavaScript preview -->
+<script type="application/json" id="workflow-data">
+{
+    {% for wf in available_workflows %}
+    "{{ wf.id }}": {
+        "name": "{{ wf.name }}",
+        "runtime_family": "{{ wf.runtime_family }}",
+        "runtime_version": "{{ wf.runtime_version }}",
+        "description": "{{ wf.description|escapejs }}",
+        "dev_workflow": "{{ wf.dev_workflow|default:'trunk_based' }}"
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+}
+</script>
+
+<script nonce="{{ csp_nonce }}">
+document.addEventListener('DOMContentLoaded', function() {
+    var select = document.getElementById('id_workflow-ci_workflow');
+    var preview = document.getElementById('workflow-preview');
+    var warning = document.getElementById('no-workflow-warning');
+    var workflowData = JSON.parse(document.getElementById('workflow-data').textContent);
+
+    function updatePreview() {
+        var selectedValue = select.value;
+
+        if (selectedValue && workflowData[selectedValue]) {
+            var wf = workflowData[selectedValue];
+            document.getElementById('preview-runtime').textContent = wf.runtime_family;
+            document.getElementById('preview-version').textContent = wf.runtime_version;
+            document.getElementById('preview-description').textContent = wf.description || 'No description';
+            preview.classList.remove('hidden');
+            warning.classList.add('hidden');
+        } else {
+            preview.classList.add('hidden');
+            warning.classList.remove('hidden');
+        }
+    }
+
+    select.addEventListener('change', updatePreview);
+    updatePreview(); // Initialize on load
+});
+</script>
 {% endblock %}

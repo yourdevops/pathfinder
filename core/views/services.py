@@ -180,6 +180,13 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
                     "lock": True,
                 }
 
+        elif self.steps.current == "workflow":
+            # Add workflow list and detail context for step 3
+            project_data = self.get_cleaned_data_for_step("project")
+            if project_data:
+                project = project_data.get("project") or self.project
+                context["available_workflows"] = get_available_workflows_for_project(project)
+
         elif self.steps.current == "review":
             # Compile all data for review
             context["review_data"] = self._get_review_data()
