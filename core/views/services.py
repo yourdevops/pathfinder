@@ -872,6 +872,22 @@ class BuildLogsView(LoginRequiredMixin, View):
         if not role:
             return HttpResponse("Access denied", status=403)
 
+        # Only fetch logs for non-successful builds
+        if build.status == "success":
+            return render(
+                request,
+                "core/services/_build_logs_partial.html",
+                {
+                    "logs": None,
+                    "log_lines": [],
+                    "logs_truncated": False,
+                    "failed_job_name": "",
+                    "failed_step_name": "",
+                    "build": build,
+                    "skip_reason": "Logs not fetched for successful builds",
+                },
+            )
+
         # Check cache first
         cache_key = f"build_logs_{build_uuid}"
         cached = cache.get(cache_key)

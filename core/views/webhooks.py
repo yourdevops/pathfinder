@@ -50,8 +50,9 @@ def identify_service_from_webhook(payload: dict):
     """
     Identify the Service associated with a webhook payload.
 
-    Tries to match by workflow name (from CI manifest naming convention)
-    or by repository URL.
+    Matches by repository URL, which is unique per service.
+    CI workflows can be shared across multiple services, so workflow name
+    is not a reliable identifier.
 
     Args:
         payload: The parsed webhook JSON payload
@@ -59,31 +60,15 @@ def identify_service_from_webhook(payload: dict):
     Returns:
         Service instance or None if no match found
     """
-    from core.models import CIWorkflow, Service
+    from core.models import Service
 
-    # Try to get workflow name from payload
-    workflow_run = payload.get("workflow_run", {})
-    workflow_name = workflow_run.get("name", "")
-
-    # Our manifest naming convention: "CI - {workflow_name}"
-    if workflow_name.startswith("CI - "):
-        parsed_name = workflow_name[5:]  # Remove "CI - " prefix
-        try:
-            ci_workflow = CIWorkflow.objects.get(name=parsed_name)
-            service = Service.objects.filter(ci_workflow=ci_workflow).first()
-            if service:
-                return service
-        except CIWorkflow.DoesNotExist:
-            pass
-
-    # Fallback: match by repository URL
     repo_url = payload.get("repository", {}).get("html_url", "")
     if repo_url:
         service = Service.objects.filter(repo_url=repo_url).first()
         if service:
             return service
 
-    logger.warning(f"No service found for webhook: workflow={workflow_name}, repo={repo_url}")
+    logger.warning(f"No service found for webhook: repo={repo_url}")
     return None
 
 
