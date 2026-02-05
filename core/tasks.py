@@ -439,6 +439,10 @@ def poll_build_details(
     # Map GitHub status to our status
     status = Build.map_github_status(run_data["status"], run_data.get("conclusion"))
 
+    # Extract workflow name (e.g., "ci-python-docker" → "python-docker")
+    raw_workflow_name = run_data.get("name", "")
+    workflow_name = raw_workflow_name[5:] if raw_workflow_name.startswith("ci-") else raw_workflow_name
+
     # Calculate duration if completed
     duration = None
     completed_at = None
@@ -452,6 +456,7 @@ def poll_build_details(
         defaults={
             "service": service,
             "run_number": run_data.get("run_number"),
+            "workflow_name": workflow_name,
             "status": status,
             "commit_sha": head_sha,
             "commit_message": commit_message,

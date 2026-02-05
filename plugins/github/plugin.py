@@ -62,7 +62,7 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
         from core.git_utils import parse_git_url
 
         manifest = {
-            "name": f"CI - {workflow.name}",
+            "name": f"ci-{workflow.name}",
             "on": {
                 "push": {"branches": ["main"]},
             },

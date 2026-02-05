@@ -760,6 +760,9 @@ class Build(models.Model):
     github_run_id = models.BigIntegerField(unique=True, db_index=True)
     run_number = models.IntegerField(null=True, blank=True)
 
+    # Workflow identification (captured at build time for categorization)
+    workflow_name = models.CharField(max_length=255, blank=True)
+
     # Build status
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
 

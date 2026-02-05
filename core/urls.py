@@ -83,11 +83,11 @@ from .views.services import (
     ServiceCreateWizard,
     ServiceDeleteView,
     ServiceDetailView,
+    ServiceFetchBuildsView,
     ServiceListView,
     ServicePushManifestView,
     ServiceRegisterWebhookView,
     ServiceScaffoldStatusView,
-    ServiceSyncBuildsView,
 )
 
 # Setup URLs
@@ -349,9 +349,9 @@ projects_patterns = [
         name="service_register_webhook",
     ),
     path(
-        "<dns:project_name>/services/<dns:service_name>/sync-builds/",
-        ServiceSyncBuildsView.as_view(),
-        name="service_sync_builds",
+        "<dns:project_name>/services/<dns:service_name>/fetch-builds/",
+        ServiceFetchBuildsView.as_view(),
+        name="service_fetch_builds",
     ),
     path(
         "<dns:project_name>/services/<dns:service_name>/builds/<uuid:build_uuid>/logs/",

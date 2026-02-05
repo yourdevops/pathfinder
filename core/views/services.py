@@ -371,8 +371,39 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
                 context["manifest_yaml"] = None
 
         elif tab == "builds":
-            # Get builds for this service
-            builds_qs = Build.objects.filter(service=self.service)
+            # Get current workflow name for categorization
+            current_workflow_name = self.service.ci_workflow.name if self.service.ci_workflow else None
+
+            # Get all builds for this service
+            all_builds = Build.objects.filter(service=self.service)
+
+            # Categorize builds
+            if current_workflow_name:
+                current_builds_qs = all_builds.filter(workflow_name=current_workflow_name)
+                other_builds_qs = all_builds.exclude(workflow_name=current_workflow_name)
+            else:
+                current_builds_qs = Build.objects.none()
+                other_builds_qs = all_builds
+
+            # Determine if tabs should be shown (only when there are "Other" builds)
+            show_workflow_tabs = other_builds_qs.exists()
+            context["show_workflow_tabs"] = show_workflow_tabs
+            context["other_builds_count"] = other_builds_qs.count()
+            context["current_workflow_name"] = current_workflow_name
+
+            # Handle build_tab parameter (default to "current" if tabs shown, otherwise show all)
+            build_tab = self.request.GET.get("build_tab", "current")
+            if not show_workflow_tabs:
+                # No tabs needed - show all builds (which are all current or all other)
+                builds_qs = all_builds
+                build_tab = "current"
+            elif build_tab == "other":
+                builds_qs = other_builds_qs
+            else:
+                builds_qs = current_builds_qs
+                build_tab = "current"
+
+            context["active_build_tab"] = build_tab
 
             # Apply search filter
             search_query = self.request.GET.get("q", "").strip()
@@ -552,7 +583,7 @@ class ServiceAssignWorkflowView(LoginRequiredMixin, View):
         )
 
 
-class ServiceSyncBuildsView(LoginRequiredMixin, View):
+class ServiceFetchBuildsView(LoginRequiredMixin, View):
     """Manually poll GitHub for recent workflow runs."""
 
     def post(self, request, project_name, service_name):
@@ -603,12 +634,12 @@ class ServiceSyncBuildsView(LoginRequiredMixin, View):
             runs = plugin.list_workflow_runs(config, repo_name, per_page=10)
 
             # Filter to runs matching our CI workflow naming convention
-            workflow_name_prefix = f"CI - {service.ci_workflow.name}" if service.ci_workflow else None
+            workflow_name_prefix = f"ci-{service.ci_workflow.name}" if service.ci_workflow else None
 
             queued = 0
             for run_data in runs:
                 # Skip if workflow name doesn't match (when CI workflow is assigned)
-                if workflow_name_prefix and not run_data["name"].startswith("CI - "):
+                if workflow_name_prefix and not run_data["name"].startswith("ci-"):
                     continue
 
                 # Enqueue polling task for each run
@@ -622,7 +653,7 @@ class ServiceSyncBuildsView(LoginRequiredMixin, View):
                 queued += 1
 
             if queued > 0:
-                messages.success(request, f"Syncing {queued} workflow run(s) from GitHub...")
+                messages.success(request, f"Fetching {queued} workflow run(s) from GitHub...")
             else:
                 messages.info(request, "No matching workflow runs found.")
 
