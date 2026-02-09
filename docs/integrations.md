@@ -62,6 +62,19 @@ When a plugin has multiple capabilities:
 - Badge shows additional capabilities: "Also provides: CI, Artifacts"
 - Connection can be used wherever any of its capabilities are needed
 
+### CI Engine / SCM Compatibility
+
+When a plugin provides both SCM and CI capabilities (GitHub, GitLab), the CI engine is only available for repositories on that SCM connection. CI-only plugins (e.g., Jenkins) are compatible with any SCM connection.
+
+| CI Engine | Compatible SCM |
+|-----------|---------------|
+| GitHub Actions | GitHub only |
+| GitLab CI | GitLab only |
+| Bitbucket Pipelines | Bitbucket only |
+| Jenkins | Any SCM |
+
+This constraint is enforced when connecting a Steps Repository and when creating a CI Workflow. See [Steps Catalog](ci-workflows/steps-catalog.md) and [Workflow Definition](ci-workflows/workflow-definition.md).
+
 ### Plugin Registry
 
 Plugins are discovered at startup by scanning the `integrations/plugins/` package. Any module in that folder can register one or more plugins and (optionally) expose URL patterns under:
