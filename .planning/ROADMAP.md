@@ -23,6 +23,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 5.2: CI Workflows — Project & Service Pairing** (INSERTED) - Assign workflows to services, push manifests to repos
 - [ ] **Phase 5.3: CI Steps Redesign** (INSERTED) - Plugin-based CI capabilities, engine-agnostic step discovery, clean core/git_utils.py
 - [ ] **Phase 6: Builds** - Webhook ingestion, build tracking, service activation
+- [ ] **Phase 6.1: Fix CI Workflows Design-Implementation Gap** (INSERTED) - Workflow versioning, build verification, manifest management
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
 ## Phase Details
@@ -264,12 +265,26 @@ Plans:
 
 ### Phase 06.1: Fix the gap between the CI Workflows design and the actual implementation (INSERTED)
 
-**Goal:** [Urgent work - to be planned]
+**Goal:** CI Workflows have full version lifecycle (draft/authorized/revoked); builds are verified via manifest hash comparison; plugin interface complete with manifest fetching; deterministic manifest generation with version headers; version management UI enables publishing, revocation, and forking
 **Depends on:** Phase 6
-**Plans:** 0 plans
+**Success Criteria** (what must be TRUE):
+  1. CIWorkflowVersion model manages version lifecycle (draft -> authorized -> revoked)
+  2. Editing a workflow auto-creates a draft version; publishing assigns semver and immutable hash
+  3. Build verification task computes manifest hash at commit SHA and sets verification status (Verified/Draft/Unauthorized)
+  4. Plugin interface includes manifest_id, extract_manifest_id, get_manifest_id_pattern, fetch_manifest_content
+  5. Generated manifests include deterministic version header ("Managed by Pathfinder")
+  6. Workflow detail page has version history tab with publish and revoke actions
+  7. Build rows display verification status badge
+  8. Workflows can be forked to create new workflows with different runtime sets
+  9. Service settings include manifest push method (PR or direct push)
+**Plans:** 5 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 06.1 to break down)
+- [ ] 06.1-01-PLAN.md — CIWorkflowVersion model, Build/Service updates, plugin interface, deterministic manifest
+- [ ] 06.1-02-PLAN.md — verify_build task, poll_build_details chain, draft auto-creation
+- [ ] 06.1-03-PLAN.md — Version management UI (publish, version history, revoke)
+- [ ] 06.1-04-PLAN.md — Build verification badges, fork workflow, service settings
+- [ ] 06.1-05-PLAN.md — Human verification checkpoint
 
 ### Phase 7: Deployments
 **Goal**: Developers can deploy services to environments; Docker plugin runs containers
@@ -290,7 +305,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -305,8 +320,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5
 | 5.2 CI Workflows — Project & Service Pairing (INSERTED) | 0/3 | Not started | - |
 | 5.3 CI Steps Redesign (INSERTED) | 0/3 | Not started | - |
 | 6. Builds | 2/2 | Complete | 2026-02-03 |
+| 6.1 Fix CI Workflows Design-Implementation Gap (INSERTED) | 0/5 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-02-03 (Phase 6 complete - build tracking and UI)*
+*Last updated: 2026-02-11 (Phase 6.1 planned - CI workflow versioning and build verification)*

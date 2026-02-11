@@ -146,6 +146,7 @@ Recent decisions affecting current work:
 - Phase 5.1 inserted after Phase 5: CI Workflows Builder - Replace Blueprints with CI Workflows, steps catalog, workflow composer, GitHub Actions manifest preview (URGENT) - 2026-01-29
 - Phase 5.2 inserted after Phase 5.1: CI Workflows — Project & Service Pairing - Assign CI Workflows to Services, push manifests to repos, project CI config (URGENT) - 2026-01-31
 - Phase 5.3 inserted after Phase 5.2: CI Steps Redesign - Plugin-based CI capabilities, engine-agnostic step discovery, clean core/git_utils.py (URGENT) - 2026-02-02
+- Phase 6.1 inserted after Phase 6: Fix the gap between the CI Workflows design and the actual implementation (URGENT)
 
 ### Pending Todos
 
