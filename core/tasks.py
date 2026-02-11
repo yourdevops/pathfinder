@@ -374,6 +374,96 @@ def activate_service_on_first_success(build):
 
 
 @task(queue_name="build_updates")
+def verify_build(build_id: int, connection_id: int, repo_name: str) -> dict:
+    """
+    Verify build manifest against authorized workflow versions.
+    Implements the 7-step verification flow from docs/ci-workflows/build-authorization.md.
+
+    Args:
+        build_id: ID of the Build to verify.
+        connection_id: ID of the IntegrationConnection to use.
+        repo_name: Full repository name (owner/repo).
+
+    Returns:
+        Dict with verification status or skip/error reason.
+    """
+    from core.models import Build, CIWorkflowVersion, IntegrationConnection, compute_manifest_hash
+    from plugins.base import get_ci_plugin_for_engine
+
+    try:
+        build = Build.objects.select_related("service__ci_workflow").get(id=build_id)
+    except Build.DoesNotExist:
+        return {"error": "Build not found"}
+
+    # Skip if already verified or not terminal
+    if build.verification_status:
+        return {"skipped": True, "reason": "already verified"}
+    if build.status not in ("success", "failed", "cancelled"):
+        return {"skipped": True, "reason": "not terminal"}
+
+    service = build.service
+    workflow = service.ci_workflow
+    if not workflow:
+        build.verification_status = "unauthorized"
+        build.save(update_fields=["verification_status"])
+        return {"status": "unauthorized", "reason": "no workflow assigned"}
+
+    # Resolve CI plugin from workflow's first step engine
+    first_step = workflow.workflow_steps.select_related("step").first()
+    engine = first_step.step.engine if first_step else "github_actions"
+    ci_plugin = get_ci_plugin_for_engine(engine)
+    if not ci_plugin:
+        build.verification_status = "unauthorized"
+        build.save(update_fields=["verification_status"])
+        return {"status": "unauthorized", "reason": f"no CI plugin for engine {engine}"}
+
+    # Get manifest_id for this workflow
+    m_id = ci_plugin.manifest_id(workflow)
+    build.manifest_id = m_id
+
+    # Fetch manifest content at build's commit SHA
+    try:
+        connection = IntegrationConnection.objects.get(id=connection_id)
+        config = connection.get_config()
+    except IntegrationConnection.DoesNotExist:
+        build.verification_status = "unauthorized"
+        build.save(update_fields=["manifest_id", "verification_status"])
+        return {"status": "unauthorized", "reason": "connection not found"}
+
+    content = ci_plugin.fetch_manifest_content(config, repo_name, m_id, build.commit_sha)
+    if not content:
+        build.verification_status = "unauthorized"
+        build.save(update_fields=["manifest_id", "verification_status"])
+        return {"status": "unauthorized", "reason": "manifest not found at commit"}
+
+    # Compute hash of fetched content (includes header per design doc)
+    manifest_hash = compute_manifest_hash(content)
+    build.manifest_hash = manifest_hash
+
+    # Look up hash in CIWorkflowVersion for this workflow
+    version_match = CIWorkflowVersion.objects.filter(workflow=workflow, manifest_hash=manifest_hash).first()
+
+    if version_match:
+        if version_match.status == CIWorkflowVersion.Status.AUTHORIZED:
+            verification_status = "verified"
+        elif version_match.status == CIWorkflowVersion.Status.DRAFT:
+            verification_status = "draft"
+        else:  # revoked
+            verification_status = "unauthorized"
+        build.workflow_version = version_match
+    else:
+        verification_status = "unauthorized"
+
+    build.verification_status = verification_status
+    build.save(update_fields=["manifest_id", "manifest_hash", "workflow_version", "verification_status"])
+
+    logger.info(
+        f"Build {build.id} verified: {verification_status} (hash={manifest_hash[:12]}..., version={version_match})"
+    )
+    return {"status": verification_status, "build_id": build.id}
+
+
+@task(queue_name="build_updates")
 def poll_build_details(
     run_id: int,
     repo_name: str,
@@ -475,6 +565,14 @@ def poll_build_details(
     if status == "success":
         activate_service_on_first_success(build)
 
+    # Trigger build verification for terminal builds
+    if status in ("success", "failed", "cancelled"):
+        verify_build.enqueue(
+            build_id=build.id,
+            connection_id=connection_id,
+            repo_name=repo_name,
+        )
+
     logger.info(f"Build {build.id} {'created' if created else 'updated'}: {status}")
     return {"build_id": build.id, "status": status, "created": created}
 
@@ -484,21 +582,22 @@ def push_ci_manifest(service_id: int) -> dict:
     """
     Push the CI manifest for a service to its repository.
 
-    Creates a feature branch, writes the generated GitHub Actions manifest file,
-    and opens a pull request via the SCM plugin.
+    Uses manifest_id(workflow) for file path and respects manually-pinned
+    ci_workflow_version for versioned manifest generation. Supports both
+    PR (default) and direct push modes via ci_manifest_push_method.
 
     Args:
         service_id: ID of the Service to push the manifest for.
 
     Returns:
-        Dict with status and PR URL, or error information.
+        Dict with status and PR URL (if PR mode), or error information.
     """
     from core.git_utils import parse_git_url
     from core.models import ProjectConnection, Service
     from plugins.base import get_ci_plugin_for_engine
 
     try:
-        service = Service.objects.select_related("project", "ci_workflow").get(id=service_id)
+        service = Service.objects.select_related("project", "ci_workflow", "ci_workflow_version").get(id=service_id)
     except Service.DoesNotExist:
         logger.error(f"Service {service_id} not found for CI manifest push")
         return {"error": "Service not found"}
@@ -516,8 +615,9 @@ def push_ci_manifest(service_id: int) -> dict:
         if not ci_plugin:
             return {"error": f"No CI plugin for engine: {engine}"}
 
-        # Generate manifest YAML via plugin
-        manifest_yaml = ci_plugin.generate_manifest(service.ci_workflow)
+        # Generate manifest YAML via plugin, using pinned version if set
+        pinned_version = service.ci_workflow_version.version if service.ci_workflow_version else None
+        manifest_yaml = ci_plugin.generate_manifest(service.ci_workflow, version=pinned_version)
 
         # Resolve SCM connection
         project_connection = (
@@ -548,40 +648,57 @@ def push_ci_manifest(service_id: int) -> dict:
 
         repo_name = f"{parsed['owner']}/{parsed['repo']}"
         source_branch = service.repo_branch or "main"
-        feature_branch = f"pathfinder/ci-manifest-{service.name}"
 
-        # Create feature branch (may already exist)
-        try:
-            plugin.create_branch(config, repo_name, feature_branch, source_branch)
-        except Exception:
-            # Branch may already exist, continue
-            logger.info(f"Branch {feature_branch} may already exist, continuing")
+        # Use manifest_id (workflow-based) instead of manifest_path (service-based)
+        manifest_file_path = ci_plugin.manifest_id(service.ci_workflow)
+        commit_message = f"Update CI workflow {service.ci_workflow.name} for {service.name}"
 
-        # Write manifest file
-        manifest_path = ci_plugin.manifest_path(service)
-        plugin.update_or_create_file(
-            config,
-            repo_name,
-            manifest_path,
-            manifest_yaml,
-            f"Update CI workflow for {service.name}",
-            branch=feature_branch,
-        )
+        pr_url = ""
 
-        # Create pull request
-        pr_result = plugin.create_pull_request(
-            config,
-            service.repo_url,
-            f"Update CI workflow for {service.name}",
-            f"Updates the CI workflow manifest for service **{service.name}**.\n\n"
-            f"Workflow: **{service.ci_workflow.name}** "
-            f"({service.ci_workflow.runtime_family} {service.ci_workflow.runtime_version})\n\n"
-            f"Generated by Pathfinder.",
-            feature_branch,
-            source_branch,
-        )
+        if service.ci_manifest_push_method == "direct":
+            # Direct push: write manifest file directly on source branch
+            plugin.update_or_create_file(
+                config,
+                repo_name,
+                manifest_file_path,
+                manifest_yaml,
+                commit_message,
+                branch=source_branch,
+            )
+        else:
+            # PR mode (default): create feature branch and open PR
+            feature_branch = f"pathfinder/ci-manifest-{service.name}"
 
-        pr_url = pr_result.get("html_url", "")
+            # Create feature branch (may already exist)
+            try:
+                plugin.create_branch(config, repo_name, feature_branch, source_branch)
+            except Exception:
+                # Branch may already exist, continue
+                logger.info(f"Branch {feature_branch} may already exist, continuing")
+
+            # Write manifest file
+            plugin.update_or_create_file(
+                config,
+                repo_name,
+                manifest_file_path,
+                manifest_yaml,
+                commit_message,
+                branch=feature_branch,
+            )
+
+            # Create pull request
+            pr_result = plugin.create_pull_request(
+                config,
+                service.repo_url,
+                f"Update CI workflow {service.ci_workflow.name} for {service.name}",
+                f"Updates the CI workflow manifest for service **{service.name}**.\n\n"
+                f"Workflow: **{service.ci_workflow.name}** "
+                f"({service.ci_workflow.runtime_family} {service.ci_workflow.runtime_version})\n\n"
+                f"Generated by Pathfinder.",
+                feature_branch,
+                source_branch,
+            )
+            pr_url = pr_result.get("html_url", "")
 
         # Register webhook for build notifications
         from core.models import SiteConfiguration
