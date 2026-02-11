@@ -531,7 +531,7 @@ def poll_build_details(
 
     # Extract workflow name (e.g., "ci-python-docker" → "python-docker")
     raw_workflow_name = run_data.get("name", "")
-    workflow_name = raw_workflow_name[5:] if raw_workflow_name.startswith("ci-") else raw_workflow_name
+    workflow_name = raw_workflow_name[3:] if raw_workflow_name.startswith("ci-") else raw_workflow_name
 
     # Calculate duration if completed
     duration = None
@@ -615,9 +615,12 @@ def push_ci_manifest(service_id: int) -> dict:
         if not ci_plugin:
             return {"error": f"No CI plugin for engine: {engine}"}
 
-        # Generate manifest YAML via plugin, using pinned version if set
-        pinned_version = service.ci_workflow_version.version if service.ci_workflow_version else None
-        manifest_yaml = ci_plugin.generate_manifest(service.ci_workflow, version=pinned_version)
+        # Use stored manifest content from pinned version (immutable, hash-verified),
+        # or generate fresh draft manifest if no version is pinned
+        if service.ci_workflow_version and service.ci_workflow_version.manifest_content:
+            manifest_yaml = service.ci_workflow_version.manifest_content
+        else:
+            manifest_yaml = ci_plugin.generate_manifest(service.ci_workflow, version=None)
 
         # Resolve SCM connection
         project_connection = (
