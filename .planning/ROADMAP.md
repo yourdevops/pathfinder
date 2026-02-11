@@ -20,9 +20,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4.1: Replace UUID URLs with Slugs** (INSERTED) - Use name-based slugs in URLs instead of UUIDs
 - [x] **Phase 5: Services** - Creation wizard, repository scaffolding, service management
 - [x] **Phase 5.1: CI Workflows Builder** (INSERTED) - Steps catalog, workflow composer, GitHub Actions manifest preview
-- [ ] **Phase 5.2: CI Workflows — Project & Service Pairing** (INSERTED) - Assign workflows to services, push manifests to repos
-- [ ] **Phase 5.3: CI Steps Redesign** (INSERTED) - Plugin-based CI capabilities, engine-agnostic step discovery, clean core/git_utils.py
-- [ ] **Phase 6: Builds** - Webhook ingestion, build tracking, service activation
+- [x] **Phase 5.2: CI Workflows — Project & Service Pairing** (INSERTED) - Assign workflows to services, push manifests to repos
+- [x] **Phase 5.3: CI Steps Redesign** (INSERTED) - Plugin-based CI capabilities, engine-agnostic step discovery, clean core/git_utils.py
+- [x] **Phase 6: Builds** - Webhook ingestion, build tracking, service activation
 - [x] **Phase 6.1: Fix CI Workflows Design-Implementation Gap** (INSERTED) - Workflow versioning, build verification, manifest management
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
@@ -212,9 +212,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 05.2-01-PLAN.md — Models, migrations, and Project CI Configuration UI
-- [ ] 05.2-02-PLAN.md — Service CI tab, manifest push task, GitHubPlugin update
-- [ ] 05.2-03-PLAN.md — Service creation wizard workflow step + verification
+- [x] 05.2-01-PLAN.md — Models, migrations, and Project CI Configuration UI
+- [x] 05.2-02-PLAN.md — Service CI tab, manifest push task, GitHubPlugin update
+- [ ] 05.2-03-PLAN.md — Service creation wizard workflow step + verification (deferred)
 
 ### Phase 5.3: CI Steps Redesign (INSERTED)
 **Goal**: CI capabilities are delivered through the plugin system; step discovery is engine-agnostic; core/git_utils.py contains only generic git operations; plugin-specific actions (manifest generation, step file parsing, manifest paths) live in plugin implementations
@@ -243,9 +243,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 05.3-01-PLAN.md — CICapableMixin, GitHubPlugin CI implementation, model migrations, core/ci_steps.py, clean git_utils.py
-- [ ] 05.3-02-PLAN.md — Refactor tasks, views, forms; remove RuntimesView and Runtimes nav
-- [ ] 05.3-03-PLAN.md — Table layouts for Steps and Repositories pages, HTMX filter dropdowns
+- [x] 05.3-01-PLAN.md — CICapableMixin, GitHubPlugin CI implementation, model migrations, core/ci_steps.py, clean git_utils.py
+- [x] 05.3-02-PLAN.md — Refactor tasks, views, forms; remove RuntimesView and Runtimes nav
+- [x] 05.3-03-PLAN.md — Table layouts for Steps and Repositories pages, HTMX filter dropdowns
 
 ### Phase 6: Builds
 **Goal**: GitHub Actions can report build status; services transition from draft to active on first successful build
@@ -317,8 +317,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5
 | 4.1 Replace UUID URLs with Slugs (INSERTED) | 4/4 | Complete | 2026-01-26 |
 | 5. Services | 4/4 | Complete | 2026-01-26 |
 | 5.1 CI Workflows Builder (INSERTED) | 4/4 | Complete | 2026-01-29 |
-| 5.2 CI Workflows — Project & Service Pairing (INSERTED) | 0/3 | Not started | - |
-| 5.3 CI Steps Redesign (INSERTED) | 0/3 | Not started | - |
+| 5.2 CI Workflows — Project & Service Pairing (INSERTED) | 2/3 | Complete | 2026-01-31 |
+| 5.3 CI Steps Redesign (INSERTED) | 3/3 | Complete | 2026-02-02 |
 | 6. Builds | 2/2 | Complete | 2026-02-03 |
 | 6.1 Fix CI Workflows Design-Implementation Gap (INSERTED) | 5/5 | Complete | 2026-02-11 |
 | 7. Deployments | 0/2 | Not started | - |
