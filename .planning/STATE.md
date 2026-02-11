@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 6.1 (Fix CI Workflows design/implementation gap)
-Plan: 3 of 5 in current phase
+Plan: 4 of 5 in current phase
 Status: In progress
-Last activity: 2026-02-11 - Completed 06.1-03-PLAN.md (Version Management UI)
+Last activity: 2026-02-11 - Completed 06.1-04-PLAN.md (UI Integration Layer)
 
-Progress: [========================                ] 60% (Phase 6.1)
+Progress: [================================        ] 80% (Phase 6.1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 45
+- Total plans completed: 46
 - Average duration: 4 min
-- Total execution time: 3.32 hours
+- Total execution time: 3.40 hours
 
 **By Phase:**
 
@@ -38,10 +38,10 @@ Progress: [========================                ] 60% (Phase 6.1)
 | 05.2-ci-workflows-pairing | 2 | 7 min | 3.5 min |
 | 05.3-ci-steps-redesign | 3 | 10 min | 3.3 min |
 | 06-builds | 2 | 5 min | 2.5 min |
-| 06.1-ci-workflows-gap | 3 | 10 min | 3.3 min |
+| 06.1-ci-workflows-gap | 4 | 15 min | 3.75 min |
 
 **Recent Trend:**
-- Last 5 plans: 06-02 (2 min), 06.1-01 (3 min), 06.1-02 (3 min), 06.1-03 (4 min)
+- Last 5 plans: 06.1-01 (3 min), 06.1-02 (3 min), 06.1-03 (4 min), 06.1-04 (5 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -152,6 +152,10 @@ Recent decisions affecting current work:
 | 06.1-03 | Tabbed layout with query param (?tab=versions) for workflow detail | Matches existing project pattern, simpler than HTMX partial loading |
 | 06.1-03 | One revoke modal per authorized version row | Simpler than Alpine.js dynamic URL approach |
 | 06.1-03 | Suggested version computed in view, passed to template | Avoids extra HTMX round-trip on modal load |
+| 06.1-04 | Verification badge in separate table column | Cleaner separation from build status, better readability |
+| 06.1-04 | Allow Drafts toggle auto-submits on change | Immediate feedback, no Save button needed for boolean toggle |
+| 06.1-04 | Fork form inline via Alpine.js toggle | Simpler UX than separate modal, keeps user on same page |
+| 06.1-04 | fork_from query param loads source steps in composer | Reuses existing composer infrastructure for fork flow |
 
 ### Roadmap Evolution
 
@@ -168,7 +172,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None -- Phase 06.1 Plan 03 complete, continuing with Plan 04
+None -- Phase 06.1 Plan 04 complete, continuing with Plan 05
 
 ### Quick Tasks Completed
 
@@ -215,5 +219,5 @@ None -- Phase 06.1 Plan 03 complete, continuing with Plan 04
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 06.1-03-PLAN.md (Version Management UI)
+Stopped at: Completed 06.1-04-PLAN.md (UI Integration Layer)
 Resume file: None
