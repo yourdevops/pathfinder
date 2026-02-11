@@ -58,7 +58,10 @@ from .views import (
 )
 from .views.ci_workflows import (
     CompatibleStepsView,
+    DiscardDraftView,
     EngineRuntimesView,
+    PublishVersionView,
+    RevokeVersionView,
     RuntimeVersionsView,
     StepConfigView,
     StepDetailView,
@@ -70,6 +73,7 @@ from .views.ci_workflows import (
     StepsRepoScanStatusView,
     StepsRepoScanView,
     StepsTableView,
+    SuggestVersionView,
     WorkflowComposerView,
     WorkflowCreateView,
     WorkflowDeleteView,
@@ -172,6 +176,26 @@ ci_workflows_patterns = [
         "<dns:workflow_name>/delete/",
         WorkflowDeleteView.as_view(),
         name="workflow_delete",
+    ),
+    path(
+        "<dns:workflow_name>/publish/",
+        PublishVersionView.as_view(),
+        name="workflow_publish",
+    ),
+    path(
+        "<dns:workflow_name>/revoke/<int:version_id>/",
+        RevokeVersionView.as_view(),
+        name="workflow_revoke",
+    ),
+    path(
+        "<dns:workflow_name>/discard-draft/",
+        DiscardDraftView.as_view(),
+        name="workflow_discard_draft",
+    ),
+    path(
+        "<dns:workflow_name>/suggest-version/",
+        SuggestVersionView.as_view(),
+        name="workflow_suggest_version",
     ),
 ]
 

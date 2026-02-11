@@ -641,10 +641,27 @@ class WorkflowDetailView(LoginRequiredMixin, View):
         # Services using this workflow
         services_using = workflow.services.select_related("project").order_by("project__name", "name")
 
+        # All versions for version history tab
+        versions = workflow.versions.order_by("-created_at")
+
+        # Suggested next version for publish modal
+        import semver as semver_lib
+
+        if latest_version and latest_version.version:
+            try:
+                suggested_version = str(semver_lib.Version.parse(latest_version.version).bump_patch())
+            except ValueError:
+                suggested_version = "1.0.0"
+        else:
+            suggested_version = "1.0.0"
+
         is_operator = request.user.is_authenticated and (
             has_system_role(request.user, "admin") or has_system_role(request.user, "operator")
         )
         can_delete = is_operator and not services_using.exists()
+
+        # Active tab from query param
+        active_tab = request.GET.get("tab", "steps")
 
         return render(
             request,
@@ -655,8 +672,12 @@ class WorkflowDetailView(LoginRequiredMixin, View):
                 "manifest_yaml": manifest_yaml,
                 "draft_version": draft_version,
                 "latest_version": latest_version,
+                "versions": versions,
+                "suggested_version": suggested_version,
                 "can_delete": can_delete,
+                "is_operator": is_operator,
                 "services_using": services_using,
+                "active_tab": active_tab,
                 "workflow_delete_url": reverse("ci_workflows:workflow_delete", kwargs={"workflow_name": workflow.name}),
             },
         )
@@ -699,3 +720,142 @@ class WorkflowDeleteView(OperatorRequiredMixin, View):
             return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
         workflow.delete()
         return redirect("ci_workflows:workflow_list")
+
+
+# --- Version Management Views ---
+
+
+class PublishVersionView(LoginRequiredMixin, View):
+    """Publish a draft CIWorkflowVersion with a version number."""
+
+    def post(self, request, workflow_name):
+        import semver as semver_lib
+        from django.utils import timezone
+
+        workflow = get_object_or_404(CIWorkflow, name=workflow_name)
+        draft = workflow.versions.filter(status=CIWorkflowVersion.Status.DRAFT).first()
+
+        if not draft:
+            messages.error(request, "No draft version to publish.")
+            return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+
+        version_number = request.POST.get("version", "").strip()
+        changelog = request.POST.get("changelog", "").strip()
+
+        # Validate semver
+        try:
+            v = semver_lib.Version.parse(version_number)
+        except ValueError:
+            messages.error(
+                request,
+                f"Invalid version number: {version_number}. Must be valid semver (e.g., 1.0.0).",
+            )
+            return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+
+        # Check uniqueness
+        if CIWorkflowVersion.objects.filter(workflow=workflow, version=version_number).exists():
+            messages.error(request, f"Version {version_number} already exists.")
+            return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+
+        # Check ordering (must be > latest authorized)
+        latest = (
+            CIWorkflowVersion.objects.filter(
+                workflow=workflow,
+                status=CIWorkflowVersion.Status.AUTHORIZED,
+            )
+            .exclude(version="")
+            .order_by("-published_at")
+            .first()
+        )
+        if latest and latest.version:
+            try:
+                latest_v = semver_lib.Version.parse(latest.version)
+                if v <= latest_v:
+                    messages.error(request, f"Version must be greater than {latest.version}.")
+                    return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+            except ValueError:
+                pass  # Latest version not parseable, allow any new version
+
+        # Regenerate manifest with version number (changes header, changes hash)
+        first_step = workflow.workflow_steps.select_related("step").first()
+        engine = first_step.step.engine if first_step else "github_actions"
+        ci_plugin = get_ci_plugin_for_engine(engine)
+
+        if ci_plugin:
+            manifest_content = ci_plugin.generate_manifest(workflow, version=version_number)
+            manifest_hash = compute_manifest_hash(manifest_content)
+        else:
+            messages.error(request, "No CI plugin available.")
+            return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+
+        # Transition draft -> authorized
+        draft.version = version_number
+        draft.status = CIWorkflowVersion.Status.AUTHORIZED
+        draft.manifest_content = manifest_content
+        draft.manifest_hash = manifest_hash
+        draft.changelog = changelog
+        draft.published_at = timezone.now()
+        draft.save()
+
+        messages.success(request, f"Version {version_number} published successfully.")
+        return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+
+
+class RevokeVersionView(OperatorRequiredMixin, View):
+    """Revoke an authorized CIWorkflowVersion."""
+
+    def post(self, request, workflow_name, version_id):
+        from django.utils import timezone
+
+        workflow = get_object_or_404(CIWorkflow, name=workflow_name)
+        version = get_object_or_404(
+            CIWorkflowVersion,
+            id=version_id,
+            workflow=workflow,
+            status=CIWorkflowVersion.Status.AUTHORIZED,
+        )
+
+        version.status = CIWorkflowVersion.Status.REVOKED
+        version.revoked_at = timezone.now()
+        version.revoked_by = request.user
+        version.manifest_content = ""  # Clear content on revocation per design doc
+        version.save(update_fields=["status", "revoked_at", "revoked_by", "manifest_content"])
+
+        messages.success(request, f"Version {version.version} has been revoked.")
+        return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+
+
+class DiscardDraftView(LoginRequiredMixin, View):
+    """Discard (delete) a draft CIWorkflowVersion."""
+
+    def post(self, request, workflow_name):
+        workflow = get_object_or_404(CIWorkflow, name=workflow_name)
+        draft = workflow.versions.filter(status=CIWorkflowVersion.Status.DRAFT).first()
+        if draft:
+            draft.delete()
+            messages.success(request, "Draft discarded.")
+        return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+
+
+class SuggestVersionView(LoginRequiredMixin, View):
+    """HTMX endpoint: suggest next version number for publishing."""
+
+    def get(self, request, workflow_name):
+        import semver as semver_lib
+
+        workflow = get_object_or_404(CIWorkflow, name=workflow_name)
+        latest = (
+            CIWorkflowVersion.objects.filter(workflow=workflow, status="authorized")
+            .exclude(version="")
+            .order_by("-published_at")
+            .first()
+        )
+        if latest and latest.version:
+            try:
+                v = semver_lib.Version.parse(latest.version)
+                suggested = str(v.bump_patch())
+            except ValueError:
+                suggested = "1.0.0"
+        else:
+            suggested = "1.0.0"
+        return HttpResponse(suggested)
