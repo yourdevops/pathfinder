@@ -380,14 +380,20 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
                     available_versions = [v for v in available_versions if v.status != "draft"]
             context["available_versions"] = available_versions
 
-            # Generate manifest preview if workflow is assigned
+            # Show manifest preview: pinned version content if available, else fresh draft
             if self.service.ci_workflow:
                 first_step = self.service.ci_workflow.workflow_steps.select_related("step").first()
                 engine = first_step.step.engine if first_step else "github_actions"
                 ci_plugin = get_ci_plugin_for_engine(engine)
-                context["manifest_yaml"] = (
-                    ci_plugin.generate_manifest(self.service.ci_workflow) if ci_plugin else "# No CI plugin available"
-                )
+                pinned = self.service.ci_workflow_version
+                if pinned and pinned.manifest_content:
+                    context["manifest_yaml"] = pinned.manifest_content
+                else:
+                    context["manifest_yaml"] = (
+                        ci_plugin.generate_manifest(self.service.ci_workflow)
+                        if ci_plugin
+                        else "# No CI plugin available"
+                    )
                 context["manifest_file_path"] = ci_plugin.manifest_id(self.service.ci_workflow) if ci_plugin else None
             else:
                 context["manifest_yaml"] = None
