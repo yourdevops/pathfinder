@@ -5,6 +5,7 @@ This module provides the GitHubPlugin class implementing GitHub App authenticati
 and repository operations via the PyGithub library.
 """
 
+import re
 from typing import Any
 
 from github import Auth, Github, GithubIntegration
@@ -26,6 +27,8 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
     category = "scm"
     capabilities = ["list_repos", "create_repo", "create_branch", "commit", "webhooks", "ci"]
     icon = "github"  # Maps to SVG icon in templates
+
+    MANIFEST_ID_PATTERN = re.compile(r"^\.github/workflows/ci-[a-z0-9][a-z0-9-]*\.yml$")
 
     # --- CICapableMixin implementation ---
 
@@ -55,8 +58,16 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
             "raw_metadata": file_content,
         }
 
-    def generate_manifest(self, workflow) -> str:
-        """Generate a GitHub Actions workflow YAML for a CIWorkflow instance."""
+    def generate_manifest(self, workflow, version: str | None = None) -> str:
+        """Generate a GitHub Actions workflow YAML for a CIWorkflow instance.
+
+        Args:
+            workflow: CIWorkflow instance.
+            version: Optional version string for the header. Defaults to "draft".
+
+        Returns:
+            Deterministic manifest string with header comment block.
+        """
         import yaml
 
         from core.git_utils import parse_git_url
@@ -109,11 +120,56 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
 
             steps_list.append(step_entry)
 
-        return yaml.dump(manifest, default_flow_style=False, sort_keys=False)
+        yaml_body = yaml.dump(manifest, default_flow_style=False, sort_keys=False)
+
+        version_str = version or "draft"
+        header = (
+            "# ==================================================\n"
+            "# Managed by Pathfinder - DO NOT EDIT MANUALLY\n"
+            f"# Workflow: {workflow.name}\n"
+            f"# Version: {version_str}\n"
+            "# ==================================================\n"
+        )
+        return header + yaml_body
 
     def manifest_path(self, service) -> str:
         """Return the file path where manifest should be placed in the service repo."""
         return f".github/workflows/{service.handler}.yml"
+
+    def manifest_id(self, workflow) -> str:
+        """Return manifest identifier based on workflow name."""
+        return f".github/workflows/ci-{workflow.name}.yml"
+
+    def extract_manifest_id(self, run_data: dict) -> str | None:
+        """Extract manifest identifier from CI run data.
+
+        Returns None if the workflow is not Pathfinder-managed.
+        """
+        name = run_data.get("name", "")
+        if name.startswith("ci-"):
+            mid = f".github/workflows/{name}.yml"
+            if self.MANIFEST_ID_PATTERN.match(mid):
+                return mid
+        return None
+
+    def get_manifest_id_pattern(self) -> re.Pattern:
+        """Return regex pattern for validating manifest IDs."""
+        return self.MANIFEST_ID_PATTERN
+
+    def fetch_manifest_content(self, config: dict, repo_name: str, manifest_id: str, commit_sha: str) -> str | None:
+        """Fetch manifest file content from repo at a specific commit.
+
+        Returns None if file not found.
+        """
+        try:
+            g = self._get_github_client(config)
+            repo = g.get_repo(repo_name)
+            content_file = repo.get_contents(manifest_id, ref=commit_sha)
+            if isinstance(content_file, list):
+                return None  # directory, not file
+            return content_file.decoded_content.decode("utf-8")
+        except Exception:
+            return None
 
     # --- BasePlugin implementation ---
 

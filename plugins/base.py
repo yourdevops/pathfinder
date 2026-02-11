@@ -5,6 +5,7 @@ This module provides the abstract BasePlugin class and the PluginRegistry
 singleton that manages plugin registration and discovery.
 """
 
+import re
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
@@ -107,12 +108,39 @@ class CICapableMixin:
         """
         raise NotImplementedError
 
-    def generate_manifest(self, workflow) -> str:
-        """Generate CI manifest YAML string for a CIWorkflow instance."""
+    def generate_manifest(self, workflow, version: str | None = None) -> str:
+        """Generate CI manifest YAML string for a CIWorkflow instance.
+
+        Args:
+            workflow: CIWorkflow instance.
+            version: Optional version string for the manifest header.
+        """
         raise NotImplementedError
 
     def manifest_path(self, service) -> str:
         """Return the file path where manifest should be placed in the service repo."""
+        raise NotImplementedError
+
+    def manifest_id(self, workflow) -> str:
+        """Return manifest identifier (e.g., .github/workflows/ci-python-uv.yml).
+
+        Based on workflow name, not service name."""
+        raise NotImplementedError
+
+    def extract_manifest_id(self, run_data: dict) -> str | None:
+        """Extract manifest identifier from CI run data.
+
+        Returns None if not Pathfinder-managed."""
+        raise NotImplementedError
+
+    def get_manifest_id_pattern(self) -> re.Pattern:
+        """Return regex pattern for validating manifest IDs."""
+        raise NotImplementedError
+
+    def fetch_manifest_content(self, config: dict, repo_name: str, manifest_id: str, commit_sha: str) -> str | None:
+        """Fetch manifest file content from repo at a specific commit.
+
+        Returns None if file not found."""
         raise NotImplementedError
 
 
