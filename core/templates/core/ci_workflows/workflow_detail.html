@@ -51,6 +51,25 @@
                class="px-4 py-2 bg-dark-accent/20 hover:bg-dark-accent/30 text-dark-accent rounded-lg transition-colors text-sm">
                 Edit Workflow
             </a>
+            <!-- Fork Workflow -->
+            <div x-data="{ showFork: false }">
+                <button @click="showFork = !showFork" class="px-4 py-2 bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 rounded-lg transition-colors text-sm">
+                    Fork Workflow
+                </button>
+                <div x-show="showFork" x-cloak class="absolute mt-2 p-4 bg-dark-surface border border-dark-border rounded-lg z-10 shadow-lg">
+                    <form method="post" action="{% url 'ci_workflows:workflow_fork' workflow_name=workflow.name %}" class="flex items-center gap-3">
+                        {% csrf_token %}
+                        <input type="text" name="name" placeholder="New workflow name" required
+                               class="bg-dark-bg border border-dark-border rounded px-3 py-2 text-dark-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-dark-accent w-64">
+                        <button type="submit" class="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors text-sm">
+                            Fork
+                        </button>
+                        <button type="button" @click="showFork = false" class="px-4 py-2 text-dark-muted hover:text-dark-text transition-colors text-sm">
+                            Cancel
+                        </button>
+                    </form>
+                </div>
+            </div>
             {% if can_delete %}
             <button type="button" data-confirm-modal="confirm-delete-workflow"
                     class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm">

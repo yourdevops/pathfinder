@@ -61,6 +61,7 @@ from .views.ci_workflows import (
     CompatibleStepsView,
     DiscardDraftView,
     EngineRuntimesView,
+    ForkWorkflowView,
     PublishVersionView,
     RevokeVersionView,
     RuntimeVersionsView,
@@ -164,6 +165,7 @@ ci_workflows_patterns = [
     path("steps/table/", StepsTableView.as_view(), name="steps_table"),
     path("steps/<uuid:step_uuid>/", StepDetailView.as_view(), name="step_detail"),
     # Dynamic workflow paths (must be after all fixed paths to avoid URL conflicts)
+    path("<dns:workflow_name>/fork/", ForkWorkflowView.as_view(), name="workflow_fork"),
     path("<dns:workflow_name>/", WorkflowDetailView.as_view(), name="workflow_detail"),
     path(
         "<dns:workflow_name>/manifest/",

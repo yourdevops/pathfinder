@@ -455,6 +455,28 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             workflow_uuid = ""
             initial_steps_json = []
 
+            # Handle fork_from: pre-populate steps from source workflow
+            fork_from = request.GET.get("fork_from", "")
+            if fork_from:
+                try:
+                    source_wf = CIWorkflow.objects.get(name=fork_from)
+                    workflow_steps = source_wf.workflow_steps.select_related("step").order_by("order")
+                    for ws in workflow_steps:
+                        initial_steps_json.append(
+                            {
+                                "id": str(ws.step.uuid),
+                                "name": ws.step.name,
+                                "phase": ws.step.phase,
+                                "description": ws.step.description[:80] if ws.step.description else "",
+                                "inputs_schema": ws.step.inputs_schema or {},
+                                "order": ws.order,
+                                "input_config": ws.input_config or {},
+                                "expanded": False,
+                            }
+                        )
+                except CIWorkflow.DoesNotExist:
+                    pass
+
             if not name or not runtime_family or not runtime_version:
                 return redirect("ci_workflows:workflow_create")
 
@@ -835,6 +857,54 @@ class DiscardDraftView(LoginRequiredMixin, View):
             draft.delete()
             messages.success(request, "Draft discarded.")
         return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+
+
+class ForkWorkflowView(LoginRequiredMixin, View):
+    """Fork an existing workflow -- redirects to composer pre-populated with existing steps."""
+
+    def get(self, request, workflow_name):
+        """Show fork form (rendered inline on workflow detail page)."""
+        workflow = get_object_or_404(CIWorkflow, name=workflow_name)
+        return render(
+            request,
+            "core/ci_workflows/workflow_detail.html",
+            {
+                "workflow": workflow,
+                "show_fork_form": True,
+            },
+        )
+
+    def post(self, request, workflow_name):
+        """Redirect to composer with pre-populated data from source workflow."""
+        from urllib.parse import urlencode
+
+        workflow = get_object_or_404(CIWorkflow, name=workflow_name)
+        new_name = request.POST.get("name", "").strip()
+
+        if not new_name:
+            messages.error(request, "Fork name is required.")
+            return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+
+        # Check uniqueness
+        if CIWorkflow.objects.filter(name=new_name).exists():
+            messages.error(request, f"A workflow named '{new_name}' already exists.")
+            return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+
+        # Redirect to composer in create mode with pre-populated params
+        first_step = workflow.workflow_steps.select_related("step").first()
+        engine = first_step.step.engine if first_step else "github_actions"
+
+        params = urlencode(
+            {
+                "name": new_name,
+                "description": f"Forked from {workflow.name}. {workflow.description}",
+                "engine": engine,
+                "runtime_family": workflow.runtime_family,
+                "runtime_version": workflow.runtime_version,
+                "fork_from": workflow.name,  # Composer will load steps from this workflow
+            }
+        )
+        return redirect(f"{reverse('ci_workflows:workflow_composer')}?{params}")
 
 
 class SuggestVersionView(LoginRequiredMixin, View):
