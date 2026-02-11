@@ -17,8 +17,10 @@ from core.models import (
     CIStep,
     CIWorkflow,
     CIWorkflowStep,
+    CIWorkflowVersion,
     RuntimeFamily,
     StepsRepository,
+    compute_manifest_hash,
 )
 from core.permissions import OperatorRequiredMixin, has_system_role
 from plugins.base import get_available_engines, get_ci_plugin_for_engine
@@ -539,6 +541,27 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             except CIStep.DoesNotExist:
                 continue
 
+        # Auto-create or update draft CIWorkflowVersion
+        first_step = workflow.workflow_steps.select_related("step").first()
+        engine = first_step.step.engine if first_step else "github_actions"
+        ci_plugin = get_ci_plugin_for_engine(engine)
+
+        if ci_plugin:
+            # Generate draft manifest (version=None produces "draft" in header)
+            manifest_content = ci_plugin.generate_manifest(workflow, version=None)
+            manifest_hash = compute_manifest_hash(manifest_content)
+
+            # Create or update the single draft slot
+            CIWorkflowVersion.objects.update_or_create(
+                workflow=workflow,
+                status=CIWorkflowVersion.Status.DRAFT,
+                defaults={
+                    "manifest_hash": manifest_hash,
+                    "manifest_content": manifest_content,
+                    "author": request.user,
+                },
+            )
+
         return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
 
 
@@ -609,6 +632,12 @@ class WorkflowDetailView(LoginRequiredMixin, View):
         ci_plugin = get_ci_plugin_for_engine(engine)
         manifest_yaml = ci_plugin.generate_manifest(workflow) if ci_plugin else "# No CI plugin available"
 
+        # Version info for UI
+        draft_version = workflow.versions.filter(status=CIWorkflowVersion.Status.DRAFT).first()
+        latest_version = (
+            workflow.versions.filter(status=CIWorkflowVersion.Status.AUTHORIZED).order_by("-published_at").first()
+        )
+
         # Services using this workflow
         services_using = workflow.services.select_related("project").order_by("project__name", "name")
 
@@ -624,6 +653,8 @@ class WorkflowDetailView(LoginRequiredMixin, View):
                 "workflow": workflow,
                 "workflow_steps": workflow_steps,
                 "manifest_yaml": manifest_yaml,
+                "draft_version": draft_version,
+                "latest_version": latest_version,
                 "can_delete": can_delete,
                 "services_using": services_using,
                 "workflow_delete_url": reverse("ci_workflows:workflow_delete", kwargs={"workflow_name": workflow.name}),
@@ -639,7 +670,16 @@ class WorkflowManifestView(LoginRequiredMixin, View):
         first_step = workflow.workflow_steps.select_related("step").first()
         engine = first_step.step.engine if first_step else "github_actions"
         ci_plugin = get_ci_plugin_for_engine(engine)
-        manifest_yaml = ci_plugin.generate_manifest(workflow) if ci_plugin else "# No CI plugin available"
+
+        # Show versioned manifest: draft first, then latest authorized, then fresh generate
+        draft_version = workflow.versions.filter(status="draft").first()
+        if draft_version:
+            manifest_yaml = draft_version.manifest_content
+        elif latest_version := workflow.versions.filter(status="authorized").order_by("-published_at").first():
+            manifest_yaml = latest_version.manifest_content
+        else:
+            manifest_yaml = ci_plugin.generate_manifest(workflow) if ci_plugin else "# No CI plugin available"
+
         return render(
             request,
             "core/ci_workflows/_manifest_preview.html",
