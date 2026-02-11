@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 6 in progress - Builds
+**Current focus:** Phase 6.1 in progress - Fix CI Workflows design/implementation gap
 
 ## Current Position
 
-Phase: 6 of 7 (Builds)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-03 - Completed 06-02-PLAN.md (Build History UI)
+Phase: 6.1 (Fix CI Workflows design/implementation gap)
+Plan: 1 of 5 in current phase
+Status: In progress
+Last activity: 2026-02-11 - Completed 06.1-01-PLAN.md (Foundation Models)
 
-Progress: [========================================] 100% (Phase 6)
+Progress: [========                                ] 20% (Phase 6.1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 42
+- Total plans completed: 43
 - Average duration: 4 min
-- Total execution time: 3.2 hours
+- Total execution time: 3.25 hours
 
 **By Phase:**
 
@@ -38,9 +38,10 @@ Progress: [========================================] 100% (Phase 6)
 | 05.2-ci-workflows-pairing | 2 | 7 min | 3.5 min |
 | 05.3-ci-steps-redesign | 3 | 10 min | 3.3 min |
 | 06-builds | 2 | 5 min | 2.5 min |
+| 06.1-ci-workflows-gap | 1 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 05.3-02 (4 min), 05.3-03 (2 min), 06-01 (3 min), 06-02 (2 min)
+- Last 5 plans: 05.3-03 (2 min), 06-01 (3 min), 06-02 (2 min), 06.1-01 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -138,6 +139,11 @@ Recent decisions affecting current work:
 | 06-02 | Status filter with hx-push-url | URL state for browser history support |
 | 06-02 | Avatar fallback to first letter initial | Graceful degradation when no avatar_url |
 | 06-02 | Duration with widthratio template tag | Avoids custom template filters |
+| 06.1-01 | CIWorkflowVersion status as TextChoices enum | Matches docs/ci-workflows/versioning.md state machine (draft/authorized/revoked) |
+| 06.1-01 | Build verification_status as standalone CharField | Independent verification state, not FK-linked to version status |
+| 06.1-01 | Service ci_manifest_push_method defaults to "pr" | Pull Request is safer default for manifest updates |
+| 06.1-01 | manifest_id is workflow-name-based (ci-{name}.yml) | Per plugin-interface.md, not service-handler-based |
+| 06.1-01 | generate_manifest version defaults to "draft" in header | Deterministic header for hash verification per build-authorization.md |
 
 ### Roadmap Evolution
 
@@ -154,7 +160,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None -- Phase 06 complete, ready for Phase 07 (Deploy)
+None -- Phase 06.1 Plan 01 complete, continuing with Plan 02
 
 ### Quick Tasks Completed
 
@@ -200,6 +206,6 @@ None -- Phase 06 complete, ready for Phase 07 (Deploy)
 
 ## Session Continuity
 
-Last session: 2026-02-03
-Stopped at: Completed quick-036 (Build logs UI/UX improvements)
+Last session: 2026-02-11
+Stopped at: Completed 06.1-01-PLAN.md (Foundation Models)
 Resume file: None
