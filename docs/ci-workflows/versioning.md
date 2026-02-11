@@ -112,6 +112,6 @@ An admin can revoke a specific workflow version:
 
 Pathfinder tracks CI Workflows and their usage across Services and Builds.
 
-A CI Workflow can be marked as **Deprecated**, which prevents onboarding new Services but does not block existing service builds or updates to the workflow.
+A CI Workflow can be marked as **Archived**, which prevents onboarding new Services but does not block existing service builds or updates to the workflow.
 
 A CI Workflow can be deleted only if no Service uses it and no Build in history references it.

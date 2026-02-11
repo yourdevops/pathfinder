@@ -24,6 +24,7 @@ Pathfinder tracks repository changes via:
 3. **Scheduled task**: Daily automatic poll
 
 On sync, Pathfinder resolves the commit SHA on the default branch using native git tools. If the SHA has changed, Pathfinder:
+0. Validates Branch Protection rules
 1. Fetches the branch contents
 2. Parses step definitions according to CI Plugin patterns
 3. Updates, adds, or removes steps in the Catalog
@@ -103,13 +104,13 @@ On repository sync:
 
 ### Step Removal
 
-When a step's definition file is deleted from a repository:
+Steps can only be removed by deleting the definition file from the Steps Repository — there is no delete action in Pathfinder's UI. On the next sync:
 
-1. The step is marked **removed** in the Catalog
-2. Workflows referencing it cannot publish new versions until the reference is resolved
-3. Existing published workflow versions remain valid—they pin the step at a specific commit SHA
-4. The step record is retained while any published workflow version references it
-5. **Auto-cleanup**: When no workflow version references a removed step, the record is deleted
+1. The step is marked **archived** in the Catalog and is no longer available for new workflows
+2. Workflows referencing it display a warning prompting the author to replace the archived step
+3. Existing published workflow versions remain valid — they pin the step at its last commit SHA, which remains retrievable via `git show`
+4. The step record is retained in the Catalog as long as any published workflow version references it
+5. **Auto-cleanup**: When no workflow version references an archived step, the record is deleted
 
 ### Version Identity via Git
 
@@ -228,7 +229,7 @@ CI Secrets are managed at the CI engine level. Steps should reference secrets av
 Pathfinder exposes an internal API endpoint for validating step definitions before they are merged to a Steps Repository. This allows step authors to catch issues during development rather than after sync.
 
 ```
-POST /api/internal/steps/validate
+POST /api/ci-workflows/steps/validate
 Authorization: Token <api-token>
 Content-Type: application/json
 

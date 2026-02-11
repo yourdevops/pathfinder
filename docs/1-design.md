@@ -138,6 +138,19 @@ See [rbac.md](rbac.md) for the complete permission model, including:
 
 ---
 
+## Logging
+
+Three log streams with distinct consumers: audit log (compliance), activity log (platform engineers), system log (ops).
+
+See [logging.md](logging.md) for the complete logging architecture, including:
+- Audit log model and audited actions
+- Activity logs (Steps Repository sync log, per-step import entries)
+- System log format and configuration
+- Log export: container-native collection, dual-write to stdout, pull API
+- Access control per stream
+
+---
+
 ## Repository Model
 
 Repositories are tracked references to SCM repositories used by Services.
@@ -178,3 +191,6 @@ Repository:
 | **Deploy Mechanism** | How deployment is executed: direct API, GitOps, or pipeline trigger |
 | **Infra Template** | Reusable infrastructure provisioning blueprint (future) |
 | **Golden Path** | A pre-approved, well-tested application pattern curated by Platform team |
+| **Audit Log** | Append-only record of who changed what, when. Stored in database, exported via dual-write to stdout. |
+| **Activity Log** | Operation-scoped log of what happened during a batch process (e.g., steps repo sync). Stored in database. |
+| **System Log** | Structured JSON to stdout for operational debugging. Collected by container platform. |

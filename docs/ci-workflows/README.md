@@ -21,6 +21,7 @@ A CI Workflow is a versioned, composable build definition that produces an artif
 | [Build Authorization](build-authorization.md) | Manifest identification, verification flow, security model |
 | [Build Lifecycle](build-lifecycle.md) | Triggering, artifact discovery, build records |
 | [Plugin Interface](plugin-interface.md) | CI engine implementations, manifest generation |
+| [Logging](logging.md) | Audited entities, sync operation logs |
 
 ---
 
