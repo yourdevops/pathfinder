@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 6.1 (Fix CI Workflows design/implementation gap)
-Plan: 2 of 5 in current phase
+Plan: 3 of 5 in current phase
 Status: In progress
-Last activity: 2026-02-11 - Completed 06.1-02-PLAN.md (Background Task Layer)
+Last activity: 2026-02-11 - Completed 06.1-03-PLAN.md (Version Management UI)
 
-Progress: [================                        ] 40% (Phase 6.1)
+Progress: [========================                ] 60% (Phase 6.1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 44
+- Total plans completed: 45
 - Average duration: 4 min
-- Total execution time: 3.25 hours
+- Total execution time: 3.32 hours
 
 **By Phase:**
 
@@ -38,10 +38,10 @@ Progress: [================                        ] 40% (Phase 6.1)
 | 05.2-ci-workflows-pairing | 2 | 7 min | 3.5 min |
 | 05.3-ci-steps-redesign | 3 | 10 min | 3.3 min |
 | 06-builds | 2 | 5 min | 2.5 min |
-| 06.1-ci-workflows-gap | 2 | 6 min | 3 min |
+| 06.1-ci-workflows-gap | 3 | 10 min | 3.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 06-01 (3 min), 06-02 (2 min), 06.1-01 (3 min), 06.1-02 (3 min)
+- Last 5 plans: 06-02 (2 min), 06.1-01 (3 min), 06.1-02 (3 min), 06.1-03 (4 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -149,6 +149,9 @@ Recent decisions affecting current work:
 | 06.1-02 | push_ci_manifest reads pinned ci_workflow_version, no auto-update | Deferred per CONTEXT.md locked decision |
 | 06.1-02 | No skip-CI flags on manifest commits | Per locked decision: let CI run on manifest pushes |
 | 06.1-02 | WorkflowManifestView priority: draft > authorized > fresh | Shows most relevant version to user |
+| 06.1-03 | Tabbed layout with query param (?tab=versions) for workflow detail | Matches existing project pattern, simpler than HTMX partial loading |
+| 06.1-03 | One revoke modal per authorized version row | Simpler than Alpine.js dynamic URL approach |
+| 06.1-03 | Suggested version computed in view, passed to template | Avoids extra HTMX round-trip on modal load |
 
 ### Roadmap Evolution
 
@@ -165,7 +168,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None -- Phase 06.1 Plan 02 complete, continuing with Plan 03
+None -- Phase 06.1 Plan 03 complete, continuing with Plan 04
 
 ### Quick Tasks Completed
 
@@ -212,5 +215,5 @@ None -- Phase 06.1 Plan 02 complete, continuing with Plan 03
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 06.1-02-PLAN.md (Background Task Layer)
+Stopped at: Completed 06.1-03-PLAN.md (Version Management UI)
 Resume file: None
