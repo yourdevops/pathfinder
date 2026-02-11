@@ -786,6 +786,22 @@ class ProjectApproveWorkflowView(LoginRequiredMixin, ProjectOwnerMixin, View):
         return _render_approved_workflows_section(request, self.project, self.user_project_role)
 
 
+class ProjectUpdateCIConfigView(LoginRequiredMixin, View):
+    """Update project CI configuration settings (e.g., Allow Drafts toggle)."""
+
+    def post(self, request, project_name):
+        project = get_object_or_404(Project, name=project_name)
+        ci_config, _ = ProjectCIConfig.objects.get_or_create(project=project)
+
+        setting = request.POST.get("setting", "")
+        if setting == "allow_draft_workflows":
+            ci_config.allow_draft_workflows = request.POST.get("allow_draft_workflows") == "true"
+            ci_config.save(update_fields=["allow_draft_workflows"])
+            messages.success(request, "Draft workflows setting updated.")
+
+        return redirect("projects:detail", project_name=project_name)
+
+
 class ProjectRemoveApprovedWorkflowView(LoginRequiredMixin, ProjectOwnerMixin, View):
     """Remove a workflow from the project's approved list."""
 

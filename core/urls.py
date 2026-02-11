@@ -46,6 +46,7 @@ from .views import (
     ProjectEnvVarSaveView,
     ProjectListView,
     ProjectRemoveApprovedWorkflowView,
+    ProjectUpdateCIConfigView,
     ProjectUpdateView,
     RemoveMemberView,
     UnlockView,
@@ -89,9 +90,11 @@ from .views.services import (
     ServiceDetailView,
     ServiceFetchBuildsView,
     ServiceListView,
+    ServicePinVersionView,
     ServicePushManifestView,
     ServiceRegisterWebhookView,
     ServiceScaffoldStatusView,
+    ServiceUpdatePushMethodView,
 )
 
 # Setup URLs
@@ -322,6 +325,11 @@ projects_patterns = [
     ),
     # CI Configuration
     path(
+        "<dns:project_name>/ci-config/",
+        ProjectUpdateCIConfigView.as_view(),
+        name="update_ci_config",
+    ),
+    path(
         "<dns:project_name>/settings/ci-config/",
         ProjectCIConfigView.as_view(),
         name="project_ci_config",
@@ -361,6 +369,16 @@ projects_patterns = [
         "<dns:project_name>/services/<dns:service_name>/ci/assign-workflow/",
         ServiceAssignWorkflowView.as_view(),
         name="service_assign_workflow",
+    ),
+    path(
+        "<dns:project_name>/services/<dns:service_name>/ci/push-method/",
+        ServiceUpdatePushMethodView.as_view(),
+        name="service_update_push_method",
+    ),
+    path(
+        "<dns:project_name>/services/<dns:service_name>/ci/pin-version/",
+        ServicePinVersionView.as_view(),
+        name="service_pin_version",
     ),
     path(
         "<dns:project_name>/services/<dns:service_name>/ci/push-manifest/",

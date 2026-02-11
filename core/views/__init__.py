@@ -53,6 +53,7 @@ from .projects import (
     ProjectEnvVarSaveView,
     ProjectListView,
     ProjectRemoveApprovedWorkflowView,
+    ProjectUpdateCIConfigView,
     ProjectUpdateView,
     RemoveMemberView,
 )
@@ -112,6 +113,7 @@ __all__ = [
     "ProjectEnvVarSaveView",
     "ProjectListView",
     "ProjectRemoveApprovedWorkflowView",
+    "ProjectUpdateCIConfigView",
     "ProjectUpdateView",
     "RemoveMemberView",
     "StepDetailView",

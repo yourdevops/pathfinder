@@ -99,7 +99,7 @@
             <thead class="bg-gray-800">
                 <tr>
                     <!-- Status - sortable -->
-                    <th class="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    <th class="w-[8%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                         <a href="?tab=builds&sort={% if sort_by == '-status' %}status{% else %}-status{% endif %}{% if show_workflow_tabs %}&build_tab={{ active_build_tab }}{% endif %}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}"
                            hx-get="?tab=builds&sort={% if sort_by == '-status' %}status{% else %}-status{% endif %}{% if show_workflow_tabs %}&build_tab={{ active_build_tab }}{% endif %}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}"
                            hx-target="#builds-tab-content"
@@ -113,14 +113,16 @@
                             {% endif %}
                         </a>
                     </th>
+                    <!-- Verification -->
+                    <th class="w-[10%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Verification</th>
                     <!-- Commit - not sortable -->
-                    <th class="w-[25%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Commit</th>
+                    <th class="w-[23%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Commit</th>
                     <!-- Branch - not sortable -->
-                    <th class="w-[18%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Branch</th>
+                    <th class="w-[16%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Branch</th>
                     <!-- Author - not sortable -->
-                    <th class="w-[15%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Author</th>
+                    <th class="w-[13%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Author</th>
                     <!-- Started - sortable (default) -->
-                    <th class="w-[20%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    <th class="w-[18%] px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                         <a href="?tab=builds&sort={% if sort_by == '-started_at' %}started_at{% else %}-started_at{% endif %}{% if show_workflow_tabs %}&build_tab={{ active_build_tab }}{% endif %}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}"
                            hx-get="?tab=builds&sort={% if sort_by == '-started_at' %}started_at{% else %}-started_at{% endif %}{% if show_workflow_tabs %}&build_tab={{ active_build_tab }}{% endif %}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}"
                            hx-target="#builds-tab-content"

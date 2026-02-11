@@ -359,6 +359,27 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
             context["ci_manifest_pushed_at"] = self.service.ci_manifest_pushed_at
             context["available_workflows"] = get_available_workflows_for_project(self.project)
             context["can_edit"] = self.user_project_role in ("contributor", "owner")
+
+            # Version pinning dropdown
+            from core.models import CIWorkflowVersion
+
+            available_versions = []
+            if self.service.ci_workflow:
+                available_versions = list(
+                    CIWorkflowVersion.objects.filter(
+                        workflow=self.service.ci_workflow,
+                        status__in=[CIWorkflowVersion.Status.AUTHORIZED, CIWorkflowVersion.Status.DRAFT],
+                    ).order_by("-published_at", "-created_at")
+                )
+                # Filter out drafts if project doesn't allow them
+                try:
+                    ci_config = self.project.ci_config
+                    if not ci_config.allow_draft_workflows:
+                        available_versions = [v for v in available_versions if v.status != "draft"]
+                except Exception:
+                    available_versions = [v for v in available_versions if v.status != "draft"]
+            context["available_versions"] = available_versions
+
             # Generate manifest preview if workflow is assigned
             if self.service.ci_workflow:
                 first_step = self.service.ci_workflow.workflow_steps.select_related("step").first()
@@ -776,6 +797,70 @@ class ServicePushManifestView(LoginRequiredMixin, View):
         messages.success(request, "CI manifest push started. A pull request will be created shortly.")
 
         return redirect(f"/projects/{self.project.name}/services/{self.service.name}/?tab=ci")
+
+
+class ServiceUpdatePushMethodView(LoginRequiredMixin, View):
+    """Update service CI manifest push method."""
+
+    def post(self, request, project_name, service_name):
+        project = get_object_or_404(Project, name=project_name)
+        service = get_object_or_404(Service, project=project, name=service_name)
+        push_method = request.POST.get("push_method", "pr")
+        if push_method in ("pr", "direct"):
+            service.ci_manifest_push_method = push_method
+            service.save(update_fields=["ci_manifest_push_method"])
+        return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+
+class ServicePinVersionView(LoginRequiredMixin, View):
+    """Pin a service to a specific CIWorkflowVersion."""
+
+    def post(self, request, project_name, service_name):
+        from core.models import CIWorkflowVersion
+
+        project = get_object_or_404(Project, name=project_name)
+        service = get_object_or_404(Service, project=project, name=service_name)
+
+        version_id = request.POST.get("version_id", "")
+
+        if version_id == "" or version_id == "none":
+            # Unpin: clear the FK
+            service.ci_workflow_version = None
+            service.save(update_fields=["ci_workflow_version"])
+            messages.success(request, "Version unpinned. Service will not use a specific version.")
+        else:
+            try:
+                version = CIWorkflowVersion.objects.get(
+                    id=int(version_id),
+                    workflow=service.ci_workflow,  # Must belong to the service's assigned workflow
+                    status__in=[CIWorkflowVersion.Status.AUTHORIZED, CIWorkflowVersion.Status.DRAFT],
+                )
+                # If draft, check project allows drafts
+                if version.status == CIWorkflowVersion.Status.DRAFT:
+                    try:
+                        ci_config = project.ci_config
+                        if not ci_config.allow_draft_workflows:
+                            messages.error(
+                                request,
+                                "This project does not allow draft workflow versions. Enable 'Allow Drafts' in Project CI Settings first.",
+                            )
+                            return redirect(
+                                "projects:service_detail", project_name=project_name, service_name=service_name
+                            )
+                    except project.ci_config.RelatedObjectDoesNotExist:
+                        messages.error(
+                            request,
+                            "This project does not allow draft workflow versions. Enable 'Allow Drafts' in Project CI Settings first.",
+                        )
+                        return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+                service.ci_workflow_version = version
+                service.save(update_fields=["ci_workflow_version"])
+                messages.success(request, f"Service pinned to version {version.version or 'draft'}.")
+            except (CIWorkflowVersion.DoesNotExist, ValueError):
+                messages.error(request, "Invalid version selected.")
+
+        return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
 
 
 class BuildLogsView(LoginRequiredMixin, View):
