@@ -41,6 +41,12 @@
             </div>
         </div>
         <div class="flex items-center gap-3">
+            {% if draft_version %}
+            <button type="button" data-confirm-modal="publish-version-modal"
+                    class="px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg transition-colors text-sm">
+                Publish Version
+            </button>
+            {% endif %}
             <a href="{% url 'ci_workflows:workflow_edit' workflow_name=workflow.name %}"
                class="px-4 py-2 bg-dark-accent/20 hover:bg-dark-accent/30 text-dark-accent rounded-lg transition-colors text-sm">
                 Edit Workflow
@@ -54,101 +60,164 @@
         </div>
     </div>
 
-    <!-- Steps Section -->
-    <div class="mb-8">
-        <h2 class="text-lg font-semibold text-dark-text mb-4">Steps</h2>
-        {% if workflow_steps %}
-        <div class="bg-dark-surface border border-dark-border rounded-lg divide-y divide-dark-border">
-            {% for ws in workflow_steps %}
-            <div class="flex items-center gap-4 p-4">
-                <span class="text-dark-muted text-sm font-mono w-8 text-center">{{ ws.order|add:1 }}</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
-                    {% if ws.step.phase == 'setup' %}bg-blue-500/20 text-blue-400
-                    {% elif ws.step.phase == 'build' %}bg-yellow-500/20 text-yellow-400
-                    {% elif ws.step.phase == 'test' %}bg-green-500/20 text-green-400
-                    {% elif ws.step.phase == 'package' %}bg-purple-500/20 text-purple-400
-                    {% else %}bg-gray-500/20 text-gray-400{% endif %}">
-                    {{ ws.step.get_phase_display|default:"Other" }}
-                </span>
-                <div class="flex-1">
-                    <span class="text-dark-text font-medium">{{ ws.step.name }}</span>
-                    {% if ws.step.description %}
-                    <p class="text-xs text-dark-muted mt-0.5">{{ ws.step.description|truncatechars:100 }}</p>
-                    {% endif %}
-                </div>
-                {% if ws.input_config %}
-                <div class="text-xs text-dark-muted">
-                    {% for key, value in ws.input_config.items %}
-                    <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-dark-border/50 mr-1">{{ key }}={{ value }}</span>
-                    {% endfor %}
-                </div>
-                {% endif %}
-            </div>
-            {% endfor %}
+    <!-- Draft Banner -->
+    {% if draft_version %}
+    <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-6 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <span class="px-2 py-0.5 text-xs rounded bg-amber-500/20 text-amber-300">Draft</span>
+            <span class="text-dark-text">Unpublished changes by {{ draft_version.author }}</span>
         </div>
-        {% else %}
-        <div class="bg-dark-surface border border-dark-border rounded-lg p-8 text-center">
-            <p class="text-dark-muted">No steps configured for this workflow.</p>
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Services Using This Workflow -->
-    <div class="mb-8">
-        <h2 class="text-lg font-semibold text-dark-text mb-4">Services Using This Workflow</h2>
-        {% if services_using %}
-        <div class="bg-dark-surface border border-dark-border rounded-lg divide-y divide-dark-border">
-            {% for svc in services_using %}
-            <a href="{% url 'projects:service_detail' project_name=svc.project.name service_name=svc.name %}"
-               class="flex items-center justify-between p-4 hover:bg-dark-border/30 transition-colors">
-                <div>
-                    <span class="text-dark-text font-medium">{{ svc.name }}</span>
-                    <span class="text-dark-muted text-sm ml-2">in {{ svc.project.name }}</span>
-                </div>
-                <div class="flex items-center gap-3">
-                    {% if svc.ci_manifest_status == "synced" and not svc.ci_manifest_out_of_date %}
-                    <span class="px-2 py-0.5 text-xs rounded bg-green-500/20 text-green-300">Synced</span>
-                    {% elif svc.ci_manifest_out_of_date %}
-                    <span class="px-2 py-0.5 text-xs rounded bg-amber-500/20 text-amber-300">Out of Date</span>
-                    {% elif svc.ci_manifest_status == "never_pushed" %}
-                    <span class="px-2 py-0.5 text-xs rounded bg-gray-500/20 text-gray-300">Never Pushed</span>
-                    {% endif %}
-                    <svg class="w-4 h-4 text-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                </div>
-            </a>
-            {% endfor %}
-        </div>
-        {% else %}
-        <div class="bg-dark-surface border border-dark-border rounded-lg p-8 text-center">
-            <p class="text-dark-muted">No services are using this workflow yet.</p>
-            <p class="text-dark-muted text-sm mt-1">Assign this workflow from a service's CI tab.</p>
-        </div>
-        {% endif %}
-    </div>
-
-    <!-- Generated Manifest Section -->
-    <div>
-        <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-dark-text">Generated Manifest</h2>
-            <button id="copy-btn"
-                    class="px-3 py-1.5 text-xs bg-dark-border hover:bg-dark-border/80 text-dark-text rounded-lg transition-colors flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                <span id="copy-text">Copy to Clipboard</span>
+        <div class="flex items-center gap-2">
+            <button type="button" data-confirm-modal="publish-version-modal"
+                    class="px-3 py-1.5 text-sm bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded transition-colors">
+                Publish Version
             </button>
+            <form method="post" action="{% url 'ci_workflows:workflow_discard_draft' workflow_name=workflow.name %}">
+                {% csrf_token %}
+                <button type="submit" class="px-3 py-1.5 text-sm bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded transition-colors">
+                    Discard
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Tab Bar -->
+    <div class="border-b border-dark-border mb-6">
+        <nav class="flex gap-1 -mb-px">
+            <a href="?tab=steps"
+               class="px-4 py-2.5 text-sm font-medium transition-colors border-b-2 {% if active_tab == 'steps' %}border-dark-accent text-dark-accent{% else %}border-transparent text-dark-muted hover:text-dark-text hover:border-dark-border{% endif %}">
+                Steps
+            </a>
+            <a href="?tab=versions"
+               class="px-4 py-2.5 text-sm font-medium transition-colors border-b-2 {% if active_tab == 'versions' %}border-dark-accent text-dark-accent{% else %}border-transparent text-dark-muted hover:text-dark-text hover:border-dark-border{% endif %}">
+                Versions
+                {% if versions.count %}
+                <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-dark-border text-dark-muted">{{ versions.count }}</span>
+                {% endif %}
+            </a>
+            <a href="?tab=manifest"
+               class="px-4 py-2.5 text-sm font-medium transition-colors border-b-2 {% if active_tab == 'manifest' %}border-dark-accent text-dark-accent{% else %}border-transparent text-dark-muted hover:text-dark-text hover:border-dark-border{% endif %}">
+                Manifest
+            </a>
+            <a href="?tab=services"
+               class="px-4 py-2.5 text-sm font-medium transition-colors border-b-2 {% if active_tab == 'services' %}border-dark-accent text-dark-accent{% else %}border-transparent text-dark-muted hover:text-dark-text hover:border-dark-border{% endif %}">
+                Services
+                {% if services_using.count %}
+                <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-dark-border text-dark-muted">{{ services_using.count }}</span>
+                {% endif %}
+            </a>
+        </nav>
+    </div>
+
+    <!-- Tab Content -->
+    <div id="tab-content">
+        {% if active_tab == 'steps' %}
+        <!-- Steps Tab -->
+        <div>
+            {% if workflow_steps %}
+            <div class="bg-dark-surface border border-dark-border rounded-lg divide-y divide-dark-border">
+                {% for ws in workflow_steps %}
+                <div class="flex items-center gap-4 p-4">
+                    <span class="text-dark-muted text-sm font-mono w-8 text-center">{{ ws.order|add:1 }}</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium
+                        {% if ws.step.phase == 'setup' %}bg-blue-500/20 text-blue-400
+                        {% elif ws.step.phase == 'build' %}bg-yellow-500/20 text-yellow-400
+                        {% elif ws.step.phase == 'test' %}bg-green-500/20 text-green-400
+                        {% elif ws.step.phase == 'package' %}bg-purple-500/20 text-purple-400
+                        {% else %}bg-gray-500/20 text-gray-400{% endif %}">
+                        {{ ws.step.get_phase_display|default:"Other" }}
+                    </span>
+                    <div class="flex-1">
+                        <span class="text-dark-text font-medium">{{ ws.step.name }}</span>
+                        {% if ws.step.description %}
+                        <p class="text-xs text-dark-muted mt-0.5">{{ ws.step.description|truncatechars:100 }}</p>
+                        {% endif %}
+                    </div>
+                    {% if ws.input_config %}
+                    <div class="text-xs text-dark-muted">
+                        {% for key, value in ws.input_config.items %}
+                        <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-dark-border/50 mr-1">{{ key }}={{ value }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="bg-dark-surface border border-dark-border rounded-lg p-8 text-center">
+                <p class="text-dark-muted">No steps configured for this workflow.</p>
+            </div>
+            {% endif %}
         </div>
 
-        {% include "core/ci_workflows/_manifest_preview.html" %}
+        {% elif active_tab == 'versions' %}
+        <!-- Versions Tab -->
+        {% include "core/ci_workflows/_version_history_tab.html" %}
+
+        {% elif active_tab == 'manifest' %}
+        <!-- Manifest Tab -->
+        <div>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-dark-text">Generated Manifest</h2>
+                <button id="copy-btn"
+                        class="px-3 py-1.5 text-xs bg-dark-border hover:bg-dark-border/80 text-dark-text rounded-lg transition-colors flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                    <span id="copy-text">Copy to Clipboard</span>
+                </button>
+            </div>
+            {% include "core/ci_workflows/_manifest_preview.html" %}
+        </div>
+
+        {% elif active_tab == 'services' %}
+        <!-- Services Tab -->
+        <div>
+            {% if services_using %}
+            <div class="bg-dark-surface border border-dark-border rounded-lg divide-y divide-dark-border">
+                {% for svc in services_using %}
+                <a href="{% url 'projects:service_detail' project_name=svc.project.name service_name=svc.name %}"
+                   class="flex items-center justify-between p-4 hover:bg-dark-border/30 transition-colors">
+                    <div>
+                        <span class="text-dark-text font-medium">{{ svc.name }}</span>
+                        <span class="text-dark-muted text-sm ml-2">in {{ svc.project.name }}</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        {% if svc.ci_manifest_status == "synced" and not svc.ci_manifest_out_of_date %}
+                        <span class="px-2 py-0.5 text-xs rounded bg-green-500/20 text-green-300">Synced</span>
+                        {% elif svc.ci_manifest_out_of_date %}
+                        <span class="px-2 py-0.5 text-xs rounded bg-amber-500/20 text-amber-300">Out of Date</span>
+                        {% elif svc.ci_manifest_status == "never_pushed" %}
+                        <span class="px-2 py-0.5 text-xs rounded bg-gray-500/20 text-gray-300">Never Pushed</span>
+                        {% endif %}
+                        <svg class="w-4 h-4 text-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="bg-dark-surface border border-dark-border rounded-lg p-8 text-center">
+                <p class="text-dark-muted">No services are using this workflow yet.</p>
+                <p class="text-dark-muted text-sm mt-1">Assign this workflow from a service's CI tab.</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
     </div>
 
     {% if can_delete %}
     {% include "core/components/_confirm_modal.html" with confirm_id="confirm-delete-workflow" confirm_title="Delete Workflow" confirm_message="Are you sure you want to delete this workflow? This cannot be undone." confirm_action=workflow_delete_url confirm_button_text="Delete Workflow" %}
     {% endif %}
+
+    {% if draft_version %}
+    {% include "core/ci_workflows/_publish_modal.html" %}
+    {% endif %}
 </div>
 
+{% if active_tab == 'manifest' %}
 <script nonce="{{ csp_nonce }}">
 function copyManifest() {
     var yamlContent = document.getElementById('manifest-yaml').textContent;
@@ -160,4 +229,5 @@ function copyManifest() {
 }
 document.getElementById('copy-btn').addEventListener('click', copyManifest);
 </script>
+{% endif %}
 {% endblock %}

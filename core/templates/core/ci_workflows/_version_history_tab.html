@@ -1,0 +1,103 @@
+{% if versions %}
+<div class="bg-dark-surface border border-dark-border rounded-lg overflow-hidden">
+    <table class="w-full">
+        <thead>
+            <tr class="border-b border-dark-border text-left">
+                <th class="px-4 py-3 text-xs font-medium text-dark-muted uppercase tracking-wider">Version</th>
+                <th class="px-4 py-3 text-xs font-medium text-dark-muted uppercase tracking-wider">Status</th>
+                <th class="px-4 py-3 text-xs font-medium text-dark-muted uppercase tracking-wider">Hash</th>
+                <th class="px-4 py-3 text-xs font-medium text-dark-muted uppercase tracking-wider">Author</th>
+                <th class="px-4 py-3 text-xs font-medium text-dark-muted uppercase tracking-wider">Published</th>
+                <th class="px-4 py-3 text-xs font-medium text-dark-muted uppercase tracking-wider">Actions</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-dark-border">
+            {% for ver in versions %}
+            <tr class="hover:bg-dark-border/20 transition-colors">
+                <td class="px-4 py-3">
+                    <div class="flex items-center gap-2">
+                        {% if ver.version %}
+                        <span class="text-dark-text font-mono font-medium">{{ ver.version }}</span>
+                        {% else %}
+                        <span class="text-dark-muted font-mono italic">No version</span>
+                        {% endif %}
+                        {% if ver.status == 'authorized' and ver.id == latest_version.id %}
+                        <span class="px-1.5 py-0.5 text-xs rounded bg-blue-500/20 text-blue-400">Latest</span>
+                        {% endif %}
+                    </div>
+                    {% if ver.changelog %}
+                    <p class="text-xs text-dark-muted mt-1 max-w-md">{{ ver.changelog|truncatechars:120 }}</p>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3">
+                    {% if ver.status == 'authorized' %}
+                    <span class="inline-flex items-center px-2 py-0.5 text-xs rounded font-medium bg-green-500/20 text-green-400">
+                        Authorized
+                    </span>
+                    {% elif ver.status == 'draft' %}
+                    <span class="inline-flex items-center px-2 py-0.5 text-xs rounded font-medium bg-amber-500/20 text-amber-300">
+                        Draft
+                    </span>
+                    {% elif ver.status == 'revoked' %}
+                    <span class="inline-flex items-center px-2 py-0.5 text-xs rounded font-medium bg-red-500/20 text-red-400">
+                        Revoked
+                    </span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3">
+                    {% if ver.manifest_hash %}
+                    <span class="text-dark-muted font-mono text-xs" title="{{ ver.manifest_hash }}">{{ ver.manifest_hash|truncatechars:16 }}</span>
+                    {% else %}
+                    <span class="text-dark-muted text-xs">-</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3">
+                    <span class="text-dark-text text-sm">{{ ver.author|default:"-" }}</span>
+                </td>
+                <td class="px-4 py-3">
+                    {% if ver.published_at %}
+                    <span class="text-dark-muted text-sm">{{ ver.published_at|date:"M j, Y H:i" }}</span>
+                    {% elif ver.status == 'draft' %}
+                    <span class="text-dark-muted text-sm italic">Not published</span>
+                    {% elif ver.revoked_at %}
+                    <div>
+                        <span class="text-dark-muted text-sm">{{ ver.revoked_at|date:"M j, Y H:i" }}</span>
+                        {% if ver.revoked_by %}
+                        <p class="text-xs text-red-400">Revoked by {{ ver.revoked_by }}</p>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <span class="text-dark-muted text-sm">-</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3">
+                    {% if ver.status == 'authorized' and is_operator %}
+                    <button type="button" data-confirm-modal="revoke-version-{{ ver.id }}"
+                            class="px-2.5 py-1 text-xs bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded transition-colors">
+                        Revoke
+                    </button>
+                    {% elif ver.status == 'draft' %}
+                    <span class="text-xs text-dark-muted">Current Draft</span>
+                    {% elif ver.status == 'revoked' %}
+                    <span class="text-xs text-dark-muted">-</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Revoke modals for each authorized version -->
+{% for ver in versions %}
+{% if ver.status == 'authorized' and is_operator %}
+{% include "core/ci_workflows/_revoke_modal.html" %}
+{% endif %}
+{% endfor %}
+
+{% else %}
+<div class="bg-dark-surface border border-dark-border rounded-lg p-8 text-center">
+    <p class="text-dark-muted">No versions yet.</p>
+    <p class="text-dark-muted text-sm mt-1">Edit the workflow to create a draft, then publish it.</p>
+</div>
+{% endif %}

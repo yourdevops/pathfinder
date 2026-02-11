@@ -1,0 +1,59 @@
+<div id="publish-version-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/50 confirm-modal-backdrop"></div>
+    <!-- Panel -->
+    <div class="relative bg-dark-surface border border-dark-border rounded-lg shadow-xl w-full max-w-lg mx-4">
+        <form method="post" action="{% url 'ci_workflows:workflow_publish' workflow_name=workflow.name %}">
+            {% csrf_token %}
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-dark-text">Publish Version</h2>
+                    <button type="button" class="text-dark-muted hover:text-dark-text transition-colors confirm-modal-close">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 mb-4">
+                    <p class="text-sm text-amber-300">
+                        Publishing creates an immutable version. The manifest hash becomes permanent.
+                    </p>
+                </div>
+
+                <!-- Version Number -->
+                <div class="mb-4">
+                    <label for="version-input" class="block text-sm font-medium text-dark-text mb-1">Version Number</label>
+                    <input type="text" name="version" id="version-input"
+                           value="{{ suggested_version }}"
+                           placeholder="e.g., 1.0.0"
+                           class="w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:ring-1 focus:ring-dark-accent focus:border-dark-accent text-sm font-mono"
+                           required>
+                    <p class="text-xs text-dark-muted mt-1">Must be valid semver and greater than the latest published version.</p>
+                </div>
+
+                <!-- Changelog -->
+                <div class="mb-4">
+                    <label for="changelog-input" class="block text-sm font-medium text-dark-text mb-1">Changelog <span class="text-dark-muted font-normal">(optional)</span></label>
+                    <textarea name="changelog" id="changelog-input" rows="3"
+                              placeholder="What changed in this version..."
+                              class="w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:ring-1 focus:ring-dark-accent focus:border-dark-accent text-sm resize-none"></textarea>
+                </div>
+
+                {% if latest_version %}
+                <div class="text-xs text-dark-muted">
+                    Current latest version: <span class="font-mono text-dark-text">{{ latest_version.version }}</span>
+                </div>
+                {% endif %}
+            </div>
+            <div class="flex justify-end gap-3 p-4 border-t border-dark-border">
+                <button type="button" class="px-4 py-2 text-dark-text hover:bg-dark-border rounded-lg transition-colors confirm-modal-close">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 rounded-lg transition-colors text-sm">
+                    Publish
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
