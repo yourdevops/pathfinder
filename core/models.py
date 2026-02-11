@@ -1,3 +1,4 @@
+import hashlib
 import uuid
 
 from auditlog.registry import auditlog
@@ -6,6 +7,11 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 from core.validators import dns_label_validator
+
+
+def compute_manifest_hash(manifest_content: str) -> str:
+    """Compute SHA-256 hash of manifest content for build authorization."""
+    return hashlib.sha256(manifest_content.encode("utf-8")).hexdigest()
 
 
 class User(AbstractUser):
@@ -434,6 +440,18 @@ class Service(models.Model):
     )
     ci_manifest_pushed_at = models.DateTimeField(null=True, blank=True)
     ci_manifest_pr_url = models.URLField(max_length=500, blank=True)
+    ci_workflow_version = models.ForeignKey(
+        "CIWorkflowVersion",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="pinned_services",
+    )
+    ci_manifest_push_method = models.CharField(
+        max_length=10,
+        choices=[("pr", "Pull Request"), ("direct", "Direct Push")],
+        default="pr",
+    )
     webhook_registered = models.BooleanField(default=False)
 
     # Build tracking (updated by Phase 6)
@@ -726,6 +744,10 @@ class ProjectCIConfig(models.Model):
         related_name="default_for_projects",
     )
     approve_all_published = models.BooleanField(default=False)
+    allow_draft_workflows = models.BooleanField(
+        default=False,
+        help_text="When enabled, services in this project can use draft workflow versions for pipeline testing in non-production environments.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -734,6 +756,63 @@ class ProjectCIConfig(models.Model):
 
     def __str__(self):
         return f"CI Config for {self.project.name}"
+
+
+class CIWorkflowVersion(models.Model):
+    """
+    A versioned snapshot of a CI Workflow manifest.
+
+    Tracks draft/authorized/revoked states. Each published version produces
+    an immutable manifest with a content hash used for build authorization.
+    See docs/ci-workflows/versioning.md.
+    """
+
+    class Status(models.TextChoices):
+        DRAFT = "draft"
+        AUTHORIZED = "authorized"
+        REVOKED = "revoked"
+
+    workflow = models.ForeignKey(CIWorkflow, on_delete=models.PROTECT, related_name="versions")
+    version = models.CharField(max_length=32, blank=True)  # semver, blank while draft
+    status = models.CharField(max_length=16, choices=Status.choices, default=Status.DRAFT)
+    manifest_hash = models.CharField(max_length=64, blank=True)  # SHA-256
+    manifest_content = models.TextField(blank=True)  # full manifest text
+    changelog = models.TextField(blank=True)  # publish modal changelog summary
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        related_name="workflow_versions",
+    )
+    revoked_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="revoked_versions",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    published_at = models.DateTimeField(null=True, blank=True)
+    revoked_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "core_ci_workflow_version"
+        ordering = ["-created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["workflow"],
+                condition=models.Q(status="draft"),
+                name="unique_draft_per_workflow",
+            ),
+            models.UniqueConstraint(
+                fields=["workflow", "version"],
+                condition=~models.Q(version=""),
+                name="unique_version_per_workflow",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.workflow.name} v{self.version or 'draft'} ({self.status})"
 
 
 class Build(models.Model):
@@ -762,6 +841,26 @@ class Build(models.Model):
 
     # Workflow identification (captured at build time for categorization)
     workflow_name = models.CharField(max_length=255, blank=True)
+
+    # Manifest verification fields (build authorization)
+    manifest_id = models.CharField(max_length=255, blank=True, db_index=True)
+    manifest_hash = models.CharField(max_length=64, blank=True)
+    workflow_version = models.ForeignKey(
+        "CIWorkflowVersion",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="builds",
+    )
+    verification_status = models.CharField(
+        max_length=16,
+        choices=[
+            ("verified", "Verified"),
+            ("draft", "Draft"),
+            ("unauthorized", "Unauthorized"),
+        ],
+        blank=True,
+    )
 
     # Build status
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
@@ -855,4 +954,5 @@ auditlog.register(CIWorkflow)
 auditlog.register(CIWorkflowStep)
 auditlog.register(ProjectApprovedWorkflow)
 auditlog.register(ProjectCIConfig)
+auditlog.register(CIWorkflowVersion)
 auditlog.register(Build)
