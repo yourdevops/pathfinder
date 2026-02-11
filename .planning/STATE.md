@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 6.1 (Fix CI Workflows design/implementation gap)
-Plan: 4 of 5 in current phase
-Status: In progress
-Last activity: 2026-02-11 - Completed 06.1-04-PLAN.md (UI Integration Layer)
+Plan: 5 of 5 in current phase
+Status: Complete
+Last activity: 2026-02-11 - Completed 06.1-05-PLAN.md (Human Verification Checkpoint)
 
-Progress: [================================        ] 80% (Phase 6.1)
+Progress: [========================================] 100% (Phase 6.1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 46
+- Total plans completed: 47
 - Average duration: 4 min
 - Total execution time: 3.40 hours
 
@@ -38,7 +38,7 @@ Progress: [================================        ] 80% (Phase 6.1)
 | 05.2-ci-workflows-pairing | 2 | 7 min | 3.5 min |
 | 05.3-ci-steps-redesign | 3 | 10 min | 3.3 min |
 | 06-builds | 2 | 5 min | 2.5 min |
-| 06.1-ci-workflows-gap | 4 | 15 min | 3.75 min |
+| 06.1-ci-workflows-gap | 5 | 15 min | 3 min |
 
 **Recent Trend:**
 - Last 5 plans: 06.1-01 (3 min), 06.1-02 (3 min), 06.1-03 (4 min), 06.1-04 (5 min)
@@ -156,6 +156,10 @@ Recent decisions affecting current work:
 | 06.1-04 | Allow Drafts toggle auto-submits on change | Immediate feedback, no Save button needed for boolean toggle |
 | 06.1-04 | Fork form inline via Alpine.js toggle | Simpler UX than separate modal, keeps user on same page |
 | 06.1-04 | fork_from query param loads source steps in composer | Reuses existing composer infrastructure for fork flow |
+| 06.1-05 | Manifest file path uses manifest_id pattern | ci-{name}.yml not service.handler for consistency with plugin interface |
+| 06.1-05 | Workflow name strip offset [3:] not [5:] | Correct removal of "ci-" prefix for build classification |
+| 06.1-05 | push_ci_manifest uses stored version content | Ensures pushed manifest matches published version exactly for hash verification |
+| 06.1-05 | CI tab manifest preview shows pinned version | Respects Service.ci_workflow_version FK for accurate preview |
 
 ### Roadmap Evolution
 
@@ -219,5 +223,5 @@ None -- Phase 06.1 Plan 04 complete, continuing with Plan 05
 ## Session Continuity
 
 Last session: 2026-02-11
-Stopped at: Completed 06.1-04-PLAN.md (UI Integration Layer)
+Stopped at: Completed 06.1-05-PLAN.md (Human Verification Checkpoint) - Phase 6.1 Complete
 Resume file: None
