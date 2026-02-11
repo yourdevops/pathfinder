@@ -388,6 +388,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
                 context["manifest_yaml"] = (
                     ci_plugin.generate_manifest(self.service.ci_workflow) if ci_plugin else "# No CI plugin available"
                 )
+                context["manifest_file_path"] = ci_plugin.manifest_id(self.service.ci_workflow) if ci_plugin else None
             else:
                 context["manifest_yaml"] = None
 

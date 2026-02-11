@@ -150,7 +150,7 @@
         <div class="p-4 border-b border-dark-border">
             <h2 class="text-lg font-semibold text-dark-text">Manifest Preview</h2>
             <p class="text-sm text-dark-muted mt-1">
-                Generated GitHub Actions workflow: <code class="text-dark-accent">.github/workflows/{{ service.handler }}.yml</code>
+                Generated GitHub Actions workflow: <code class="text-dark-accent">{{ manifest_file_path|default:".github/workflows/ci-unknown.yml" }}</code>
             </p>
         </div>
         <div class="p-4">
