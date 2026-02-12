@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 6.1 in progress - Fix CI Workflows design/implementation gap
+**Current focus:** Phase 6.2 in progress - Deployment Design Documentation
 
 ## Current Position
 
-Phase: 6.1 (Fix CI Workflows design/implementation gap)
-Plan: 5 of 5 in current phase
-Status: Complete
-Last activity: 2026-02-11 - Completed 06.1-05-PLAN.md (Human Verification Checkpoint)
+Phase: 6.2 (Deployment Design Documentation)
+Plan: 1 of 3 in current phase
+Status: In Progress
+Last activity: 2026-02-12 - Completed 06.2-01-PLAN.md (Deployment README and Methods)
 
-Progress: [========================================] 100% (Phase 6.1)
+Progress: [=============...........................] 33% (Phase 6.2)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 47
+- Total plans completed: 48
 - Average duration: 4 min
-- Total execution time: 3.40 hours
+- Total execution time: 3.43 hours
 
 **By Phase:**
 
@@ -39,9 +39,10 @@ Progress: [========================================] 100% (Phase 6.1)
 | 05.3-ci-steps-redesign | 3 | 10 min | 3.3 min |
 | 06-builds | 2 | 5 min | 2.5 min |
 | 06.1-ci-workflows-gap | 5 | 15 min | 3 min |
+| 06.2-deployment-design-docs | 1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.1-01 (3 min), 06.1-02 (3 min), 06.1-03 (4 min), 06.1-04 (5 min)
+- Last 5 plans: 06.1-02 (3 min), 06.1-03 (4 min), 06.1-04 (5 min), 06.1-05 (3 min), 06.2-01 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -160,6 +161,10 @@ Recent decisions affecting current work:
 | 06.1-05 | Workflow name strip offset [3:] not [5:] | Correct removal of "ci-" prefix for build classification |
 | 06.1-05 | push_ci_manifest uses stored version content | Ensures pushed manifest matches published version exactly for hash verification |
 | 06.1-05 | CI tab manifest preview shows pinned version | Respects Service.ci_workflow_version FK for accurate preview |
+| 06.2-01 | README structure mirrors docs/ci-workflows/README.md | Consistency across design documentation domains |
+| 06.2-01 | Docker direct is MVP method; others at design-contract depth | Per DPLY-05 requirement, focused implementation |
+| 06.2-01 | Old docs/deployments.md replaced by directory structure | Avoid stale duplicates, match CI workflows organization |
+| 06.2-01 | Health Check as distinct deployment status state | Per locked decision, meaningful UI feedback during deployment |
 
 ### Roadmap Evolution
 
@@ -169,6 +174,7 @@ Recent decisions affecting current work:
 - Phase 5.2 inserted after Phase 5.1: CI Workflows — Project & Service Pairing - Assign CI Workflows to Services, push manifests to repos, project CI config (URGENT) - 2026-01-31
 - Phase 5.3 inserted after Phase 5.2: CI Steps Redesign - Plugin-based CI capabilities, engine-agnostic step discovery, clean core/git_utils.py (URGENT) - 2026-02-02
 - Phase 6.1 inserted after Phase 6: Fix the gap between the CI Workflows design and the actual implementation (URGENT)
+- Phase 6.2 inserted after Phase 6: Deployment Design Documentation - RFC-style design docs for Deployments, organized similar to ci-workflows (URGENT)
 
 ### Pending Todos
 
@@ -176,7 +182,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None -- Phase 06.1 Plan 04 complete, continuing with Plan 05
+None
 
 ### Quick Tasks Completed
 
@@ -222,6 +228,6 @@ None -- Phase 06.1 Plan 04 complete, continuing with Plan 05
 
 ## Session Continuity
 
-Last session: 2026-02-11
-Stopped at: Completed 06.1-05-PLAN.md (Human Verification Checkpoint) - Phase 6.1 Complete
+Last session: 2026-02-12
+Stopped at: Completed 06.2-01-PLAN.md (Deployment README and Methods)
 Resume file: None
