@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 6.2 (Deployment Design Documentation)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In Progress
-Last activity: 2026-02-12 - Completed 06.2-01-PLAN.md (Deployment README and Methods)
+Last activity: 2026-02-12 - Completed 06.2-02-PLAN.md (Deployment Lifecycle and Promotion)
 
-Progress: [=============...........................] 33% (Phase 6.2)
+Progress: [==========================..............] 67% (Phase 6.2)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 48
+- Total plans completed: 49
 - Average duration: 4 min
-- Total execution time: 3.43 hours
+- Total execution time: 3.47 hours
 
 **By Phase:**
 
@@ -39,10 +39,10 @@ Progress: [=============...........................] 33% (Phase 6.2)
 | 05.3-ci-steps-redesign | 3 | 10 min | 3.3 min |
 | 06-builds | 2 | 5 min | 2.5 min |
 | 06.1-ci-workflows-gap | 5 | 15 min | 3 min |
-| 06.2-deployment-design-docs | 1 | 2 min | 2 min |
+| 06.2-deployment-design-docs | 2 | 4 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.1-02 (3 min), 06.1-03 (4 min), 06.1-04 (5 min), 06.1-05 (3 min), 06.2-01 (2 min)
+- Last 5 plans: 06.1-03 (4 min), 06.1-04 (5 min), 06.1-05 (3 min), 06.2-01 (2 min), 06.2-02 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -165,6 +165,10 @@ Recent decisions affecting current work:
 | 06.2-01 | Docker direct is MVP method; others at design-contract depth | Per DPLY-05 requirement, focused implementation |
 | 06.2-01 | Old docs/deployments.md replaced by directory structure | Avoid stale duplicates, match CI workflows organization |
 | 06.2-01 | Health Check as distinct deployment status state | Per locked decision, meaningful UI feedback during deployment |
+| 06.2-02 | Env vars frozen at deploy time with full cascade snapshot | Predictable and auditable; changes require re-deploy |
+| 06.2-02 | Rollback = re-deploy of previous known-good build | No special rollback action; artifact-focused, optimizes MTTR |
+| 06.2-02 | Environment ordering recommended but not enforced | Aligns with GitOps platforms (ArgoCD, Flux) not sequential enforcement |
+| 06.2-02 | Concurrent deployments blocked per (service, environment) pair | Services are independent; different services in same env deploy freely |
 
 ### Roadmap Evolution
 
@@ -229,5 +233,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-12
-Stopped at: Completed 06.2-01-PLAN.md (Deployment README and Methods)
+Stopped at: Completed 06.2-02-PLAN.md (Deployment Lifecycle and Promotion)
 Resume file: None
