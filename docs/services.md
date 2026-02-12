@@ -94,7 +94,7 @@ Build:
 
 ## Deployment Model
 
-Each deployment of an Service to an Environment is tracked.
+Each deployment of a Service to an Environment is tracked. See [Deployment Design Docs](deployments/README.md) for full design details.
 
 ```
 Deployment:
@@ -103,18 +103,19 @@ Deployment:
   - environment: FK Environment
 
   # Deploy Reference
-  - deploy_connection: FK IntegrationConnection
-  - deploy_job_url: string (if pipeline mechanism)
+  - deploy_connection: FK EnvironmentConnection
+  - deploy_job_url: string (if CI-managed mechanism)
 
-  # Deployment-specific Environment Variables
-  - env_vars: array of { key, value }
+  # Environment Variable Snapshot (frozen at deploy time)
+  - env_vars_snapshot: JSON (full merged cascade, immutable)
 
   # Result
   - artifact_ref: string (snapshot of deployed artifact)
-  - status: enum (pending, running, success, failed, rolled_back)
+  - status: enum (pending, running, health_check, success, failed, cancelled)
   - error_message: text (if failed)
 
-  # Audit
+  # Trigger
+  - triggered_by: string ("auto" for auto-deploy, username for manual)
   - created_by: string (username, denormalized)
 
   # Timestamps
@@ -129,13 +130,14 @@ Deployment:
 |--------|-------------|
 | `pending` | Deployment triggered, waiting to start |
 | `running` | Deployment in progress |
-| `success` | Deployment completed successfully |
+| `health_check` | Execution complete, verifying health |
+| `success` | Deployment completed and healthy |
 | `failed` | Deployment failed, see error_message |
-| `rolled_back` | Deployment was rolled back |
+| `cancelled` | Deployment cancelled before execution started |
 
 ### Deployment History
 
-Multiple Deployments can exist for the same (app, environment) pair. The most recent successful deployment represents the current state. History is preserved for audit and rollback purposes.
+Multiple Deployments can exist for the same (app, environment) pair. The most recent successful deployment represents the current state. History is preserved for audit purposes. Rollback is achieved by creating a new deployment of a previous known-good build's artifact -- there is no special rollback status or action.
 
 ### Environment Variables
 
