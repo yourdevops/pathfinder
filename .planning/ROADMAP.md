@@ -24,6 +24,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5.3: CI Steps Redesign** (INSERTED) - Plugin-based CI capabilities, engine-agnostic step discovery, clean core/git_utils.py
 - [x] **Phase 6: Builds** - Webhook ingestion, build tracking, service activation
 - [x] **Phase 6.1: Fix CI Workflows Design-Implementation Gap** (INSERTED) - Workflow versioning, build verification, manifest management
+- [ ] **Phase 6.2: Deployment Design Documentation** (INSERTED) - RFC-style design docs for Deployments
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
 ## Phase Details
@@ -286,6 +287,17 @@ Plans:
 - [ ] 06.1-04-PLAN.md — Build verification badges, fork workflow, service settings
 - [ ] 06.1-05-PLAN.md — Human verification checkpoint
 
+### Phase 06.2: Deployment Design Documentation (INSERTED)
+
+**Goal:** RFC-style design documentation for Deployments, organized similar to ci-workflows docs; research-driven, abstract from implementation
+**Depends on:** Phase 6.1
+**Plans:** 3 plans
+
+Plans:
+- [ ] 06.2-01-PLAN.md — README overview and deployment methods documentation
+- [ ] 06.2-02-PLAN.md — Deployment lifecycle and promotion documentation
+- [ ] 06.2-03-PLAN.md — Plugin interface, environment binding, logging, and services.md alignment
+
 ### Phase 7: Deployments
 **Goal**: Developers can deploy services to environments; Docker plugin runs containers
 **Depends on**: Phase 6
@@ -305,7 +317,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -321,6 +333,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5
 | 5.3 CI Steps Redesign (INSERTED) | 3/3 | Complete | 2026-02-02 |
 | 6. Builds | 2/2 | Complete | 2026-02-03 |
 | 6.1 Fix CI Workflows Design-Implementation Gap (INSERTED) | 5/5 | Complete | 2026-02-11 |
+| 6.2 Deployment Design Documentation (INSERTED) | 0/0 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
