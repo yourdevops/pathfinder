@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 6.2 complete - Deployment Design Documentation
+**Current focus:** Phase 6.3 - Security & Compliance Design (Secrets, SLSA L3, SOX RBAC)
 
 ## Current Position
 
-Phase: 6.2 (Deployment Design Documentation)
+Phase: 6.3 (Security & Compliance Design)
 Plan: 3 of 3 in current phase
-Status: Complete
-Last activity: 2026-02-12 - Completed 06.2-03-PLAN.md (Plugin Interface, Environment Binding, Logging)
+Status: Phase Complete
+Last activity: 2026-02-13 - Completed 06.3-03-PLAN.md (SOX-Compliant RBAC Design)
 
-Progress: [========================================] 100% (Phase 6.2)
+Progress: [========================================] 100% (Phase 6.3)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 50
+- Total plans completed: 53
 - Average duration: 4 min
-- Total execution time: 3.50 hours
+- Total execution time: 3.56 hours
 
 **By Phase:**
 
@@ -40,9 +40,10 @@ Progress: [========================================] 100% (Phase 6.2)
 | 06-builds | 2 | 5 min | 2.5 min |
 | 06.1-ci-workflows-gap | 5 | 15 min | 3 min |
 | 06.2-deployment-design-docs | 3 | 6 min | 2 min |
+| 06.3-security-compliance-design | 3 | 6 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.1-04 (5 min), 06.1-05 (3 min), 06.2-01 (2 min), 06.2-02 (2 min), 06.2-03 (2 min)
+- Last 5 plans: 06.2-02 (2 min), 06.2-03 (2 min), 06.3-01 (2 min), 06.3-02 (2 min), 06.3-03 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -173,6 +174,19 @@ Recent decisions affecting current work:
 | 06.2-03 | Docker plugin is MVP reference implementation | Per DPLY-05; K8s/GitOps at design-contract depth only |
 | 06.2-03 | Secrets are external; no MVP secrets management system | Config values in Pathfinder, secrets from Vault/K8s Secrets |
 | 06.2-03 | services.md Deployment Model aligned with locked decisions | health_check status, triggered_by, env_vars_snapshot, no rolled_back |
+| 06.3-01 | Security docs organized in single docs/security/ directory | Mirrors ci-workflows and deployments pattern |
+| 06.3-01 | Secret model uses scope inheritance (project-wide + environment override) | Parallels env var cascade from environment-binding.md |
+| 06.3-01 | SecretsCapableMixin follows CICapableMixin/DeployCapableMixin pattern | Consistency across plugin interfaces |
+| 06.3-01 | Internal encrypted store is stepping stone, external vault recommended | Per locked decision; mitigates centralized credential risk |
+| 06.3-02 | Cosign 3.x with --type slsaprovenance1 for SLSA v1.0 format | Deprecated slsaprovenance generates v0.2; v1.0 is current standard |
+| 06.3-02 | Rekor transparency log disabled by default | Enterprise privacy; many regulated orgs cannot publish to public log |
+| 06.3-02 | CycloneDX JSON recommended over SPDX for SBOM | Better security/vulnerability focus, native VEX support |
+| 06.3-02 | Two verification points only (build ingestion + deploy time) | No promotion boundary checks; avoids operational complexity |
+| 06.3-02 | Trust steps repo via branch protection, not individual step signing | Complexity vs security tradeoff; branch protection already enforced |
+| 06.3-03 | 8 predefined role bundles: 4 system + 4 project replacing owner/contributor/viewer | Granular CRUD permissions for SOX compliance |
+| 06.3-03 | Production approval workflow with 4-hour default expiry | Four-eyes principle; configurable per environment |
+| 06.3-03 | Emergency override allows platform-admin self-approval with justification | Break-glass mechanism with audit trail for compliance |
+| 06.3-03 | release-manager and secrets-admin are new roles without old equivalents | Fills deployment approval and cross-project secret management gaps |
 
 ### Roadmap Evolution
 
@@ -183,6 +197,7 @@ Recent decisions affecting current work:
 - Phase 5.3 inserted after Phase 5.2: CI Steps Redesign - Plugin-based CI capabilities, engine-agnostic step discovery, clean core/git_utils.py (URGENT) - 2026-02-02
 - Phase 6.1 inserted after Phase 6: Fix the gap between the CI Workflows design and the actual implementation (URGENT)
 - Phase 6.2 inserted after Phase 6: Deployment Design Documentation - RFC-style design docs for Deployments, organized similar to ci-workflows (URGENT)
+- Phase 6.3 inserted after Phase 6: Security & Compliance Design — Secrets, SLSA L3, SOX RBAC (URGENT)
 
 ### Pending Todos
 
@@ -236,6 +251,6 @@ None
 
 ## Session Continuity
 
-Last session: 2026-02-12
-Stopped at: Completed 06.2-03-PLAN.md (Plugin Interface, Environment Binding, Logging) - Phase 6.2 complete
+Last session: 2026-02-13
+Stopped at: Completed 06.3-03-PLAN.md (SOX-Compliant RBAC Design) -- Phase 6.3 complete
 Resume file: None

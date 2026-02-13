@@ -24,7 +24,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5.3: CI Steps Redesign** (INSERTED) - Plugin-based CI capabilities, engine-agnostic step discovery, clean core/git_utils.py
 - [x] **Phase 6: Builds** - Webhook ingestion, build tracking, service activation
 - [x] **Phase 6.1: Fix CI Workflows Design-Implementation Gap** (INSERTED) - Workflow versioning, build verification, manifest management
-- [ ] **Phase 6.2: Deployment Design Documentation** (INSERTED) - RFC-style design docs for Deployments
+- [x] **Phase 6.2: Deployment Design Documentation** (INSERTED) - RFC-style design docs for Deployments
+- [x] **Phase 6.3: Security & Compliance Design — Secrets, SLSA L3, SOX RBAC** (INSERTED) - Secrets management, artifact provenance signing, SLSA Level 3, SOX-compliant RBAC
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
 ## Phase Details
@@ -261,8 +262,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 06-01-PLAN.md — Build model, webhook endpoint with HMAC auth, poll_build_details task, service activation
-- [ ] 06-02-PLAN.md — Build history UI with table layout, filtering, pagination, HTMX auto-refresh
+- [x] 06-01-PLAN.md — Build model, webhook endpoint with HMAC auth, poll_build_details task, service activation
+- [x] 06-02-PLAN.md — Build history UI with table layout, filtering, pagination, HTMX auto-refresh
 
 ### Phase 06.1: Fix the gap between the CI Workflows design and the actual implementation (INSERTED)
 
@@ -281,11 +282,11 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [ ] 06.1-01-PLAN.md — CIWorkflowVersion model, Build/Service updates, plugin interface, deterministic manifest
-- [ ] 06.1-02-PLAN.md — verify_build task, poll_build_details chain, draft auto-creation
-- [ ] 06.1-03-PLAN.md — Version management UI (publish, version history, revoke)
-- [ ] 06.1-04-PLAN.md — Build verification badges, fork workflow, service settings
-- [ ] 06.1-05-PLAN.md — Human verification checkpoint
+- [x] 06.1-01-PLAN.md — CIWorkflowVersion model, Build/Service updates, plugin interface, deterministic manifest
+- [x] 06.1-02-PLAN.md — verify_build task, poll_build_details chain, draft auto-creation
+- [x] 06.1-03-PLAN.md — Version management UI (publish, version history, revoke)
+- [x] 06.1-04-PLAN.md — Build verification badges, fork workflow, service settings
+- [x] 06.1-05-PLAN.md — Human verification checkpoint
 
 ### Phase 06.2: Deployment Design Documentation (INSERTED)
 
@@ -297,6 +298,17 @@ Plans:
 - [x] 06.2-01-PLAN.md — README overview and deployment methods documentation
 - [x] 06.2-02-PLAN.md — Deployment lifecycle and promotion documentation
 - [x] 06.2-03-PLAN.md — Plugin interface, environment binding, logging, and services.md alignment
+
+### Phase 06.3: Security & Compliance Design — Secrets, SLSA L3, SOX RBAC (INSERTED)
+
+**Goal:** Design documentation for secrets management, artifact provenance signing (SLSA Level 3), and SOX-compliant RBAC changes; incorporate deployment review findings into design docs
+**Depends on:** Phase 6.2
+**Plans:** 3 plans
+
+Plans:
+- [x] 06.3-01-PLAN.md — Security domain README and secrets management documentation
+- [x] 06.3-02-PLAN.md — SLSA provenance and artifact signing documentation
+- [x] 06.3-03-PLAN.md — SOX-compliant RBAC with granular permissions and approval workflow
 
 ### Phase 7: Deployments
 **Goal**: Developers can deploy services to environments; Docker plugin runs containers
@@ -317,7 +329,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 6.3 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -334,8 +346,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5
 | 6. Builds | 2/2 | Complete | 2026-02-03 |
 | 6.1 Fix CI Workflows Design-Implementation Gap (INSERTED) | 5/5 | Complete | 2026-02-11 |
 | 6.2 Deployment Design Documentation (INSERTED) | 3/3 | Complete | 2026-02-12 |
+| 6.3 Security & Compliance Design (INSERTED) | 3/3 | Complete | 2026-02-13 |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-02-12 (Phase 6.2 complete - Deployment design documentation)*
+*Last updated: 2026-02-13 (Phase 6.3 complete - secrets, SLSA provenance, SOX RBAC design docs)*
