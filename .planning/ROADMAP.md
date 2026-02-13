@@ -25,7 +25,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6: Builds** - Webhook ingestion, build tracking, service activation
 - [x] **Phase 6.1: Fix CI Workflows Design-Implementation Gap** (INSERTED) - Workflow versioning, build verification, manifest management
 - [x] **Phase 6.2: Deployment Design Documentation** (INSERTED) - RFC-style design docs for Deployments
-- [ ] **Phase 6.3: Security & Compliance Design — Secrets, SLSA L3, SOX RBAC** (INSERTED) - Secrets management, artifact provenance signing, SLSA Level 3, SOX-compliant RBAC
+- [x] **Phase 6.3: Security & Compliance Design — Secrets, SLSA L3, SOX RBAC** (INSERTED) - Secrets management, artifact provenance signing, SLSA Level 3, SOX-compliant RBAC
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
 ## Phase Details
@@ -306,9 +306,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 06.3-01-PLAN.md — Security domain README and secrets management documentation
-- [ ] 06.3-02-PLAN.md — SLSA provenance and artifact signing documentation
-- [ ] 06.3-03-PLAN.md — SOX-compliant RBAC with granular permissions and approval workflow
+- [x] 06.3-01-PLAN.md — Security domain README and secrets management documentation
+- [x] 06.3-02-PLAN.md — SLSA provenance and artifact signing documentation
+- [x] 06.3-03-PLAN.md — SOX-compliant RBAC with granular permissions and approval workflow
 
 ### Phase 7: Deployments
 **Goal**: Developers can deploy services to environments; Docker plugin runs containers
@@ -346,9 +346,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5
 | 6. Builds | 2/2 | Complete | 2026-02-03 |
 | 6.1 Fix CI Workflows Design-Implementation Gap (INSERTED) | 5/5 | Complete | 2026-02-11 |
 | 6.2 Deployment Design Documentation (INSERTED) | 3/3 | Complete | 2026-02-12 |
-| 6.3 Security & Compliance Design (INSERTED) | 0/3 | Not started | - |
+| 6.3 Security & Compliance Design (INSERTED) | 3/3 | Complete | 2026-02-13 |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-02-13 (Phase 6.3 planned - 3 plans in 1 wave)*
+*Last updated: 2026-02-13 (Phase 6.3 complete - secrets, SLSA provenance, SOX RBAC design docs)*
