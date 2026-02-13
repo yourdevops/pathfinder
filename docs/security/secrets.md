@@ -30,7 +30,7 @@ Internal secrets use Fernet symmetric encryption via the existing `core/encrypti
 
 - Same system-wide key sourced from `PTF_ENCRYPTION_KEY` env var or `secrets/encryption.key` file
 - `encrypt_config` / `decrypt_config` functions already handle Fernet operations; the Secret model extends this pattern for individual secret values
-- Fernet provides authenticated encryption (AES-128-CBC with HMAC-SHA256), ensuring both confidentiality and integrity
+- Fernet provides authenticated encryption (AES-128-CBC with HMAC-SHA256), ensuring both confidentiality and integrity. AES-128 is the Fernet specification's choice, not a Pathfinder decision -- the `cryptography` library's Fernet implementation defines this.
 - Key rotation is a documented future concern -- not designed in detail now (per locked decision)
 
 External secrets store no encrypted value in Pathfinder. The `external_ref` field holds the vault path or cloud secret ARN, and resolution happens at deploy time via the vault plugin.
@@ -104,15 +104,15 @@ Secret operations are governed by the granular permission model defined in [Acce
 - Secret CRUD permissions are part of the standard resource permission set (`create`, `read`, `update`, `delete` on the `secret` resource type)
 - `secrets-admin` system role enables cross-project secret management
 - Project roles determine secret access within a project scope:
-  - `project-admin`: full CRUD on all project secrets
-  - `release-manager`: read secret names, create/update secrets
+  - `maintainer`: read secret names and metadata (no secret write -- maintainers administer members and settings, not resources)
+  - `release-manager`: read secret names and metadata
   - `developer`: create and update secrets within their project
   - `viewer`: see secret names and metadata only (never values -- write-only semantics apply to all roles)
 - The `read` permission on secrets grants visibility of names, metadata, and source -- never the encrypted value
 
 ## Addressing the "God Mode" Problem
 
-This design directly mitigates the centralized credential risk identified in the [deployment design review](../deployments/review.md):
+This design directly mitigates the centralized credential risk in the platform-as-executor pattern:
 
 - **External vault integration** means production secrets never need to exist in Pathfinder's database. The external vault remains the source of truth, and Pathfinder only holds references.
 - **Internal store is a stepping stone**, not the recommended production pattern. It serves teams without external vault infrastructure. The recommended path for production workloads is external vault integration.

@@ -38,7 +38,7 @@ Pathfinder never signs artifacts -- it is the verification and policy enforcemen
 | **KMS backends** | `hashivault://` (Vault Transit), `awskms://` (AWS KMS), `gcpkms://` (GCP KMS), or keyless via Sigstore | Customer-managed keys for enterprise compliance; keyless for internal/development use. |
 | **Timestamping** | DigiCert TSA via `--timestamp-server-url=http://timestamp.digicert.com` | RFC 3161 timestamps for long-term verifiability. |
 | **Transparency log** | Rekor with `--tlog-upload=false` by default | Opt-in per environment. Many regulated enterprises cannot publish artifact signatures to a public transparency log. |
-| **Minimum versions** | Cosign >= 3.x, timestamp-authority >= 1.2.8 | The timestamp-authority version is required for DigiCert TSA certificate chain compatibility (see [sigstore/cosign#3632](https://github.com/sigstore/cosign/issues/3632)). |
+| **Minimum versions** | Cosign >= 3.x, timestamp-authority >= 1.2.8 | The timestamp-authority minimum version is required for DigiCert TSA certificate chain compatibility (see [sigstore/cosign#3632](https://github.com/sigstore/cosign/issues/3632)). Verify this requirement against current Cosign releases at implementation time -- the fix may be included in newer versions. |
 
 **Important:** Use `--type slsaprovenance1` (with the `1` suffix) to generate SLSA v1.0 format. The deprecated `--type slsaprovenance` (without the suffix) generates SLSA v0.2 format.
 
@@ -123,11 +123,12 @@ Pathfinder verifies attestations at two points to prevent TOCTOU (time-of-check-
 ### Point 2: Deploy Time (before deployment execution)
 
 1. Check if the target environment has attestation verification enabled (opt-in per environment, enabled by default for production)
-2. Re-verify the attestation on the specific image being deployed -- not a cached result from build ingestion
-3. If verification fails: deployment is blocked with a clear error message identifying the failure reason
-4. This prevents TOCTOU attacks: an attestation could have been revoked or the image replaced between build and deploy
+2. Run the same `cosign verify-attestation` command as Point 1, against the live OCI registry -- this is a fresh verification, not a cached result from build ingestion
+3. Re-extract and re-validate the provenance predicate fields (`buildType`, `source.digest.sha1`)
+4. If verification fails: deployment is blocked with a clear error message identifying the failure reason
+5. This prevents TOCTOU attacks: an attestation could have been revoked or the image replaced between build and deploy
 
-No separate verification occurs at promotion boundaries. The deploy-time verification at the target environment is sufficient -- promotion between environments does not require its own verification step.
+**No verification at promotion boundaries.** Pathfinder does not verify attestations when a build is "promoted" (selected for deployment in a different environment). Verification occurs only at the deployment target. This is a deliberate design choice: promotion in Pathfinder is not a separate action -- it is simply a deployment to a different environment, and that deployment triggers its own verification.
 
 ## Environment Configuration
 
@@ -178,7 +179,7 @@ Individual CI steps are NOT signed. Branch protection on the steps repository (r
 
 ## Addressing "Artifact Signing Absent" Finding
 
-The deployment review ([review.md](../deployments/review.md)) identified a critical gap: "no cryptographic guarantee that the artifact deployed to production is the same one that passed tests in staging."
+The original deployment design had no cryptographic guarantee that the artifact deployed to production is the same one that passed tests in staging.
 
 This design directly addresses that finding:
 
