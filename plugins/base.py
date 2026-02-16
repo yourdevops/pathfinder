@@ -172,6 +172,16 @@ class CICapableMixin:
         Returns None if file not found."""
         raise NotImplementedError
 
+    def check_branch_protection(self, config: dict, repo_name: str, branch: str) -> dict:
+        """Check branch protection rules for a repository branch.
+
+        Returns dict with:
+            valid: bool -- True if all required rules are in place
+            rules: dict -- individual rule check results
+            message: str -- human-readable summary
+        """
+        raise NotImplementedError
+
 
 class BasePlugin(ABC):
     """

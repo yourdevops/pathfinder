@@ -31,12 +31,13 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 | GAP-11 | Auto-Update on Version Publish | versioning.md | Medium | R4 |
 | GAP-12 | Version Cleanup and Retention | versioning.md | Low | R4 |
 | GAP-13 | Artifact Discovery via CI Plugin | build-lifecycle.md | Medium | R5 |
-| GAP-14 | Build Categorization by manifest_id | build-authorization.md | Medium | R2 |
+| GAP-14 | Build Categorization by manifest_id | build-authorization.md | Medium | Won't Fix |
 | GAP-15 | "revoked" Build Verification Status | build-lifecycle.md | High | R2 |
 | GAP-16 | Engine-Agnostic Build Model | build-lifecycle.md | Low | R2 |
 | GAP-17 | CI Variables in Manifest | steps-catalog.md | Low | R5 |
 | GAP-18 | Step Validation API | steps-catalog.md | Low | R5 |
 | GAP-19 | manifest_path Cleanup | plugin-interface.md | Low | R5 |
+| GAP-20 | Runtime Derived from Steps, Not Selected Upfront | workflow-definition.md | High | R5 |
 
 **Severity criteria**:
 - **Critical**: Data integrity or security risk (hard deletes losing data, missing verification states)
@@ -290,16 +291,11 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 
 **Design Reference**: build-authorization.md, Section "Build Categorization"
 
-**Current Implementation**: `ServiceDetailView` (`core/views/services.py:449`) categorizes builds by `workflow_name` string matching: `current_builds_qs = all_builds.filter(workflow_name=current_workflow_name)`.
+**Status**: Won't Fix
 
-**Gap**: Categorization should use `manifest_id` matching `ci_plugin.manifest_id(service.ci_workflow)`. This is the canonical identifier for Pathfinder-managed workflows.
+**Rationale**: The current `workflow_name`-based categorization is the correct approach for UI build grouping. `manifest_id` is set during *verification* (after build completion), so in-progress builds would have a blank `manifest_id` and incorrectly fall into "Other." The `workflow_name` field is set during *polling* and is available on all builds immediately. Additionally, `workflow_name` is a simpler, more human-readable comparison that maps directly to what users see in the UI. The `manifest_id` field serves the authorization chain (hash verification, content fetching) — not UI categorization.
 
-**Impact**: Fragile categorization that depends on naming conventions. Could miscategorize builds if workflow names change or if the `ci-` prefix stripping logic in `poll_build_details` produces unexpected results.
-
-**Remediation**:
-- In `ServiceDetailView` builds tab, replace `workflow_name` filtering with `manifest_id` filtering
-- Compute expected `manifest_id` from `ci_plugin.manifest_id(service.ci_workflow)`
-- Filter: `current_builds_qs = all_builds.filter(manifest_id=expected_manifest_id)`
+**Current Implementation**: `ServiceDetailView` (`core/views/services.py:449`) categorizes builds by `workflow_name` string matching: `current_builds_qs = all_builds.filter(workflow_name=current_workflow_name)`. This is correct and will be kept.
 
 ---
 
@@ -393,6 +389,35 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 
 ---
 
+### GAP-20: Runtime Derived from Steps, Not Selected Upfront
+
+**Design Reference**: workflow-definition.md, Sections "CI Workflow Fields" — Runtimes, Version Constraints
+
+**Current Implementation**: `WorkflowCreateView` (`core/views/ci_workflows.py:326`) requires selecting `runtime_family` and `runtime_version` as mandatory fields in the first wizard step. These values are passed to the composer via query params and used to filter which steps are shown as compatible. The selected runtime version is a concrete value (e.g., `3.12`), not a constraint range.
+
+**Gap**: Per the design doc:
+- **Runtimes**: "Derived from the CI Steps included into a Workflow. Each Step declares which runtimes it supports; the Workflow's runtimes are the union of all Step runtime declarations."
+- **Version Constraints**: "For each Runtime, the Workflow specifies version constraints (e.g., `python: ">=3.11"`), derived from the intersection of all included Steps' constraints for that runtime. The Workflow author can further narrow these constraints. Concrete version selection (e.g., `3.12`) happens at the Service level."
+
+Two issues:
+1. Runtimes should not be selected upfront — they should be derived from the steps the user picks in the composer. The wizard's first step should only collect name, description, and engine.
+2. The workflow should store version *constraints* (intersection of step constraints), not a concrete version. Concrete version pinning belongs at the Service level, not the Workflow level.
+
+**Impact**: Users must know which runtime they want before building a workflow. The upfront selection prevents composing workflows that span multiple runtimes (e.g., a Python build step + a Docker packaging step). Concrete version pinning at the workflow level means all services using the same workflow are locked to the same runtime version, contradicting the design's intent for service-level version selection.
+
+**Remediation**:
+- Remove `runtime_family` and `runtime_version` from `WorkflowCreateForm` and `WorkflowCreateView`
+- Update the composer to show all active steps (not pre-filtered by runtime), with runtime as a filter/grouping option rather than a hard constraint
+- Derive the workflow's runtime set from the union of `runtime_constraints` across all selected steps
+- Compute version constraints per runtime as the intersection of all included steps' constraint ranges for that runtime
+- Store derived runtimes and version constraints on `CIWorkflow` (e.g., `runtime_constraints` JSONField)
+- Allow the workflow author to further narrow version constraints in the composer (per design: "The Workflow author can further narrow these constraints")
+- Move concrete version selection to the Service level — `Service.runtime_versions` or similar field where the service pins specific versions within the workflow's allowed range
+- **Manifest hash constraint**: Concrete runtime versions CANNOT be baked into the generated manifest — doing so would break hash-based build verification (every service pinning a different version would produce a different hash). The manifest must remain identical for all services using the same workflow version. Instead, Pathfinder manages a runtime config file in the service repo (e.g., `.python-version`, `.tool-versions`, `.nvmrc`) that is separate from the CI manifest. Setup steps read concrete versions from these standard toolchain files. This keeps version pinning independent from Pathfinder and follows ecosystem conventions.
+- Update the composer's step display to show runtime tags on each step rather than hiding incompatible steps entirely
+
+---
+
 ## Remediation Phases
 
 ### Phase R1: Step Identity and Change Tracking
@@ -424,19 +449,19 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 
 ### Phase R2: Workflow and Build Model Hardening
 
-**Goal**: CIWorkflow has an explicit engine field set at creation, step ordering is validated before save, and an "archived" status allows graceful deprecation. Build model is engine-agnostic with a generic `ci_run_id`, has a distinct "revoked" verification status, and categorizes builds by `manifest_id` instead of workflow name.
+**Goal**: CIWorkflow has an explicit engine field set at creation, step ordering is validated before save, and an "archived" status allows graceful deprecation. Build model is engine-agnostic with a generic `ci_run_id` and has a distinct "revoked" verification status.
 
-**Gaps Addressed**: GAP-08, GAP-09, GAP-10, GAP-14, GAP-15, GAP-16
+**Gaps Addressed**: GAP-08, GAP-09, GAP-10, GAP-15, GAP-16
 
 **Estimated Complexity**: Medium (2-3 plans)
 - Plan 1: Add `engine` field to `CIWorkflow`; add ordering validation in composer; add `archived` status choice
-- Plan 2: Rename `github_run_id` to `ci_run_id`; add `"revoked"` verification status; update build categorization to use `manifest_id`; move `map_github_status` to plugin
+- Plan 2: Rename `github_run_id` to `ci_run_id`; add `"revoked"` verification status; move `map_github_status` to plugin
 
 **Dependencies**: None (can run in parallel with R1)
 
 **Key Changes**:
 - **Models**: `CIWorkflow` -- add `engine` CharField, add `"archived"` to status choices; `Build` -- rename `github_run_id` to `ci_run_id`, add `("revoked", "Revoked")` to `verification_status`
-- **Views**: `WorkflowComposerView.post()` -- set engine from steps, add setup-before-use validation; `ServiceDetailView` builds tab -- categorize by `manifest_id` instead of `workflow_name`
+- **Views**: `WorkflowComposerView.post()` -- set engine from steps, add setup-before-use validation
 - **Tasks**: `verify_build` -- use `workflow.engine` instead of step-derived engine, set `"revoked"` when version is revoked; `push_ci_manifest` -- use `workflow.engine`; `poll_build_details` -- use `ci_run_id`
 - **Plugins**: Move `map_github_status` from `Build` to `GitHubPlugin`; add `map_run_status` to `CICapableMixin`
 - **Templates**: Service wizard and workflow list filter out archived workflows; distinct badge for revoked builds
@@ -445,7 +470,7 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 - Ordering validation must not break existing valid workflows (validate only on save, not retroactively)
 - Any external tools querying the `core_build` table directly will break (no external API currently)
 
-**Done when**: `CIWorkflow.engine` is set at creation and used everywhere; invalid step orders are rejected with a clear message; archived workflows are hidden from new onboarding but remain functional for existing services; `github_run_id` is renamed to `ci_run_id`; revoked versions produce `"revoked"` verification status with distinct UI badge; builds tab categorizes by `manifest_id`.
+**Done when**: `CIWorkflow.engine` is set at creation and used everywhere; invalid step orders are rejected with a clear message; archived workflows are hidden from new onboarding but remain functional for existing services; `github_run_id` is renamed to `ci_run_id`; revoked versions produce `"revoked"` verification status with distinct UI badge.
 
 ---
 
@@ -506,28 +531,33 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 
 ### Phase R5: Manifest and Plugin Interface
 
-**Goal**: Artifact discovery uses CI plugin API (not webhook payloads), CI variables are injected into manifests, a step validation API exists, and dead `manifest_path` code is removed.
+**Goal**: Artifact discovery uses CI plugin API (not webhook payloads), CI variables are injected into manifests, a step validation API exists, dead `manifest_path` code is removed, and workflow runtimes are derived from steps with version constraints at the workflow level and concrete versions at the service level.
 
-**Gaps Addressed**: GAP-13, GAP-17, GAP-18, GAP-19
+**Gaps Addressed**: GAP-13, GAP-17, GAP-18, GAP-19, GAP-20
 
-**Estimated Complexity**: Medium (2-3 plans)
+**Estimated Complexity**: Large (3-4 plans)
 - Plan 1: Add `resolve_artifact_ref()` to plugin interface; implement in GitHubPlugin; inject PTF_* variables in manifest
 - Plan 2: Create step validation API endpoint; remove `manifest_path` dead code
+- Plan 3: Redesign workflow creation — remove upfront runtime selection, derive runtimes and version constraints from steps, move concrete version pinning to service level
 
 **Dependencies**: R2 (manifest generation uses engine field, artifact ref resolution relates to build model)
 
 **Key Changes**:
 - **Plugins**: Add `resolve_artifact_ref()` to `CICapableMixin`; implement in `GitHubPlugin`; remove `manifest_path`
 - **Tasks**: `poll_build_details` -- call `resolve_artifact_ref()` instead of using webhook artifact_ref
-- **Views**: New API view for step validation at `api/ci-workflows/steps/validate`
+- **Views**: New API view for step validation at `api/ci-workflows/steps/validate`; redesign `WorkflowCreateView` (remove runtime fields); update composer to derive runtimes from selected steps
 - **Plugin base**: `generate_manifest()` accepts optional service context for PTF_* variables
+- **Models**: `CIWorkflow` -- add `runtime_constraints` JSONField (derived from steps); `Service` -- add runtime version pinning field for concrete version selection within workflow constraints
+- **Forms**: Remove `runtime_family` and `runtime_version` from `WorkflowCreateForm`; add version constraint narrowing UI to composer
 
 **Risk Notes**:
 - `resolve_artifact_ref()` requires access to container registry or GitHub Packages API; authentication may differ from standard GitHub App permissions
 - Step validation API needs authentication; token-based auth must be added if not already available
 - Removing `manifest_path` is safe only if confirmed no code references it
+- Runtime derivation redesign affects the entire workflow creation and composer UX; existing workflows need migration to populate derived runtime_constraints
+- Manifest generation must be updated to read concrete versions from the service, not the workflow
 
-**Done when**: Artifact refs are resolved via CI plugin API; manifests include PTF_* variables when pushed for a service; step validation API returns parsed metadata; `manifest_path` is removed.
+**Done when**: Artifact refs are resolved via CI plugin API; manifests include PTF_* variables when pushed for a service; step validation API returns parsed metadata; `manifest_path` is removed; workflow runtimes are derived from included steps; version constraints are computed as intersection of step constraints; concrete version selection happens at the service level.
 
 ---
 
@@ -551,6 +581,9 @@ All existing Steps, Workflows, and related CI data were deleted. No data migrati
 | R3 | StepsRepository | Add `protection_valid` BooleanField |
 | R3 | StepsRepository | Add `webhook_registered` BooleanField |
 | R4 | ProjectCIConfig | Add retention settings fields |
+| R5 | CIWorkflow | Add `runtime_constraints` JSONField (derived from steps) |
+| R5 | CIWorkflow | Remove `runtime_family`, `runtime_version` fields |
+| R5 | Service | Add runtime version pinning field for concrete version selection |
 
 ### Breaking Changes
 
@@ -577,11 +610,12 @@ Each phase produces independent migrations. To roll back:
                         |
    --- LOW EFFORT ------+------ HIGH EFFORT ---
                         |
-    GAP-19 (Low)        |   GAP-06 (Medium)
-    GAP-10 (Low)        |   GAP-07 (Medium)
-    GAP-16 (Low)        |   GAP-11 (Medium)
-    GAP-14 (Medium)     |   GAP-05 (Medium)
-    GAP-17 (Low)        |   GAP-13 (Medium)
+    GAP-19 (Low)        |   GAP-20 (High)
+    GAP-10 (Low)        |   GAP-06 (Medium)
+    GAP-16 (Low)        |   GAP-07 (Medium)
+    GAP-17 (Low)        |   GAP-11 (Medium)
+                        |   GAP-05 (Medium)
+                        |   GAP-13 (Medium)
                         |   GAP-18 (Low)
                         |   GAP-12 (Low)
                         |
@@ -594,7 +628,7 @@ Each phase produces independent migrations. To roll back:
 |----------|------|----------|
 | High Impact / Low Effort | GAP-04, GAP-08, GAP-15 | Do first -- quick wins with high value |
 | High Impact / High Effort | GAP-01, GAP-02, GAP-03 | Plan carefully -- R1 is the largest phase |
-| Low Impact / Low Effort | GAP-10, GAP-14, GAP-16, GAP-17, GAP-19 | Bundle with related work in same phase |
+| Low Impact / Low Effort | GAP-10, GAP-16, GAP-17, GAP-19 | Bundle with related work in same phase |
 | Low Impact / High Effort | GAP-05, GAP-06, GAP-07, GAP-11, GAP-12, GAP-13, GAP-18 | Defer to later phases (R3-R5) or simplify scope |
 
 **Recommended execution order**:

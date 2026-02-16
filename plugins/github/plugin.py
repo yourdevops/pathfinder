@@ -216,6 +216,57 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
         except Exception:
             return None
 
+    def check_branch_protection(self, config: dict, repo_name: str, branch: str) -> dict:
+        """Check branch protection rules on a GitHub repository branch."""
+        try:
+            g = self._get_github_client(config)
+            repo = g.get_repo(repo_name)
+            branch_obj = repo.get_branch(branch)
+
+            if not branch_obj.protected:
+                return {
+                    "valid": False,
+                    "rules": {},
+                    "message": f"Branch '{branch}' has no protection rules configured",
+                }
+
+            protection = branch_obj.get_protection()
+
+            rules = {
+                "no_force_push": not protection.allow_force_pushes,
+                "no_deletions": not protection.allow_deletions,
+                "enforce_admins": protection.enforce_admins,
+                "requires_pr": False,
+                "required_reviews": False,
+            }
+
+            # Check that PRs are required (direct pushes disabled) and review count
+            try:
+                reviews = protection.required_pull_request_reviews
+                if reviews is not None:
+                    # If required_pull_request_reviews exists, PRs are required
+                    rules["requires_pr"] = True
+                    if reviews.required_approving_review_count >= 1:
+                        rules["required_reviews"] = True
+            except Exception:
+                pass  # No PR requirement configured -- both remain False
+
+            valid = all(rules.values())
+
+            failures = [k.replace("_", " ") for k, v in rules.items() if not v]
+            if failures:
+                message = "Missing protection rules: " + ", ".join(failures)
+            else:
+                message = "All branch protection rules are satisfied"
+
+            return {"valid": valid, "rules": rules, "message": message}
+        except Exception as e:
+            return {
+                "valid": False,
+                "rules": {},
+                "message": f"Failed to check branch protection: {e}",
+            }
+
     # --- BasePlugin implementation ---
 
     def get_config_schema(self) -> dict[str, Any]:
