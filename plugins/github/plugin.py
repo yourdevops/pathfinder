@@ -216,6 +216,16 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
         except Exception:
             return None
 
+    def find_open_pr(self, config: dict, repo_name: str, branch_name: str) -> dict | None:
+        """Find an open PR for the given branch name."""
+        g = self._get_github_client(config)
+        repo = g.get_repo(repo_name)
+        owner = repo.owner.login
+        pulls = repo.get_pulls(state="open", head=f"{owner}:{branch_name}")
+        for pr in pulls:
+            return {"number": pr.number, "html_url": pr.html_url, "title": pr.title}
+        return None
+
     def check_branch_protection(self, config: dict, repo_name: str, branch: str) -> dict:
         """Check branch protection rules on a GitHub repository branch."""
         try:

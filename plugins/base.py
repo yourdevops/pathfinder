@@ -182,6 +182,13 @@ class CICapableMixin:
         """
         raise NotImplementedError
 
+    def find_open_pr(self, config: dict, repo_name: str, branch_name: str) -> dict | None:
+        """Find an open PR for the given branch.
+
+        Returns dict with number, html_url, title if found, or None.
+        """
+        raise NotImplementedError
+
 
 class BasePlugin(ABC):
     """
