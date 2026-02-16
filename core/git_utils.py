@@ -163,6 +163,40 @@ def clone_repo_shallow(git_url: str, branch: str = "main", auth_url: str | None 
         raise
 
 
+def clone_repo_full(git_url: str, branch: str = "main", auth_url: str | None = None):
+    """
+    Clone a repository with full history for a single branch.
+
+    Required for per-file commit SHA computation via git log.
+    Uses single_branch=True for efficiency (only fetches history for one branch).
+
+    Args:
+        git_url: Repository URL (for logging)
+        branch: Branch to clone
+        auth_url: Optional authenticated URL to use instead of git_url
+
+    Returns:
+        Tuple of (git.Repo object, temp_dir path)
+
+    Raises:
+        git.GitCommandError: If clone fails
+    """
+    temp_dir = tempfile.mkdtemp(prefix="ssp_clone_full_")
+
+    try:
+        url_to_clone = auth_url or git_url
+        logger.info(f"Full cloning repository (branch={branch})")
+
+        repo = git.Repo.clone_from(url_to_clone, temp_dir, branch=branch, single_branch=True)
+
+        return repo, temp_dir
+
+    except Exception:
+        # Clean up on failure
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        raise
+
+
 def read_manifest_from_repo(repo_path: str) -> dict:
     """
     Read and parse manifest file from repository.
