@@ -280,12 +280,13 @@ Plans:
   4. Unreferenced revoked versions are deleted after retention period
   5. CI Configuration settings page allows retention period configuration and manual cleanup
   6. Daily cleanup task runs at 03:00 UTC; management command available for CLI use
-**Plans:** 3 plans
+**Plans:** 4 plans
 
 Plans:
 - [ ] 06.7-01-PLAN.md -- Models, migration, and service auto-update toggle UI
 - [ ] 06.7-02-PLAN.md -- push_ci_manifest refactor, auto-update task, and publish integration
-- [ ] 06.7-03-PLAN.md -- Cleanup task, management command, and CI Configuration settings page
+- [ ] 06.7-03-PLAN.md -- Cleanup task, deletion guards, and management command
+- [ ] 06.7-04-PLAN.md -- CI Configuration settings page and navigation
 
 ### Phase 06.6: Sync Operations and Logging (INSERTED)
 
