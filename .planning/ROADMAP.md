@@ -26,7 +26,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6.1: Fix CI Workflows Design-Implementation Gap** (INSERTED) - Workflow versioning, build verification, manifest management
 - [x] **Phase 6.2: Deployment Design Documentation** (INSERTED) - RFC-style design docs for Deployments
 - [x] **Phase 6.3: Security & Compliance Design — Secrets, SLSA L3, SOX RBAC** (INSERTED) - Secrets management, artifact provenance signing, SLSA Level 3, SOX-compliant RBAC
-- [ ] **Phase 6.4: CI Step Identity and Change Tracking** (INSERTED) - Step slugs, per-file SHA versioning, change detection, archival
+- [x] **Phase 6.4: CI Step Identity and Change Tracking** (INSERTED) - Step slugs, per-file SHA versioning, change detection, archival
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
 ## Phase Details
@@ -285,9 +285,9 @@ Plans:
   8. cleanup_archived_steps task safely removes unreferenced archived steps
 
 Plans:
-- [ ] 06.4-01-PLAN.md — CIStep model fields (slug, status, file_path, last_change_type), UniqueConstraint, clone_repo_full
-- [ ] 06.4-02-PLAN.md — Rewrite scan_steps_repository (per-file SHA, slug, collision detection, change detection, archival), cleanup task, ci_manifest filter
-- [ ] 06.4-03-PLAN.md — Views and templates for archived/changed step badges and warnings
+- [x] 06.4-01-PLAN.md — CIStep model fields (slug, status, file_path, last_change_type), UniqueConstraint, clone_repo_full
+- [x] 06.4-02-PLAN.md — Rewrite scan_steps_repository (per-file SHA, slug, collision detection, change detection, archival), cleanup task, ci_manifest filter
+- [x] 06.4-03-PLAN.md — Views and templates for archived/changed step badges and warnings
 
 ### Phase 06.1: Fix the gap between the CI Workflows design and the actual implementation (INSERTED)
 
@@ -371,9 +371,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5
 | 6.1 Fix CI Workflows Design-Implementation Gap (INSERTED) | 5/5 | Complete | 2026-02-11 |
 | 6.2 Deployment Design Documentation (INSERTED) | 3/3 | Complete | 2026-02-12 |
 | 6.3 Security & Compliance Design (INSERTED) | 3/3 | Complete | 2026-02-13 |
-| 6.4 CI Step Identity and Change Tracking (INSERTED) | 0/3 | Not started | - |
+| 6.4 CI Step Identity and Change Tracking (INSERTED) | 3/3 | Complete | 2026-02-16 |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-02-16 (Phase 6.4 planned - step identity, per-file SHA, change detection, archival)*
+*Last updated: 2026-02-16 (Phase 6.4 complete - step identity, per-file SHA, change detection, archival)*
