@@ -606,6 +606,16 @@ class CIStep(models.Model):
         ("package", "Package"),
     ]
 
+    STATUS_CHOICES = [
+        ("active", "Active"),
+        ("archived", "Archived"),
+    ]
+
+    CHANGE_TYPE_CHOICES = [
+        ("interface", "Interface"),
+        ("metadata", "Metadata"),
+    ]
+
     id = models.BigAutoField(primary_key=True)
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     repository = models.ForeignKey(StepsRepository, on_delete=models.CASCADE, related_name="steps")
@@ -617,6 +627,23 @@ class CIStep(models.Model):
     directory_name = models.CharField(max_length=255)  # e.g., 'setup-python'
     name = models.CharField(max_length=255)  # from action.yml 'name'
     description = models.TextField(blank=True)  # from action.yml 'description'
+    slug = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="URL-safe identifier derived from x-pathfinder.name",
+    )
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="active")
+    file_path = models.CharField(
+        max_length=500,
+        blank=True,
+        help_text="Relative path from repo root to the step definition file",
+    )
+    last_change_type = models.CharField(
+        max_length=20,
+        blank=True,
+        choices=CHANGE_TYPE_CHOICES,
+        help_text="Type of change detected in the last scan",
+    )
     phase = models.CharField(max_length=20, choices=PHASE_CHOICES, blank=True)
     runtime_constraints = models.JSONField(default=dict)  # e.g., {"python": ">=3.10"}
     tags = models.JSONField(default=list)
@@ -631,6 +658,12 @@ class CIStep(models.Model):
         db_table = "core_ci_step"
         unique_together = [["repository", "directory_name"]]
         ordering = ["phase", "name"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["engine", "slug"],
+                name="unique_step_slug_per_engine",
+            ),
+        ]
 
     def __str__(self):
         return self.name
