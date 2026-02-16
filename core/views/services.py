@@ -1104,7 +1104,7 @@ class BuildLogsView(LoginRequiredMixin, View):
 
         # Fetch jobs to find failed one and get job_id for logs
         try:
-            jobs = plugin.get_workflow_run_jobs(config, repo_name, build.github_run_id)
+            jobs = plugin.get_workflow_run_jobs(config, repo_name, build.ci_run_id)
         except Exception as e:
             return render(request, "core/services/_build_logs_partial.html", {"error": f"Failed to fetch jobs: {e}"})
 

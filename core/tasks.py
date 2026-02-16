@@ -572,7 +572,9 @@ def verify_build(build_id: int, connection_id: int, repo_name: str) -> dict:
             verification_status = "verified"
         elif version_match.status == CIWorkflowVersion.Status.DRAFT:
             verification_status = "draft"
-        else:  # revoked
+        elif version_match.status == CIWorkflowVersion.Status.REVOKED:
+            verification_status = "revoked"
+        else:
             verification_status = "unauthorized"
         build.workflow_version = version_match
     else:
@@ -665,7 +667,7 @@ def poll_build_details(
             # Continue without commit message - not critical
 
     # Map GitHub status to our status
-    status = Build.map_github_status(run_data["status"], run_data.get("conclusion"))
+    status = plugin.map_run_status(run_data["status"], run_data.get("conclusion"))
 
     # Extract workflow name (e.g., "ci-python-docker" → "python-docker")
     raw_workflow_name = run_data.get("name", "")
@@ -680,7 +682,7 @@ def poll_build_details(
 
     # Update or create Build record
     build, created = Build.objects.update_or_create(
-        github_run_id=run_id,
+        ci_run_id=run_id,
         defaults={
             "service": service,
             "run_number": run_data.get("run_number"),
