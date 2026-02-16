@@ -28,6 +28,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6.3: Security & Compliance Design — Secrets, SLSA L3, SOX RBAC** (INSERTED) - Secrets management, artifact provenance signing, SLSA Level 3, SOX-compliant RBAC
 - [x] **Phase 6.4: CI Step Identity and Change Tracking** (INSERTED) - Step slugs, per-file SHA versioning, change detection, archival
 - [x] **Phase 6.5: Workflow and Build Model Hardening** (INSERTED) - CIWorkflow engine field, step ordering validation, archived status, engine-agnostic Build model, revoked verification status
+- [ ] **Phase 6.6: Sync Operations and Logging** (INSERTED) - Webhook and scheduled sync triggers, sync operation logging, branch protection validation
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
 ## Phase Details
@@ -267,6 +268,25 @@ Plans:
 - [x] 06-01-PLAN.md — Build model, webhook endpoint with HMAC auth, poll_build_details task, service activation
 - [x] 06-02-PLAN.md — Build history UI with table layout, filtering, pagination, HTMX auto-refresh
 
+### Phase 06.6: Sync Operations and Logging (INSERTED)
+
+**Goal:** Step repository syncs are triggered by webhooks and scheduled tasks (in addition to manual poll), all sync operations are logged with per-step detail, and branch protection is validated on registration and each sync.
+**Depends on:** Phase 6 (all R1/R2 prereqs complete via Phase 6.4 and 6.5)
+**Gaps Addressed**: GAP-05, GAP-06, GAP-07 from docs/ci-workflows/REMEDIATION.md
+**Success Criteria** (what must be TRUE):
+  1. Every sync operation creates a StepsRepoSyncLog with status, timing, trigger, and per-step StepSyncEntry records
+  2. Push to a steps repository default branch triggers automatic rescan via webhook at /webhooks/steps-repo/
+  3. A management command (scan_all_steps_repos) enqueues scans for all repositories for daily cron
+  4. Branch protection is validated via plugin interface (CICapableMixin.check_branch_protection) on each sync
+  5. Repo detail page shows sync history table with expandable per-step details
+  6. Branch protection status displayed on repo detail page
+**Plans:** 3 plans
+
+Plans:
+- [ ] 06.6-01-PLAN.md — Sync logging models, StepsRepository fields, branch protection plugin interface, scan_steps_repository instrumentation
+- [ ] 06.6-02-PLAN.md — Steps repo webhook handler, management command for scheduled scan, webhook registration on repo creation
+- [ ] 06.6-03-PLAN.md — Sync history UI on repo detail page with HTMX expandable detail
+
 ### Phase 06.5: Workflow and Build Model Hardening (INSERTED)
 
 **Goal:** CIWorkflow has an explicit engine field set at creation, step ordering is validated before save, and an "archived" status allows graceful deprecation. Build model is engine-agnostic with a generic `ci_run_id` and has a distinct "revoked" verification status.
@@ -371,7 +391,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 6.3 -> 6.4 -> 6.5 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 6.3 -> 6.4 -> 6.5 -> 6.6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -391,8 +411,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5
 | 6.3 Security & Compliance Design (INSERTED) | 3/3 | Complete | 2026-02-13 |
 | 6.4 CI Step Identity and Change Tracking (INSERTED) | 3/3 | Complete | 2026-02-16 |
 | 6.5 Workflow and Build Model Hardening (INSERTED) | 2/2 | Complete | 2026-02-16 |
+| 6.6 Sync Operations and Logging (INSERTED) | 0/3 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-02-16 (Phase 6.5 complete - workflow engine field, build model hardening)*
+*Last updated: 2026-02-16 (Phase 6.6 planned - sync operations and logging)*
