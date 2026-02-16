@@ -961,7 +961,26 @@ class PublishVersionView(LoginRequiredMixin, View):
         draft.published_at = timezone.now()
         draft.save()
 
-        messages.success(request, f"Version {version_number} published successfully.")
+        # Auto-update eligible services
+        from core.models import Service
+
+        eligible_count = Service.objects.filter(
+            ci_workflow=workflow,
+            auto_update_patch=True,
+            ci_workflow_version__isnull=False,
+        ).count()
+
+        if eligible_count > 0:
+            from core.tasks import auto_update_services
+
+            auto_update_services.enqueue(workflow_id=workflow.id, version_id=draft.id)
+            messages.success(
+                request,
+                f"Version {version_number} published. Auto-update queued for {eligible_count} service(s).",
+            )
+        else:
+            messages.success(request, f"Version {version_number} published.")
+
         return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
 
 

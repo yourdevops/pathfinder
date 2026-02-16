@@ -997,6 +997,75 @@ def push_ci_manifest(service_id: int) -> dict:
         return {"status": "failed", "error": error_msg}
 
 
+def is_patch_bump(current_version_str: str, new_version_str: str) -> bool:
+    """Check if new_version is a patch bump from current_version (same major.minor)."""
+    import semver as semver_lib
+
+    try:
+        current = semver_lib.Version.parse(current_version_str)
+        new = semver_lib.Version.parse(new_version_str)
+        return new.major == current.major and new.minor == current.minor and new > current
+    except ValueError:
+        return False
+
+
+@task(queue_name="default")
+def auto_update_services(workflow_id: int, version_id: int) -> dict:
+    """Auto-update services when a patch version is published.
+
+    Finds services that have auto_update_patch=True and a pinned version
+    that is a patch-level predecessor of the new version. Updates their
+    ci_workflow_version FK and enqueues push_ci_manifest for each.
+    """
+    from core.models import CIWorkflow, CIWorkflowVersion, Service
+
+    try:
+        workflow = CIWorkflow.objects.get(id=workflow_id)
+    except CIWorkflow.DoesNotExist:
+        logger.error(f"CIWorkflow {workflow_id} not found for auto-update")
+        return {"error": "Workflow not found"}
+
+    try:
+        new_version = CIWorkflowVersion.objects.get(id=version_id)
+    except CIWorkflowVersion.DoesNotExist:
+        logger.error(f"CIWorkflowVersion {version_id} not found for auto-update")
+        return {"error": "Version not found"}
+
+    if new_version.status != CIWorkflowVersion.Status.AUTHORIZED:
+        logger.info(f"Version {version_id} is not authorized, skipping auto-update")
+        return {"skipped": True, "reason": "not authorized"}
+
+    # Find eligible services: auto-update enabled, has a pinned version
+    services = Service.objects.filter(
+        ci_workflow_id=workflow_id,
+        auto_update_patch=True,
+        ci_workflow_version__isnull=False,
+    ).select_related("ci_workflow_version")
+
+    updated = 0
+    skipped = 0
+
+    for service in services:
+        current_version_str = service.ci_workflow_version.version
+        if not current_version_str or not is_patch_bump(current_version_str, new_version.version):
+            skipped += 1
+            continue
+
+        # Update service FK to new version
+        service.ci_workflow_version = new_version
+        service.ci_manifest_status = "pending_pr"
+        service.save(update_fields=["ci_workflow_version", "ci_manifest_status"])
+
+        # Enqueue manifest push
+        push_ci_manifest.enqueue(service_id=service.id)
+        updated += 1
+
+        logger.info(f"Auto-updated service {service.name}: {current_version_str} -> {new_version.version}")
+
+    logger.info(f"Auto-update complete for workflow {workflow.name}: {updated} updated, {skipped} skipped")
+    return {"updated": updated, "skipped": skipped}
+
+
 @cron_task(cron_schedule="0 2 * * *")
 @task(queue_name="steps_scan")
 def scheduled_scan_all_steps_repos() -> dict:
