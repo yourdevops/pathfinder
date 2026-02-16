@@ -1,5 +1,7 @@
 """Service views including creation wizard and detail pages."""
 
+import json
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
@@ -357,7 +359,8 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
             context["ci_manifest_out_of_sync"] = self.service.ci_manifest_out_of_sync
             context["ci_manifest_pr_url"] = self.service.ci_manifest_pr_url
             context["ci_manifest_pushed_at"] = self.service.ci_manifest_pushed_at
-            context["available_workflows"] = get_available_workflows_for_project(self.project)
+            available_workflows = get_available_workflows_for_project(self.project)
+            context["available_workflows"] = available_workflows
             context["can_edit"] = self.user_project_role in ("contributor", "owner")
 
             # Version pinning dropdown
@@ -379,6 +382,43 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
                 except Exception:
                     available_versions = [v for v in available_versions if v.status != "draft"]
             context["available_versions"] = available_versions
+
+            # Build versions map for ALL available workflows (for client-side dynamic swap)
+            workflow_ids = list(available_workflows.values_list("id", flat=True))
+            all_versions_qs = CIWorkflowVersion.objects.filter(
+                workflow_id__in=workflow_ids,
+                status__in=[CIWorkflowVersion.Status.AUTHORIZED, CIWorkflowVersion.Status.DRAFT],
+            ).order_by("-published_at", "-created_at")
+
+            # Check draft permission
+            allow_drafts = False
+            try:
+                ci_config = self.project.ci_config
+                allow_drafts = ci_config.allow_draft_workflows
+            except Exception:
+                pass
+
+            # Build the map: {workflow_id_str: [{id, version, status, label, author}, ...]}
+            versions_map = {}
+            for wf_id in workflow_ids:
+                versions_for_wf = []
+                for v in all_versions_qs:
+                    if v.workflow_id != wf_id:
+                        continue
+                    if not allow_drafts and v.status == "draft":
+                        continue
+                    versions_for_wf.append(
+                        {
+                            "id": str(v.id),
+                            "version": v.version or "",
+                            "status": v.status,
+                            "label": "Draft" if v.status == "draft" else ("v" + v.version if v.version else "Draft"),
+                            "author": str(v.author) if v.author else "",
+                        }
+                    )
+                versions_map[str(wf_id)] = versions_for_wf
+
+            context["workflow_versions_json"] = json.dumps(versions_map)
 
             # Show manifest preview: pinned version content if available, else fresh draft
             if self.service.ci_workflow:

@@ -33,6 +33,28 @@
                 }
             };
         });
+        Alpine.data('ciSelector', function(initialWf, initialVer, versionsMap) {
+            return {
+                wfVal: String(initialWf),
+                wfInitial: String(initialWf),
+                wfOpen: false,
+                verVal: String(initialVer),
+                verInitial: String(initialVer),
+                verOpen: false,
+                versionsMap: versionsMap,
+                versions: versionsMap[String(initialWf)] || [],
+                pickWf: function(v) {
+                    this.wfVal = v;
+                    this.wfOpen = false;
+                    this.versions = this.versionsMap[v] || [];
+                    this.verVal = this.versions.length > 0 ? this.versions[0].id : 'none';
+                },
+                pickVer: function(v) {
+                    this.verVal = v;
+                    this.verOpen = false;
+                }
+            };
+        });
     });
     </script>
     <!-- HTMX -->
