@@ -533,9 +533,8 @@ def verify_build(build_id: int, connection_id: int, repo_name: str) -> dict:
         build.save(update_fields=["verification_status"])
         return {"status": "unauthorized", "reason": "no workflow assigned"}
 
-    # Resolve CI plugin from workflow's first step engine
-    first_step = workflow.workflow_steps.select_related("step").first()
-    engine = first_step.step.engine if first_step else "github_actions"
+    # Resolve CI plugin from workflow engine
+    engine = workflow.engine
     ci_plugin = get_ci_plugin_for_engine(engine)
     if not ci_plugin:
         build.verification_status = "unauthorized"
@@ -747,9 +746,8 @@ def push_ci_manifest(service_id: int) -> dict:
         return {"error": "No CI workflow assigned"}
 
     try:
-        # Resolve CI plugin from workflow steps engine
-        first_step = service.ci_workflow.workflow_steps.select_related("step").first()
-        engine = first_step.step.engine if first_step else "github_actions"
+        # Resolve CI plugin from workflow engine
+        engine = service.ci_workflow.engine
         ci_plugin = get_ci_plugin_for_engine(engine)
         if not ci_plugin:
             return {"error": f"No CI plugin for engine: {engine}"}

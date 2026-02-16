@@ -422,8 +422,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
 
             # Show manifest preview: pinned version content if available, else fresh draft
             if self.service.ci_workflow:
-                first_step = self.service.ci_workflow.workflow_steps.select_related("step").first()
-                engine = first_step.step.engine if first_step else "github_actions"
+                engine = self.service.ci_workflow.engine
                 ci_plugin = get_ci_plugin_for_engine(engine)
                 pinned = self.service.ci_workflow_version
                 if pinned and pinned.manifest_content:

@@ -692,6 +692,11 @@ class CIWorkflow(models.Model):
     runtime_family = models.CharField(max_length=63)  # e.g., 'python'
     runtime_version = models.CharField(max_length=20)  # e.g., '3.12'
     artifact_type = models.CharField(max_length=50, blank=True)  # derived from last package step
+    engine = models.CharField(
+        max_length=63,
+        default="github_actions",
+        help_text="CI engine identifier, set at creation and immutable",
+    )
     dev_workflow = models.CharField(
         max_length=50,
         choices=DEV_WORKFLOW_CHOICES,
@@ -700,7 +705,7 @@ class CIWorkflow(models.Model):
     )
     status = models.CharField(
         max_length=20,
-        choices=[("published", "Published"), ("draft", "Draft")],
+        choices=[("published", "Published"), ("draft", "Draft"), ("archived", "Archived")],
         default="published",
     )
     created_by = models.CharField(max_length=150, blank=True)

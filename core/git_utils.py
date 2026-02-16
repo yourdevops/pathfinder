@@ -481,8 +481,7 @@ def scaffold_new_repository(service, connection, template_temp_dir: str, variabl
         # Generate CI manifest if workflow is assigned
         if service.ci_workflow:
             # Get CI plugin for the workflow's engine
-            first_step = service.ci_workflow.workflow_steps.select_related("step").first()
-            engine = first_step.step.engine if first_step else "github_actions"
+            engine = service.ci_workflow.engine
             ci_plugin = get_ci_plugin_for_engine(engine)
 
             if ci_plugin:
@@ -579,8 +578,7 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str, va
 
         # Generate CI manifest if workflow is assigned
         if service.ci_workflow:
-            first_step = service.ci_workflow.workflow_steps.select_related("step").first()
-            engine = first_step.step.engine if first_step else "github_actions"
+            engine = service.ci_workflow.engine
             ci_plugin = get_ci_plugin_for_engine(engine)
 
             if ci_plugin:

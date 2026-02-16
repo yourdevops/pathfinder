@@ -489,6 +489,8 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             runtime_family, runtime_version
         )
 
+        engine = workflow.engine if workflow_name else request.GET.get("engine", "github_actions")
+
         return render(
             request,
             "core/ci_workflows/workflow_composer.html",
@@ -498,6 +500,7 @@ class WorkflowComposerView(LoginRequiredMixin, View):
                 "runtime_family": runtime_family,
                 "runtime_version": runtime_version,
                 "workflow_uuid": workflow_uuid,
+                "engine": engine,
                 "initial_steps_json": initial_steps_json,
                 "compatible_by_phase": compatible_by_phase,
                 "incompatible_steps": incompatible,
@@ -533,6 +536,8 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             except CIStep.DoesNotExist:
                 continue
 
+        engine_value = request.POST.get("engine") or request.GET.get("engine", "github_actions")
+
         if workflow_uuid:
             # Edit mode: update existing workflow
             workflow = get_object_or_404(CIWorkflow, uuid=workflow_uuid)
@@ -552,6 +557,7 @@ class WorkflowComposerView(LoginRequiredMixin, View):
                 runtime_family=runtime_family,
                 runtime_version=runtime_version,
                 artifact_type=artifact_type,
+                engine=engine_value,
                 created_by=request.user.username,
             )
 
@@ -569,8 +575,7 @@ class WorkflowComposerView(LoginRequiredMixin, View):
                 continue
 
         # Auto-create or update draft CIWorkflowVersion
-        first_step = workflow.workflow_steps.select_related("step").first()
-        engine = first_step.step.engine if first_step else "github_actions"
+        engine = workflow.engine
         ci_plugin = get_ci_plugin_for_engine(engine)
 
         if ci_plugin:
@@ -662,8 +667,7 @@ class WorkflowDetailView(LoginRequiredMixin, View):
                 has_step_warnings = True
                 break
 
-        first_step = workflow_steps.first()
-        engine = first_step.step.engine if first_step else "github_actions"
+        engine = workflow.engine
         ci_plugin = get_ci_plugin_for_engine(engine)
         manifest_yaml = ci_plugin.generate_manifest(workflow) if ci_plugin else "# No CI plugin available"
 
@@ -727,8 +731,7 @@ class WorkflowManifestView(LoginRequiredMixin, View):
 
     def get(self, request, workflow_name):
         workflow = get_object_or_404(CIWorkflow, name=workflow_name)
-        first_step = workflow.workflow_steps.select_related("step").first()
-        engine = first_step.step.engine if first_step else "github_actions"
+        engine = workflow.engine
         ci_plugin = get_ci_plugin_for_engine(engine)
 
         # Show versioned manifest: draft first, then latest authorized, then fresh generate
@@ -822,8 +825,7 @@ class PublishVersionView(LoginRequiredMixin, View):
                 pass  # Latest version not parseable, allow any new version
 
         # Regenerate manifest with version number (changes header, changes hash)
-        first_step = workflow.workflow_steps.select_related("step").first()
-        engine = first_step.step.engine if first_step else "github_actions"
+        engine = workflow.engine
         ci_plugin = get_ci_plugin_for_engine(engine)
 
         if ci_plugin:
@@ -935,8 +937,7 @@ class ForkWorkflowView(LoginRequiredMixin, View):
             return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
 
         # Redirect to composer in create mode with pre-populated params
-        first_step = workflow.workflow_steps.select_related("step").first()
-        engine = first_step.step.engine if first_step else "github_actions"
+        engine = workflow.engine
 
         params = urlencode(
             {
