@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 6.6 complete - Sync Operations and Logging
+**Current focus:** Phase 6.7 in progress - Version Lifecycle Automation
 
 ## Current Position
 
-Phase: 6.6 (Sync Operations and Logging)
-Plan: 3 of 3 in current phase
-Status: Complete
-Last activity: 2026-02-16 - Plan 03 complete: sync history UI with branch protection display
+Phase: 6.7 (Version Lifecycle Automation)
+Plan: 1 of 4 in current phase
+Status: In Progress
+Last activity: 2026-02-16 - Plan 01 complete: model fields and auto-update toggle
 
-Progress: [========================================] 100% (Phase 6.6)
+Progress: [==========------------------------------] 25% (Phase 6.7)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 61
+- Total plans completed: 62
 - Average duration: 4 min
-- Total execution time: 3.99 hours
+- Total execution time: 4.06 hours
 
 **By Phase:**
 
@@ -44,9 +44,10 @@ Progress: [========================================] 100% (Phase 6.6)
 | 06.4-ci-step-identity-and-change-tracking | 3 | 9 min | 3 min |
 | 06.5-workflow-and-build-model-hardening | 2 | 8 min | 4 min |
 | 06.6-sync-operations-and-logging | 3 | 12 min | 4 min |
+| 06.7-version-lifecycle-automation | 1 | 4 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.5-01 (5 min), 06.5-02 (3 min), 06.6-01 (4 min), 06.6-02 (6 min), 06.6-03 (2 min)
+- Last 5 plans: 06.5-02 (3 min), 06.6-01 (4 min), 06.6-02 (6 min), 06.6-03 (2 min), 06.7-01 (4 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -205,6 +206,8 @@ Recent decisions affecting current work:
 | 06.6-02 | URL normalization via parse_git_url for webhook-to-repo matching | Handles URL format differences (HTTPS vs SSH, trailing .git) |
 | 06.6-02 | Concurrent scan prevention returns 200 silently | Prevents task queue flooding from rapid pushes |
 | 06.6-02 | django_scheduled_tasks in INSTALLED_APPS with scheduler process | Required for run_task_scheduler command and ScheduledTaskRunLog models |
+| 06.7-01 | HTMX toggle partial for auto-update instead of full page reload | Dedicated template with id for outerHTML swap, matching existing project patterns |
+| 06.7-01 | Toggle only visible when CI workflow is assigned to service | No point showing auto-update toggle without a workflow to update |
 
 ### Roadmap Evolution
 
@@ -279,5 +282,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Phase 6.7 context gathered
-Resume file: .planning/phases/06.7-version-lifecycle-automation/06.7-CONTEXT.md
+Stopped at: Completed 06.7-01-PLAN.md
+Resume file: .planning/phases/06.7-version-lifecycle-automation/06.7-01-SUMMARY.md
