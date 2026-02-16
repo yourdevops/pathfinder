@@ -77,6 +77,7 @@ from .views.ci_workflows import (
     StepsRepoScanView,
     StepsTableView,
     SuggestVersionView,
+    WorkflowArchiveView,
     WorkflowComposerView,
     WorkflowCreateView,
     WorkflowDeleteView,
@@ -181,6 +182,11 @@ ci_workflows_patterns = [
         "<dns:workflow_name>/delete/",
         WorkflowDeleteView.as_view(),
         name="workflow_delete",
+    ),
+    path(
+        "<dns:workflow_name>/archive/",
+        WorkflowArchiveView.as_view(),
+        name="workflow_archive",
     ),
     path(
         "<dns:workflow_name>/publish/",

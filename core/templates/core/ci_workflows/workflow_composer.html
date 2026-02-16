@@ -147,6 +147,7 @@
                         <input type="hidden" name="description" value="{{ workflow_description }}">
                         <input type="hidden" name="runtime_family" value="{{ runtime_family }}">
                         <input type="hidden" name="runtime_version" value="{{ runtime_version }}">
+                        <input type="hidden" name="engine" value="{{ engine }}">
                         {% if workflow_uuid %}<input type="hidden" name="workflow_uuid" value="{{ workflow_uuid }}">{% endif %}
                         <input type="hidden" name="steps_json" :value="stepsJson()">
                         <button type="submit"

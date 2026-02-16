@@ -70,6 +70,20 @@
                     </form>
                 </div>
             </div>
+            {% if is_operator %}
+            <form method="post" action="{% url 'ci_workflows:workflow_archive' workflow_name=workflow.name %}">
+                {% csrf_token %}
+                {% if workflow.status == "archived" %}
+                <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition-colors">
+                    Restore
+                </button>
+                {% else %}
+                <button type="submit" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm transition-colors">
+                    Archive
+                </button>
+                {% endif %}
+            </form>
+            {% endif %}
             {% if can_delete %}
             <button type="button" data-confirm-modal="confirm-delete-workflow"
                     class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm">
@@ -98,6 +112,17 @@
                 </button>
             </form>
         </div>
+    </div>
+    {% endif %}
+
+    <!-- Archived Banner -->
+    {% if workflow.status == "archived" %}
+    <div class="bg-gray-500/10 border border-gray-500/30 rounded-lg p-3 mb-4 flex items-center gap-2 text-gray-400">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z"/>
+            <path fill-rule="evenodd" d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <span>This workflow is archived. It remains functional for existing services but is hidden from new onboarding.</span>
     </div>
     {% endif %}
 

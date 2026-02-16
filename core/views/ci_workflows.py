@@ -399,6 +399,33 @@ class EngineRuntimesView(LoginRequiredMixin, View):
         return HttpResponse("\n".join(options))
 
 
+def _validate_step_order(steps_data):
+    """Validate setup-before-use rule for workflow steps.
+
+    For each non-setup step with runtime_constraints, verify a setup step
+    for the same runtime appears earlier in the list.
+    """
+    provided_runtimes = set()
+    errors = []
+
+    for step_entry in steps_data:
+        try:
+            ci_step = CIStep.objects.get(uuid=step_entry.get("id"))
+        except CIStep.DoesNotExist:
+            continue
+
+        if ci_step.phase == "setup":
+            for rt in ci_step.runtime_constraints or {}:
+                provided_runtimes.add(rt)
+        elif ci_step.runtime_constraints:
+            for rt in ci_step.runtime_constraints:
+                if rt != "*" and rt not in provided_runtimes:
+                    errors.append(
+                        f'"{ci_step.name}" requires {rt} runtime setup. Add a setup step for {rt} before this step.'
+                    )
+    return errors
+
+
 class WorkflowComposerView(LoginRequiredMixin, View):
     """Step 2: Compose workflow steps with drag-and-drop ordering.
 
@@ -524,6 +551,34 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             steps_data = json.loads(steps_json)
         except json.JSONDecodeError:
             steps_data = []
+
+        # Validate step ordering (setup-before-use)
+        ordering_errors = _validate_step_order(steps_data)
+        if ordering_errors:
+            for err in ordering_errors:
+                messages.error(request, err)
+            # Re-render composer with current data so user can fix ordering
+            engine_val = request.POST.get("engine") or request.GET.get("engine", "github_actions")
+            compatible_by_phase, incompatible, compatible, step_inputs_map = self._build_compatible_context(
+                runtime_family, runtime_version
+            )
+            return render(
+                request,
+                "core/ci_workflows/workflow_composer.html",
+                {
+                    "workflow_name": name,
+                    "workflow_description": description,
+                    "runtime_family": runtime_family,
+                    "runtime_version": runtime_version,
+                    "workflow_uuid": workflow_uuid,
+                    "engine": engine_val,
+                    "initial_steps_json": steps_data,
+                    "compatible_by_phase": compatible_by_phase,
+                    "incompatible_steps": incompatible,
+                    "compatible_steps": compatible,
+                    "step_inputs_map": step_inputs_map,
+                },
+            )
 
         # Determine artifact_type from last package step
         artifact_type = ""
@@ -768,6 +823,21 @@ class WorkflowDeleteView(OperatorRequiredMixin, View):
             return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
         workflow.delete()
         return redirect("ci_workflows:workflow_list")
+
+
+class WorkflowArchiveView(OperatorRequiredMixin, View):
+    """Toggle workflow archived status."""
+
+    def post(self, request, workflow_name):
+        workflow = get_object_or_404(CIWorkflow, name=workflow_name)
+        if workflow.status == "archived":
+            workflow.status = "published"
+            messages.success(request, f'Workflow "{workflow.name}" restored.')
+        else:
+            workflow.status = "archived"
+            messages.success(request, f'Workflow "{workflow.name}" archived.')
+        workflow.save(update_fields=["status"])
+        return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
 
 
 # --- Version Management Views ---
