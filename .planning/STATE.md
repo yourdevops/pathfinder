@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 6.5 (Workflow and Build Model Hardening)
-Plan: 1 of 2 in current phase
-Status: In Progress
-Last activity: 2026-02-16 - Completed 06.5-01: engine field, step validation, archive
+Plan: 2 of 2 in current phase
+Status: Complete
+Last activity: 2026-02-16 - Completed 06.5-02: ci_run_id rename, revoked badge, map_run_status plugin
 
-Progress: [====================                    ] 50% (Phase 6.5)
+Progress: [========================================] 100% (Phase 6.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 57
+- Total plans completed: 58
 - Average duration: 4 min
-- Total execution time: 3.74 hours
+- Total execution time: 3.79 hours
 
 **By Phase:**
 
@@ -42,10 +42,10 @@ Progress: [====================                    ] 50% (Phase 6.5)
 | 06.2-deployment-design-docs | 3 | 6 min | 2 min |
 | 06.3-security-compliance-design | 3 | 6 min | 2 min |
 | 06.4-ci-step-identity-and-change-tracking | 3 | 9 min | 3 min |
-| 06.5-workflow-and-build-model-hardening | 1 | 5 min | 5 min |
+| 06.5-workflow-and-build-model-hardening | 2 | 8 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.3-03 (2 min), 06.4-01 (3 min), 06.4-02 (3 min), 06.4-03 (3 min), 06.5-01 (5 min)
+- Last 5 plans: 06.4-01 (3 min), 06.4-02 (3 min), 06.4-03 (3 min), 06.5-01 (5 min), 06.5-02 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -194,6 +194,9 @@ Recent decisions affecting current work:
 | 06.5-01 | CIWorkflow.engine set at creation, immutable, replaces step-derived engine | Eliminates fragile first_step.step.engine pattern across 10+ call sites |
 | 06.5-01 | Archived status as third CIWorkflow choice alongside published/draft | Existing status=published filter already excludes archived from onboarding |
 | 06.5-01 | Step ordering validation checks runtime_constraints against setup steps | Descriptive error messages per missing runtime setup step |
+| 06.5-02 | Build.ci_run_id replaces github_run_id for engine-agnostic naming | Removes GitHub-specific coupling from core Build model |
+| 06.5-02 | Revoked versions produce distinct "revoked" verification_status | Clear visual distinction from "unauthorized" (unknown manifests) |
+| 06.5-02 | map_run_status on CICapableMixin interface, not Build model | Each CI engine implements its own status/conclusion mapping |
 
 ### Roadmap Evolution
 
@@ -266,5 +269,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 06.5-01-PLAN.md — engine field, step validation, archive
+Stopped at: Completed 06.5-02-PLAN.md — ci_run_id rename, revoked badge, map_run_status plugin (Phase 6.5 complete)
 Resume file: None
