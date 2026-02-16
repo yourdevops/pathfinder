@@ -191,6 +191,15 @@ class SiteConfiguration(models.Model):
         blank=True,
         help_text="Public URL for webhooks and OAuth callbacks (e.g., https://pathfinder.example.com)",
     )
+    version_retention_days = models.IntegerField(
+        default=365,
+        help_text="Days before manifest content is cleared from old versions",
+    )
+    last_cleanup_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Timestamp of last version cleanup run",
+    )
 
     class Meta:
         db_table = "core_site_configuration"
@@ -452,6 +461,10 @@ class Service(models.Model):
         max_length=10,
         choices=[("pr", "Pull Request")],
         default="pr",
+    )
+    auto_update_patch = models.BooleanField(
+        default=True,
+        help_text="Automatically update CI manifest when a patch version is published",
     )
     webhook_registered = models.BooleanField(default=False)
 
