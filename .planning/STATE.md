@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 6.7 (Version Lifecycle Automation)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: In Progress
-Last activity: 2026-02-16 - Plan 01 complete: model fields and auto-update toggle
+Last activity: 2026-02-16 - Plan 02 complete: auto-update engine and digest PR
 
-Progress: [==========------------------------------] 25% (Phase 6.7)
+Progress: [====================--------------------] 50% (Phase 6.7)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 62
+- Total plans completed: 63
 - Average duration: 4 min
 - Total execution time: 4.06 hours
 
@@ -44,10 +44,10 @@ Progress: [==========------------------------------] 25% (Phase 6.7)
 | 06.4-ci-step-identity-and-change-tracking | 3 | 9 min | 3 min |
 | 06.5-workflow-and-build-model-hardening | 2 | 8 min | 4 min |
 | 06.6-sync-operations-and-logging | 3 | 12 min | 4 min |
-| 06.7-version-lifecycle-automation | 1 | 4 min | 4 min |
+| 06.7-version-lifecycle-automation | 2 | 6 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.5-02 (3 min), 06.6-01 (4 min), 06.6-02 (6 min), 06.6-03 (2 min), 06.7-01 (4 min)
+- Last 5 plans: 06.6-01 (4 min), 06.6-02 (6 min), 06.6-03 (2 min), 06.7-01 (4 min), 06.7-02 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -208,6 +208,9 @@ Recent decisions affecting current work:
 | 06.6-02 | django_scheduled_tasks in INSTALLED_APPS with scheduler process | Required for run_task_scheduler command and ScheduledTaskRunLog models |
 | 06.7-01 | HTMX toggle partial for auto-update instead of full page reload | Dedicated template with id for outerHTML swap, matching existing project patterns |
 | 06.7-01 | Toggle only visible when CI workflow is assigned to service | No point showing auto-update toggle without a workflow to update |
+| 06.7-02 | Fixed branch name pathfinder/ci-manifest per repo for digest PR | Prevents branch sprawl when multiple services share a repository |
+| 06.7-02 | Auto-update count in flash uses quick DB count, patch filtering in task | Avoid semver comparison in the view for every service |
+| 06.7-02 | Version-aware commit message: ci: update {manifest_id} to v{version} | Clearer audit trail for manifest changes |
 
 ### Roadmap Evolution
 
@@ -282,5 +285,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 06.7-01-PLAN.md
-Resume file: .planning/phases/06.7-version-lifecycle-automation/06.7-01-SUMMARY.md
+Stopped at: Completed 06.7-02-PLAN.md
+Resume file: .planning/phases/06.7-version-lifecycle-automation/06.7-02-SUMMARY.md
