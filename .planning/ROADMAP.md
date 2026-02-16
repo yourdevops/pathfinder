@@ -268,6 +268,25 @@ Plans:
 - [x] 06-01-PLAN.md — Build model, webhook endpoint with HMAC auth, poll_build_details task, service activation
 - [x] 06-02-PLAN.md — Build history UI with table layout, filtering, pagination, HTMX auto-refresh
 
+### Phase 06.7: Version Lifecycle Automation (INSERTED)
+
+**Goal:** When a CI Workflow version is published, services using that workflow automatically receive updated manifests via PR (patch bumps only). Old versions are cleaned up per retention policy.
+**Depends on:** Phase 6
+**Gaps Addressed**: GAP-11, GAP-12 from docs/ci-workflows/REMEDIATION.md
+**Success Criteria** (what must be TRUE):
+  1. Publishing a patch version auto-updates eligible services via digest PR on `pathfinder/ci-manifest` branch
+  2. Services have an auto-update toggle (default on) controlling whether patch updates are applied
+  3. Old manifest content is cleared after retention period; hash retained for verification
+  4. Unreferenced revoked versions are deleted after retention period
+  5. CI Configuration settings page allows retention period configuration and manual cleanup
+  6. Daily cleanup task runs at 03:00 UTC; management command available for CLI use
+**Plans:** 3 plans
+
+Plans:
+- [ ] 06.7-01-PLAN.md -- Models, migration, and service auto-update toggle UI
+- [ ] 06.7-02-PLAN.md -- push_ci_manifest refactor, auto-update task, and publish integration
+- [ ] 06.7-03-PLAN.md -- Cleanup task, management command, and CI Configuration settings page
+
 ### Phase 06.6: Sync Operations and Logging (INSERTED)
 
 **Goal:** Step repository syncs are triggered by webhooks and scheduled tasks (in addition to manual poll), all sync operations are logged with per-step detail, and branch protection is validated on registration and each sync.
@@ -391,7 +410,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 6.3 -> 6.4 -> 6.5 -> 6.6 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 6.3 -> 6.4 -> 6.5 -> 6.6 -> 6.7 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -412,6 +431,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5
 | 6.4 CI Step Identity and Change Tracking (INSERTED) | 3/3 | Complete | 2026-02-16 |
 | 6.5 Workflow and Build Model Hardening (INSERTED) | 2/2 | Complete | 2026-02-16 |
 | 6.6 Sync Operations and Logging (INSERTED) | 3/3 | Complete | 2026-02-16 |
+| 6.7 Version Lifecycle Automation (INSERTED) | 0/3 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
