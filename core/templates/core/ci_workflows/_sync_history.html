@@ -1,0 +1,75 @@
+{% load humanize %}
+<div class="bg-dark-surface border border-dark-border rounded-lg overflow-hidden">
+    <table class="w-full text-sm">
+        <thead>
+            <tr class="border-b border-dark-border text-dark-muted text-left">
+                <th class="px-4 py-3 font-medium">Status</th>
+                <th class="px-4 py-3 font-medium">Trigger</th>
+                <th class="px-4 py-3 font-medium">Commit</th>
+                <th class="px-4 py-3 font-medium">Protection</th>
+                <th class="px-4 py-3 font-medium">Changes</th>
+                <th class="px-4 py-3 font-medium">When</th>
+                <th class="px-4 py-3 font-medium"></th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-dark-border">
+            {% for log in sync_logs %}
+            <tr class="hover:bg-dark-border/20">
+                <td class="px-4 py-3">
+                    {% if log.status == "success" %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">Success</span>
+                    {% elif log.status == "partial" %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-400">Partial</span>
+                    {% elif log.status == "failed" %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-500/20 text-red-400">Failed</span>
+                    {% elif log.status == "skipped" %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-500/20 text-gray-400">Skipped</span>
+                    {% elif log.status == "running" %}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-500/20 text-blue-400">Running</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3 text-dark-text capitalize">{{ log.trigger }}</td>
+                <td class="px-4 py-3">
+                    {% if log.commit_sha %}
+                    <code class="text-xs text-dark-muted bg-dark-bg px-1.5 py-0.5 rounded">{{ log.commit_sha|truncatechars:11 }}</code>
+                    {% else %}
+                    <span class="text-dark-muted">-</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3">
+                    {% if log.protection_valid %}
+                    <span class="text-green-400 text-xs">OK</span>
+                    {% else %}
+                    <span class="text-amber-400 text-xs">Warn</span>
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3 text-dark-muted text-xs">
+                    {% if log.status == "skipped" %}
+                    <span>No changes</span>
+                    {% else %}
+                    {% if log.steps_added %}<span class="text-green-400">+{{ log.steps_added }}</span> {% endif %}
+                    {% if log.steps_updated %}<span class="text-blue-400">~{{ log.steps_updated }}</span> {% endif %}
+                    {% if log.steps_archived %}<span class="text-red-400">-{{ log.steps_archived }}</span> {% endif %}
+                    {% if not log.steps_added and not log.steps_updated and not log.steps_archived %}<span>-</span>{% endif %}
+                    {% endif %}
+                </td>
+                <td class="px-4 py-3 text-dark-muted text-xs">{{ log.started_at|naturaltime }}</td>
+                <td class="px-4 py-3 text-right">
+                    {% if log.status != "skipped" and log.status != "running" %}
+                    <button
+                        hx-get="{% url 'ci_workflows:sync_detail' repo_name=repo.name sync_id=log.id %}"
+                        hx-target="#sync-detail-{{ log.id }}"
+                        hx-swap="innerHTML"
+                        class="text-dark-accent hover:text-dark-accent/80 text-xs">
+                        Details
+                    </button>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr id="sync-detail-{{ log.id }}">
+                {# HTMX detail will load here #}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
