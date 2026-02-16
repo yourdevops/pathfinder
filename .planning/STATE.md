@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 6.6 (Sync Operations and Logging)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In Progress
-Last activity: 2026-02-16 - Plan 01 complete: sync logging models, branch protection, instrumented scan
+Last activity: 2026-02-16 - Plan 02 complete: webhook handler, scheduled scan, auto-registration
 
-Progress: [=============...........................] 33% (Phase 6.6)
+Progress: [==========================..............] 67% (Phase 6.6)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 59
+- Total plans completed: 60
 - Average duration: 4 min
-- Total execution time: 3.86 hours
+- Total execution time: 3.96 hours
 
 **By Phase:**
 
@@ -43,10 +43,10 @@ Progress: [=============...........................] 33% (Phase 6.6)
 | 06.3-security-compliance-design | 3 | 6 min | 2 min |
 | 06.4-ci-step-identity-and-change-tracking | 3 | 9 min | 3 min |
 | 06.5-workflow-and-build-model-hardening | 2 | 8 min | 4 min |
-| 06.6-sync-operations-and-logging | 1 | 4 min | 4 min |
+| 06.6-sync-operations-and-logging | 2 | 10 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.4-02 (3 min), 06.4-03 (3 min), 06.5-01 (5 min), 06.5-02 (3 min), 06.6-01 (4 min)
+- Last 5 plans: 06.4-03 (3 min), 06.5-01 (5 min), 06.5-02 (3 min), 06.6-01 (4 min), 06.6-02 (6 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -202,6 +202,9 @@ Recent decisions affecting current work:
 | 06.6-01 | Branch protection check is non-blocking; logs warning but never aborts scan | Scan reliability prioritized over strict enforcement |
 | 06.6-01 | requires_pr and required_reviews are separate protection rules | Detects branches allowing self-merge (PRs required but 0 reviews) |
 | 06.6-01 | No StepSyncEntry for unchanged steps | Reduces noise in sync logs; only log actual changes |
+| 06.6-02 | URL normalization via parse_git_url for webhook-to-repo matching | Handles URL format differences (HTTPS vs SSH, trailing .git) |
+| 06.6-02 | Concurrent scan prevention returns 200 silently | Prevents task queue flooding from rapid pushes |
+| 06.6-02 | django_scheduled_tasks in INSTALLED_APPS with scheduler process | Required for run_task_scheduler command and ScheduledTaskRunLog models |
 
 ### Roadmap Evolution
 
@@ -275,5 +278,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 06.6-01-PLAN.md — sync logging models, branch protection, instrumented scan_steps_repository
+Stopped at: Completed 06.6-02-PLAN.md — webhook handler, scheduled scan, auto-registration
 Resume file: None
