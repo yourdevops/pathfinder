@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 6.5 complete - Next: Phase 7 (Deployments)
+**Current focus:** Phase 6.6 in progress - Sync Operations and Logging
 
 ## Current Position
 
-Phase: 6.5 (Workflow and Build Model Hardening)
-Plan: 2 of 2 in current phase
-Status: Complete
-Last activity: 2026-02-16 - Phase 6.5 complete: workflow engine field, build model hardening
+Phase: 6.6 (Sync Operations and Logging)
+Plan: 1 of 3 in current phase
+Status: In Progress
+Last activity: 2026-02-16 - Plan 01 complete: sync logging models, branch protection, instrumented scan
 
-Progress: [========================================] 100% (Phase 6.5)
+Progress: [=============...........................] 33% (Phase 6.6)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 58
+- Total plans completed: 59
 - Average duration: 4 min
-- Total execution time: 3.79 hours
+- Total execution time: 3.86 hours
 
 **By Phase:**
 
@@ -43,9 +43,10 @@ Progress: [========================================] 100% (Phase 6.5)
 | 06.3-security-compliance-design | 3 | 6 min | 2 min |
 | 06.4-ci-step-identity-and-change-tracking | 3 | 9 min | 3 min |
 | 06.5-workflow-and-build-model-hardening | 2 | 8 min | 4 min |
+| 06.6-sync-operations-and-logging | 1 | 4 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.4-01 (3 min), 06.4-02 (3 min), 06.4-03 (3 min), 06.5-01 (5 min), 06.5-02 (3 min)
+- Last 5 plans: 06.4-02 (3 min), 06.4-03 (3 min), 06.5-01 (5 min), 06.5-02 (3 min), 06.6-01 (4 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -197,6 +198,10 @@ Recent decisions affecting current work:
 | 06.5-02 | Build.ci_run_id replaces github_run_id for engine-agnostic naming | Removes GitHub-specific coupling from core Build model |
 | 06.5-02 | Revoked versions produce distinct "revoked" verification_status | Clear visual distinction from "unauthorized" (unknown manifests) |
 | 06.5-02 | map_run_status on CICapableMixin interface, not Build model | Each CI engine implements its own status/conclusion mapping |
+| 06.6-01 | SHA-unchanged optimization skips full scan when HEAD matches last_scanned_sha | Avoids unnecessary re-processing of unchanged repositories |
+| 06.6-01 | Branch protection check is non-blocking; logs warning but never aborts scan | Scan reliability prioritized over strict enforcement |
+| 06.6-01 | requires_pr and required_reviews are separate protection rules | Detects branches allowing self-merge (PRs required but 0 reviews) |
+| 06.6-01 | No StepSyncEntry for unchanged steps | Reduces noise in sync logs; only log actual changes |
 
 ### Roadmap Evolution
 
@@ -270,5 +275,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 06.5-02-PLAN.md — ci_run_id rename, revoked badge, map_run_status plugin (Phase 6.5 complete)
+Stopped at: Completed 06.6-01-PLAN.md — sync logging models, branch protection, instrumented scan_steps_repository
 Resume file: None
