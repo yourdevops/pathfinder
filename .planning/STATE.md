@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 6.7 in progress - Version Lifecycle Automation
+**Current focus:** Phase 6.7 complete - Version Lifecycle Automation
 
 ## Current Position
 
 Phase: 6.7 (Version Lifecycle Automation)
-Plan: 3 of 4 in current phase
-Status: In Progress
-Last activity: 2026-02-16 - Plan 03 complete: version cleanup logic and management command
+Plan: 4 of 4 in current phase
+Status: Complete
+Last activity: 2026-02-16 - Plan 04 complete: CI Configuration settings page
 
-Progress: [==============================----------] 75% (Phase 6.7)
+Progress: [========================================] 100% (Phase 6.7)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 64
+- Total plans completed: 65
 - Average duration: 4 min
 - Total execution time: 4.08 hours
 
@@ -44,10 +44,10 @@ Progress: [==============================----------] 75% (Phase 6.7)
 | 06.4-ci-step-identity-and-change-tracking | 3 | 9 min | 3 min |
 | 06.5-workflow-and-build-model-hardening | 2 | 8 min | 4 min |
 | 06.6-sync-operations-and-logging | 3 | 12 min | 4 min |
-| 06.7-version-lifecycle-automation | 3 | 7 min | 2.3 min |
+| 06.7-version-lifecycle-automation | 4 | 9 min | 2.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.6-02 (6 min), 06.6-03 (2 min), 06.7-01 (4 min), 06.7-02 (2 min), 06.7-03 (1 min)
+- Last 5 plans: 06.6-03 (2 min), 06.7-01 (4 min), 06.7-02 (2 min), 06.7-03 (1 min), 06.7-04 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -213,6 +213,8 @@ Recent decisions affecting current work:
 | 06.7-02 | Version-aware commit message: ci: update {manifest_id} to v{version} | Clearer audit trail for manifest changes |
 | 06.7-03 | Only revoked versions eligible for record deletion; authorized versions retained | Authorized versions may still be referenced for auditing |
 | 06.7-03 | Existing DeleteVersionView already guards builds and pinned_services | No view changes needed; guards verified in place |
+| 06.7-04 | Cleanup button enqueues scheduled_cleanup_versions via .enqueue(), not direct call | Per locked decision 13; background task keeps view responsive |
+| 06.7-04 | CI Configuration nav link placed between Audit Log and Notifications | Logical grouping with other system configuration items |
 
 ### Roadmap Evolution
 
@@ -287,5 +289,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 06.7-03-PLAN.md
-Resume file: .planning/phases/06.7-version-lifecycle-automation/06.7-03-SUMMARY.md
+Stopped at: Completed 06.7-04-PLAN.md
+Resume file: .planning/phases/06.7-version-lifecycle-automation/06.7-04-SUMMARY.md
