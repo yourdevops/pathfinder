@@ -1066,6 +1066,70 @@ def auto_update_services(workflow_id: int, version_id: int) -> dict:
     return {"updated": updated, "skipped": skipped}
 
 
+def cleanup_old_versions() -> dict:
+    """Clean up old version manifest content and delete unreferenced versions.
+
+    Two-phase cleanup:
+    1. Clear manifest_content for old authorized/revoked versions (keep hash for verification).
+    2. Delete revoked version records that have no Build or Service references
+       and are older than the retention period.
+
+    Returns dict with content_cleared and versions_deleted counts.
+    """
+    from datetime import timedelta
+
+    from django.utils import timezone
+
+    from core.models import CIWorkflowVersion, SiteConfiguration
+
+    config = SiteConfiguration.get_instance()
+    retention_days = config.version_retention_days
+    cutoff = timezone.now() - timedelta(days=retention_days)
+
+    # Step 1: Clear manifest_content for old authorized/revoked versions
+    # Keep manifest_hash for verification. Only clear content, not the record.
+    old_versions = CIWorkflowVersion.objects.filter(
+        status__in=["authorized", "revoked"],
+        published_at__lt=cutoff,
+        manifest_content__isnull=False,
+    ).exclude(manifest_content="")
+    content_cleared = old_versions.update(manifest_content="")
+
+    # Step 2: Delete version records that meet ALL criteria:
+    # - No Build references (Build.workflow_version FK)
+    # - Not pinned by any service (Service.ci_workflow_version FK)
+    # - Older than retention period
+    # - Status is "revoked" (don't delete authorized versions)
+    deleted_count = 0
+    for version in CIWorkflowVersion.objects.filter(
+        status="revoked",
+        published_at__lt=cutoff,
+    ):
+        if version.builds.exists():
+            continue
+        if version.pinned_services.exists():
+            continue
+        version.delete()
+        deleted_count += 1
+
+    # Update last_cleanup_at
+    config.last_cleanup_at = timezone.now()
+    config.save(update_fields=["last_cleanup_at"])
+
+    logger.info(f"Version cleanup: {content_cleared} manifest(s) cleared, {deleted_count} version(s) deleted")
+    return {
+        "content_cleared": content_cleared,
+        "versions_deleted": deleted_count,
+    }
+
+
+@cron_task(cron_schedule="0 3 * * *")
+@task(queue_name="default")
+def scheduled_cleanup_versions() -> dict:
+    """Daily cleanup of old version manifest content and unreferenced versions."""
+    return cleanup_old_versions()
+
+
 @cron_task(cron_schedule="0 2 * * *")
 @task(queue_name="steps_scan")
 def scheduled_scan_all_steps_repos() -> dict:
