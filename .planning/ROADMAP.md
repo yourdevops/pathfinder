@@ -27,6 +27,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6.2: Deployment Design Documentation** (INSERTED) - RFC-style design docs for Deployments
 - [x] **Phase 6.3: Security & Compliance Design — Secrets, SLSA L3, SOX RBAC** (INSERTED) - Secrets management, artifact provenance signing, SLSA Level 3, SOX-compliant RBAC
 - [x] **Phase 6.4: CI Step Identity and Change Tracking** (INSERTED) - Step slugs, per-file SHA versioning, change detection, archival
+- [ ] **Phase 6.5: Workflow and Build Model Hardening** (INSERTED) - CIWorkflow engine field, step ordering validation, archived status, engine-agnostic Build model, revoked verification status
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
 ## Phase Details
@@ -266,6 +267,24 @@ Plans:
 - [x] 06-01-PLAN.md — Build model, webhook endpoint with HMAC auth, poll_build_details task, service activation
 - [x] 06-02-PLAN.md — Build history UI with table layout, filtering, pagination, HTMX auto-refresh
 
+### Phase 06.5: Workflow and Build Model Hardening (INSERTED)
+
+**Goal:** CIWorkflow has an explicit engine field set at creation, step ordering is validated before save, and an "archived" status allows graceful deprecation. Build model is engine-agnostic with a generic `ci_run_id`, has a distinct "revoked" verification status, and categorizes builds by `manifest_id` instead of workflow name.
+**Depends on:** Phase 6
+**Gaps Addressed**: GAP-08, GAP-09, GAP-10, GAP-14, GAP-15, GAP-16 from docs/ci-workflows/REMEDIATION.md
+**Success Criteria** (what must be TRUE):
+  1. `CIWorkflow.engine` is set at creation and used everywhere instead of step-derived engine
+  2. Invalid step orders are rejected with a clear message in the workflow composer
+  3. Archived workflows are hidden from new onboarding but remain functional for existing services
+  4. `github_run_id` is renamed to `ci_run_id` (engine-agnostic)
+  5. Revoked versions produce `"revoked"` verification status with distinct UI badge
+  6. Builds tab categorizes by `manifest_id` instead of workflow name
+**Plans:** 2 plans
+
+Plans:
+- [ ] 06.5-01-PLAN.md — CIWorkflow engine field, step ordering validation, archived status
+- [ ] 06.5-02-PLAN.md — Build model engine-agnostic rename, revoked verification status, manifest_id categorization
+
 ### Phase 06.4: CI Step Identity and Change Tracking (INSERTED)
 
 **Goal:** Steps have proper identity (globally unique slug per engine), per-file versioning, SHA-based change detection, and soft-delete via archival instead of hard delete
@@ -353,7 +372,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 6.3 -> 6.4 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 6.3 -> 6.4 -> 6.5 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -372,8 +391,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5
 | 6.2 Deployment Design Documentation (INSERTED) | 3/3 | Complete | 2026-02-12 |
 | 6.3 Security & Compliance Design (INSERTED) | 3/3 | Complete | 2026-02-13 |
 | 6.4 CI Step Identity and Change Tracking (INSERTED) | 3/3 | Complete | 2026-02-16 |
+| 6.5 Workflow and Build Model Hardening (INSERTED) | 0/2 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-02-16 (Phase 6.4 complete - step identity, per-file SHA, change detection, archival)*
+*Last updated: 2026-02-16 (Phase 6.5 planned - workflow engine field, build model hardening)*
