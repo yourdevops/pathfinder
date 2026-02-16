@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 6.4 complete - Next: Phase 7 (Deployments)
+**Current focus:** Phase 6.5 in progress - Workflow and Build Model Hardening
 
 ## Current Position
 
-Phase: 6.4 (CI Step Identity and Change Tracking)
-Plan: 3 of 3 in current phase
-Status: Phase Complete
-Last activity: 2026-02-16 - Completed quick task 40: Fix python-uv step not imported from ci-steps-library
+Phase: 6.5 (Workflow and Build Model Hardening)
+Plan: 1 of 2 in current phase
+Status: In Progress
+Last activity: 2026-02-16 - Completed 06.5-01: engine field, step validation, archive
 
-Progress: [========================================] 100% (Phase 6.4)
+Progress: [====================                    ] 50% (Phase 6.5)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 56
+- Total plans completed: 57
 - Average duration: 4 min
-- Total execution time: 3.66 hours
+- Total execution time: 3.74 hours
 
 **By Phase:**
 
@@ -42,9 +42,10 @@ Progress: [========================================] 100% (Phase 6.4)
 | 06.2-deployment-design-docs | 3 | 6 min | 2 min |
 | 06.3-security-compliance-design | 3 | 6 min | 2 min |
 | 06.4-ci-step-identity-and-change-tracking | 3 | 9 min | 3 min |
+| 06.5-workflow-and-build-model-hardening | 1 | 5 min | 5 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.3-02 (2 min), 06.3-03 (2 min), 06.4-01 (3 min), 06.4-02 (3 min), 06.4-03 (3 min)
+- Last 5 plans: 06.3-03 (2 min), 06.4-01 (3 min), 06.4-02 (3 min), 06.4-03 (3 min), 06.5-01 (5 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -190,6 +191,9 @@ Recent decisions affecting current work:
 | 06.3-03 | release-manager and secrets-admin are new roles without old equivalents | Fills deployment approval and cross-project secret management gaps |
 | 06.4-01 | last_change_type uses blank=True (empty string) not null=True | Django CharField convention per ruff DJ001; empty string as "no change" sentinel |
 | 06.4-02 | Reset last_change_type for all active steps before each scan | Clean change markers per scan cycle; avoids stale interface/metadata flags from prior scan |
+| 06.5-01 | CIWorkflow.engine set at creation, immutable, replaces step-derived engine | Eliminates fragile first_step.step.engine pattern across 10+ call sites |
+| 06.5-01 | Archived status as third CIWorkflow choice alongside published/draft | Existing status=published filter already excludes archived from onboarding |
+| 06.5-01 | Step ordering validation checks runtime_constraints against setup steps | Descriptive error messages per missing runtime setup step |
 
 ### Roadmap Evolution
 
@@ -202,6 +206,7 @@ Recent decisions affecting current work:
 - Phase 6.2 inserted after Phase 6: Deployment Design Documentation - RFC-style design docs for Deployments, organized similar to ci-workflows (URGENT)
 - Phase 6.3 inserted after Phase 6: Security & Compliance Design — Secrets, SLSA L3, SOX RBAC (URGENT)
 - Phase 6.4 inserted after Phase 6: CI Step Identity and Change Tracking (URGENT)
+- Phase 6.5 inserted after Phase 6: Workflow and Build Model Hardening (URGENT)
 
 ### Pending Todos
 
@@ -261,5 +266,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed quick-40 — discover_steps supports both .yml and .yaml extensions
+Stopped at: Completed 06.5-01-PLAN.md — engine field, step validation, archive
 Resume file: None
