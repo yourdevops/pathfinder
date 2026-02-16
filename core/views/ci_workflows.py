@@ -150,6 +150,9 @@ class StepsRepoDetailView(LoginRequiredMixin, View):
         workflows_using = CIWorkflow.objects.filter(workflow_steps__step__repository=repo).distinct().order_by("name")
         can_delete = can_manage and not workflows_using.exists()
 
+        # Sync history (most recent 20)
+        sync_logs = repo.sync_logs.prefetch_related("entries").order_by("-started_at")[:20]
+
         return render(
             request,
             "core/ci_workflows/repo_detail.html",
@@ -162,6 +165,7 @@ class StepsRepoDetailView(LoginRequiredMixin, View):
                 "can_manage": can_manage,
                 "workflows_using": workflows_using,
                 "can_delete": can_delete,
+                "sync_logs": sync_logs,
                 "repo_delete_url": reverse("ci_workflows:repo_delete", kwargs={"repo_name": repo.name}),
             },
         )
@@ -202,6 +206,20 @@ class StepsRepoScanStatusView(LoginRequiredMixin, View):
             {
                 "repo": repo,
             },
+        )
+
+
+class SyncDetailView(LoginRequiredMixin, View):
+    """HTMX partial for sync log detail with per-step entries."""
+
+    def get(self, request, repo_name, sync_id):
+        from core.models import StepsRepoSyncLog
+
+        sync_log = get_object_or_404(StepsRepoSyncLog, id=sync_id, repository__name=repo_name)
+        return render(
+            request,
+            "core/ci_workflows/_sync_detail.html",
+            {"sync_log": sync_log, "entries": sync_log.entries.all()},
         )
 
 
