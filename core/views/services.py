@@ -871,6 +871,30 @@ class ServicePushManifestView(LoginRequiredMixin, View):
         return redirect(f"/projects/{self.project.name}/services/{self.service.name}/?tab=ci")
 
 
+class ServiceAutoUpdateToggleView(LoginRequiredMixin, View):
+    """Toggle auto_update_patch for a service via HTMX."""
+
+    def post(self, request, project_name, service_name):
+        project = get_object_or_404(Project, name=project_name, status="active")
+        service = get_object_or_404(Service, project=project, name=service_name)
+
+        # Check contributor permission
+        role = can_access_project(request.user, project)
+        if not role or role == "viewer":
+            return HttpResponse("Permission denied", status=403)
+
+        # Toggle based on checkbox value (checkbox sends value when checked, absent when unchecked)
+        service.auto_update_patch = "auto_update_patch" in request.POST
+        service.save(update_fields=["auto_update_patch", "updated_at"])
+
+        # Return the updated toggle partial for HTMX swap
+        return render(
+            request,
+            "core/services/_auto_update_toggle.html",
+            {"service": service, "project": project, "can_edit": True},
+        )
+
+
 class ServicePinVersionView(LoginRequiredMixin, View):
     """Pin a service to a specific CIWorkflowVersion."""
 

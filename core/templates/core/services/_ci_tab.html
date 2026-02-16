@@ -203,6 +203,13 @@
                 </div>
             </div>
             {% endif %}
+
+            <!-- Row 3: Auto-update Toggle (only if workflow assigned) -->
+            {% if service.ci_workflow %}
+            <div class="pt-4 border-t border-dark-border/50">
+                {% include "core/services/_auto_update_toggle.html" %}
+            </div>
+            {% endif %}
         </div>
     </div>
 

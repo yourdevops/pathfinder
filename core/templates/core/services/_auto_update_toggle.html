@@ -1,0 +1,38 @@
+<div id="auto-update-toggle" class="flex items-center justify-between py-3 px-4 bg-dark-bg/30 rounded-lg">
+    <div>
+        <label for="auto-update-checkbox" class="text-dark-text font-medium text-sm">Auto-update on Patch Versions</label>
+        <p class="text-dark-muted text-xs mt-0.5">When enabled, this service automatically receives manifest updates when a patch version (same major.minor) is published.</p>
+    </div>
+    <div class="flex items-center gap-3">
+        {% if service.auto_update_patch %}
+        <span class="text-xs text-green-400">Enabled</span>
+        {% else %}
+        <span class="text-xs text-dark-muted">Disabled</span>
+        {% endif %}
+        {% if can_edit %}
+        <form method="post" action="{% url 'projects:service_auto_update_toggle' project_name=project.name service_name=service.name %}">
+            {% csrf_token %}
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox"
+                       name="auto_update_patch"
+                       id="auto-update-checkbox"
+                       {% if service.auto_update_patch %}checked{% endif %}
+                       class="sr-only peer"
+                       hx-post="{% url 'projects:service_auto_update_toggle' project_name=project.name service_name=service.name %}"
+                       hx-target="#auto-update-toggle"
+                       hx-swap="outerHTML"
+                       hx-include="closest form">
+                <div class="w-11 h-6 bg-dark-border rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-dark-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-dark-accent"></div>
+            </label>
+        </form>
+        {% else %}
+        <label class="relative inline-flex items-center">
+            <input type="checkbox"
+                   {% if service.auto_update_patch %}checked{% endif %}
+                   disabled
+                   class="sr-only peer">
+            <div class="w-11 h-6 bg-dark-border rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-dark-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-dark-accent opacity-60"></div>
+        </label>
+        {% endif %}
+    </div>
+</div>
