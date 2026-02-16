@@ -95,7 +95,6 @@ from .views.services import (
     ServicePushManifestView,
     ServiceRegisterWebhookView,
     ServiceScaffoldStatusView,
-    ServiceUpdatePushMethodView,
 )
 
 # Setup URLs
@@ -371,11 +370,6 @@ projects_patterns = [
         "<dns:project_name>/services/<dns:service_name>/ci/assign-workflow/",
         ServiceAssignWorkflowView.as_view(),
         name="service_assign_workflow",
-    ),
-    path(
-        "<dns:project_name>/services/<dns:service_name>/ci/push-method/",
-        ServiceUpdatePushMethodView.as_view(),
-        name="service_update_push_method",
     ),
     path(
         "<dns:project_name>/services/<dns:service_name>/ci/pin-version/",

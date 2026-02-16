@@ -449,7 +449,7 @@ class Service(models.Model):
     )
     ci_manifest_push_method = models.CharField(
         max_length=10,
-        choices=[("pr", "Pull Request"), ("direct", "Direct Push")],
+        choices=[("pr", "Pull Request")],
         default="pr",
     )
     webhook_registered = models.BooleanField(default=False)

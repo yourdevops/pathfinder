@@ -806,19 +806,6 @@ class ServicePushManifestView(LoginRequiredMixin, View):
         return redirect(f"/projects/{self.project.name}/services/{self.service.name}/?tab=ci")
 
 
-class ServiceUpdatePushMethodView(LoginRequiredMixin, View):
-    """Update service CI manifest push method."""
-
-    def post(self, request, project_name, service_name):
-        project = get_object_or_404(Project, name=project_name)
-        service = get_object_or_404(Service, project=project, name=service_name)
-        push_method = request.POST.get("push_method", "pr")
-        if push_method in ("pr", "direct"):
-            service.ci_manifest_push_method = push_method
-            service.save(update_fields=["ci_manifest_push_method"])
-        return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
-
-
 class ServicePinVersionView(LoginRequiredMixin, View):
     """Pin a service to a specific CIWorkflowVersion."""
 
