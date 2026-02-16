@@ -612,9 +612,11 @@ class ServiceAssignWorkflowView(LoginRequiredMixin, View):
         return super().dispatch(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
-        from core.models import CIWorkflow
+        from core.models import CIWorkflow, CIWorkflowVersion
 
         workflow_id = request.POST.get("ci_workflow")
+        version_id = request.POST.get("version_id", "")
+        update_fields = ["ci_workflow", "ci_manifest_status", "ci_workflow_version", "updated_at"]
 
         if workflow_id:
             # Validate workflow is in project's approved list
@@ -636,12 +638,36 @@ class ServiceAssignWorkflowView(LoginRequiredMixin, View):
             if old_workflow and old_workflow != workflow and self.service.ci_manifest_status == "synced":
                 self.service.ci_manifest_status = "out_of_sync"
 
-            self.service.save(update_fields=["ci_workflow", "ci_manifest_status", "updated_at"])
+            # Handle version pinning in the same request
+            if version_id and version_id != "none":
+                try:
+                    version = CIWorkflowVersion.objects.get(
+                        id=int(version_id),
+                        workflow=workflow,
+                        status__in=[CIWorkflowVersion.Status.AUTHORIZED, CIWorkflowVersion.Status.DRAFT],
+                    )
+                    if version.status == CIWorkflowVersion.Status.DRAFT:
+                        try:
+                            ci_config = self.project.ci_config
+                            if not ci_config.allow_draft_workflows:
+                                messages.error(request, "This project does not allow draft workflow versions.")
+                                return redirect(f"/projects/{self.project.name}/services/{self.service.name}/?tab=ci")
+                        except self.project.ci_config.RelatedObjectDoesNotExist:
+                            messages.error(request, "This project does not allow draft workflow versions.")
+                            return redirect(f"/projects/{self.project.name}/services/{self.service.name}/?tab=ci")
+                    self.service.ci_workflow_version = version
+                except (CIWorkflowVersion.DoesNotExist, ValueError):
+                    self.service.ci_workflow_version = None
+            else:
+                self.service.ci_workflow_version = None
+
+            self.service.save(update_fields=update_fields)
             messages.success(request, f'CI Workflow updated to "{workflow.name}".')
         else:
-            # Unassign workflow
+            # Unassign workflow and version
             self.service.ci_workflow = None
-            self.service.save(update_fields=["ci_workflow", "updated_at"])
+            self.service.ci_workflow_version = None
+            self.service.save(update_fields=update_fields)
             messages.success(request, "CI Workflow unassigned.")
 
         return redirect(
