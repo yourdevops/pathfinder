@@ -19,6 +19,7 @@ RESET='\033[0m'
 # Track child PIDs
 WEB_PID=""
 WORKER_PID=""
+SCHED_PID=""
 
 cleanup() {
     echo ""
@@ -33,6 +34,11 @@ cleanup() {
     if [ -n "$WORKER_PID" ] && kill -0 "$WORKER_PID" 2>/dev/null; then
         kill -- -"$WORKER_PID" 2>/dev/null || kill "$WORKER_PID" 2>/dev/null || true
         wait "$WORKER_PID" 2>/dev/null || true
+    fi
+
+    if [ -n "$SCHED_PID" ] && kill -0 "$SCHED_PID" 2>/dev/null; then
+        kill -- -"$SCHED_PID" 2>/dev/null || kill "$SCHED_PID" 2>/dev/null || true
+        wait "$SCHED_PID" 2>/dev/null || true
     fi
 
     rm -f "$WEB_PID_FILE" "$WORKER_PID_FILE"
@@ -55,6 +61,14 @@ echo ""
 WORKER_PID=$!
 echo "$WORKER_PID" > "$WORKER_PID_FILE"
 
+# Start task scheduler with prefixed output
+(
+    $PYTHON manage.py run_task_scheduler 2>&1 | while IFS= read -r line; do
+        echo -e "${GREEN}[sched]${RESET} $line"
+    done
+) &
+SCHED_PID=$!
+
 # Small delay to let worker start first
 sleep 0.5
 
@@ -67,7 +81,7 @@ sleep 0.5
 WEB_PID=$!
 echo "$WEB_PID" > "$WEB_PID_FILE"
 
-echo -e "${GREEN}Both services running. Press Ctrl+C to stop.${RESET}"
+echo -e "${GREEN}All services running. Press Ctrl+C to stop.${RESET}"
 echo ""
 
 # Wait for either process to exit

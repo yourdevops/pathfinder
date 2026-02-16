@@ -59,6 +59,22 @@ services:
     networks:
       - yourdevops_public
 
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ssp-scheduler
+    command: python manage.py run_task_scheduler
+    environment:
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
+      - PTF_ENCRYPTION_KEY=${PTF_ENCRYPTION_KEY}
+    volumes:
+      - ./data:/app/data
+    restart: unless-stopped
+    networks:
+      - yourdevops_public
+
 networks:
   yourdevops_public:
     external: true

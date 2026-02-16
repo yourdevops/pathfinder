@@ -19,6 +19,7 @@ dependencies = [
     "PyGithub>=2.5.0",
     "docker>=7.1.0",
     "django-tasks[database]>=0.4.0",
+    "django-scheduled-tasks>=0.2.0",
     "django-formtools>=2.5.0",
     # Phase 4: Blueprints
     "semver>=3.0.0",

@@ -12,6 +12,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.utils import timezone
+from django_scheduled_tasks import cron_task
 from django_tasks import task
 
 logger = logging.getLogger(__name__)
@@ -972,3 +973,30 @@ def push_ci_manifest(service_id: int) -> dict:
         error_msg = str(e)
         logger.exception(f"Failed to push CI manifest for service {service_id}")
         return {"status": "failed", "error": error_msg}
+
+
+@cron_task(cron_schedule="0 2 * * *")
+@task(queue_name="steps_scan")
+def scheduled_scan_all_steps_repos() -> dict:
+    """Daily scan of all steps repositories.
+
+    Runs at 02:00 UTC via django-scheduled-tasks.
+    Enqueues individual scan tasks for each repository.
+    """
+    from core.models import StepsRepository
+
+    repos = StepsRepository.objects.all()
+    enqueued = 0
+    skipped = 0
+
+    for repo in repos:
+        if repo.scan_status == "scanning":
+            logger.info(f"Skipping {repo.name} (already scanning)")
+            skipped += 1
+            continue
+
+        scan_steps_repository.enqueue(repository_id=repo.id, trigger="scheduled")
+        enqueued += 1
+
+    logger.info(f"Scheduled scan: enqueued {enqueued}, skipped {skipped}")
+    return {"enqueued": enqueued, "skipped": skipped}

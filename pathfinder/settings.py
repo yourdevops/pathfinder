@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     "django_htmx",
     "django_tasks",
     "django_tasks.backends.database",
+    "django_scheduled_tasks",
     "formtools",
     "tailwind",
     "theme",  # django-tailwind theme app

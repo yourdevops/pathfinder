@@ -1,6 +1,7 @@
 """CI Workflows views: repository management, steps catalog, workflow composer."""
 
 import json
+import logging
 from collections import OrderedDict
 
 from django.contrib import messages
@@ -13,6 +14,7 @@ from django.views import View
 
 from core.ci_manifest import get_compatible_steps, is_step_compatible
 from core.forms.ci_workflows import StepsRepoRegisterForm, WorkflowCreateForm
+from core.git_utils import parse_git_url
 from core.models import (
     CIStep,
     CIWorkflow,
@@ -24,6 +26,8 @@ from core.models import (
 )
 from core.permissions import OperatorRequiredMixin, has_system_role
 from plugins.base import get_available_engines, get_ci_plugin_for_engine
+
+logger = logging.getLogger(__name__)
 
 
 class StepsRepoListView(LoginRequiredMixin, View):
@@ -73,10 +77,35 @@ class StepsRepoRegisterView(OperatorRequiredMixin, View):
                 connection=form.cleaned_data.get("connection"),
                 created_by=request.user.username,
             )
+
+            # Register webhook for push events on the steps repository
+            if repo.connection:
+                from core.models import SiteConfiguration
+
+                site_config = SiteConfiguration.get_instance()
+                if site_config and site_config.external_url:
+                    try:
+                        plugin = repo.connection.get_plugin()
+                        config = repo.connection.get_config()
+                        parsed = parse_git_url(repo.git_url)
+                        if plugin and parsed:
+                            repo_full_name = f"{parsed['owner']}/{parsed['repo']}"
+                            webhook_url = f"{site_config.external_url.rstrip('/')}/webhooks/steps-repo/"
+                            plugin.configure_webhook(
+                                config,
+                                repo_full_name,
+                                webhook_url,
+                                events=["push"],
+                            )
+                            logger.info(f"Registered webhook for steps repo {repo.name}")
+                    except Exception as e:
+                        # Log but don't fail registration
+                        logger.warning(f"Failed to register webhook for steps repo {repo.name}: {e}")
+
             # Enqueue scan task
             from core.tasks import scan_steps_repository
 
-            scan_steps_repository.enqueue(repository_id=repo.id)
+            scan_steps_repository.enqueue(repository_id=repo.id, trigger="manual")
             return redirect("ci_workflows:repo_detail", repo_name=repo.name)
         return render(
             request,
@@ -149,7 +178,7 @@ class StepsRepoScanView(OperatorRequiredMixin, View):
 
         from core.tasks import scan_steps_repository
 
-        scan_steps_repository.enqueue(repository_id=repo.id)
+        scan_steps_repository.enqueue(repository_id=repo.id, trigger="manual")
 
         if request.headers.get("HX-Request"):
             return render(
