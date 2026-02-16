@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 6.7 (Version Lifecycle Automation)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In Progress
-Last activity: 2026-02-16 - Plan 02 complete: auto-update engine and digest PR
+Last activity: 2026-02-16 - Plan 03 complete: version cleanup logic and management command
 
-Progress: [====================--------------------] 50% (Phase 6.7)
+Progress: [==============================----------] 75% (Phase 6.7)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 63
+- Total plans completed: 64
 - Average duration: 4 min
-- Total execution time: 4.06 hours
+- Total execution time: 4.08 hours
 
 **By Phase:**
 
@@ -44,10 +44,10 @@ Progress: [====================--------------------] 50% (Phase 6.7)
 | 06.4-ci-step-identity-and-change-tracking | 3 | 9 min | 3 min |
 | 06.5-workflow-and-build-model-hardening | 2 | 8 min | 4 min |
 | 06.6-sync-operations-and-logging | 3 | 12 min | 4 min |
-| 06.7-version-lifecycle-automation | 2 | 6 min | 3 min |
+| 06.7-version-lifecycle-automation | 3 | 7 min | 2.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.6-01 (4 min), 06.6-02 (6 min), 06.6-03 (2 min), 06.7-01 (4 min), 06.7-02 (2 min)
+- Last 5 plans: 06.6-02 (6 min), 06.6-03 (2 min), 06.7-01 (4 min), 06.7-02 (2 min), 06.7-03 (1 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -211,6 +211,8 @@ Recent decisions affecting current work:
 | 06.7-02 | Fixed branch name pathfinder/ci-manifest per repo for digest PR | Prevents branch sprawl when multiple services share a repository |
 | 06.7-02 | Auto-update count in flash uses quick DB count, patch filtering in task | Avoid semver comparison in the view for every service |
 | 06.7-02 | Version-aware commit message: ci: update {manifest_id} to v{version} | Clearer audit trail for manifest changes |
+| 06.7-03 | Only revoked versions eligible for record deletion; authorized versions retained | Authorized versions may still be referenced for auditing |
+| 06.7-03 | Existing DeleteVersionView already guards builds and pinned_services | No view changes needed; guards verified in place |
 
 ### Roadmap Evolution
 
@@ -285,5 +287,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 06.7-02-PLAN.md
-Resume file: .planning/phases/06.7-version-lifecycle-automation/06.7-02-SUMMARY.md
+Stopped at: Completed 06.7-03-PLAN.md
+Resume file: .planning/phases/06.7-version-lifecycle-automation/06.7-03-SUMMARY.md
