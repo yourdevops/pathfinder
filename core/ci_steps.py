@@ -18,6 +18,8 @@ def discover_steps(repo_path: str, engine_file_name: str) -> list[dict]:
     Walk repo_path looking for engine-specific step definition files.
 
     Searches at any depth, skipping hidden directories (starting with '.').
+    Both `.yml` and `.yaml` extensions are checked when the engine_file_name
+    uses either YAML extension (e.g., 'action.yml' also matches 'action.yaml').
     For each match, parses the YAML and returns a list of dicts.
 
     Args:
@@ -28,29 +30,40 @@ def discover_steps(repo_path: str, engine_file_name: str) -> list[dict]:
         Sorted list of dicts with keys:
             - directory_path: relative path from repo_path to the directory
               containing the file
+            - file_path: relative path including the actual filename found on disk
             - raw_content: parsed YAML dict
     """
     results = []
+
+    # Build candidate filenames: include both .yml and .yaml variants
+    candidates = {engine_file_name}
+    stem, ext = os.path.splitext(engine_file_name)
+    if ext == ".yml":
+        candidates.add(stem + ".yaml")
+    elif ext == ".yaml":
+        candidates.add(stem + ".yml")
 
     for dirpath, dirnames, filenames in os.walk(repo_path):
         # Skip hidden directories
         dirnames[:] = [d for d in dirnames if not d.startswith(".")]
 
-        if engine_file_name in filenames:
-            file_path = os.path.join(dirpath, engine_file_name)
+        matched = candidates & set(filenames)
+        if matched:
+            actual_filename = next(iter(matched))
+            file_path = os.path.join(dirpath, actual_filename)
             rel_dir = os.path.relpath(dirpath, repo_path)
 
             try:
                 with open(file_path) as f:
                     content = yaml.safe_load(f) or {}
             except yaml.YAMLError as e:
-                logger.warning(f"Failed to parse {engine_file_name} in {rel_dir}: {e}")
+                logger.warning(f"Failed to parse {actual_filename} in {rel_dir}: {e}")
                 continue
 
             results.append(
                 {
                     "directory_path": rel_dir,
-                    "file_path": os.path.join(rel_dir, engine_file_name),
+                    "file_path": os.path.join(rel_dir, actual_filename),
                     "raw_content": content,
                 }
             )
