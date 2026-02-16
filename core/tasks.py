@@ -214,17 +214,6 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
         return {"status": "failed", "error": error_msg}
 
 
-def _derive_step_slug(pathfinder_name: str, directory_name: str) -> str:
-    """Derive URL-safe slug from x-pathfinder.name, falling back to directory_name."""
-    from django.utils.text import slugify
-
-    name = pathfinder_name or directory_name
-    slug = slugify(name)
-    if not slug:
-        slug = slugify(directory_name)
-    return slug
-
-
 def _classify_change(old_step, new_fields: dict) -> str | None:
     """Compare old step fields with new fields to classify change type.
 
@@ -348,8 +337,8 @@ def scan_steps_repository(repository_id: int) -> dict:
             if not per_file_sha:
                 per_file_sha = repo_obj.head.commit.hexsha  # Fallback
 
-            # Derive slug
-            slug = _derive_step_slug(step_info["name"], dir_name)
+            # Derive slug via CI plugin (three-tier: x-pathfinder.name → native name → full path)
+            slug = ci_plugin.derive_step_slug(raw_step["raw_content"], raw_step["directory_path"])
             if not slug:
                 logger.warning(f"Could not derive slug for step in {dir_name}, skipping")
                 continue

@@ -73,7 +73,13 @@ Slugs must be unique within a CI Engine **across the entire Catalog**. At import
 
 There is no "adoption" mechanism—conflicts must be resolved by renaming or removing one of the conflicting steps.
 
-CI Plugins may provide engine-specific fallbacks for name resolution (e.g., deriving from directory structure), but steps without a resolvable name are skipped with a warning.
+Slug derivation follows a three-tier fallback:
+
+1. **`x-pathfinder.name`** — preferred, Pathfinder-specific metadata
+2. **Engine-native name** — CI Plugin provides engine-specific fallback (e.g., GitHub Actions uses the top-level `name` field from `action.yml`)
+3. **Full relative directory path** — last resort, slugified (e.g., `setup/python` → `setup-python`)
+
+Steps where none of the three tiers produce a valid slug are skipped with a warning.
 
 ## Step Tracking
 

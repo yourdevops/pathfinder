@@ -108,6 +108,23 @@ class CICapableMixin:
         """
         raise NotImplementedError
 
+    def derive_step_slug(self, file_content: dict, directory_path: str) -> str:
+        """Derive a URL-safe slug for a step using three-tier fallback.
+
+        Resolution order:
+          1. x-pathfinder.name (Pathfinder-specific metadata)
+          2. Engine-native name (plugin-specific, e.g., action.yml 'name' field)
+          3. Full relative directory path (e.g., 'setup/python' -> 'setup-python')
+
+        Args:
+            file_content: Parsed YAML dict of the step definition file.
+            directory_path: Relative path from repo root to the step directory.
+
+        Returns:
+            Slug string, or empty string if none could be derived.
+        """
+        raise NotImplementedError
+
     def generate_manifest(self, workflow, version: str | None = None) -> str:
         """Generate CI manifest YAML string for a CIWorkflow instance.
 

@@ -59,8 +59,10 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 **Impact**: Without global slug uniqueness, different repositories can import conflicting steps for the same engine. No collision detection means silent overwrites when steps from different repos share the same directory name and engine.
 
 **Remediation**:
-- Add `slug` CharField to `CIStep` model with `unique_together = ["engine", "slug"]`
-- Add slug derivation (from `x-pathfinder.name`, falling back to `directory_name`) in `scan_steps_repository` task (`core/tasks.py:298`)
+- Add `slug` CharField to `CIStep` model with `UniqueConstraint` on `["engine", "slug"]`
+- Remove the old `unique_together = ["repository", "directory_name"]` constraint — identity is now `(engine, slug)`, and `directory_name` is no longer unique within a repo (steps can share a basename at different paths, e.g., `setup/python/` and `test/python/`)
+- Add `derive_step_slug(directory_path, file_content)` method to `CICapableMixin` plugin interface — per steps-catalog.md: "CI Plugins may provide engine-specific fallbacks for name resolution (e.g., deriving from directory structure)". The slug is derived from `x-pathfinder.name` first; the plugin-provided fallback uses the full relative directory path (e.g., `setup/python` → `setup-python`) instead of just the basename
+- In `scan_steps_repository` (`core/tasks.py`), call the plugin's `derive_step_slug` instead of a core helper function
 - Add collision detection: if a slug already exists for the same engine in a different repository, skip with a logged warning
 
 ---
@@ -407,15 +409,16 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 **Dependencies**: None (foundation work)
 
 **Key Changes**:
-- **Models**: `CIStep` -- add `slug`, `status` fields; new unique constraint on `["engine", "slug"]`
-- **Tasks**: `scan_steps_repository` -- per-file git log, SHA-based skip/re-parse, field-level change classification, archive instead of delete
+- **Models**: `CIStep` -- add `slug`, `status`, `file_path`, `last_change_type` fields; new `UniqueConstraint` on `["engine", "slug"]`; remove old `unique_together = ["repository", "directory_name"]` (identity is now `(engine, slug)`, and `directory_name` is no longer unique within a repo since steps can share a basename at different paths)
+- **Plugins**: Add `derive_step_slug(directory_path, file_content)` to `CICapableMixin` — three-tier slug resolution: (1) `x-pathfinder.name`, (2) engine-native name field (GitHub Actions: `name` from action.yml), (3) full relative directory path as last resort (e.g., `setup/python` → `setup-python`)
+- **Tasks**: `scan_steps_repository` -- full clone (not shallow), per-file git log, plugin-driven slug derivation, SHA-based skip/re-parse, field-level change classification, archive instead of delete
 - **Views**: Workflow composer step picker filters out archived steps; workflow detail shows step update warnings
 - **Templates**: Badge/warning for archived or updated steps
 
 **Risk Notes**:
 - Changing from shallow clone to full clone (or deeper shallow) in `scan_steps_repository` increases clone time
 
-**Done when**: Steps have unique slugs per engine, `commit_sha` reflects per-file history, unchanged steps are skipped during scan, changes are detected and classified via field comparison, removed steps are archived (not deleted).
+**Done when**: Steps have unique slugs per engine (derived via plugin three-tier resolution), `commit_sha` reflects per-file history, unchanged steps are skipped during scan, changes are detected and classified via field comparison, removed steps are archived (not deleted), old `unique_together` on `(repository, directory_name)` is removed.
 
 ---
 
@@ -536,9 +539,9 @@ All existing Steps, Workflows, and related CI data were deleted. No data migrati
 
 | Phase | Model | Change |
 |-------|-------|--------|
-| R1 | CIStep | Add `slug` CharField |
-| R1 | CIStep | Add `status` CharField (default="active") |
-| R1 | CIStep | New unique constraint `["engine", "slug"]` |
+| R1 | CIStep | Add `slug`, `status`, `file_path`, `last_change_type` fields |
+| R1 | CIStep | New `UniqueConstraint` on `["engine", "slug"]` |
+| R1 | CIStep | Remove old `unique_together = ["repository", "directory_name"]` |
 | R2 | CIWorkflow | Add `engine` CharField (default="github_actions") |
 | R2 | CIWorkflow | Add "archived" to status choices |
 | R2 | Build | Rename `github_run_id` to `ci_run_id` |

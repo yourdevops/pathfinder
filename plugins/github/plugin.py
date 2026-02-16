@@ -58,6 +58,38 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
             "raw_metadata": file_content,
         }
 
+    def derive_step_slug(self, file_content: dict, directory_path: str) -> str:
+        """Derive slug for a GitHub Actions step.
+
+        Fallback chain:
+          1. x-pathfinder.name
+          2. action.yml top-level 'name' field
+          3. Full relative directory path
+        """
+        from django.utils.text import slugify
+
+        # Tier 1: x-pathfinder.name
+        pathfinder_name = file_content.get("x-pathfinder", {}).get("name", "")
+        if pathfinder_name:
+            slug = slugify(pathfinder_name)
+            if slug:
+                return slug
+
+        # Tier 2: GitHub Actions native 'name' field
+        native_name = file_content.get("name", "")
+        if native_name:
+            slug = slugify(native_name)
+            if slug:
+                return slug
+
+        # Tier 3: Full relative directory path (e.g., "setup/python" -> "setup-python")
+        if directory_path:
+            slug = slugify(directory_path.replace("/", "-").replace("\\", "-"))
+            if slug:
+                return slug
+
+        return ""
+
     def generate_manifest(self, workflow, version: str | None = None) -> str:
         """Generate a GitHub Actions workflow YAML for a CIWorkflow instance.
 

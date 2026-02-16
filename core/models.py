@@ -656,7 +656,6 @@ class CIStep(models.Model):
 
     class Meta:
         db_table = "core_ci_step"
-        unique_together = [["repository", "directory_name"]]
         ordering = ["phase", "name"]
         constraints = [
             models.UniqueConstraint(
