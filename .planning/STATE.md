@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 6.5 in progress - Workflow and Build Model Hardening
+**Current focus:** Phase 6.5 complete - Next: Phase 7 (Deployments)
 
 ## Current Position
 
 Phase: 6.5 (Workflow and Build Model Hardening)
 Plan: 2 of 2 in current phase
 Status: Complete
-Last activity: 2026-02-16 - Completed 06.5-02: ci_run_id rename, revoked badge, map_run_status plugin
+Last activity: 2026-02-16 - Phase 6.5 complete: workflow engine field, build model hardening
 
 Progress: [========================================] 100% (Phase 6.5)
 
