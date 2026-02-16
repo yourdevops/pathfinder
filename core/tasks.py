@@ -242,29 +242,33 @@ def _classify_change(old_step, new_fields: dict) -> str | None:
 
 
 @task(queue_name="steps_scan")
-def scan_steps_repository(repository_id: int) -> dict:
+def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
     """
     Scan a CI steps repository for step definitions and runtimes.
 
     Clones the repository, parses runtimes.yml, scans ci-steps/ for
     action.yml files, and creates/updates CIStep and RuntimeFamily records.
+    Creates a StepsRepoSyncLog with per-step StepSyncEntry records.
 
     Args:
         repository_id: ID of the StepsRepository to scan
+        trigger: How this scan was initiated ("manual", "webhook", "scheduled")
 
     Returns:
-        Dict with counts: {"steps": N, "runtimes": M}
+        Dict with counts: {"steps": N, "runtimes": M, "sync_log_id": N}
     """
     from core.ci_steps import parse_runtimes_yml
     from core.git_utils import (
         build_authenticated_git_url,
         cleanup_repo,
         clone_repo_full,
+        parse_git_url,
     )
-    from core.models import CIStep, RuntimeFamily, StepsRepository
+    from core.models import CIStep, RuntimeFamily, StepsRepository, StepsRepoSyncLog, StepSyncEntry
 
     repo_obj = None
     temp_dir = None
+    sync_log = None
 
     try:
         repository = StepsRepository.objects.get(id=repository_id)
@@ -276,6 +280,17 @@ def scan_steps_repository(repository_id: int) -> dict:
     repository.scan_status = "scanning"
     repository.scan_error = ""
     repository.save(update_fields=["scan_status", "scan_error"])
+
+    # Create sync log
+    previous_sha = repository.last_scanned_sha or ""
+    sync_log = StepsRepoSyncLog.objects.create(
+        repository=repository,
+        commit_sha="",
+        previous_sha=previous_sha,
+        status="running",
+        started_at=timezone.now(),
+        trigger=trigger,
+    )
 
     try:
         # Build authenticated URL if connection is set
@@ -289,6 +304,51 @@ def scan_steps_repository(repository_id: int) -> dict:
             branch=repository.default_branch,
             auth_url=auth_url,
         )
+
+        # Get HEAD SHA and update sync log
+        head_sha = repo_obj.head.commit.hexsha
+        sync_log.commit_sha = head_sha
+        sync_log.save(update_fields=["commit_sha"])
+
+        # Skip optimization: SHA unchanged since last scan
+        if head_sha == previous_sha:
+            sync_log.status = "skipped"
+            sync_log.completed_at = timezone.now()
+            sync_log.save(update_fields=["status", "completed_at"])
+            repository.scan_status = "scanned"
+            repository.save(update_fields=["scan_status"])
+            cleanup_repo(repo_obj, temp_dir)
+            repo_obj = None
+            temp_dir = None
+            return {"status": "skipped", "sync_log_id": sync_log.id}
+
+        # Branch protection check (non-blocking -- log result but don't abort scan)
+        from plugins.base import get_ci_plugin_for_engine
+
+        engine = repository.engine
+        ci_plugin = get_ci_plugin_for_engine(engine)
+
+        protection_result = {"valid": False, "message": "No connection configured"}
+        if repository.connection and ci_plugin:
+            parsed = parse_git_url(repository.git_url)
+            if parsed:
+                repo_name = f"{parsed['owner']}/{parsed['repo']}"
+                config = repository.connection.get_config()
+                protection_result = ci_plugin.check_branch_protection(config, repo_name, repository.default_branch)
+
+        sync_log.protection_valid = protection_result.get("valid", False)
+        sync_log.save(update_fields=["protection_valid"])
+        repository.protection_valid = protection_result.get("valid", False)
+        repository.save(update_fields=["protection_valid"])
+
+        if not protection_result.get("valid", False):
+            StepSyncEntry.objects.create(
+                sync_log=sync_log,
+                step_slug="",
+                action="skipped",
+                severity="warning",
+                message=f"Branch protection: {protection_result.get('message', 'unknown')}",
+            )
 
         # Parse runtimes.yml
         runtimes_data = parse_runtimes_yml(temp_dir)
@@ -311,10 +371,7 @@ def scan_steps_repository(repository_id: int) -> dict:
 
         # Scan CI steps using engine-agnostic discovery + plugin parsing
         from core.ci_steps import discover_steps
-        from plugins.base import get_ci_plugin_for_engine
 
-        engine = repository.engine
-        ci_plugin = get_ci_plugin_for_engine(engine)
         if ci_plugin:
             raw_steps = discover_steps(temp_dir, ci_plugin.engine_file_name)
         else:
@@ -337,7 +394,7 @@ def scan_steps_repository(repository_id: int) -> dict:
             if not per_file_sha:
                 per_file_sha = repo_obj.head.commit.hexsha  # Fallback
 
-            # Derive slug via CI plugin (three-tier: x-pathfinder.name → native name → full path)
+            # Derive slug via CI plugin (three-tier: x-pathfinder.name -> native name -> full path)
             slug = ci_plugin.derive_step_slug(raw_step["raw_content"], raw_step["directory_path"])
             if not slug:
                 logger.warning(f"Could not derive slug for step in {dir_name}, skipping")
@@ -353,13 +410,20 @@ def scan_steps_repository(repository_id: int) -> dict:
                     f"repository '{existing.repository.name}', skipping step from '{repository.name}'"
                 )
                 stats["skipped_collision"] += 1
+                StepSyncEntry.objects.create(
+                    sync_log=sync_log,
+                    step_slug=slug,
+                    action="skipped",
+                    severity="warning",
+                    message=f"Slug collision with repository '{existing.repository.name}'",
+                )
                 continue
 
             # Check same-repo match by slug+engine (normal update path)
             existing_same_repo = CIStep.objects.filter(repository=repository, engine=engine, slug=slug).first()
 
             if existing_same_repo:
-                # SHA unchanged? Skip
+                # SHA unchanged? Skip (no entry -- too noisy)
                 if existing_same_repo.commit_sha == per_file_sha:
                     stats["unchanged"] += 1
                     # Re-activate if it was archived (step file returned)
@@ -396,6 +460,14 @@ def scan_steps_repository(repository_id: int) -> dict:
                 existing_same_repo.last_change_type = change_type or ""
                 existing_same_repo.save()
                 stats["updated"] += 1
+                severity = "warning" if change_type == "interface" else "info"
+                StepSyncEntry.objects.create(
+                    sync_log=sync_log,
+                    step_slug=slug,
+                    action="updated",
+                    severity=severity,
+                    message=f"Change type: {change_type or 'content'}" if change_type else "Content updated",
+                )
             else:
                 # New step: create
                 CIStep.objects.create(
@@ -417,20 +489,43 @@ def scan_steps_repository(repository_id: int) -> dict:
                     last_change_type="",
                 )
                 stats["created"] += 1
+                StepSyncEntry.objects.create(
+                    sync_log=sync_log,
+                    step_slug=slug,
+                    action="added",
+                    severity="info",
+                    message=f"New step discovered: {step_info['name'] or dir_name}",
+                )
 
-        # Archive steps no longer found in repo (soft-delete instead of hard-delete)
-        archived_count = (
-            CIStep.objects.filter(repository=repository, status="active")
-            .exclude(slug__in=scanned_slugs)
-            .update(status="archived")
-        )
+        # Archive steps no longer found in repo (capture slugs before update)
+        to_archive_qs = CIStep.objects.filter(repository=repository, status="active").exclude(slug__in=scanned_slugs)
+        archived_slugs_list = list(to_archive_qs.values_list("slug", "name"))
+        archived_count = to_archive_qs.update(status="archived")
         stats["archived"] = archived_count
+        for slug, name in archived_slugs_list:
+            StepSyncEntry.objects.create(
+                sync_log=sync_log,
+                step_slug=slug,
+                action="archived",
+                severity="warning",
+                message=f"Step '{name}' no longer found in repository",
+            )
 
-        # Mark as scanned
+        # Finalize sync log
+        has_errors = sync_log.entries.filter(severity="error").exists()
+        sync_log.status = "partial" if has_errors else "success"
+        sync_log.completed_at = timezone.now()
+        sync_log.steps_added = stats["created"]
+        sync_log.steps_updated = stats["updated"]
+        sync_log.steps_archived = stats["archived"]
+        sync_log.save()
+
+        # Update repository tracking fields
+        repository.last_scanned_sha = head_sha
         repository.scan_status = "scanned"
         repository.scan_error = ""
         repository.last_scanned_at = timezone.now()
-        repository.save(update_fields=["scan_status", "scan_error", "last_scanned_at"])
+        repository.save(update_fields=["scan_status", "scan_error", "last_scanned_at", "last_scanned_sha"])
 
         logger.info(
             f"Scanned steps repository {repository.name}: "
@@ -441,6 +536,7 @@ def scan_steps_repository(repository_id: int) -> dict:
         return {
             "steps": stats["created"] + stats["updated"] + stats["unchanged"],
             "runtimes": len(runtimes_data),
+            "sync_log_id": sync_log.id,
             **stats,
         }
 
@@ -450,6 +546,17 @@ def scan_steps_repository(repository_id: int) -> dict:
         repository.scan_status = "error"
         repository.scan_error = error_msg
         repository.save(update_fields=["scan_status", "scan_error"])
+        if sync_log:
+            sync_log.status = "failed"
+            sync_log.completed_at = timezone.now()
+            sync_log.save(update_fields=["status", "completed_at"])
+            StepSyncEntry.objects.create(
+                sync_log=sync_log,
+                step_slug="",
+                action="skipped",
+                severity="error",
+                message=f"Scan failed: {e}",
+            )
         return {"error": error_msg}
 
     finally:
