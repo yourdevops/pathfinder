@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 6.4 (CI Step Identity and Change Tracking)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In Progress
-Last activity: 2026-02-16 - Completed 06.4-01 (CIStep model fields and full clone utility)
+Last activity: 2026-02-16 - Completed 06.4-02 (Scan logic rewrite with per-file SHA, slug identity, and archival)
 
-Progress: [=============...........................] 33% (Phase 6.4)
+Progress: [==========================..............] 66% (Phase 6.4)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 54
+- Total plans completed: 55
 - Average duration: 4 min
-- Total execution time: 3.61 hours
+- Total execution time: 3.66 hours
 
 **By Phase:**
 
@@ -41,10 +41,10 @@ Progress: [=============...........................] 33% (Phase 6.4)
 | 06.1-ci-workflows-gap | 5 | 15 min | 3 min |
 | 06.2-deployment-design-docs | 3 | 6 min | 2 min |
 | 06.3-security-compliance-design | 3 | 6 min | 2 min |
-| 06.4-ci-step-identity-and-change-tracking | 1 | 3 min | 3 min |
+| 06.4-ci-step-identity-and-change-tracking | 2 | 6 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.2-03 (2 min), 06.3-01 (2 min), 06.3-02 (2 min), 06.3-03 (2 min), 06.4-01 (3 min)
+- Last 5 plans: 06.3-01 (2 min), 06.3-02 (2 min), 06.3-03 (2 min), 06.4-01 (3 min), 06.4-02 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -189,6 +189,7 @@ Recent decisions affecting current work:
 | 06.3-03 | Emergency override allows platform-admin self-approval with justification | Break-glass mechanism with audit trail for compliance |
 | 06.3-03 | release-manager and secrets-admin are new roles without old equivalents | Fills deployment approval and cross-project secret management gaps |
 | 06.4-01 | last_change_type uses blank=True (empty string) not null=True | Django CharField convention per ruff DJ001; empty string as "no change" sentinel |
+| 06.4-02 | Reset last_change_type for all active steps before each scan | Clean change markers per scan cycle; avoids stale interface/metadata flags from prior scan |
 
 ### Roadmap Evolution
 
@@ -258,5 +259,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 06.4-01-PLAN.md (CIStep model fields and full clone utility)
+Stopped at: Completed 06.4-02-PLAN.md (Scan logic rewrite with per-file SHA, slug identity, and archival)
 Resume file: None
