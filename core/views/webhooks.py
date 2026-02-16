@@ -189,3 +189,83 @@ def build_webhook(request: HttpRequest) -> HttpResponse:
 
     logger.info(f"Enqueued build polling for service {service.name}, run_id={run_id}")
     return HttpResponse(status=200)
+
+
+@csrf_exempt
+def steps_repo_webhook(request: HttpRequest) -> HttpResponse:
+    """Handle push events for steps repositories.
+
+    Receives push webhook events when a steps repository is updated.
+    Validates HMAC signature, identifies the repository, checks it's the
+    default branch, and enqueues a rescan task.
+
+    Security: Always returns 200 OK to prevent information leakage.
+    """
+    if request.method != "POST":
+        return HttpResponse(status=200)
+
+    try:
+        payload = json.loads(request.body)
+    except json.JSONDecodeError:
+        logger.warning("Invalid JSON in steps repo webhook payload")
+        return HttpResponse(status=200)
+
+    # Only process push events
+    event_type = request.headers.get("X-GitHub-Event", "")
+    if event_type != "push":
+        return HttpResponse(status=200)
+
+    # Identify steps repository by matching repo URL
+    from core.git_utils import parse_git_url
+    from core.models import StepsRepository
+
+    repo_html_url = payload.get("repository", {}).get("html_url", "")
+    if not repo_html_url:
+        return HttpResponse(status=200)
+
+    # Normalize: extract owner/repo from webhook URL and match against stored git_url
+    parsed_webhook = parse_git_url(repo_html_url)
+    if not parsed_webhook:
+        return HttpResponse(status=200)
+
+    webhook_key = f"{parsed_webhook['owner']}/{parsed_webhook['repo']}".lower()
+
+    repository = None
+    for repo in StepsRepository.objects.select_related("connection").all():
+        parsed_stored = parse_git_url(repo.git_url)
+        if parsed_stored:
+            stored_key = f"{parsed_stored['owner']}/{parsed_stored['repo']}".lower()
+            if stored_key == webhook_key:
+                repository = repo
+                break
+
+    if not repository:
+        logger.info(f"No steps repository found for webhook: {repo_html_url}")
+        return HttpResponse(status=200)
+
+    # Only process pushes to default branch
+    ref = payload.get("ref", "")
+    expected_ref = f"refs/heads/{repository.default_branch}"
+    if ref != expected_ref:
+        logger.info(f"Steps repo webhook: ignoring push to {ref} (expected {expected_ref})")
+        return HttpResponse(status=200)
+
+    # Verify signature using connection's webhook secret
+    if repository.connection:
+        config = repository.connection.get_config()
+        webhook_secret = config.get("webhook_secret", "")
+        if webhook_secret and not verify_github_signature(request, webhook_secret):
+            logger.warning(f"Invalid webhook signature for steps repo {repository.name}")
+            return HttpResponse(status=200)
+
+    # Concurrent scan prevention
+    if repository.scan_status == "scanning":
+        logger.info(f"Steps repo {repository.name} already scanning, skipping webhook trigger")
+        return HttpResponse(status=200)
+
+    # Enqueue scan task with webhook trigger
+    from core.tasks import scan_steps_repository
+
+    scan_steps_repository.enqueue(repository_id=repository.id, trigger="webhook")
+    logger.info(f"Enqueued webhook-triggered scan for steps repo {repository.name}")
+    return HttpResponse(status=200)

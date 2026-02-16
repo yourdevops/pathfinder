@@ -422,4 +422,5 @@ settings_patterns = [
 # Webhooks URLs
 webhooks_patterns = [
     path("build/", webhooks.build_webhook, name="build_webhook"),
+    path("steps-repo/", webhooks.steps_repo_webhook, name="steps_repo_webhook"),
 ]
