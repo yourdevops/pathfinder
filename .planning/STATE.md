@@ -219,6 +219,7 @@ Recent decisions affecting current work:
 - Phase 6.4 inserted after Phase 6: CI Step Identity and Change Tracking (URGENT)
 - Phase 6.5 inserted after Phase 6: Workflow and Build Model Hardening (URGENT)
 - Phase 6.6 inserted after Phase 6: Sync Operations and Logging (URGENT)
+- Phase 6.7 inserted after Phase 6: Version Lifecycle Automation (URGENT)
 
 ### Pending Todos
 
@@ -278,5 +279,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-16
-Stopped at: Completed 06.6-03-PLAN.md — sync history UI with branch protection display (Phase 6.6 complete)
-Resume file: None
+Stopped at: Phase 6.7 context gathered
+Resume file: .planning/phases/06.7-version-lifecycle-automation/06.7-CONTEXT.md
