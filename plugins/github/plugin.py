@@ -188,6 +188,19 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
         """Return regex pattern for validating manifest IDs."""
         return self.MANIFEST_ID_PATTERN
 
+    def map_run_status(self, status: str, conclusion: str | None) -> str:
+        """Map GitHub Actions run status/conclusion to Build status."""
+        if status in ("queued", "in_progress"):
+            return "running"
+        if status == "completed" and conclusion:
+            conclusion_map = {
+                "success": "success",
+                "failure": "failed",
+                "cancelled": "cancelled",
+            }
+            return conclusion_map.get(conclusion, "pending")
+        return "pending"
+
     def fetch_manifest_content(self, config: dict, repo_name: str, manifest_id: str, commit_sha: str) -> str | None:
         """Fetch manifest file content from repo at a specific commit.
 

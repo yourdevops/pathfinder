@@ -857,7 +857,7 @@ class Build(models.Model):
     """
     A CI/CD build for a service.
 
-    Tracks GitHub Actions workflow runs and their status.
+    Tracks CI engine workflow runs and their status.
     Created via webhook when builds start/complete.
     """
 
@@ -873,8 +873,8 @@ class Build(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, db_index=True)
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name="builds")
 
-    # GitHub Actions identifiers
-    github_run_id = models.BigIntegerField(unique=True, db_index=True)
+    # CI engine identifiers
+    ci_run_id = models.BigIntegerField(unique=True, db_index=True)
     run_number = models.IntegerField(null=True, blank=True)
 
     # Workflow identification (captured at build time for categorization)
@@ -895,6 +895,7 @@ class Build(models.Model):
         choices=[
             ("verified", "Verified"),
             ("draft", "Draft"),
+            ("revoked", "Revoked"),
             ("unauthorized", "Unauthorized"),
         ],
         blank=True,
@@ -936,30 +937,7 @@ class Build(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"Build #{self.run_number or self.github_run_id} ({self.status})"
-
-    @staticmethod
-    def map_github_status(status: str, conclusion: str | None) -> str:
-        """
-        Map GitHub workflow run status to Build status.
-
-        Args:
-            status: GitHub status (queued, in_progress, completed)
-            conclusion: GitHub conclusion (success, failure, cancelled, etc.)
-
-        Returns:
-            Build status string
-        """
-        if status in ("queued", "in_progress"):
-            return "running"
-        if status == "completed" and conclusion:
-            conclusion_map = {
-                "success": "success",
-                "failure": "failed",
-                "cancelled": "cancelled",
-            }
-            return conclusion_map.get(conclusion, "pending")
-        return "pending"
+        return f"Build #{self.run_number or self.ci_run_id} ({self.status})"
 
 
 def get_available_workflows_for_project(project):

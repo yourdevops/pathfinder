@@ -154,6 +154,18 @@ class CICapableMixin:
         """Return regex pattern for validating manifest IDs."""
         raise NotImplementedError
 
+    def map_run_status(self, status: str, conclusion: str | None) -> str:
+        """Map CI engine run status/conclusion to Build status string.
+
+        Args:
+            status: Engine-specific run status string.
+            conclusion: Engine-specific conclusion string (may be None).
+
+        Returns:
+            One of: 'pending', 'running', 'success', 'failed', 'cancelled'.
+        """
+        raise NotImplementedError
+
     def fetch_manifest_content(self, config: dict, repo_name: str, manifest_id: str, commit_sha: str) -> str | None:
         """Fetch manifest file content from repo at a specific commit.
 
