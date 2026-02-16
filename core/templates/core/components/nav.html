@@ -126,6 +126,10 @@
                    class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors {% if active_settings_section == 'audit_logs' %}bg-dark-border/50 text-dark-text{% else %}text-dark-muted hover:bg-dark-border/50 hover:text-dark-text{% endif %}">
                     Audit Log
                 </a>
+                <a href="{% url 'settings:settings_ci_config' %}"
+                   class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors {% if active_settings_section == 'ci_config' %}bg-dark-border/50 text-dark-text{% else %}text-dark-muted hover:bg-dark-border/50 hover:text-dark-text{% endif %}">
+                    CI Configuration
+                </a>
                 <a href="{% url 'settings:notifications' %}"
                    class="flex items-center pl-11 pr-3 py-2 rounded-lg text-sm transition-colors {% if active_settings_section == 'notifications' %}bg-dark-border/50 text-dark-text{% else %}text-dark-muted hover:bg-dark-border/50 hover:text-dark-text{% endif %}">
                     Notifications
