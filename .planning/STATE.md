@@ -248,9 +248,10 @@ None
 | 034 | Builds UI/UX fixes (sort, search, expand) | 2026-02-03 | 672c9b5 | [034-builds-ui-ux-fixes](./quick/034-builds-ui-ux-fixes/) |
 | 035 | Build logs with failed step detection | 2026-02-03 | d85d6e6 | [035-build-logs-with-failed-step-detection](./quick/035-build-logs-with-failed-step-detection/) |
 | 036 | Build logs UI/UX improvements | 2026-02-03 | 71024f9 | [036-build-logs-ui-ux-improvements](./quick/036-build-logs-ui-ux-improvements/) |
+| 037 | Service UI sidebar highlight & CI workflow tab | 2026-02-16 | cd65785 | [37-service-ui-sidebar-highlight-ci-workflow](./quick/37-service-ui-sidebar-highlight-ci-workflow/) |
 
 ## Session Continuity
 
-Last session: 2026-02-13
-Stopped at: Completed 06.3-03-PLAN.md (SOX-Compliant RBAC Design) -- Phase 6.3 complete
+Last session: 2026-02-16
+Stopped at: Completed 037-PLAN.md (Service UI Sidebar Highlight & CI Workflow Tab)
 Resume file: None
