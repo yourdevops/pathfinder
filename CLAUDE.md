@@ -5,7 +5,7 @@ Pathfinder DevSSP (Developer Self-Service Portal) is a Django web app for managi
 
 **Django Documentation**: use context7 MCP to look up the Django documentation
 
-**Stack**: Django 6.x, SQLite, Docker/Podman, Gunicorn
+**Stack**: Django 6.x, SQLite, HTMX + Alpine CSP + Tailwind CSS, Docker/Podman Container, Gunicorn
 
 **Package Management**: uv (pyproject.toml + uv.lock). Do NOT use pip or requirements.txt.
 
@@ -16,6 +16,8 @@ Pathfinder DevSSP (Developer Self-Service Portal) is a Django web app for managi
 1. **Core code must be plugin-agnostic.** All SCM-plugin-specific logic (GitHub, GitLab, etc.) lives exclusively in `plugins/`. Core code interacts with SCM only through the plugin interface — never import or call provider-specific APIs from `core/`.
 
 2. **Prefer generic Git operations over SCM API calls.** Use Git protocol commands (`git ls-remote`, `git clone`, `git fetch` over SSH/HTTPS) instead of provider REST/GraphQL APIs whenever possible. Git operations have separate, more generous rate limits and work identically across providers. Reserve API calls for operations that have no Git-protocol equivalent (e.g., creating PRs, managing webhooks).
+
+3. Maintain CSP compatibility for strong frontend security. Use Alpine.js CSP build directives (`x-data`, `x-on`, `x-show`, `x-bind`, etc.) for all client-side interactivity — they work in HTMX-swapped partials without CSP nonce issues. The CSP build's expression parser only supports **single expressions** (no semicolons, no arrow functions). For multi-step logic, register reusable components via `Alpine.data()` in `base.html` (see `dropdown` and `copyBtn` examples) and reference them from templates. Do not use inline `<script>` tags in partials or create separate JS files for simple UI logic.
 
 ## Local run
 When running locally, use uv (no manual venv activation needed):

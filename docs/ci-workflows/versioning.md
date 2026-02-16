@@ -6,9 +6,9 @@ A CI Workflow is versioned using semver. Version numbers are chosen by the autho
 
 Services that use a CI Workflow can auto-update to new patch versions. Upgrading to a Minor/Major version is a manual procedure. Pathfinder compares the newly published version against each Service's current version using semver to determine whether the update falls within the Service's auto-update policy.
 
-On upgrade, Pathfinder pushes the updated pipeline manifest to the Service repo. According to the configured option in the Service Settings, Pathfinder either opens a PR against the main branch or pushes directly. If an open PR with the same scope/author exists (autoupdate CI manifest), Pathfinder reuses it as a Digest PR for all CI manifest changes.
+On upgrade, Pathfinder pushes the updated pipeline manifest to the Service repo via Pull Request. If an open PR with the same scope/author exists (autoupdate CI manifest), Pathfinder reuses it as a Digest PR for all CI manifest changes.
 
-Pathfinder's commit can be optionally marked with a skip-CI comment so it does not trigger CI execution.
+**Sync detection**: After build verification, if the build's verified workflow version matches the service's pinned version and the build ran on the default branch, Pathfinder transitions the status from `pending_pr` to `synced`. This confirms the manifest PR was merged and the correct workflow version is now active.
 
 ## CIWorkflowVersion Model
 

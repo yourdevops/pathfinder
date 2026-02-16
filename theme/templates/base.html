@@ -11,6 +11,30 @@
     <script defer src="{% static 'js/vendor/alpine-persist.min.js' %}" nonce="{{ csp_nonce }}"></script>
     <!-- Alpine.js (CSP-compatible build — no unsafe-eval needed) -->
     <script defer src="{% static 'js/vendor/alpine-csp.min.js' %}" nonce="{{ csp_nonce }}"></script>
+    <!-- Alpine.data() components (must register before Alpine initializes) -->
+    <script nonce="{{ csp_nonce }}">
+    document.addEventListener('alpine:init', function() {
+        Alpine.data('dropdown', function(initial) {
+            return {
+                open: false,
+                val: String(initial),
+                initial: String(initial),
+                pick: function(v) { this.val = v; this.open = false; }
+            };
+        });
+        Alpine.data('copyBtn', function(text) {
+            return {
+                copied: false,
+                copy: function() {
+                    var self = this;
+                    navigator.clipboard.writeText(text);
+                    self.copied = true;
+                    setTimeout(function() { self.copied = false; }, 2000);
+                }
+            };
+        });
+    });
+    </script>
     <!-- HTMX -->
     <script src="{% static 'js/vendor/htmx.min.js' %}" nonce="{{ csp_nonce }}"></script>
     <!-- HTMX config: disable inline indicator styles (moved to styles.css for CSP compliance) -->

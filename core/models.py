@@ -433,8 +433,9 @@ class Service(models.Model):
         max_length=20,
         choices=[
             ("never_pushed", "Never Pushed"),
+            ("pending_pr", "Pending PR"),
             ("synced", "Synced"),
-            ("out_of_date", "Out of Date"),
+            ("out_of_sync", "Out of Sync"),
         ],
         default="never_pushed",
     )
@@ -477,8 +478,8 @@ class Service(models.Model):
         return f"{self.project.name}-{self.name}"
 
     @property
-    def ci_manifest_out_of_date(self):
-        """Check if the manifest needs re-pushing."""
+    def ci_manifest_out_of_sync(self):
+        """Check if the manifest needs re-pushing (workflow changed since last push)."""
         if not self.ci_workflow or not self.ci_manifest_pushed_at:
             return False
         return self.ci_workflow.updated_at > self.ci_manifest_pushed_at

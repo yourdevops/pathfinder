@@ -354,7 +354,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
             # CI Workflow tab context
             context["ci_workflow"] = self.service.ci_workflow
             context["ci_manifest_status"] = self.service.ci_manifest_status
-            context["ci_manifest_out_of_date"] = self.service.ci_manifest_out_of_date
+            context["ci_manifest_out_of_sync"] = self.service.ci_manifest_out_of_sync
             context["ci_manifest_pr_url"] = self.service.ci_manifest_pr_url
             context["ci_manifest_pushed_at"] = self.service.ci_manifest_pushed_at
             context["available_workflows"] = get_available_workflows_for_project(self.project)
@@ -594,7 +594,7 @@ class ServiceAssignWorkflowView(LoginRequiredMixin, View):
             self.service.ci_workflow = workflow
 
             if old_workflow and old_workflow != workflow and self.service.ci_manifest_status == "synced":
-                self.service.ci_manifest_status = "out_of_date"
+                self.service.ci_manifest_status = "out_of_sync"
 
             self.service.save(update_fields=["ci_workflow", "ci_manifest_status", "updated_at"])
             messages.success(request, f'CI Workflow updated to "{workflow.name}".')
@@ -809,6 +809,9 @@ class ServicePushManifestView(LoginRequiredMixin, View):
 class ServicePinVersionView(LoginRequiredMixin, View):
     """Pin a service to a specific CIWorkflowVersion."""
 
+    def _redirect_ci_tab(self, project_name, service_name):
+        return redirect(f"/projects/{project_name}/services/{service_name}/?tab=ci")
+
     def post(self, request, project_name, service_name):
         from core.models import CIWorkflowVersion
 
@@ -838,15 +841,13 @@ class ServicePinVersionView(LoginRequiredMixin, View):
                                 request,
                                 "This project does not allow draft workflow versions. Enable 'Allow Drafts' in Project CI Settings first.",
                             )
-                            return redirect(
-                                "projects:service_detail", project_name=project_name, service_name=service_name
-                            )
+                            return self._redirect_ci_tab(project_name, service_name)
                     except project.ci_config.RelatedObjectDoesNotExist:
                         messages.error(
                             request,
                             "This project does not allow draft workflow versions. Enable 'Allow Drafts' in Project CI Settings first.",
                         )
-                        return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+                        return self._redirect_ci_tab(project_name, service_name)
 
                 service.ci_workflow_version = version
                 service.save(update_fields=["ci_workflow_version"])
@@ -854,7 +855,7 @@ class ServicePinVersionView(LoginRequiredMixin, View):
             except (CIWorkflowVersion.DoesNotExist, ValueError):
                 messages.error(request, "Invalid version selected.")
 
-        return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+        return self._redirect_ci_tab(project_name, service_name)
 
 
 class BuildLogsView(LoginRequiredMixin, View):

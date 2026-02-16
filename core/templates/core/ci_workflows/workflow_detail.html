@@ -203,10 +203,12 @@
                         <span class="text-dark-muted text-sm ml-2">in {{ svc.project.name }}</span>
                     </div>
                     <div class="flex items-center gap-3">
-                        {% if svc.ci_manifest_status == "synced" and not svc.ci_manifest_out_of_date %}
+                        {% if svc.ci_manifest_status == "synced" and not svc.ci_manifest_out_of_sync %}
                         <span class="px-2 py-0.5 text-xs rounded bg-green-500/20 text-green-300">Synced</span>
-                        {% elif svc.ci_manifest_out_of_date %}
-                        <span class="px-2 py-0.5 text-xs rounded bg-amber-500/20 text-amber-300">Out of Date</span>
+                        {% elif svc.ci_manifest_status == "pending_pr" %}
+                        <span class="px-2 py-0.5 text-xs rounded bg-blue-500/20 text-blue-300">Pending PR</span>
+                        {% elif svc.ci_manifest_out_of_sync or svc.ci_manifest_status == "out_of_sync" %}
+                        <span class="px-2 py-0.5 text-xs rounded bg-amber-500/20 text-amber-300">Out of Sync</span>
                         {% elif svc.ci_manifest_status == "never_pushed" %}
                         <span class="px-2 py-0.5 text-xs rounded bg-gray-500/20 text-gray-300">Never Pushed</span>
                         {% endif %}

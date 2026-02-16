@@ -42,8 +42,8 @@
             </button>
         </div>
         <!-- Log container - constrained width with vertical scroll only -->
-        <div x-ref="logs" class="bg-gray-950 rounded-lg p-3 max-h-[60vh] overflow-y-auto overflow-x-hidden w-full min-w-0" style="max-width: 100%;">
-            <pre class="text-xs font-mono leading-relaxed whitespace-pre-wrap m-0" style="word-break: break-all; overflow-wrap: anywhere; max-width: 100%; width: 100%;">{% for line in log_lines %}{% if line.is_error %}<span class="log-error">{{ line.text }}</span>{% elif line.is_warning %}<span class="log-warning">{{ line.text }}</span>{% else %}<span class="text-gray-300">{{ line.text }}</span>{% endif %}
+        <div x-ref="logs" class="bg-gray-950 rounded-lg p-3 max-h-[60vh] overflow-y-auto overflow-x-hidden w-full min-w-0 max-w-full">
+            <pre class="text-xs font-mono leading-relaxed whitespace-pre-wrap m-0 break-all max-w-full w-full">{% for line in log_lines %}{% if line.is_error %}<span class="log-error">{{ line.text }}</span>{% elif line.is_warning %}<span class="log-warning">{{ line.text }}</span>{% else %}<span class="text-gray-300">{{ line.text }}</span>{% endif %}
 {% endfor %}</pre>
         </div>
     </div>

@@ -192,10 +192,10 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
                 service.ci_manifest_status = "synced"
                 update_fields.append("ci_manifest_status")
             else:
-                # Existing repo: manifest pushed via PR
+                # Existing repo: manifest pushed via PR — not yet merged
                 pr_url = result.get("pr_url", "")
                 if pr_url:
-                    service.ci_manifest_status = "synced"
+                    service.ci_manifest_status = "pending_pr"
                     service.ci_manifest_pr_url = pr_url
                     update_fields.extend(["ci_manifest_status", "ci_manifest_pr_url"])
 
@@ -457,6 +457,20 @@ def verify_build(build_id: int, connection_id: int, repo_name: str) -> dict:
     build.verification_status = verification_status
     build.save(update_fields=["manifest_id", "manifest_hash", "workflow_version", "verification_status"])
 
+    # Transition pending_pr → synced when the build's verified version matches
+    # the service's pinned version. This confirms the manifest PR was merged
+    # and the correct workflow version is now active on the default branch.
+    if (
+        service.ci_manifest_status == "pending_pr"
+        and version_match
+        and service.ci_workflow_version_id
+        and version_match.id == service.ci_workflow_version_id
+        and build.branch == (service.repo_branch or "main")
+    ):
+        service.ci_manifest_status = "synced"
+        service.save(update_fields=["ci_manifest_status"])
+        logger.info(f"Service {service.name} manifest synced (version {version_match})")
+
     logger.info(
         f"Build {build.id} verified: {verification_status} (hash={manifest_hash[:12]}..., version={version_match})"
     )
@@ -631,7 +645,7 @@ def push_ci_manifest(service_id: int) -> dict:
 
         if not project_connection:
             logger.error(f"No default SCM connection for project {service.project.name}")
-            service.ci_manifest_status = "out_of_date"
+            service.ci_manifest_status = "out_of_sync"
             service.save(update_fields=["ci_manifest_status"])
             return {"error": "No SCM connection configured"}
 
@@ -711,8 +725,8 @@ def push_ci_manifest(service_id: int) -> dict:
         else:
             logger.warning(f"External URL not configured, skipping webhook registration for {service.name}")
 
-        # Update service status
-        service.ci_manifest_status = "synced"
+        # Update service status — PR created but not yet merged
+        service.ci_manifest_status = "pending_pr"
         service.ci_manifest_pushed_at = timezone.now()
         service.ci_manifest_pr_url = pr_url
         service.save(
