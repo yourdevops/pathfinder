@@ -93,14 +93,14 @@ Pathfinder tracks step definitions to detect changes that may affect dependent w
 
 ### Change Detection
 
-On repository sync:
+Change detection is driven by the per-file commit SHA (see [Version Identity via Git](#version-identity-via-git)). On repository sync, for each discovered step file:
 
-1. Parse each step's metadata file at the new commit SHA
-2. Compute a **definition hash** from normalized tracked attributes
-3. Compare against the stored definition hash
-4. If changed, flag the step and classify:
-   - **Interface change** (inputs/outputs/runtimes/path): Workflows receive a warning badge
-   - **Metadata change** (tags only): Informational
+1. Compute the per-file commit SHA via `git log -1 --format=%H -- <path>`
+2. Compare against the stored `commit_sha` on the Catalog entry
+3. **SHA unchanged** → skip, no work needed
+4. **SHA changed or new step** → parse the metadata file, upsert the Catalog entry with the new SHA and parsed fields. Compare old and new field values to classify:
+   - **Interface change** (inputs/outputs/runtimes/path changed): Workflows using this step receive a warning badge
+   - **Metadata change** (tags/description only): Informational, no badge
 
 ### Step Removal
 
@@ -251,12 +251,11 @@ Response:
     "phase": "test",
     "produces": null
   },
-  "definition_hash": "a1b2c3...",
   "conflicts": [],
   "warnings": []
 }
 ```
 
-The endpoint runs the same parsing and validation logic used during repository sync: `x-pathfinder` block extraction, slug derivation, conflict detection against the live Catalog, and runtime constraint validation. The `definition_hash` lets authors predict whether a change will be classified as an interface change or metadata-only.
+The endpoint runs the same parsing and validation logic used during repository sync: `x-pathfinder` block extraction, slug derivation, conflict detection against the live Catalog, and runtime constraint validation.
 
 This endpoint is intended for authorized access only. It can be integrated into pre-commit hooks or CI checks on the Steps Repository itself.

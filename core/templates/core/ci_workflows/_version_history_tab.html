@@ -72,12 +72,29 @@
                 </td>
                 <td class="px-4 py-3">
                     {% if ver.status == 'authorized' and is_operator %}
-                    <button type="button" data-confirm-modal="revoke-version-{{ ver.id }}"
-                            class="px-2.5 py-1 text-xs bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded transition-colors">
-                        Revoke
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" data-confirm-modal="revoke-version-{{ ver.id }}"
+                                class="px-2.5 py-1 text-xs bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded transition-colors">
+                            Revoke
+                        </button>
+                        {% if ver.pinned_count == 0 and ver.build_count == 0 %}
+                        <button type="button" data-confirm-modal="delete-version-{{ ver.id }}"
+                                class="px-2.5 py-1 text-xs bg-dark-border hover:bg-dark-border/80 text-dark-muted hover:text-red-400 rounded transition-colors">
+                            Delete
+                        </button>
+                        {% endif %}
+                    </div>
                     {% elif ver.status == 'draft' %}
                     <span class="text-xs text-dark-muted">Current Draft</span>
+                    {% elif ver.status == 'revoked' and is_operator %}
+                        {% if ver.pinned_count == 0 and ver.build_count == 0 %}
+                        <button type="button" data-confirm-modal="delete-version-{{ ver.id }}"
+                                class="px-2.5 py-1 text-xs bg-dark-border hover:bg-dark-border/80 text-dark-muted hover:text-red-400 rounded transition-colors">
+                            Delete
+                        </button>
+                        {% else %}
+                        <span class="text-xs text-dark-muted">-</span>
+                        {% endif %}
                     {% elif ver.status == 'revoked' %}
                     <span class="text-xs text-dark-muted">-</span>
                     {% endif %}
@@ -92,6 +109,13 @@
 {% for ver in versions %}
 {% if ver.status == 'authorized' and is_operator %}
 {% include "core/ci_workflows/_revoke_modal.html" %}
+{% endif %}
+{% endfor %}
+
+<!-- Delete modals for unreferenced versions -->
+{% for ver in versions %}
+{% if is_operator and ver.pinned_count == 0 and ver.build_count == 0 and ver.status != 'draft' %}
+{% include "core/ci_workflows/_delete_version_modal.html" %}
 {% endif %}
 {% endfor %}
 

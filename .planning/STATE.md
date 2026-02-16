@@ -198,6 +198,7 @@ Recent decisions affecting current work:
 - Phase 6.1 inserted after Phase 6: Fix the gap between the CI Workflows design and the actual implementation (URGENT)
 - Phase 6.2 inserted after Phase 6: Deployment Design Documentation - RFC-style design docs for Deployments, organized similar to ci-workflows (URGENT)
 - Phase 6.3 inserted after Phase 6: Security & Compliance Design — Secrets, SLSA L3, SOX RBAC (URGENT)
+- Phase 6.4 inserted after Phase 6: CI Step Identity and Change Tracking (URGENT)
 
 ### Pending Todos
 

@@ -1,0 +1,45 @@
+<!-- Delete version confirmation modal. Expects: ver (CIWorkflowVersion), workflow (CIWorkflow) -->
+<div id="delete-version-{{ ver.id }}" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/50 confirm-modal-backdrop"></div>
+    <!-- Panel -->
+    <div class="relative bg-dark-surface border border-dark-border rounded-lg shadow-xl w-full max-w-md mx-4">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-bold text-dark-text">Delete Version {{ ver.version }}</h2>
+                <button type="button" class="text-dark-muted hover:text-dark-text transition-colors confirm-modal-close">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-3 mb-4">
+                <p class="text-sm text-red-300">
+                    This will permanently delete version {{ ver.version }} from this workflow.
+                    This action cannot be undone.
+                </p>
+            </div>
+            <div class="flex items-center gap-4 mb-4 text-sm">
+                <div>
+                    <span class="text-dark-muted">Version:</span>
+                    <span class="text-dark-text font-mono ml-1">{{ ver.version }}</span>
+                </div>
+                <div>
+                    <span class="text-dark-muted">Status:</span>
+                    <span class="text-dark-text ml-1">{{ ver.get_status_display }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-end gap-3 p-4 border-t border-dark-border">
+            <button type="button" class="px-4 py-2 text-dark-text hover:bg-dark-border rounded-lg transition-colors confirm-modal-close">
+                Cancel
+            </button>
+            <form method="post" action="{% url 'ci_workflows:workflow_delete_version' workflow_name=workflow.name version_id=ver.id %}">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm">
+                    Delete Version
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

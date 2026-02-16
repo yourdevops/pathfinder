@@ -8,7 +8,9 @@
 
 This document catalogs every gap between the CI Workflows design (defined in `docs/ci-workflows/`) and the current implementation (primarily `core/models.py`, `core/tasks.py`, `core/ci_steps.py`, `core/views/ci_workflows.py`, `core/views/webhooks.py`, `core/views/services.py`, and `plugins/github/plugin.py`). Each gap is assigned a severity and mapped to a remediation phase.
 
-**How to use**: Each remediation phase (R1 through R6) maps to a future GSD phase. Phases are ordered so that foundation changes land before features that depend on them. Execute phases sequentially; parallelizable phases are noted.
+**How to use**: Each remediation phase (R1 through R5) maps to a future GSD phase. Phases are ordered so that foundation changes land before features that depend on them. Execute phases sequentially; parallelizable phases are noted.
+
+**Migrations**: No data migrations are needed for any gap in this document. All existing Steps, Workflows, and related CI data were deleted, so schema changes can be applied fresh.
 
 ---
 
@@ -20,21 +22,21 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 | GAP-02 | Step Version Identity via Git | steps-catalog.md | High | R1 |
 | GAP-03 | Step Tracking and Change Detection | steps-catalog.md | High | R1 |
 | GAP-04 | Step Archival Instead of Hard Delete | steps-catalog.md | Critical | R1 |
-| GAP-05 | Branch Protection Validation | steps-catalog.md | Medium | R4 |
-| GAP-06 | Repository Sync Triggers | steps-catalog.md | Medium | R4 |
-| GAP-07 | Sync Operation Logging | logging.md | Medium | R4 |
+| GAP-05 | Branch Protection Validation | steps-catalog.md | Medium | R3 |
+| GAP-06 | Repository Sync Triggers | steps-catalog.md | Medium | R3 |
+| GAP-07 | Sync Operation Logging | logging.md | Medium | R3 |
 | GAP-08 | Explicit Engine Field on CIWorkflow | workflow-definition.md | High | R2 |
 | GAP-09 | Step Ordering Validation | workflow-definition.md | Medium | R2 |
 | GAP-10 | Workflow Archived Status | versioning.md | Low | R2 |
-| GAP-11 | Auto-Update on Version Publish | versioning.md | Medium | R5 |
-| GAP-12 | Version Cleanup and Retention | versioning.md | Low | R5 |
-| GAP-13 | Artifact Discovery via CI Plugin | build-lifecycle.md | Medium | R6 |
-| GAP-14 | Build Categorization by manifest_id | build-authorization.md | Medium | R3 |
-| GAP-15 | "revoked" Build Verification Status | build-lifecycle.md | High | R3 |
-| GAP-16 | Engine-Agnostic Build Model | build-lifecycle.md | Low | R3 |
-| GAP-17 | CI Variables in Manifest | steps-catalog.md | Low | R6 |
-| GAP-18 | Step Validation API | steps-catalog.md | Low | R6 |
-| GAP-19 | manifest_path Cleanup | plugin-interface.md | Low | R6 |
+| GAP-11 | Auto-Update on Version Publish | versioning.md | Medium | R4 |
+| GAP-12 | Version Cleanup and Retention | versioning.md | Low | R4 |
+| GAP-13 | Artifact Discovery via CI Plugin | build-lifecycle.md | Medium | R5 |
+| GAP-14 | Build Categorization by manifest_id | build-authorization.md | Medium | R2 |
+| GAP-15 | "revoked" Build Verification Status | build-lifecycle.md | High | R2 |
+| GAP-16 | Engine-Agnostic Build Model | build-lifecycle.md | Low | R2 |
+| GAP-17 | CI Variables in Manifest | steps-catalog.md | Low | R5 |
+| GAP-18 | Step Validation API | steps-catalog.md | Low | R5 |
+| GAP-19 | manifest_path Cleanup | plugin-interface.md | Low | R5 |
 
 **Severity criteria**:
 - **Critical**: Data integrity or security risk (hard deletes losing data, missing verification states)
@@ -60,7 +62,6 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 - Add `slug` CharField to `CIStep` model with `unique_together = ["engine", "slug"]`
 - Add slug derivation (from `x-pathfinder.name`, falling back to `directory_name`) in `scan_steps_repository` task (`core/tasks.py:298`)
 - Add collision detection: if a slug already exists for the same engine in a different repository, skip with a logged warning
-- Migration: backfill existing steps with slug derived from `directory_name`
 
 ---
 
@@ -81,22 +82,21 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 
 ---
 
-### GAP-03: Step Tracking and Change Detection
+### GAP-03: Step Change Detection and Workflow Notifications
 
 **Design Reference**: steps-catalog.md, Sections "Step Tracking" and "Change Detection"
 
-**Current Implementation**: No `definition_hash` field exists on `CIStep` (`core/models.py:594`). No change detection logic in `scan_steps_repository` (`core/tasks.py:217`). Steps are silently updated via `update_or_create`.
+**Current Implementation**: No change detection logic in `scan_steps_repository` (`core/tasks.py:217`). Steps are silently updated via `update_or_create`. Workflows using updated steps receive no notification.
 
-**Gap**: `CIStep` should have a `definition_hash` computed from normalized tracked attributes (name, path, inputs, outputs, runtimes, phase, produces). On sync, the new hash should be compared to the stored hash. Changes should be classified as interface changes (inputs/outputs changed) vs. metadata changes (description, tags). Workflows using steps with interface changes should be flagged with a warning badge.
+**Gap**: Once per-file commit SHAs are implemented (GAP-02), `scan_steps_repository` should skip steps whose SHA hasn't changed and only re-parse steps with a new SHA. When a step is re-parsed, old and new field values should be compared to classify the change as interface (inputs/outputs/runtimes/path) vs. metadata (tags/description). Workflows using steps with interface changes should be flagged with a warning badge.
 
 **Impact**: No way to detect which steps changed during a sync. Workflows using updated steps get no notification. Breaking interface changes (e.g., renamed inputs) go undetected until builds fail.
 
 **Remediation**:
-- Add `definition_hash` CharField to `CIStep` model
-- Compute hash from `(name, phase, inputs_schema, runtime_constraints, produces)` during scan
-- In `scan_steps_repository`, compare old hash vs. new hash before updating
+- In `scan_steps_repository`, compare per-file SHA against stored `commit_sha`; skip unchanged steps
+- When SHA differs, re-parse and compare old vs. new field values (inputs_schema, runtime_constraints, produces, phase)
 - Add `has_step_updates` BooleanField or similar on `CIWorkflow` for UI badge display
-- Track change type (interface vs. metadata) for logging
+- Log change type (interface vs. metadata) per step
 
 ---
 
@@ -191,7 +191,6 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 - Add `engine` CharField to `CIWorkflow` model with `max_length=63, default="github_actions"`
 - Set engine in `WorkflowComposerView.post()` (`core/views/ci_workflows.py:504`) based on the steps being composed
 - Remove all `first_step.step.engine` derivation patterns in tasks and views
-- Migration: backfill from first step's engine for existing workflows
 
 ---
 
@@ -299,7 +298,6 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 - In `ServiceDetailView` builds tab, replace `workflow_name` filtering with `manifest_id` filtering
 - Compute expected `manifest_id` from `ci_plugin.manifest_id(service.ci_workflow)`
 - Filter: `current_builds_qs = all_builds.filter(manifest_id=expected_manifest_id)`
-- Fallback to `workflow_name` matching for pre-migration builds without `manifest_id`
 
 ---
 
@@ -332,7 +330,7 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 **Impact**: The Build model is coupled to GitHub. Adding Jenkins or GitLab CI would require model changes rather than just a new plugin.
 
 **Remediation**:
-- Rename `github_run_id` to `ci_run_id` (database column rename via migration)
+- Rename `github_run_id` to `ci_run_id`
 - Move `map_github_status` from `Build` to `GitHubPlugin` as `map_run_status`
 - Update all references: `core/tasks.py:558` (`Build.objects.update_or_create(github_run_id=run_id)`), `core/models.py:902` (`__str__`), and any template references
 - Add `map_run_status(status, conclusion)` to `CICapableMixin` interface
@@ -363,14 +361,14 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 
 **Current Implementation**: Not implemented. No API endpoint exists.
 
-**Gap**: A `POST /api/ci-workflows/steps/validate` endpoint should accept a step definition file and return parsed metadata, computed slug, conflict detection results, warnings, and definition_hash. This allows step authors to validate definitions before merging to the steps repo.
+**Gap**: A `POST /api/ci-workflows/steps/validate` endpoint should accept a step definition file and return parsed metadata, computed slug, conflict detection results, and warnings. This allows step authors to validate definitions before merging to the steps repo.
 
 **Impact**: Step authors cannot validate definitions before merging. Errors are only discovered after the sync task runs, which may be hours later.
 
 **Remediation**:
 - Create a new API view with token authentication
 - Reuse parsing logic from `discover_steps` (`core/ci_steps.py:16`) and `parse_step_file` (`plugins/github/plugin.py:47`)
-- Return structured validation result: `{slug, name, phase, inputs, conflicts: [], warnings: [], definition_hash}`
+- Return structured validation result: `{slug, name, phase, inputs, conflicts: [], warnings: []}`
 - Add URL route at `api/ci-workflows/steps/validate`
 
 ---
@@ -397,83 +395,58 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 
 ### Phase R1: Step Identity and Change Tracking
 
-**Goal**: Steps have proper identity (globally unique slug per engine), per-file versioning, change detection via definition hash, and soft-delete via archival instead of hard delete.
+**Goal**: Steps have proper identity (globally unique slug per engine), per-file versioning, SHA-based change detection, and soft-delete via archival instead of hard delete.
 
 **Gaps Addressed**: GAP-01, GAP-02, GAP-03, GAP-04
 
 **Estimated Complexity**: Large (3-4 plans)
-- Plan 1: Add `slug`, `definition_hash`, `status` fields to `CIStep`; migration with backfill
-- Plan 2: Rewrite `scan_steps_repository` for per-file SHA, collision detection, change detection, archival
+- Plan 1: Add `slug`, `status` fields to `CIStep`
+- Plan 2: Rewrite `scan_steps_repository` for per-file SHA, collision detection, SHA-based change detection, archival
 - Plan 3: Update workflow composer and detail views for archived step warnings; add cleanup task
 
 **Dependencies**: None (foundation work)
 
 **Key Changes**:
-- **Models**: `CIStep` -- add `slug`, `definition_hash`, `status` fields; new unique constraint on `["engine", "slug"]`
-- **Tasks**: `scan_steps_repository` -- per-file git log, hash computation, change classification, archive instead of delete
+- **Models**: `CIStep` -- add `slug`, `status` fields; new unique constraint on `["engine", "slug"]`
+- **Tasks**: `scan_steps_repository` -- per-file git log, SHA-based skip/re-parse, field-level change classification, archive instead of delete
 - **Views**: Workflow composer step picker filters out archived steps; workflow detail shows step update warnings
 - **Templates**: Badge/warning for archived or updated steps
 
 **Risk Notes**:
-- Migration must backfill `slug` from `directory_name` for existing steps
 - Changing from shallow clone to full clone (or deeper shallow) in `scan_steps_repository` increases clone time
-- The `unique_together` on `["engine", "slug"]` may conflict with existing data if two repos have steps with the same directory name
 
-**Done when**: Steps have unique slugs per engine, `commit_sha` reflects per-file history, changes are detected and logged, removed steps are archived (not deleted).
+**Done when**: Steps have unique slugs per engine, `commit_sha` reflects per-file history, unchanged steps are skipped during scan, changes are detected and classified via field comparison, removed steps are archived (not deleted).
 
 ---
 
-### Phase R2: Workflow Model Hardening
+### Phase R2: Workflow and Build Model Hardening
 
-**Goal**: CIWorkflow has an explicit engine field set at creation, step ordering is validated before save, and an "archived" status allows graceful deprecation.
+**Goal**: CIWorkflow has an explicit engine field set at creation, step ordering is validated before save, and an "archived" status allows graceful deprecation. Build model is engine-agnostic with a generic `ci_run_id`, has a distinct "revoked" verification status, and categorizes builds by `manifest_id` instead of workflow name.
 
-**Gaps Addressed**: GAP-08, GAP-09, GAP-10
+**Gaps Addressed**: GAP-08, GAP-09, GAP-10, GAP-14, GAP-15, GAP-16
 
-**Estimated Complexity**: Small (1-2 plans)
+**Estimated Complexity**: Medium (2-3 plans)
 - Plan 1: Add `engine` field to `CIWorkflow`; add ordering validation in composer; add `archived` status choice
+- Plan 2: Rename `github_run_id` to `ci_run_id`; add `"revoked"` verification status; update build categorization to use `manifest_id`; move `map_github_status` to plugin
 
 **Dependencies**: None (can run in parallel with R1)
 
 **Key Changes**:
-- **Models**: `CIWorkflow` -- add `engine` CharField, add `"archived"` to status choices
-- **Views**: `WorkflowComposerView.post()` -- set engine from steps, add setup-before-use validation
-- **Tasks**: `verify_build`, `push_ci_manifest` -- use `workflow.engine` instead of step-derived engine
-- **Templates**: Service wizard and workflow list filter out archived workflows
-
-**Risk Notes**:
-- Migration must backfill `engine` from first step for existing workflows
-- Ordering validation must not break existing valid workflows (validate only on save, not retroactively)
-
-**Done when**: `CIWorkflow.engine` is set at creation and used everywhere; invalid step orders are rejected with a clear message; archived workflows are hidden from new onboarding but remain functional for existing services.
-
----
-
-### Phase R3: Build Model Corrections
-
-**Goal**: Build model is engine-agnostic with a generic `ci_run_id`, has a distinct "revoked" verification status, and categorizes builds by `manifest_id` instead of workflow name.
-
-**Gaps Addressed**: GAP-14, GAP-15, GAP-16
-
-**Estimated Complexity**: Small (1-2 plans)
-- Plan 1: Rename `github_run_id` to `ci_run_id`; add `"revoked"` verification status; update build categorization to use `manifest_id`
-
-**Dependencies**: R2 (GAP-14 needs `manifest_id` which uses workflow engine from R2; however the field already exists on Build so this dependency is soft)
-
-**Key Changes**:
-- **Models**: `Build` -- rename `github_run_id` to `ci_run_id`, add `("revoked", "Revoked")` to `verification_status`
-- **Tasks**: `verify_build` -- set `"revoked"` when version is revoked; `poll_build_details` -- use `ci_run_id`
-- **Views**: `ServiceDetailView` builds tab -- categorize by `manifest_id` instead of `workflow_name`
+- **Models**: `CIWorkflow` -- add `engine` CharField, add `"archived"` to status choices; `Build` -- rename `github_run_id` to `ci_run_id`, add `("revoked", "Revoked")` to `verification_status`
+- **Views**: `WorkflowComposerView.post()` -- set engine from steps, add setup-before-use validation; `ServiceDetailView` builds tab -- categorize by `manifest_id` instead of `workflow_name`
+- **Tasks**: `verify_build` -- use `workflow.engine` instead of step-derived engine, set `"revoked"` when version is revoked; `push_ci_manifest` -- use `workflow.engine`; `poll_build_details` -- use `ci_run_id`
 - **Plugins**: Move `map_github_status` from `Build` to `GitHubPlugin`; add `map_run_status` to `CICapableMixin`
+- **Templates**: Service wizard and workflow list filter out archived workflows; distinct badge for revoked builds
 
 **Risk Notes**:
-- Database column rename for `github_run_id` requires a migration that preserves existing data
+- Ordering validation must not break existing valid workflows (validate only on save, not retroactively)
 - Any external tools querying the `core_build` table directly will break (no external API currently)
 
-**Done when**: `github_run_id` is renamed to `ci_run_id`; revoked versions produce `"revoked"` verification status with distinct UI badge; builds tab categorizes by `manifest_id`.
+**Done when**: `CIWorkflow.engine` is set at creation and used everywhere; invalid step orders are rejected with a clear message; archived workflows are hidden from new onboarding but remain functional for existing services; `github_run_id` is renamed to `ci_run_id`; revoked versions produce `"revoked"` verification status with distinct UI badge; builds tab categorizes by `manifest_id`.
 
 ---
 
-### Phase R4: Sync Operations and Logging
+### Phase R3: Sync Operations and Logging
 
 **Goal**: Step repository syncs are triggered by webhooks and scheduled tasks (in addition to manual poll), all sync operations are logged with per-step detail, and branch protection is validated on registration and each sync.
 
@@ -502,7 +475,7 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 
 ---
 
-### Phase R5: Version Lifecycle Automation
+### Phase R4: Version Lifecycle Automation
 
 **Goal**: Patch version publishes auto-push updated manifests to services; old versions are cleaned up per retention policy.
 
@@ -512,7 +485,7 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 - Plan 1: Add auto-update task triggered after version publish; implement PR digest reuse
 - Plan 2: Add retention settings; add periodic cleanup task; add deletion guards
 
-**Dependencies**: R2 (needs workflow `archived` status for filtering), R3 (cleanup references builds for deletion guards)
+**Dependencies**: R2 (needs workflow `archived` status and `ci_run_id` for deletion guards)
 
 **Key Changes**:
 - **Tasks**: New post-publish auto-update task; new periodic cleanup task
@@ -528,7 +501,7 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 
 ---
 
-### Phase R6: Manifest and Plugin Interface
+### Phase R5: Manifest and Plugin Interface
 
 **Goal**: Artifact discovery uses CI plugin API (not webhook payloads), CI variables are injected into manifests, a step validation API exists, and dead `manifest_path` code is removed.
 
@@ -538,10 +511,10 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 - Plan 1: Add `resolve_artifact_ref()` to plugin interface; implement in GitHubPlugin; inject PTF_* variables in manifest
 - Plan 2: Create step validation API endpoint; remove `manifest_path` dead code
 
-**Dependencies**: R2 (manifest generation uses engine field), R3 (artifact ref resolution relates to build model)
+**Dependencies**: R2 (manifest generation uses engine field, artifact ref resolution relates to build model)
 
 **Key Changes**:
-- **Plugins**: Add `resolve_artifact_ref()` and `map_run_status()` to `CICapableMixin`; implement in `GitHubPlugin`; remove `manifest_path`
+- **Plugins**: Add `resolve_artifact_ref()` to `CICapableMixin`; implement in `GitHubPlugin`; remove `manifest_path`
 - **Tasks**: `poll_build_details` -- call `resolve_artifact_ref()` instead of using webhook artifact_ref
 - **Views**: New API view for step validation at `api/ci-workflows/steps/validate`
 - **Plugin base**: `generate_manifest()` accepts optional service context for PTF_* variables
@@ -555,37 +528,31 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 
 ---
 
-## Migration and Risk Assessment
+## Schema Changes and Risk Assessment
 
-### Database Migrations (ordered)
+All existing Steps, Workflows, and related CI data were deleted. No data migrations or backfills are needed -- all schema changes apply to empty tables and can be created fresh via `makemigrations`.
 
-| Phase | Model | Change | Migration Type |
-|-------|-------|--------|----------------|
-| R1 | CIStep | Add `slug` CharField | AddField + data migration (backfill from directory_name) |
-| R1 | CIStep | Add `definition_hash` CharField | AddField |
-| R1 | CIStep | Add `status` CharField (default="active") | AddField |
-| R1 | CIStep | New unique constraint `["engine", "slug"]` | AddConstraint (after backfill) |
-| R2 | CIWorkflow | Add `engine` CharField (default="github_actions") | AddField + data migration (backfill from first step) |
-| R2 | CIWorkflow | Add "archived" to status choices | AlterField (no data change) |
-| R3 | Build | Rename `github_run_id` to `ci_run_id` | RenameField |
-| R3 | Build | Add "revoked" to verification_status choices | AlterField (no data change) |
-| R4 | New | Create `StepsRepoSyncLog` model | CreateModel |
-| R4 | New | Create `StepSyncEntry` model | CreateModel |
-| R4 | StepsRepository | Add `protection_valid` BooleanField | AddField |
-| R4 | StepsRepository | Add `webhook_registered` BooleanField | AddField |
-| R5 | ProjectCIConfig | Add retention settings fields | AddField |
+### Schema Changes (ordered)
 
-### Data Migration Notes
-
-- **Slug backfill (R1)**: Derive from `directory_name` using Django's `slugify()`. Run as a data migration before adding the unique constraint.
-- **Engine backfill (R2)**: Query `workflow.workflow_steps.first().step.engine` for each workflow. Default to `"github_actions"` for workflows with no steps.
-- **commit_sha recalculation (R1)**: Per-file SHAs will be computed on the next sync run. No data migration needed -- values update organically.
+| Phase | Model | Change |
+|-------|-------|--------|
+| R1 | CIStep | Add `slug` CharField |
+| R1 | CIStep | Add `status` CharField (default="active") |
+| R1 | CIStep | New unique constraint `["engine", "slug"]` |
+| R2 | CIWorkflow | Add `engine` CharField (default="github_actions") |
+| R2 | CIWorkflow | Add "archived" to status choices |
+| R2 | Build | Rename `github_run_id` to `ci_run_id` |
+| R2 | Build | Add "revoked" to verification_status choices |
+| R3 | New | Create `StepsRepoSyncLog` model |
+| R3 | New | Create `StepSyncEntry` model |
+| R3 | StepsRepository | Add `protection_valid` BooleanField |
+| R3 | StepsRepository | Add `webhook_registered` BooleanField |
+| R4 | ProjectCIConfig | Add retention settings fields |
 
 ### Breaking Changes
 
-- **`github_run_id` rename (R3)**: Any raw SQL queries or management commands referencing this column name will break. Search codebase for all references before migrating.
 - **Hard delete to soft delete (R1)**: Code that assumes deleted steps are gone from the database needs updating. Filter queries with `status="active"` where appropriate.
-- **`manifest_path` removal (R6)**: Verify zero references before removing.
+- **`manifest_path` removal (R5)**: Verify zero references before removing.
 
 ### Rollback Strategy
 
@@ -625,14 +592,12 @@ Each phase produces independent migrations. To roll back:
 | High Impact / Low Effort | GAP-04, GAP-08, GAP-15 | Do first -- quick wins with high value |
 | High Impact / High Effort | GAP-01, GAP-02, GAP-03 | Plan carefully -- R1 is the largest phase |
 | Low Impact / Low Effort | GAP-10, GAP-14, GAP-16, GAP-17, GAP-19 | Bundle with related work in same phase |
-| Low Impact / High Effort | GAP-05, GAP-06, GAP-07, GAP-11, GAP-12, GAP-13, GAP-18 | Defer to later phases or simplify scope |
+| Low Impact / High Effort | GAP-05, GAP-06, GAP-07, GAP-11, GAP-12, GAP-13, GAP-18 | Defer to later phases (R3-R5) or simplify scope |
 
 **Recommended execution order**:
-1. **R1** (Step Identity) and **R2** (Workflow Hardening) -- in parallel, foundation work
-2. **R3** (Build Corrections) -- quick follow-up
-3. **R4** (Sync and Logging) -- depends on R1
-4. **R5** (Version Lifecycle) -- depends on R2 and R3
-5. **R6** (Manifest and Plugin) -- depends on R2 and R3
+1. **R1** (Step Identity) and **R2** (Workflow & Build Hardening) -- in parallel, foundation work
+2. **R3** (Sync and Logging) -- depends on R1
+3. **R4** (Version Lifecycle) and **R5** (Manifest and Plugin) -- in parallel, both depend on R2
 
 ---
 
@@ -665,17 +630,14 @@ The following design items are fully implemented and do not require remediation.
 ## Dependency Graph
 
 ```
-R1 (Step Identity)  ----+
+R1 (Step Identity)  --------+--> R3 (Sync & Logging)
+                             |
+R2 (Workflow & Build) --+---+--> R4 (Version Lifecycle)
                         |
-R2 (Workflow Model) -+  +--> R4 (Sync & Logging)
-                     |
-                     +--> R3 (Build Corrections) --+--> R5 (Version Lifecycle)
-                     |                             |
-                     +-----------------------------+--> R6 (Manifest & Plugin)
+                        +------> R5 (Manifest & Plugin)
 ```
 
 R1 and R2 have no dependencies and can execute in parallel.
-R3 has a soft dependency on R2.
-R4 depends on R1 (step slugs, archive status).
-R5 depends on R2 and R3.
-R6 depends on R2 and R3.
+R3 depends on R1 (step slugs, archive status).
+R4 depends on R2 (workflow archived status, ci_run_id for deletion guards).
+R5 depends on R2 (engine field, build model).

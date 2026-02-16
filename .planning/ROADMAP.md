@@ -265,6 +265,15 @@ Plans:
 - [x] 06-01-PLAN.md — Build model, webhook endpoint with HMAC auth, poll_build_details task, service activation
 - [x] 06-02-PLAN.md — Build history UI with table layout, filtering, pagination, HTMX auto-refresh
 
+### Phase 06.4: CI Step Identity and Change Tracking (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Depends on:** Phase 6
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 06.4 to break down)
+
 ### Phase 06.1: Fix the gap between the CI Workflows design and the actual implementation (INSERTED)
 
 **Goal:** CI Workflows have full version lifecycle (draft/authorized/revoked); builds are verified via manifest hash comparison; plugin interface complete with manifest fetching; deterministic manifest generation with version headers; version management UI enables publishing, revocation, and forking

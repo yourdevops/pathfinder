@@ -5,7 +5,7 @@ from collections import OrderedDict
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Case, IntegerField, Value, When
+from django.db.models import Case, Count, IntegerField, Value, When
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -663,8 +663,11 @@ class WorkflowDetailView(LoginRequiredMixin, View):
         # Services using this workflow
         services_using = workflow.services.select_related("project").order_by("project__name", "name")
 
-        # All versions for version history tab
-        versions = workflow.versions.order_by("-created_at")
+        # All versions for version history tab (annotate reference counts for delete eligibility)
+        versions = workflow.versions.annotate(
+            pinned_count=Count("pinned_services"),
+            build_count=Count("builds"),
+        ).order_by("-created_at")
 
         # Suggested next version for publish modal
         import semver as semver_lib
@@ -739,6 +742,12 @@ class WorkflowDeleteView(OperatorRequiredMixin, View):
         workflow = get_object_or_404(CIWorkflow, name=workflow_name)
         if workflow.services.exists():
             messages.error(request, "Cannot delete workflow: it is still used by services.")
+            return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+        if workflow.versions.exists():
+            messages.error(
+                request,
+                "Cannot delete workflow: it still has versions. Delete all versions first (Version History tab).",
+            )
             return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
         workflow.delete()
         return redirect("ci_workflows:workflow_list")
@@ -856,6 +865,27 @@ class DiscardDraftView(LoginRequiredMixin, View):
         if draft:
             draft.delete()
             messages.success(request, "Draft discarded.")
+        return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+
+
+class DeleteVersionView(OperatorRequiredMixin, View):
+    """Delete a CIWorkflowVersion that has no remaining references."""
+
+    def post(self, request, workflow_name, version_id):
+        workflow = get_object_or_404(CIWorkflow, name=workflow_name)
+        version = get_object_or_404(CIWorkflowVersion, id=version_id, workflow=workflow)
+
+        # Block deletion if any services or builds still reference this version
+        if version.pinned_services.exists():
+            messages.error(request, f"Cannot delete version {version.version}: still pinned by services.")
+            return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+        if version.builds.exists():
+            messages.error(request, f"Cannot delete version {version.version}: still referenced by builds.")
+            return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+
+        label = version.version or "draft"
+        version.delete()
+        messages.success(request, f"Version {label} deleted.")
         return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
 
 

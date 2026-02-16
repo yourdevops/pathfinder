@@ -59,6 +59,7 @@ from .views import (
 )
 from .views.ci_workflows import (
     CompatibleStepsView,
+    DeleteVersionView,
     DiscardDraftView,
     EngineRuntimesView,
     ForkWorkflowView,
@@ -195,6 +196,11 @@ ci_workflows_patterns = [
         "<dns:workflow_name>/discard-draft/",
         DiscardDraftView.as_view(),
         name="workflow_discard_draft",
+    ),
+    path(
+        "<dns:workflow_name>/version/<int:version_id>/delete/",
+        DeleteVersionView.as_view(),
+        name="workflow_delete_version",
     ),
     path(
         "<dns:workflow_name>/suggest-version/",
