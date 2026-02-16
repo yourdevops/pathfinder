@@ -134,6 +134,17 @@
         {% if active_tab == 'steps' %}
         <!-- Steps Tab -->
         <div>
+            {% if has_step_warnings %}
+            <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-4 flex items-center gap-3">
+                <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+                <div>
+                    <p class="text-amber-300 text-sm font-medium">Some steps in this workflow have been updated or archived.</p>
+                    <p class="text-amber-300/70 text-xs mt-0.5">Edit the workflow to review and update affected steps.</p>
+                </div>
+            </div>
+            {% endif %}
             {% if workflow_steps %}
             <div class="bg-dark-surface border border-dark-border rounded-lg divide-y divide-dark-border">
                 {% for ws in workflow_steps %}
@@ -149,6 +160,20 @@
                     </span>
                     <div class="flex-1">
                         <span class="text-dark-text font-medium">{{ ws.step.name }}</span>
+                        {% if ws.step.status == "archived" %}
+                        <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-500/20 text-red-400">
+                            Archived
+                        </span>
+                        {% endif %}
+                        {% if ws.step.last_change_type == "interface" %}
+                        <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-300">
+                            Step Updated
+                        </span>
+                        {% elif ws.step.last_change_type == "metadata" %}
+                        <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-500/20 text-blue-300">
+                            Metadata Updated
+                        </span>
+                        {% endif %}
                         {% if ws.step.description %}
                         <p class="text-xs text-dark-muted mt-0.5">{{ ws.step.description|truncatechars:100 }}</p>
                         {% endif %}

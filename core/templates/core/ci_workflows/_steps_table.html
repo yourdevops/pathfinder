@@ -7,6 +7,9 @@
     data-sort-repo="{{ step.repository.name|lower }}">
     <td class="py-3 px-4">
         <span class="text-dark-text font-medium">{{ step.name }}</span>
+        {% if step.status == "archived" %}
+        <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-500/20 text-red-400">Archived</span>
+        {% endif %}
         {% if step.description %}<p class="text-dark-muted text-xs mt-0.5">{{ step.description|truncatechars:60 }}</p>{% endif %}
     </td>
     <td class="py-3 px-4">

@@ -31,6 +31,18 @@
         {% endif %}
     </div>
 
+    {% if step.status == "archived" %}
+    <div class="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6 flex items-center gap-3">
+        <svg class="w-5 h-5 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+        </svg>
+        <div>
+            <p class="text-red-400 text-sm font-medium">This step has been archived.</p>
+            <p class="text-red-400/70 text-xs mt-0.5">It was removed from its steps repository. Workflows using this step should be updated.</p>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Metadata Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <!-- General Info -->
@@ -48,7 +60,23 @@
                 </div>
                 <div>
                     <dt class="text-sm text-dark-muted">Directory</dt>
-                    <dd class="text-dark-text font-mono text-sm">ci-steps/{{ step.directory_name }}/</dd>
+                    <dd class="text-dark-text font-mono text-sm">{% if step.file_path %}{{ step.file_path }}{% else %}ci-steps/{{ step.directory_name }}/{% endif %}</dd>
+                </div>
+                {% if step.slug %}
+                <div>
+                    <dt class="text-sm text-dark-muted">Slug</dt>
+                    <dd class="text-dark-text font-mono text-sm">{{ step.slug }}</dd>
+                </div>
+                {% endif %}
+                <div>
+                    <dt class="text-sm text-dark-muted">Status</dt>
+                    <dd>
+                        {% if step.status == "archived" %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-500/20 text-red-400">Archived</span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">Active</span>
+                        {% endif %}
+                    </dd>
                 </div>
                 <div>
                     <dt class="text-sm text-dark-muted">Commit SHA</dt>

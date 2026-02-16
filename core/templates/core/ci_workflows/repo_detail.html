@@ -128,7 +128,12 @@
                 <a href="{% url 'ci_workflows:step_detail' step_uuid=step.uuid %}"
                    class="flex items-center justify-between bg-dark-surface border border-dark-border rounded-lg p-4 hover:border-dark-accent/50 transition-colors block">
                     <div>
-                        <h4 class="font-medium text-dark-text">{{ step.name }}</h4>
+                        <div class="flex items-center">
+                            <h4 class="font-medium text-dark-text">{{ step.name }}</h4>
+                            {% if step.status == "archived" %}
+                            <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-500/20 text-red-400">Archived</span>
+                            {% endif %}
+                        </div>
                         {% if step.description %}
                         <p class="text-sm text-dark-muted mt-0.5">{{ step.description|truncatechars:80 }}</p>
                         {% endif %}
@@ -151,6 +156,26 @@
         </div>
         {% endif %}
     </div>
+
+    {% if archived_steps %}
+    <div class="mt-6">
+        <h2 class="text-lg font-semibold text-dark-muted mb-3">Archived Steps ({{ archived_steps|length }})</h2>
+        <div class="space-y-2">
+            {% for step in archived_steps %}
+            <a href="{% url 'ci_workflows:step_detail' step_uuid=step.uuid %}"
+               class="flex items-center justify-between bg-dark-surface border border-dark-border/50 rounded-lg p-4 hover:border-dark-accent/50 transition-colors block opacity-60">
+                <div class="flex items-center gap-2">
+                    <h4 class="font-medium text-dark-muted">{{ step.name }}</h4>
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-500/20 text-red-400">Archived</span>
+                </div>
+                {% if step.description %}
+                <p class="text-sm text-dark-muted">{{ step.description|truncatechars:60 }}</p>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
     {% if can_delete %}
     {% include "core/components/_confirm_modal.html" with confirm_id="confirm-delete-repo" confirm_title="Delete Repository" confirm_message="Are you sure you want to delete this repository and all its imported steps? This cannot be undone." confirm_action=repo_delete_url confirm_button_text="Delete Repository" %}
