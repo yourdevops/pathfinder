@@ -9,27 +9,27 @@
 
         <div class="p-4 space-y-5">
             <!-- Row 1: Workflow + Version inline -->
-            <div class="flex items-start gap-4">
+            {% if can_edit %}
+            <div x-data="ciSelector('{{ ci_workflow.id|default:"" }}', '{{ service.ci_workflow_version_id|default:"none" }}', {{ workflow_versions_json }})"
+                 class="flex items-start gap-4">
                 <!-- Workflow Selector -->
                 <div class="flex-1 min-w-0">
                     <label class="text-sm font-medium text-dark-text mb-2 block">Workflow</label>
-                    {% if can_edit %}
                     <form method="post" action="{% url 'projects:service_assign_workflow' project_name=project.name service_name=service.name %}"
                           hx-post="{% url 'projects:service_assign_workflow' project_name=project.name service_name=service.name %}"
-                          hx-target="#tab-content"
-                          x-data="dropdown('{{ ci_workflow.id|default:"" }}')">
+                          hx-target="#tab-content">
                         {% csrf_token %}
-                        <input type="hidden" name="ci_workflow" :value="val">
+                        <input type="hidden" name="ci_workflow" :value="wfVal">
 
                         <!-- Dropdown -->
-                        <div class="relative" @click.outside="open = false">
-                            <button type="button" @click="open = !open"
+                        <div class="relative" @click.outside="wfOpen = false">
+                            <button type="button" @click="wfOpen = !wfOpen"
                                     class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-dark-border bg-dark-bg hover:border-dark-border/80 text-left transition-colors">
                                 <!-- Trigger: no workflow selected -->
-                                <span x-show="val === ''" {% if ci_workflow %}x-cloak{% endif %} class="text-sm text-dark-muted">Select a workflow...</span>
-                                <!-- Trigger: each workflow option -->
+                                <span x-show="wfVal === ''" {% if ci_workflow %}x-cloak{% endif %} class="text-sm text-dark-muted">Select a workflow...</span>
+                                <!-- Trigger: each workflow option (server-rendered, static) -->
                                 {% for wf in available_workflows %}
-                                <div x-show="val === '{{ wf.id }}'" {% if not ci_workflow or ci_workflow.id != wf.id %}x-cloak{% endif %} class="flex items-center gap-2 min-w-0">
+                                <div x-show="wfVal === '{{ wf.id }}'" {% if not ci_workflow or ci_workflow.id != wf.id %}x-cloak{% endif %} class="flex items-center gap-2 min-w-0">
                                     <span class="text-sm font-medium text-dark-text truncate">{{ wf.name }}</span>
                                     <span class="flex-shrink-0 px-1.5 py-0.5 text-xs rounded bg-blue-500/20 text-blue-300">{{ wf.runtime_family }} {{ wf.runtime_version }}</span>
                                     {% if wf.artifact_type %}
@@ -37,21 +37,21 @@
                                     {% endif %}
                                 </div>
                                 {% endfor %}
-                                <svg :class="{ 'rotate-180': open }" class="w-4 h-4 text-dark-muted flex-shrink-0 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                <svg :class="{ 'rotate-180': wfOpen }" class="w-4 h-4 text-dark-muted flex-shrink-0 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </button>
 
                             <!-- Dropdown panel -->
-                            <div x-show="open" x-cloak class="absolute z-20 mt-1 w-full bg-dark-surface border border-dark-border rounded-lg shadow-lg max-h-72 overflow-y-auto">
+                            <div x-show="wfOpen" x-cloak class="absolute z-20 mt-1 w-full bg-dark-surface border border-dark-border rounded-lg shadow-lg max-h-72 overflow-y-auto">
                                 <!-- No workflow option -->
-                                <div @click="pick('')"
-                                     :class="val === '' && 'bg-dark-accent/5'"
+                                <div @click="pickWf('')"
+                                     :class="wfVal === '' && 'bg-dark-accent/5'"
                                      class="p-3 cursor-pointer hover:bg-dark-bg/50 border-b border-dark-border/50 transition-colors">
                                     <span class="text-sm text-dark-muted">No workflow</span>
                                 </div>
 
                                 {% for wf in available_workflows %}
-                                <div @click="pick('{{ wf.id }}')"
-                                     :class="val === '{{ wf.id }}' && 'bg-dark-accent/5'"
+                                <div @click="pickWf('{{ wf.id }}')"
+                                     :class="wfVal === '{{ wf.id }}' && 'bg-dark-accent/5'"
                                      class="p-3 cursor-pointer hover:bg-dark-bg/50 transition-colors {% if not forloop.last %}border-b border-dark-border/30{% endif %}">
                                     <div class="flex items-center gap-2 mb-0.5">
                                         <span class="text-sm font-medium text-dark-text">{{ wf.name }}</span>
@@ -68,12 +68,83 @@
                             </div>
                         </div>
 
-                        <button type="submit" x-show="val !== initial" x-cloak
+                        <button type="submit" x-show="wfVal !== wfInitial" x-cloak
                                 class="mt-2 px-3 py-1.5 text-sm bg-dark-accent hover:bg-dark-accent/80 text-white rounded transition-colors">
                             Save
                         </button>
                     </form>
-                    {% else %}
+                </div>
+
+                <!-- Version Selector (dynamic, driven by Alpine) -->
+                <div class="w-56 flex-shrink-0" x-show="wfVal !== ''" x-cloak>
+                    <label class="text-sm font-medium text-dark-text mb-2 block">Version</label>
+                    <form method="post" action="{% url 'projects:service_pin_version' project_name=project.name service_name=service.name %}"
+                          hx-post="{% url 'projects:service_pin_version' project_name=project.name service_name=service.name %}"
+                          hx-target="#tab-content">
+                        {% csrf_token %}
+                        <input type="hidden" name="version_id" :value="verVal">
+
+                        <!-- Dropdown -->
+                        <div class="relative" @click.outside="verOpen = false">
+                            <button type="button" @click="verOpen = !verOpen"
+                                    class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-dark-border bg-dark-bg hover:border-dark-border/80 text-left transition-colors">
+                                <!-- Trigger: not pinned -->
+                                <span x-show="verVal === 'none'" class="text-sm text-dark-muted">Not pinned</span>
+                                <!-- Trigger: show selected version dynamically -->
+                                <template x-for="ver in versions">
+                                    <div x-show="verVal === ver.id" class="flex items-center gap-2">
+                                        <span class="text-sm text-dark-text" x-text="ver.label"></span>
+                                        <span x-show="ver.status === 'authorized'" class="px-1.5 py-0.5 text-xs rounded-full bg-green-500/20 text-green-300">Authorized</span>
+                                        <span x-show="ver.status === 'draft'" class="px-1.5 py-0.5 text-xs rounded-full bg-amber-500/20 text-amber-300">Draft</span>
+                                    </div>
+                                </template>
+                                <!-- No versions available -->
+                                <span x-show="wfVal !== '' && versions.length === 0" class="text-sm text-dark-muted">No versions</span>
+                                <svg :class="{ 'rotate-180': verOpen }" class="w-4 h-4 text-dark-muted flex-shrink-0 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+
+                            <!-- Dropdown panel -->
+                            <div x-show="verOpen" x-cloak class="absolute z-20 mt-1 w-full bg-dark-surface border border-dark-border rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                                <!-- Not pinned option -->
+                                <div @click="pickVer('none')"
+                                     :class="verVal === 'none' && 'bg-dark-accent/5'"
+                                     class="px-3 py-2.5 cursor-pointer hover:bg-dark-bg/50 border-b border-dark-border/50 transition-colors">
+                                    <span class="text-sm text-dark-muted">Not pinned</span>
+                                </div>
+
+                                <template x-for="ver in versions">
+                                    <div @click="pickVer(ver.id)"
+                                         :class="verVal === ver.id && 'bg-dark-accent/5'"
+                                         class="px-3 py-2.5 cursor-pointer hover:bg-dark-bg/50 transition-colors">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-sm text-dark-text" x-text="ver.label"></span>
+                                            <span x-show="ver.status === 'authorized'" class="px-1.5 py-0.5 text-xs rounded-full bg-green-500/20 text-green-300">Authorized</span>
+                                            <span x-show="ver.status === 'draft'" class="px-1.5 py-0.5 text-xs rounded-full bg-amber-500/20 text-amber-300">Draft</span>
+                                            <span x-show="ver.status === 'revoked'" class="px-1.5 py-0.5 text-xs rounded-full bg-red-500/20 text-red-300">Revoked</span>
+                                            <span x-show="ver.author" class="text-xs text-dark-muted ml-auto" x-text="ver.author"></span>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <!-- No versions state -->
+                                <div x-show="versions.length === 0" class="px-3 py-2.5">
+                                    <span class="text-sm text-dark-muted">No versions available</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" x-show="verVal !== verInitial" x-cloak
+                                class="mt-2 px-3 py-1.5 text-sm bg-dark-accent hover:bg-dark-accent/80 text-white rounded transition-colors">
+                            Save
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="flex items-start gap-4">
+                <!-- Read-only Workflow -->
+                <div class="flex-1 min-w-0">
+                    <label class="text-sm font-medium text-dark-text mb-2 block">Workflow</label>
                     <p class="text-dark-text text-sm py-2.5">
                         {% if ci_workflow %}
                             <span class="font-medium">{{ ci_workflow.name }}</span>
@@ -82,84 +153,12 @@
                             <span class="text-dark-muted">No workflow assigned</span>
                         {% endif %}
                     </p>
-                    {% endif %}
                 </div>
 
-                <!-- Version Selector (appears when workflow is assigned) -->
+                <!-- Read-only Version -->
                 {% if service.ci_workflow %}
                 <div class="w-56 flex-shrink-0">
                     <label class="text-sm font-medium text-dark-text mb-2 block">Version</label>
-                    {% if can_edit %}
-                    <form method="post" action="{% url 'projects:service_pin_version' project_name=project.name service_name=service.name %}"
-                          hx-post="{% url 'projects:service_pin_version' project_name=project.name service_name=service.name %}"
-                          hx-target="#tab-content"
-                          x-data="dropdown('{{ service.ci_workflow_version_id|default:"none" }}')">
-                        {% csrf_token %}
-                        <input type="hidden" name="version_id" :value="val">
-
-                        <!-- Dropdown -->
-                        <div class="relative" @click.outside="open = false">
-                            <button type="button" @click="open = !open"
-                                    class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-dark-border bg-dark-bg hover:border-dark-border/80 text-left transition-colors">
-                                <!-- Trigger: not pinned -->
-                                <span x-show="val === 'none'" {% if service.ci_workflow_version %}x-cloak{% endif %} class="text-sm text-dark-muted">Not pinned</span>
-                                <!-- Trigger: each version option -->
-                                {% for ver in available_versions %}
-                                <div x-show="val === '{{ ver.id }}'" {% if service.ci_workflow_version_id != ver.id %}x-cloak{% endif %} class="flex items-center gap-2">
-                                    <span class="text-sm text-dark-text">
-                                        {% if ver.status == "draft" %}Draft{% else %}v{{ ver.version }}{% endif %}
-                                    </span>
-                                    {% if ver.status == "authorized" %}
-                                    <span class="px-1.5 py-0.5 text-xs rounded-full bg-green-500/20 text-green-300">Authorized</span>
-                                    {% elif ver.status == "draft" %}
-                                    <span class="px-1.5 py-0.5 text-xs rounded-full bg-amber-500/20 text-amber-300">Draft</span>
-                                    {% elif ver.status == "revoked" %}
-                                    <span class="px-1.5 py-0.5 text-xs rounded-full bg-red-500/20 text-red-300">Revoked</span>
-                                    {% endif %}
-                                </div>
-                                {% endfor %}
-                                <svg :class="{ 'rotate-180': open }" class="w-4 h-4 text-dark-muted flex-shrink-0 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                            </button>
-
-                            <!-- Dropdown panel -->
-                            <div x-show="open" x-cloak class="absolute z-20 mt-1 w-full bg-dark-surface border border-dark-border rounded-lg shadow-lg max-h-64 overflow-y-auto">
-                                <!-- Not pinned option -->
-                                <div @click="pick('none')"
-                                     :class="val === 'none' && 'bg-dark-accent/5'"
-                                     class="px-3 py-2.5 cursor-pointer hover:bg-dark-bg/50 border-b border-dark-border/50 transition-colors">
-                                    <span class="text-sm text-dark-muted">Not pinned</span>
-                                </div>
-
-                                {% for ver in available_versions %}
-                                <div @click="pick('{{ ver.id }}')"
-                                     :class="val === '{{ ver.id }}' && 'bg-dark-accent/5'"
-                                     class="px-3 py-2.5 cursor-pointer hover:bg-dark-bg/50 transition-colors {% if not forloop.last %}border-b border-dark-border/30{% endif %}">
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-sm text-dark-text">
-                                            {% if ver.status == "draft" %}Draft{% else %}v{{ ver.version }}{% endif %}
-                                        </span>
-                                        {% if ver.status == "authorized" %}
-                                        <span class="px-1.5 py-0.5 text-xs rounded-full bg-green-500/20 text-green-300">Authorized</span>
-                                        {% elif ver.status == "draft" %}
-                                        <span class="px-1.5 py-0.5 text-xs rounded-full bg-amber-500/20 text-amber-300">Draft</span>
-                                        {% elif ver.status == "revoked" %}
-                                        <span class="px-1.5 py-0.5 text-xs rounded-full bg-red-500/20 text-red-300">Revoked</span>
-                                        {% endif %}
-                                        {% if ver.author %}
-                                        <span class="text-xs text-dark-muted ml-auto">{{ ver.author }}</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-
-                        <button type="submit" x-show="val !== initial" x-cloak
-                                class="mt-2 px-3 py-1.5 text-sm bg-dark-accent hover:bg-dark-accent/80 text-white rounded transition-colors">
-                            Save
-                        </button>
-                    </form>
-                    {% else %}
                     <p class="text-dark-muted text-sm py-2.5">
                         {% if service.ci_workflow_version %}
                             {% if service.ci_workflow_version.status == "draft" %}Draft{% else %}v{{ service.ci_workflow_version.version }}{% endif %}
@@ -167,10 +166,10 @@
                             Not pinned
                         {% endif %}
                     </p>
-                    {% endif %}
                 </div>
                 {% endif %}
             </div>
+            {% endif %}
 
             <!-- Row 2: Manifest Status + Push (only if workflow assigned) -->
             {% if service.ci_workflow %}
