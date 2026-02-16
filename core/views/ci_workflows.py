@@ -92,10 +92,11 @@ class StepsRepoDetailView(LoginRequiredMixin, View):
 
     def get(self, request, repo_name):
         repo = get_object_or_404(StepsRepository, name=repo_name)
-        steps = repo.steps.all().order_by("phase", "name")
+        active_steps = repo.steps.filter(status="active").order_by("phase", "name")
+        archived_steps = repo.steps.filter(status="archived").order_by("name")
         runtimes = repo.runtimes.all().order_by("name")
 
-        # Group steps by phase
+        # Group active steps by phase
         phase_order = ["setup", "test", "build", "package"]
         phase_labels = {
             "setup": "Setup",
@@ -105,11 +106,11 @@ class StepsRepoDetailView(LoginRequiredMixin, View):
         }
         steps_by_phase = OrderedDict()
         for phase in phase_order:
-            phase_steps = [s for s in steps if s.phase == phase]
+            phase_steps = [s for s in active_steps if s.phase == phase]
             if phase_steps:
                 steps_by_phase[phase_labels[phase]] = phase_steps
         # Steps without a phase
-        uncategorized = [s for s in steps if s.phase not in phase_order]
+        uncategorized = [s for s in active_steps if s.phase not in phase_order]
         if uncategorized:
             steps_by_phase["Other"] = uncategorized
 
@@ -127,7 +128,8 @@ class StepsRepoDetailView(LoginRequiredMixin, View):
                 "repo": repo,
                 "steps_by_phase": steps_by_phase,
                 "runtimes": runtimes,
-                "total_steps": steps.count(),
+                "total_steps": active_steps.count(),
+                "archived_steps": archived_steps,
                 "can_manage": can_manage,
                 "workflows_using": workflows_using,
                 "can_delete": can_delete,
@@ -197,7 +199,7 @@ def _filter_steps(request):
         output_field=IntegerField(),
     )
     steps = (
-        CIStep.objects.all()
+        CIStep.objects.filter(status="active")
         .select_related("repository")
         .annotate(phase_order=phase_ordering)
         .order_by("phase_order", "name")
@@ -286,7 +288,10 @@ class StepDetailView(LoginRequiredMixin, View):
             base_url = step.repository.git_url.rstrip("/")
             if base_url.endswith(".git"):
                 base_url = base_url[:-4]
-            source_url = f"{base_url}/blob/{step.commit_sha}/ci-steps/{step.directory_name}/{engine_file}"
+            if step.file_path:
+                source_url = f"{base_url}/blob/{step.commit_sha}/{step.file_path}"
+            else:
+                source_url = f"{base_url}/blob/{step.commit_sha}/ci-steps/{step.directory_name}/{engine_file}"
 
         return render(
             request,
@@ -649,6 +654,14 @@ class WorkflowDetailView(LoginRequiredMixin, View):
     def get(self, request, workflow_name):
         workflow = get_object_or_404(CIWorkflow, name=workflow_name)
         workflow_steps = workflow.workflow_steps.select_related("step").order_by("order")
+
+        # Check for step warnings (archived or interface changes)
+        has_step_warnings = False
+        for ws in workflow_steps:
+            if ws.step.status == "archived" or ws.step.last_change_type == "interface":
+                has_step_warnings = True
+                break
+
         first_step = workflow_steps.first()
         engine = first_step.step.engine if first_step else "github_actions"
         ci_plugin = get_ci_plugin_for_engine(engine)
@@ -702,6 +715,7 @@ class WorkflowDetailView(LoginRequiredMixin, View):
                 "can_delete": can_delete,
                 "is_operator": is_operator,
                 "services_using": services_using,
+                "has_step_warnings": has_step_warnings,
                 "active_tab": active_tab,
                 "workflow_delete_url": reverse("ci_workflows:workflow_delete", kwargs={"workflow_name": workflow.name}),
             },
