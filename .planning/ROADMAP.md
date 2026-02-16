@@ -280,7 +280,7 @@ Plans:
   4. Unreferenced revoked versions are deleted after retention period
   5. CI Configuration settings page allows retention period configuration and manual cleanup
   6. Daily cleanup task runs at 03:00 UTC; management command available for CLI use
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] 06.7-01-PLAN.md -- Models, migration, and service auto-update toggle UI
