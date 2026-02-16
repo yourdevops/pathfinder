@@ -214,6 +214,44 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
         return {"status": "failed", "error": error_msg}
 
 
+def _derive_step_slug(pathfinder_name: str, directory_name: str) -> str:
+    """Derive URL-safe slug from x-pathfinder.name, falling back to directory_name."""
+    from django.utils.text import slugify
+
+    name = pathfinder_name or directory_name
+    slug = slugify(name)
+    if not slug:
+        slug = slugify(directory_name)
+    return slug
+
+
+def _classify_change(old_step, new_fields: dict) -> str | None:
+    """Compare old step fields with new fields to classify change type.
+
+    Returns 'interface' if inputs/outputs/runtimes/phase changed,
+    'metadata' if only tags/description changed, None if no meaningful change.
+    """
+    interface_fields = {
+        "inputs_schema": old_step.inputs_schema,
+        "runtime_constraints": old_step.runtime_constraints,
+        "produces": old_step.produces,
+        "phase": old_step.phase,
+    }
+    metadata_fields = {
+        "tags": old_step.tags,
+        "description": old_step.description,
+    }
+
+    interface_changed = any(interface_fields.get(k) != new_fields.get(k) for k in interface_fields)
+    metadata_changed = any(metadata_fields.get(k) != new_fields.get(k) for k in metadata_fields)
+
+    if interface_changed:
+        return "interface"
+    if metadata_changed:
+        return "metadata"
+    return None
+
+
 @task(queue_name="steps_scan")
 def scan_steps_repository(repository_id: int) -> dict:
     """
@@ -232,7 +270,7 @@ def scan_steps_repository(repository_id: int) -> dict:
     from core.git_utils import (
         build_authenticated_git_url,
         cleanup_repo,
-        clone_repo_shallow,
+        clone_repo_full,
     )
     from core.models import CIStep, RuntimeFamily, StepsRepository
 
@@ -256,8 +294,8 @@ def scan_steps_repository(repository_id: int) -> dict:
         if repository.connection:
             auth_url = build_authenticated_git_url(repository.git_url, repository.connection)
 
-        # Clone repository
-        repo_obj, temp_dir = clone_repo_shallow(
+        # Clone repository (full history for per-file SHA computation)
+        repo_obj, temp_dir = clone_repo_full(
             git_url=repository.git_url,
             branch=repository.default_branch,
             auth_url=auth_url,
@@ -294,34 +332,110 @@ def scan_steps_repository(repository_id: int) -> dict:
             raw_steps = []
             logger.warning(f"No CI plugin found for engine '{engine}', skipping step scan")
 
-        # Get HEAD commit SHA
-        head_sha = repo_obj.head.commit.hexsha
+        # Reset last_change_type for all active steps in this repo before scan
+        CIStep.objects.filter(repository=repository, status="active").update(last_change_type="")
 
-        # Create/update CIStep records
-        scanned_dir_names = set()
+        scanned_slugs = set()
+        stats = {"created": 0, "updated": 0, "unchanged": 0, "skipped_collision": 0, "archived": 0}
+
         for raw_step in raw_steps:
             step_info = ci_plugin.parse_step_file(raw_step["raw_content"])
             dir_name = os.path.basename(raw_step["directory_path"])
-            CIStep.objects.update_or_create(
-                repository=repository,
-                directory_name=dir_name,
-                defaults={
-                    "engine": engine,
-                    "name": step_info["name"] or dir_name,
-                    "description": step_info["description"],
-                    "phase": step_info["phase"],
-                    "runtime_constraints": step_info["runtime_constraints"],
-                    "tags": step_info["tags"],
-                    "produces": step_info["produces"],
-                    "inputs_schema": step_info["inputs"],
-                    "commit_sha": head_sha,
-                    "raw_metadata": step_info["raw_metadata"],
-                },
-            )
-            scanned_dir_names.add(dir_name)
+            file_path = raw_step["file_path"]
 
-        # Delete removed steps
-        CIStep.objects.filter(repository=repository).exclude(directory_name__in=scanned_dir_names).delete()
+            # Per-file commit SHA
+            per_file_sha = repo_obj.git.log("-1", "--format=%H", "--", file_path).strip()
+            if not per_file_sha:
+                per_file_sha = repo_obj.head.commit.hexsha  # Fallback
+
+            # Derive slug
+            slug = _derive_step_slug(step_info["name"], dir_name)
+            if not slug:
+                logger.warning(f"Could not derive slug for step in {dir_name}, skipping")
+                continue
+
+            scanned_slugs.add(slug)
+
+            # Collision detection: check if slug+engine exists from a DIFFERENT repository
+            existing = CIStep.objects.filter(engine=engine, slug=slug).first()
+            if existing and existing.repository_id != repository.id:
+                logger.warning(
+                    f"Slug collision: '{slug}' (engine={engine}) already exists from "
+                    f"repository '{existing.repository.name}', skipping step from '{repository.name}'"
+                )
+                stats["skipped_collision"] += 1
+                continue
+
+            # Check same-repo match by slug+engine (normal update path)
+            existing_same_repo = CIStep.objects.filter(repository=repository, engine=engine, slug=slug).first()
+
+            if existing_same_repo:
+                # SHA unchanged? Skip
+                if existing_same_repo.commit_sha == per_file_sha:
+                    stats["unchanged"] += 1
+                    # Re-activate if it was archived (step file returned)
+                    if existing_same_repo.status == "archived":
+                        existing_same_repo.status = "active"
+                        existing_same_repo.save(update_fields=["status"])
+                    continue
+
+                # SHA changed: re-parse and classify
+                new_fields = {
+                    "inputs_schema": step_info["inputs"],
+                    "runtime_constraints": step_info["runtime_constraints"],
+                    "produces": step_info["produces"],
+                    "phase": step_info["phase"],
+                    "tags": step_info["tags"],
+                    "description": step_info["description"],
+                }
+                change_type = _classify_change(existing_same_repo, new_fields)
+
+                # Update existing step
+                existing_same_repo.name = step_info["name"] or dir_name
+                existing_same_repo.description = step_info["description"]
+                existing_same_repo.phase = step_info["phase"]
+                existing_same_repo.runtime_constraints = step_info["runtime_constraints"]
+                existing_same_repo.tags = step_info["tags"]
+                existing_same_repo.produces = step_info["produces"]
+                existing_same_repo.inputs_schema = step_info["inputs"]
+                existing_same_repo.commit_sha = per_file_sha
+                existing_same_repo.raw_metadata = step_info["raw_metadata"]
+                existing_same_repo.file_path = file_path
+                existing_same_repo.directory_name = dir_name
+                existing_same_repo.slug = slug
+                existing_same_repo.status = "active"
+                existing_same_repo.last_change_type = change_type or ""
+                existing_same_repo.save()
+                stats["updated"] += 1
+            else:
+                # New step: create
+                CIStep.objects.create(
+                    repository=repository,
+                    engine=engine,
+                    directory_name=dir_name,
+                    slug=slug,
+                    name=step_info["name"] or dir_name,
+                    description=step_info["description"],
+                    phase=step_info["phase"],
+                    runtime_constraints=step_info["runtime_constraints"],
+                    tags=step_info["tags"],
+                    produces=step_info["produces"],
+                    inputs_schema=step_info["inputs"],
+                    commit_sha=per_file_sha,
+                    raw_metadata=step_info["raw_metadata"],
+                    file_path=file_path,
+                    status="active",
+                    last_change_type="",
+                )
+                stats["created"] += 1
+
+        # Archive steps no longer found in repo (soft-delete instead of hard-delete)
+        archived_count = (
+            CIStep.objects.filter(repository=repository, status="active")
+            .exclude(slug__in=scanned_slugs)
+            .update(status="archived")
+        )
+        stats["archived"] = archived_count
 
         # Mark as scanned
         repository.scan_status = "scanned"
@@ -330,9 +444,16 @@ def scan_steps_repository(repository_id: int) -> dict:
         repository.save(update_fields=["scan_status", "scan_error", "last_scanned_at"])
 
         logger.info(
-            f"Scanned steps repository {repository.name}: {len(scanned_dir_names)} steps, {len(runtimes_data)} runtimes"
+            f"Scanned steps repository {repository.name}: "
+            f"{stats['created']} created, {stats['updated']} updated, "
+            f"{stats['unchanged']} unchanged, {stats['archived']} archived, "
+            f"{stats['skipped_collision']} collisions, {len(runtimes_data)} runtimes"
         )
-        return {"steps": len(scanned_dir_names), "runtimes": len(runtimes_data)}
+        return {
+            "steps": stats["created"] + stats["updated"] + stats["unchanged"],
+            "runtimes": len(runtimes_data),
+            **stats,
+        }
 
     except Exception as e:
         error_msg = str(e)
@@ -345,6 +466,21 @@ def scan_steps_repository(repository_id: int) -> dict:
     finally:
         if repo_obj and temp_dir:
             cleanup_repo(repo_obj, temp_dir)
+
+
+@task(queue_name="steps_scan")
+def cleanup_archived_steps() -> dict:
+    """Delete archived steps that are not referenced by any workflow.
+
+    CIWorkflowStep.step has on_delete=PROTECT, so we must check for
+    zero references before deleting to avoid ProtectedError.
+    """
+    from core.models import CIStep, CIWorkflowStep
+
+    referenced_step_ids = CIWorkflowStep.objects.values_list("step_id", flat=True)
+    deleted_count, _ = CIStep.objects.filter(status="archived").exclude(id__in=referenced_step_ids).delete()
+    logger.info(f"Cleaned up {deleted_count} unreferenced archived steps")
+    return {"deleted": deleted_count}
 
 
 def activate_service_on_first_success(build):

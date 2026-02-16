@@ -50,6 +50,7 @@ def discover_steps(repo_path: str, engine_file_name: str) -> list[dict]:
             results.append(
                 {
                     "directory_path": rel_dir,
+                    "file_path": os.path.join(rel_dir, engine_file_name),
                     "raw_content": content,
                 }
             )
