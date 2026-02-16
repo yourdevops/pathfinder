@@ -88,7 +88,7 @@ def get_compatible_steps(runtime_family: str, runtime_version: str):
     Returns:
         Tuple of (compatible_steps, incompatible_steps), both ordered by phase then name.
     """
-    all_steps = CIStep.objects.all().select_related("repository").order_by("phase", "name")
+    all_steps = CIStep.objects.filter(status="active").select_related("repository").order_by("phase", "name")
 
     compatible = []
     incompatible = []
