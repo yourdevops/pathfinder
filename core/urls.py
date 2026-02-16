@@ -5,6 +5,7 @@ from .views import (
     ApiTokensView,
     AuditLogsSettingsView,
     AuditLogView,
+    CIConfigSettingsView,
     ConnectionConfigUpdateView,
     ConnectionCreateDispatchView,
     ConnectionDeleteView,
@@ -429,6 +430,7 @@ settings_patterns = [
     path("audit-logs/", AuditLogsSettingsView.as_view(), name="audit_logs"),
     path("api-tokens/", ApiTokensView.as_view(), name="api_tokens"),
     path("notifications/", NotificationsView.as_view(), name="notifications"),
+    path("ci-config/", CIConfigSettingsView.as_view(), name="settings_ci_config"),
 ]
 
 # Webhooks URLs

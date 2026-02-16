@@ -4,7 +4,7 @@ from django.shortcuts import redirect, render
 from django.views import View
 
 from ..decorators import AdminRequiredMixin
-from ..forms import SiteConfigurationForm
+from ..forms import RetentionSettingsForm, SiteConfigurationForm
 from ..models import SiteConfiguration
 
 
@@ -100,5 +100,54 @@ class NotificationsView(LoginRequiredMixin, AdminRequiredMixin, View):
             self.template_name,
             {
                 "active_section": "notifications",
+            },
+        )
+
+
+class CIConfigSettingsView(LoginRequiredMixin, AdminRequiredMixin, View):
+    """CI Configuration settings page - retention management and manual cleanup trigger."""
+
+    template_name = "core/settings/ci_config.html"
+
+    def get(self, request):
+        config = SiteConfiguration.get_instance()
+        form = RetentionSettingsForm(instance=config)
+        return render(
+            request,
+            self.template_name,
+            {
+                "active_section": "settings",
+                "active_settings_section": "ci_config",
+                "form": form,
+                "config": config,
+            },
+        )
+
+    def post(self, request):
+        config = SiteConfiguration.get_instance()
+        # Check if this is a cleanup request
+        if "run_cleanup" in request.POST:
+            from core.tasks import scheduled_cleanup_versions
+
+            scheduled_cleanup_versions.enqueue()
+            messages.success(
+                request,
+                "Version cleanup has been queued. Results will appear shortly.",
+            )
+            form = RetentionSettingsForm(instance=config)
+        else:
+            form = RetentionSettingsForm(request.POST, instance=config)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Retention settings saved.")
+            # else form will show errors
+        return render(
+            request,
+            self.template_name,
+            {
+                "active_section": "settings",
+                "active_settings_section": "ci_config",
+                "form": form,
+                "config": config,
             },
         )

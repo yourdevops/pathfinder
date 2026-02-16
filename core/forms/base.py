@@ -751,3 +751,20 @@ class SiteConfigurationForm(forms.ModelForm):
     def clean_external_url(self):
         url = self.cleaned_data.get("external_url", "").rstrip("/")
         return url
+
+
+class RetentionSettingsForm(forms.ModelForm):
+    """Form for version retention settings."""
+
+    class Meta:
+        model = SiteConfiguration
+        fields = ["version_retention_days"]
+        widgets = {
+            "version_retention_days": forms.NumberInput(
+                attrs={
+                    "class": "input-field",
+                    "min": "1",
+                    "max": "3650",
+                }
+            ),
+        }

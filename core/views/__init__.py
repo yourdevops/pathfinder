@@ -60,6 +60,7 @@ from .projects import (
 from .settings import (
     ApiTokensView,
     AuditLogsSettingsView,
+    CIConfigSettingsView,
     GeneralSettingsView,
     NotificationsView,
     UserManagementView,
@@ -72,6 +73,7 @@ __all__ = [
     "ApiTokensView",
     "AuditLogView",
     "AuditLogsSettingsView",
+    "CIConfigSettingsView",
     "ConnectionConfigUpdateView",
     "ConnectionCreateDispatchView",
     "ConnectionDeleteView",
