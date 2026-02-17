@@ -190,7 +190,17 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
             project_data = self.get_cleaned_data_for_step("project")
             if project_data:
                 project = project_data.get("project") or self.project
-                context["available_workflows"] = get_available_workflows_for_project(project)
+                workflows = get_available_workflows_for_project(project)
+                context["available_workflows"] = workflows
+                context["workflow_data_json"] = {
+                    str(wf.id): {
+                        "name": wf.name,
+                        "runtime_constraints": wf.runtime_constraints or {},
+                        "description": wf.description or "",
+                        "dev_workflow": wf.dev_workflow or "trunk_based",
+                    }
+                    for wf in workflows
+                }
 
         elif self.steps.current == "review":
             # Compile all data for review
