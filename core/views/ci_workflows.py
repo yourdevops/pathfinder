@@ -923,13 +923,20 @@ class WorkflowDetailView(LoginRequiredMixin, View):
 
         engine = workflow.engine
         ci_plugin = get_ci_plugin_for_engine(engine)
-        manifest_yaml = ci_plugin.generate_manifest(workflow) if ci_plugin else "# No CI plugin available"
 
         # Version info for UI
         draft_version = workflow.versions.filter(status=CIWorkflowVersion.Status.DRAFT).first()
         latest_version = (
             workflow.versions.filter(status=CIWorkflowVersion.Status.AUTHORIZED).order_by("-published_at").first()
         )
+
+        # Show versioned manifest: draft first, then latest authorized, then fresh generate
+        if draft_version and draft_version.manifest_content:
+            manifest_yaml = draft_version.manifest_content
+        elif latest_version and latest_version.manifest_content:
+            manifest_yaml = latest_version.manifest_content
+        else:
+            manifest_yaml = ci_plugin.generate_manifest(workflow) if ci_plugin else "# No CI plugin available"
 
         # Services using this workflow
         services_using = workflow.services.select_related("project").order_by("project__name", "name")
