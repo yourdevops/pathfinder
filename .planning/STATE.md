@@ -305,9 +305,10 @@ None
 | 039 | CI Workflows gap analysis and remediation plan | 2026-02-16 | 543b991 | [39-ci-workflows-gap-analysis-and-remediatio](./quick/39-ci-workflows-gap-analysis-and-remediatio/) |
 | 040 | Fix python-uv step not imported from ci-steps-library | 2026-02-16 | 6a40bf7 | [40-fix-python-uv-step-not-imported-from-ci-](./quick/40-fix-python-uv-step-not-imported-from-ci-/) |
 | 040 | Fix python-uv step not imported (yml/yaml extension) | 2026-02-16 | 6a40bf7 | [40-fix-python-uv-step-not-imported-from-ci-](./quick/40-fix-python-uv-step-not-imported-from-ci-/) |
+| 041 | Fix workflow manifest page to use stored version content | 2026-02-17 | d451894 | [41-fix-workflow-manifest-page-to-use-stored](./quick/41-fix-workflow-manifest-page-to-use-stored/) |
 
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06.9-02-PLAN.md (Phase 6.9 complete)
-Resume file: .planning/phases/06.9-plan-execution-of-the-phase-r6-step-output-wiring/06.9-02-SUMMARY.md
+Stopped at: Completed quick task 41 - Fix workflow manifest page to use stored version content
+Resume file: .planning/quick/41-fix-workflow-manifest-page-to-use-stored/41-SUMMARY.md
