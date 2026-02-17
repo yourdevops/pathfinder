@@ -10,7 +10,7 @@
             &larr; Back to Workflows
         </a>
         <h1 class="text-2xl font-bold text-dark-text mt-2">Create CI Workflow</h1>
-        <p class="text-dark-muted mt-1">Define name, description, CI engine, and runtime for your workflow</p>
+        <p class="text-dark-muted mt-1">Define name, description, and CI engine for your workflow</p>
     </div>
 
     <!-- Form -->
@@ -47,53 +47,13 @@
                     CI Engine
                 </label>
                 <select name="engine" id="id_engine"
-                        class="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:border-dark-accent"
-                        hx-get="{% url 'ci_workflows:engine_runtimes' %}"
-                        hx-trigger="change"
-                        hx-target="#id_runtime_family"
-                        hx-include="[name='engine']">
+                        class="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:border-dark-accent">
                     {% for value, label in form.engine.field.choices %}
                     <option value="{{ value }}" {% if form.engine.value == value %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
                 {% if form.engine.errors %}
                 <p class="text-red-400 text-sm mt-1">{{ form.engine.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <!-- Runtime Family -->
-            <div>
-                <label for="id_runtime_family" class="block text-sm font-medium text-dark-text mb-1">
-                    Runtime Family
-                </label>
-                <select name="runtime_family" id="id_runtime_family"
-                        class="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:border-dark-accent"
-                        hx-get="{% url 'ci_workflows:runtime_versions' %}"
-                        hx-trigger="change"
-                        hx-target="#id_runtime_version"
-                        hx-include="[name='runtime_family']">
-                    {% for value, label in form.runtime_family.field.choices %}
-                    <option value="{{ value }}" {% if form.runtime_family.value == value %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
-                {% if form.runtime_family.errors %}
-                <p class="text-red-400 text-sm mt-1">{{ form.runtime_family.errors.0 }}</p>
-                {% endif %}
-            </div>
-
-            <!-- Runtime Version -->
-            <div>
-                <label for="id_runtime_version" class="block text-sm font-medium text-dark-text mb-1">
-                    Runtime Version
-                </label>
-                <select name="runtime_version" id="id_runtime_version"
-                        class="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:border-dark-accent">
-                    {% for value, label in form.runtime_version.field.choices %}
-                    <option value="{{ value }}" {% if form.runtime_version.value == value %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                </select>
-                {% if form.runtime_version.errors %}
-                <p class="text-red-400 text-sm mt-1">{{ form.runtime_version.errors.0 }}</p>
                 {% endif %}
             </div>
 

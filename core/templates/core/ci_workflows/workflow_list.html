@@ -41,10 +41,16 @@
             {% if workflow.description %}
             <p class="text-sm text-dark-muted mb-3 line-clamp-2">{{ workflow.description|truncatechars:120 }}</p>
             {% endif %}
-            <div class="flex items-center gap-2 mb-3">
+            <div class="flex items-center gap-2 mb-3 flex-wrap">
+                {% if workflow.runtime_constraints %}
+                {% for family, constraint in workflow.runtime_constraints.items %}
                 <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-500/20 text-blue-400">
-                    {{ workflow.runtime_family }} {{ workflow.runtime_version }}
+                    {{ family|title }} {{ constraint }}
                 </span>
+                {% endfor %}
+                {% else %}
+                <span class="text-xs text-dark-muted">No runtime constraints</span>
+                {% endif %}
                 <span class="text-xs text-dark-muted">
                     {{ workflow.workflow_steps.count }} step{{ workflow.workflow_steps.count|pluralize }}
                 </span>

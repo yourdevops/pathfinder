@@ -61,13 +61,10 @@
     <div id="workflow-preview" class="hidden p-4 bg-dark-bg border border-dark-border rounded-lg">
         <p class="text-sm font-medium text-dark-text mb-3">Workflow Details</p>
         <div class="grid grid-cols-2 gap-4 text-sm">
-            <div>
-                <span class="text-dark-muted">Runtime:</span>
+            <div class="col-span-2">
+                <span class="text-dark-muted">Runtimes:</span>
                 <span id="preview-runtime" class="text-dark-text ml-2"></span>
-            </div>
-            <div>
-                <span class="text-dark-muted">Version:</span>
-                <span id="preview-version" class="text-dark-text ml-2"></span>
+                <span id="preview-version" class="hidden"></span>
             </div>
             <div class="col-span-2" id="preview-description-container">
                 <span class="text-dark-muted">Description:</span>
@@ -108,8 +105,7 @@
     {% for wf in available_workflows %}
     "{{ wf.id }}": {
         "name": "{{ wf.name }}",
-        "runtime_family": "{{ wf.runtime_family }}",
-        "runtime_version": "{{ wf.runtime_version }}",
+        "runtime_constraints": {{ wf.runtime_constraints|default:"{}"|safe }},
         "description": "{{ wf.description|escapejs }}",
         "dev_workflow": "{{ wf.dev_workflow|default:'trunk_based' }}"
     }{% if not forloop.last %},{% endif %}
@@ -124,13 +120,24 @@ document.addEventListener('DOMContentLoaded', function() {
     var warning = document.getElementById('no-workflow-warning');
     var workflowData = JSON.parse(document.getElementById('workflow-data').textContent);
 
+    function formatRuntimeConstraints(rc) {
+        if (!rc || Object.keys(rc).length === 0) return 'No runtime constraints';
+        var parts = [];
+        for (var family in rc) {
+            if (rc.hasOwnProperty(family)) {
+                parts.push(family.charAt(0).toUpperCase() + family.slice(1) + ' ' + rc[family]);
+            }
+        }
+        return parts.join(', ');
+    }
+
     function updatePreview() {
         var selectedValue = select.value;
 
         if (selectedValue && workflowData[selectedValue]) {
             var wf = workflowData[selectedValue];
-            document.getElementById('preview-runtime').textContent = wf.runtime_family;
-            document.getElementById('preview-version').textContent = wf.runtime_version;
+            document.getElementById('preview-runtime').textContent = formatRuntimeConstraints(wf.runtime_constraints);
+            document.getElementById('preview-version').textContent = '';
             document.getElementById('preview-description').textContent = wf.description || 'No description';
             preview.classList.remove('hidden');
             warning.classList.add('hidden');

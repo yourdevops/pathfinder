@@ -17,7 +17,7 @@
                     </div>
                     <div>
                         <span class="text-dark-text font-medium">{{ approval.workflow.name }}</span>
-                        <span class="text-dark-muted text-xs ml-2">{{ approval.workflow.runtime_family }} {{ approval.workflow.runtime_version }}</span>
+                        <span class="text-dark-muted text-xs ml-2">{% if approval.workflow.runtime_constraints %}{% for fam, con in approval.workflow.runtime_constraints.items %}{{ fam|title }} {{ con }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}</span>
                         {% if ci_config and ci_config.default_workflow_id == approval.workflow.id %}
                         <span class="ml-2 px-2 py-0.5 text-xs rounded bg-dark-accent/20 text-dark-accent">Default</span>
                         {% endif %}

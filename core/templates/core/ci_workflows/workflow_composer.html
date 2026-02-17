@@ -17,20 +17,46 @@
         </a>
         <h1 class="text-2xl font-bold text-dark-text mt-2">Compose Workflow: {{ workflow_name }}</h1>
         {% endif %}
-        <div class="flex items-center gap-3 mt-2">
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-500/20 text-blue-400">
-                {{ runtime_family }} {{ runtime_version }}
-            </span>
-            {% if workflow_description %}
-            <span class="text-dark-muted text-sm">{{ workflow_description }}</span>
-            {% endif %}
-        </div>
+        {% if workflow_description %}
+        <p class="text-dark-muted text-sm mt-1">{{ workflow_description }}</p>
+        {% endif %}
     </div>
 
     <!-- Two-column layout -->
     <div class="flex gap-6">
         <!-- LEFT: Workflow Steps (60%) -->
         <div class="w-3/5">
+            <!-- Constraint Summary Panel -->
+            <div class="bg-dark-surface border border-dark-border rounded-lg mb-4 p-4">
+                <h3 class="text-sm font-semibold text-dark-text mb-2">Runtime Constraints</h3>
+                <template x-if="steps.length === 0">
+                    <p class="text-dark-muted text-sm">Add steps to see runtime constraints</p>
+                </template>
+                <template x-if="steps.length > 0">
+                    <div>
+                        <!-- Constraint badges -->
+                        <div class="flex flex-wrap gap-2 mb-2" x-show="formatConstraints().length > 0">
+                            <template x-for="c in formatConstraints()" :key="c.family">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium"
+                                      :class="c.status === 'ok' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'">
+                                    <span x-text="c.family"></span>
+                                    <span class="ml-1" x-text="c.constraint"></span>
+                                </span>
+                            </template>
+                        </div>
+                        <p x-show="formatConstraints().length === 0 && derivedConstraints().conflicts.length === 0"
+                           class="text-dark-muted text-sm">No runtime constraints (all steps are runtime-agnostic)</p>
+                        <!-- Conflict warnings -->
+                        <template x-for="conflict in derivedConstraints().conflicts" :key="conflict.runtime">
+                            <div class="mt-2 p-2 bg-red-500/10 border border-red-500/30 rounded text-sm text-red-400">
+                                <span class="font-medium" x-text="'Conflict: ' + conflict.runtime"></span>
+                                <span class="ml-1" x-text="'Steps ' + conflict.steps.join(', ') + ' have incompatible constraints'"></span>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
             <div class="bg-dark-surface border border-dark-border rounded-lg">
                 <div class="p-4 border-b border-dark-border flex items-center justify-between">
                     <h2 class="font-semibold text-dark-text">Workflow Steps</h2>
@@ -145,8 +171,6 @@
                         {% csrf_token %}
                         <input type="hidden" name="name" value="{{ workflow_name }}">
                         <input type="hidden" name="description" value="{{ workflow_description }}">
-                        <input type="hidden" name="runtime_family" value="{{ runtime_family }}">
-                        <input type="hidden" name="runtime_version" value="{{ runtime_version }}">
                         <input type="hidden" name="engine" value="{{ engine }}">
                         {% if workflow_uuid %}<input type="hidden" name="workflow_uuid" value="{{ workflow_uuid }}">{% endif %}
                         <input type="hidden" name="steps_json" :value="stepsJson()">
@@ -164,7 +188,18 @@
             <div class="bg-dark-surface border border-dark-border rounded-lg">
                 <div class="p-4 border-b border-dark-border">
                     <h2 class="font-semibold text-dark-text">Available Steps</h2>
-                    <p class="text-xs text-dark-muted mt-1">Compatible with {{ runtime_family }} {{ runtime_version }}</p>
+                    <p class="text-xs text-dark-muted mt-1">All steps for this engine</p>
+                </div>
+
+                <!-- Optional Runtime Filter -->
+                <div class="px-4 pt-3">
+                    <select class="w-full px-3 py-1.5 text-sm bg-dark-bg border border-dark-border rounded text-dark-text focus:outline-none focus:border-dark-accent"
+                            x-model="runtimeFilter">
+                        <option value="">All Runtimes</option>
+                        {% for family in runtime_families %}
+                        <option value="{{ family }}">{{ family|title }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
 
                 <div class="p-4">
@@ -173,61 +208,99 @@
             </div>
         </div>
     </div>
+
+    <!-- Constraint conflict inline error -->
+    <div x-show="addStepError" x-cloak
+         class="fixed bottom-4 right-4 max-w-md p-4 bg-red-500/10 border border-red-500/30 rounded-lg shadow-lg z-50">
+        <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+                <p class="text-sm font-medium text-red-400">Cannot add step</p>
+                <p class="text-sm text-red-300 mt-1" x-text="addStepError"></p>
+            </div>
+            <button @click="addStepError = ''" class="ml-auto text-red-400 hover:text-red-300">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 {{ initial_steps_json|json_script:"initial-steps-data" }}
+{{ step_constraints_map|json_script:"step-constraints-map-data" }}
 <script nonce="{{ csp_nonce }}">
-document.addEventListener('alpine:init', () => {
-    const _initialSteps = JSON.parse(document.getElementById('initial-steps-data').textContent);
-    Alpine.data('workflowComposer', () => ({
+document.addEventListener('alpine:init', function() {
+    var _initialSteps = JSON.parse(document.getElementById('initial-steps-data').textContent);
+    var _stepConstraintsMap = JSON.parse(document.getElementById('step-constraints-map-data').textContent);
+
+    Alpine.data('workflowComposer', function() { return {
         steps: _initialSteps,
+        stepConstraintsMap: _stepConstraintsMap,
         dragIndex: -1,
-        dropIndex: -1,  // insertion gap: 0 = before first, N = after last
-        addStep(step) {
-            if (this.steps.find(s => s.id === step.id)) return;
-            this.steps.push({...step, order: this.steps.length, input_config: {}, expanded: false});
+        dropIndex: -1,
+        runtimeFilter: '',
+        addStepError: '',
+        addStep: function(step) {
+            if (this.steps.find(function(s) { return s.id === step.id; })) return;
+            var check = this.canAddStep(step.id);
+            if (!check.ok) {
+                this.addStepError = check.reason;
+                return;
+            }
+            this.addStepError = '';
+            this.steps.push({id: step.id, name: step.name, phase: step.phase, description: step.description, inputs_schema: step.inputs_schema, order: this.steps.length, input_config: {}, expanded: false});
             this.updateOrders();
         },
-        removeStep(index) {
+        removeStep: function(index) {
             this.steps.splice(index, 1);
             this.updateOrders();
         },
-        updateOrders() {
-            this.steps.forEach((s, i) => s.order = i);
+        updateOrders: function() {
+            this.steps.forEach(function(s, i) { s.order = i; });
         },
-        toggleExpand(index) {
+        toggleExpand: function(index) {
             this.steps[index].expanded = !this.steps[index].expanded;
         },
-        updateStepConfig(index, inputName, value) {
+        updateStepConfig: function(index, inputName, value) {
             if (!this.steps[index].input_config) this.steps[index].input_config = {};
             this.steps[index].input_config[inputName] = value;
         },
-        phaseBadgeColor(phase) {
-            const colors = {
+        phaseBadgeColor: function(phase) {
+            var colors = {
                 'setup': 'bg-blue-500/20 text-blue-400',
                 'build': 'bg-yellow-500/20 text-yellow-400',
                 'test': 'bg-green-500/20 text-green-400',
-                'package': 'bg-purple-500/20 text-purple-400',
+                'package': 'bg-purple-500/20 text-purple-400'
             };
             return colors[phase] || 'bg-gray-500/20 text-gray-400';
         },
-        hasInputs(step) {
+        hasInputs: function(step) {
             return step.inputs_schema && Object.keys(step.inputs_schema).length > 0;
         },
-        inputEntries(step) {
+        inputEntries: function(step) {
             if (!step.inputs_schema) return [];
-            return Object.entries(step.inputs_schema).map(([name, def]) => ({name, def}));
+            return Object.entries(step.inputs_schema).map(function(pair) { return {name: pair[0], def: pair[1]}; });
         },
-        stepsJson() {
+        stepsJson: function() {
             return JSON.stringify(this.steps);
         },
-        isStepSelected(id) {
-            return this.steps.some(s => s.id === id);
+        isStepSelected: function(id) {
+            return this.steps.some(function(s) { return s.id === id; });
         },
-        addStepFromEl(el) {
-            const inputsMap = JSON.parse(document.getElementById('step-inputs-map').textContent);
+        isStepVisible: function(stepId) {
+            if (!this.runtimeFilter) return true;
+            var rc = this.stepConstraintsMap[stepId] || {};
+            if (Object.keys(rc).length === 0) return true;
+            if (rc['*'] !== undefined) return true;
+            return rc[this.runtimeFilter] !== undefined;
+        },
+        addStepFromEl: function(el) {
+            var inputsMap = JSON.parse(document.getElementById('step-inputs-map').textContent);
             this.addStep({
                 id: el.dataset.stepId,
                 name: el.dataset.stepName,
@@ -236,22 +309,132 @@ document.addEventListener('alpine:init', () => {
                 inputs_schema: inputsMap[el.dataset.stepId] || {}
             });
         },
+        derivedConstraints: function() {
+            var familyConstraints = {};
+            var self = this;
+            this.steps.forEach(function(step) {
+                var rc = self.stepConstraintsMap[step.id] || {};
+                if (Object.keys(rc).length === 0) return;
+                var keys = Object.keys(rc);
+                if (keys.length === 1 && keys[0] === '*') return;
+                keys.forEach(function(family) {
+                    if (family === '*') return;
+                    if (!familyConstraints[family]) familyConstraints[family] = [];
+                    familyConstraints[family].push({constraint: String(rc[family]), stepName: step.name});
+                });
+            });
+            var constraints = {};
+            var conflicts = [];
+            Object.keys(familyConstraints).forEach(function(family) {
+                var entries = familyConstraints[family];
+                var cStrings = entries.map(function(e) { return e.constraint; });
+                var stepNames = entries.map(function(e) { return e.stepName; });
+                var nonWild = cStrings.filter(function(c) { return c !== '*'; });
+                if (nonWild.length === 0) { constraints[family] = '*'; return; }
+                var result = self._intersectClient(nonWild);
+                if (result === null) {
+                    conflicts.push({runtime: family, steps: stepNames, constraints: cStrings});
+                } else {
+                    constraints[family] = result;
+                }
+            });
+            return {constraints: constraints, conflicts: conflicts};
+        },
+        canAddStep: function(stepUuid) {
+            var rc = this.stepConstraintsMap[stepUuid] || {};
+            if (Object.keys(rc).length === 0) return {ok: true};
+            var keys = Object.keys(rc);
+            if (keys.length === 1 && keys[0] === '*') return {ok: true};
+            var current = this.derivedConstraints().constraints;
+            var self = this;
+            var problems = [];
+            keys.forEach(function(family) {
+                if (family === '*') return;
+                if (current[family]) {
+                    var result = self._intersectClient([current[family], String(rc[family])]);
+                    if (result === null) {
+                        problems.push(family + ': existing ' + current[family] + ' conflicts with ' + rc[family]);
+                    }
+                }
+            });
+            if (problems.length > 0) return {ok: false, reason: problems.join('; ')};
+            return {ok: true};
+        },
+        formatConstraints: function() {
+            var derived = this.derivedConstraints();
+            var result = [];
+            Object.keys(derived.constraints).forEach(function(family) {
+                result.push({family: family, constraint: derived.constraints[family], status: 'ok'});
+            });
+            derived.conflicts.forEach(function(c) {
+                result.push({family: c.runtime, constraint: 'CONFLICT', status: 'conflict'});
+            });
+            return result;
+        },
+        _intersectClient: function(constraints) {
+            var lowerVer = null, lowerInc = true;
+            var upperVer = null, upperInc = true;
+            for (var i = 0; i < constraints.length; i++) {
+                var parts = constraints[i].split(',');
+                for (var j = 0; j < parts.length; j++) {
+                    var part = parts[j].trim();
+                    if (part === '*') continue;
+                    var m = part.match(/^(>=|<=|>|<|==|!=|~=)?\s*(.+)$/);
+                    if (!m) continue;
+                    var op = m[1] || '>=';
+                    var verParts = m[2].trim().split('.');
+                    while (verParts.length < 3) verParts.push('0');
+                    var ver = verParts.slice(0, 3).map(Number);
+                    if (op === '>=' || op === '>') {
+                        var inc = op === '>=';
+                        if (lowerVer === null || this._cmpVer(ver, lowerVer) > 0 || (this._cmpVer(ver, lowerVer) === 0 && !inc)) {
+                            lowerVer = ver; lowerInc = inc;
+                        }
+                    } else if (op === '<=' || op === '<') {
+                        var uInc = op === '<=';
+                        if (upperVer === null || this._cmpVer(ver, upperVer) < 0 || (this._cmpVer(ver, upperVer) === 0 && !uInc)) {
+                            upperVer = ver; upperInc = uInc;
+                        }
+                    } else if (op === '==') {
+                        if (lowerVer === null || this._cmpVer(ver, lowerVer) > 0) { lowerVer = ver; lowerInc = true; }
+                        if (upperVer === null || this._cmpVer(ver, upperVer) < 0) { upperVer = ver; upperInc = true; }
+                    }
+                }
+            }
+            if (lowerVer && upperVer) {
+                var cmp = this._cmpVer(lowerVer, upperVer);
+                if (cmp > 0) return null;
+                if (cmp === 0 && !(lowerInc && upperInc)) return null;
+            }
+            var result = [];
+            if (lowerVer) result.push((lowerInc ? '>=' : '>') + this._fmtVer(lowerVer));
+            if (upperVer) result.push((upperInc ? '<=' : '<') + this._fmtVer(upperVer));
+            return result.length > 0 ? result.join(',') : '*';
+        },
+        _cmpVer: function(a, b) {
+            for (var i = 0; i < 3; i++) { if (a[i] !== b[i]) return a[i] - b[i]; }
+            return 0;
+        },
+        _fmtVer: function(v) {
+            if (v[2] === 0 && v[1] === 0) return String(v[0]);
+            if (v[2] === 0) return v[0] + '.' + v[1];
+            return v[0] + '.' + v[1] + '.' + v[2];
+        },
         // Drag and drop
-        onDragStart(event, index) {
+        onDragStart: function(event, index) {
             this.dragIndex = index;
             event.dataTransfer.effectAllowed = 'move';
             event.dataTransfer.setData('text/plain', String(index));
         },
-        onDragOver(event) {
+        onDragOver: function(event) {
             if (this.dragIndex === -1) return;
             event.preventDefault();
             event.dataTransfer.dropEffect = 'move';
-            // Find which gap the cursor is closest to by checking item midpoints
-            const container = event.currentTarget;
-            const items = container.querySelectorAll('[draggable="true"]');
-            let gap = items.length; // default: after last
-            for (let i = 0; i < items.length; i++) {
-                const rect = items[i].getBoundingClientRect();
+            var container = event.currentTarget;
+            var items = container.querySelectorAll('[draggable="true"]');
+            var gap = items.length;
+            for (var i = 0; i < items.length; i++) {
+                var rect = items[i].getBoundingClientRect();
                 if (event.clientY < rect.top + rect.height / 2) {
                     gap = i;
                     break;
@@ -259,34 +442,32 @@ document.addEventListener('alpine:init', () => {
             }
             this.dropIndex = gap;
         },
-        onDragLeave() {
+        onDragLeave: function() {
             this.dropIndex = -1;
         },
-        onDrop(event) {
+        onDrop: function(event) {
             event.preventDefault();
-            const fromIndex = this.dragIndex;
-            let toIndex = this.dropIndex;
+            var fromIndex = this.dragIndex;
+            var toIndex = this.dropIndex;
             this.dragIndex = -1;
             this.dropIndex = -1;
             if (fromIndex === -1 || toIndex === -1) return;
-            // Adjust for removal shifting indices
             if (toIndex > fromIndex) toIndex--;
             if (fromIndex === toIndex) return;
-            const item = this.steps.splice(fromIndex, 1)[0];
+            var item = this.steps.splice(fromIndex, 1)[0];
             this.steps.splice(toIndex, 0, item);
             this.updateOrders();
         },
-        onDragEnd() {
+        onDragEnd: function() {
             this.dragIndex = -1;
             this.dropIndex = -1;
         },
-        dropLineClass(gapIndex) {
+        dropLineClass: function(gapIndex) {
             if (this.dropIndex !== gapIndex) return 'h-0';
-            // Don't show line directly above or below the dragged item (no-op drop)
             if (gapIndex === this.dragIndex || gapIndex === this.dragIndex + 1) return 'h-0';
             return 'h-0.5 my-1 bg-dark-accent';
         }
-    }));
+    }; });
 });
 </script>
 {% endblock %}

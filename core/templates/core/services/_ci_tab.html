@@ -29,7 +29,7 @@
                                 {% for wf in available_workflows %}
                                 <div x-show="wfVal === '{{ wf.id }}'" {% if not ci_workflow or ci_workflow.id != wf.id %}x-cloak{% endif %} class="flex items-center gap-2 min-w-0">
                                     <span class="text-sm font-medium text-dark-text truncate">{{ wf.name }}</span>
-                                    <span class="flex-shrink-0 px-1.5 py-0.5 text-xs rounded bg-blue-500/20 text-blue-300">{{ wf.runtime_family }} {{ wf.runtime_version }}</span>
+                                    {% if wf.runtime_constraints %}{% for fam, con in wf.runtime_constraints.items %}<span class="flex-shrink-0 px-1.5 py-0.5 text-xs rounded bg-blue-500/20 text-blue-300">{{ fam|title }} {{ con }}</span>{% endfor %}{% endif %}
                                     {% if wf.artifact_type %}
                                     <span class="flex-shrink-0 px-1.5 py-0.5 text-xs rounded bg-purple-500/20 text-purple-300">{{ wf.artifact_type }}</span>
                                     {% endif %}
@@ -49,9 +49,9 @@
                                 <div @click="pickWf('{{ wf.id }}')"
                                      :class="wfVal === '{{ wf.id }}' && 'bg-dark-accent/5'"
                                      class="p-3 cursor-pointer hover:bg-dark-bg/50 transition-colors {% if not forloop.last %}border-b border-dark-border/30{% endif %}">
-                                    <div class="flex items-center gap-2 mb-0.5">
+                                    <div class="flex items-center gap-2 mb-0.5 flex-wrap">
                                         <span class="text-sm font-medium text-dark-text">{{ wf.name }}</span>
-                                        <span class="px-1.5 py-0.5 text-xs rounded bg-blue-500/20 text-blue-300">{{ wf.runtime_family }} {{ wf.runtime_version }}</span>
+                                        {% if wf.runtime_constraints %}{% for fam, con in wf.runtime_constraints.items %}<span class="px-1.5 py-0.5 text-xs rounded bg-blue-500/20 text-blue-300">{{ fam|title }} {{ con }}</span>{% endfor %}{% endif %}
                                         {% if wf.artifact_type %}
                                         <span class="px-1.5 py-0.5 text-xs rounded bg-purple-500/20 text-purple-300">{{ wf.artifact_type }}</span>
                                         {% endif %}
@@ -125,7 +125,9 @@
                     <p class="text-dark-text text-sm py-2.5">
                         {% if ci_workflow %}
                             <span class="font-medium">{{ ci_workflow.name }}</span>
-                            <span class="text-dark-muted ml-2">({{ ci_workflow.runtime_family }} {{ ci_workflow.runtime_version }})</span>
+                            {% if ci_workflow.runtime_constraints %}
+                            <span class="text-dark-muted ml-2">({% for fam, con in ci_workflow.runtime_constraints.items %}{{ fam|title }} {{ con }}{% if not forloop.last %}, {% endif %}{% endfor %})</span>
+                            {% endif %}
                         {% else %}
                             <span class="text-dark-muted">No workflow assigned</span>
                         {% endif %}
