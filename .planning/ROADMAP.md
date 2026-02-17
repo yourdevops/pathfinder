@@ -270,6 +270,17 @@ Plans:
 - [x] 06-01-PLAN.md — Build model, webhook endpoint with HMAC auth, poll_build_details task, service activation
 - [x] 06-02-PLAN.md — Build history UI with table layout, filtering, pagination, HTMX auto-refresh
 
+### Phase 06.9: Step Output Wiring (INSERTED)
+
+**Goal:** Steps declare outputs in the catalog (parsed during sync). The workflow composer lets users wire one step's output to another step's input via copy-paste of engine-native references. CI plugins translate these references to engine-native syntax during manifest generation.
+**Depends on:** Phase 6
+**Gaps Addressed**: GAP-21 from docs/ci-workflows/REMEDIATION.md
+**Plans:** 2 plans
+
+Plans:
+- [ ] 06.9-01-PLAN.md -- Model, plugin interface, sync parsing, step detail outputs, manifest step IDs
+- [ ] 06.9-02-PLAN.md -- Composer UX: Configure tabs, outputs display, copy buttons, real-time and server-side validation
+
 ### Phase 06.8: Manifest and Plugin Interface (INSERTED)
 
 **Goal:** Artifact discovery uses CI plugin API (not webhook payloads), CI variables are injected into manifests, a step validation API exists, dead manifest_path code is removed, and workflow runtimes are derived from steps with version constraints at the workflow level and concrete versions at the service level.
@@ -426,7 +437,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 6.3 -> 6.4 -> 6.5 -> 6.6 -> 6.7 -> 6.8 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 6.3 -> 6.4 -> 6.5 -> 6.6 -> 6.7 -> 6.8 -> 6.9 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -449,8 +460,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5
 | 6.6 Sync Operations and Logging (INSERTED) | 3/3 | Complete | 2026-02-16 |
 | 6.7 Version Lifecycle Automation (INSERTED) | 0/3 | Not started | - |
 | 6.8 Manifest and Plugin Interface (INSERTED) | 0/4 | Not started | - |
+| 6.9 Step Output Wiring (INSERTED) | 0/2 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-02-17 (Phase 6.8 planned - 4 plans for manifest and plugin interface)*
+*Last updated: 2026-02-17 (Phase 6.9 planned - 2 plans for step output wiring)*
