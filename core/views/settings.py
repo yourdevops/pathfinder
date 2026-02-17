@@ -1,3 +1,5 @@
+import secrets
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, render
@@ -5,7 +7,7 @@ from django.views import View
 
 from ..decorators import AdminRequiredMixin
 from ..forms import RetentionSettingsForm, SiteConfigurationForm
-from ..models import SiteConfiguration
+from ..models import ApiToken, SiteConfiguration
 
 
 class GeneralSettingsView(LoginRequiredMixin, AdminRequiredMixin, View):
@@ -75,16 +77,57 @@ class AuditLogsSettingsView(LoginRequiredMixin, AdminRequiredMixin, View):
 
 
 class ApiTokensView(LoginRequiredMixin, AdminRequiredMixin, View):
-    """API and tokens management page."""
+    """API token management page -- create, list, and revoke tokens."""
 
     template_name = "core/settings/api_tokens.html"
 
     def get(self, request):
+        tokens = ApiToken.objects.all()
         return render(
             request,
             self.template_name,
             {
                 "active_section": "api_tokens",
+                "tokens": tokens,
+            },
+        )
+
+    def post(self, request):
+        action = request.POST.get("action", "")
+        new_token_key = None
+
+        if action == "create":
+            name = request.POST.get("name", "").strip()
+            if not name:
+                messages.error(request, "Token name is required.")
+            else:
+                key = secrets.token_hex(32)
+                ApiToken.objects.create(
+                    key=key,
+                    name=name,
+                    created_by=request.user,
+                )
+                new_token_key = key
+                messages.success(request, f"Token '{name}' created successfully.")
+
+        elif action == "revoke":
+            token_id = request.POST.get("token_id")
+            try:
+                token = ApiToken.objects.get(id=token_id)
+                token.is_active = False
+                token.save(update_fields=["is_active"])
+                messages.success(request, f"Token '{token.name}' revoked.")
+            except ApiToken.DoesNotExist:
+                messages.error(request, "Token not found.")
+
+        tokens = ApiToken.objects.all()
+        return render(
+            request,
+            self.template_name,
+            {
+                "active_section": "api_tokens",
+                "tokens": tokens,
+                "new_token_key": new_token_key,
             },
         )
 

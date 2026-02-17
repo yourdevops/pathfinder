@@ -180,6 +180,29 @@ class ProjectMembership(models.Model):
         return f"{self.group.name} -> {self.project.name} ({self.project_role})"
 
 
+class ApiToken(models.Model):
+    """API token for authenticating external API calls (e.g., step validation)."""
+
+    id = models.BigAutoField(primary_key=True)
+    key = models.CharField(max_length=64, unique=True, db_index=True)
+    name = models.CharField(max_length=100, help_text="Human-readable label for this token")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="api_tokens",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "core_api_token"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.name
+
+
 class SiteConfiguration(models.Model):
     """
     Singleton model for site-wide configuration settings.
@@ -1056,6 +1079,7 @@ auditlog.register(GroupMembership)
 auditlog.register(Project)
 auditlog.register(Environment)
 auditlog.register(ProjectMembership)
+auditlog.register(ApiToken)
 auditlog.register(SiteConfiguration)
 auditlog.register(IntegrationConnection, exclude_fields=["config_encrypted"])
 auditlog.register(ProjectConnection)
