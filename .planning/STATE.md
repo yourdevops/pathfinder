@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 6.9 in progress - Step Output Wiring
+**Current focus:** Phase 6.9 complete - Step Output Wiring
 
 ## Current Position
 
 Phase: 6.9 (Step Output Wiring)
-Plan: 1 of 2 in current phase
-Status: In Progress
-Last activity: 2026-02-17 - Plan 01 complete: CIStep outputs_schema, plugin interface, sync, and step detail
+Plan: 2 of 2 in current phase
+Status: Complete
+Last activity: 2026-02-17 - Plan 02 complete: Composer UX for step output wiring
 
-Progress: [====================                    ] 50% (Phase 6.9)
+Progress: [========================================] 100% (Phase 6.9)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 70
+- Total plans completed: 71
 - Average duration: 4 min
-- Total execution time: 4.41 hours
+- Total execution time: 4.48 hours
 
 **By Phase:**
 
@@ -46,10 +46,10 @@ Progress: [====================                    ] 50% (Phase 6.9)
 | 06.6-sync-operations-and-logging | 3 | 12 min | 4 min |
 | 06.7-version-lifecycle-automation | 4 | 9 min | 2.3 min |
 | 06.8-manifest-and-plugin-interface | 4 | 17 min | 4.3 min |
-| 06.9-step-output-wiring | 1 | 3 min | 3 min |
+| 06.9-step-output-wiring | 2 | 7 min | 3.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.8-02 (3 min), 06.8-03 (3 min), 06.8-04 (9 min), 06.9-01 (3 min)
+- Last 5 plans: 06.8-03 (3 min), 06.8-04 (9 min), 06.9-01 (3 min), 06.9-02 (4 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -230,6 +230,9 @@ Recent decisions affecting current work:
 | 06.9-01 | GitHub Actions step ID is slug as-is | Already lowercase with hyphens per DNS label validator |
 | 06.9-01 | Output reference regex allows hyphens in step_slug and underscores/hyphens in output_name | Matches GitHub Actions expression syntax conventions |
 | 06.9-01 | Auto-injected checkout step has no id attribute | No outputs consumers need; only user-composed steps get IDs |
+| 06.9-02 | validateInputValue calls updateStepConfig internally | Keep input_config synchronized during validation without separate @change handler |
+| 06.9-02 | copyBtn uses server-side pre-computed reference strings | Avoids CSP dynamic expression issues in Alpine.js |
+| 06.9-02 | Default configTab is inputs when has inputs, outputs when only outputs | Natural UX: show what the step has |
 
 ### Roadmap Evolution
 
@@ -306,5 +309,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06.9-01-PLAN.md
-Resume file: .planning/phases/06.9-plan-execution-of-the-phase-r6-step-output-wiring/06.9-01-SUMMARY.md
+Stopped at: Completed 06.9-02-PLAN.md (Phase 6.9 complete)
+Resume file: .planning/phases/06.9-plan-execution-of-the-phase-r6-step-output-wiring/06.9-02-SUMMARY.md
