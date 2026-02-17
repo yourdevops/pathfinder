@@ -97,6 +97,7 @@ from .views.services import (
     ServiceFetchBuildsView,
     ServiceListView,
     ServicePinVersionView,
+    ServiceProvisionVariablesView,
     ServicePushManifestView,
     ServiceRegisterWebhookView,
     ServiceScaffoldStatusView,
@@ -405,6 +406,11 @@ projects_patterns = [
         "<dns:project_name>/services/<dns:service_name>/ci/auto-update-toggle/",
         ServiceAutoUpdateToggleView.as_view(),
         name="service_auto_update_toggle",
+    ),
+    path(
+        "<dns:project_name>/services/<dns:service_name>/ci/provision-variables/",
+        ServiceProvisionVariablesView.as_view(),
+        name="service_provision_variables",
     ),
     path(
         "<dns:project_name>/services/<dns:service_name>/register-webhook/",

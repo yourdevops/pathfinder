@@ -489,6 +489,17 @@ class Service(models.Model):
         default=True,
         help_text="Automatically update CI manifest when a patch version is published",
     )
+    ci_variables_status = models.CharField(
+        max_length=20,
+        choices=[
+            ("pending", "Pending"),
+            ("provisioned", "Provisioned"),
+            ("failed", "Failed"),
+        ],
+        default="pending",
+        blank=True,
+    )
+    ci_variables_error = models.TextField(blank=True)
     webhook_registered = models.BooleanField(default=False)
 
     # Build tracking (updated by Phase 6)

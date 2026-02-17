@@ -819,6 +819,74 @@ class ServiceRegisterWebhookView(LoginRequiredMixin, View):
         return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
 
 
+class ServiceProvisionVariablesView(LoginRequiredMixin, View):
+    """Retry CI variable provisioning for a service."""
+
+    def post(self, request, project_name, service_name):
+        from core.git_utils import parse_git_url
+        from core.models import ProjectConnection
+        from plugins.base import CICapableMixin
+
+        project = get_object_or_404(Project, name=project_name, status="active")
+        service = get_object_or_404(Service, project=project, name=service_name)
+
+        # Check contributor permission
+        role = can_access_project(request.user, project)
+        if not role or role == "viewer":
+            messages.error(request, "You don't have permission to modify this service.")
+            return redirect(f"/projects/{project_name}/services/{service_name}/?tab=ci")
+
+        if not service.repo_url:
+            messages.error(request, "Service has no repository configured.")
+            return redirect(f"/projects/{project_name}/services/{service_name}/?tab=ci")
+
+        # Get SCM connection
+        project_connection = (
+            ProjectConnection.objects.filter(project=project, is_default=True).select_related("connection").first()
+        )
+        if not project_connection:
+            messages.error(request, "No SCM connection configured for this project.")
+            return redirect(f"/projects/{project_name}/services/{service_name}/?tab=ci")
+
+        connection = project_connection.connection
+        plugin = connection.get_plugin()
+
+        if not plugin or not isinstance(plugin, CICapableMixin):
+            messages.error(request, "SCM plugin does not support CI variable provisioning.")
+            return redirect(f"/projects/{project_name}/services/{service_name}/?tab=ci")
+
+        parsed = parse_git_url(service.repo_url)
+        if not parsed:
+            messages.error(request, "Invalid repository URL.")
+            return redirect(f"/projects/{project_name}/services/{service_name}/?tab=ci")
+
+        repo_full_name = f"{parsed['owner']}/{parsed['repo']}"
+        variables = {
+            "PTF_PROJECT": service.project.name,
+            "PTF_SERVICE": service.name,
+        }
+
+        try:
+            result = plugin.provision_ci_variables(connection.get_config(), repo_full_name, variables)
+            has_errors = any("error" in str(v) for v in result.values())
+            if has_errors:
+                service.ci_variables_status = "failed"
+                service.ci_variables_error = str(result)
+                messages.error(request, f"CI variable provisioning partially failed: {result}")
+            else:
+                service.ci_variables_status = "provisioned"
+                service.ci_variables_error = ""
+                messages.success(request, "CI variables provisioned successfully.")
+            service.save(update_fields=["ci_variables_status", "ci_variables_error"])
+        except Exception as e:
+            service.ci_variables_status = "failed"
+            service.ci_variables_error = str(e)
+            service.save(update_fields=["ci_variables_status", "ci_variables_error"])
+            messages.error(request, f"CI variable provisioning failed: {e}")
+
+        return redirect(f"/projects/{project_name}/services/{service_name}/?tab=ci")
+
+
 class ServicePushManifestView(LoginRequiredMixin, View):
     """Enqueue push_ci_manifest background task for a service."""
 

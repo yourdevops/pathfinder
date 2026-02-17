@@ -202,6 +202,39 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
 
         service.save(update_fields=update_fields)
 
+        # Provision CI variables (non-blocking)
+        if service.repo_url and connection:
+            from plugins.base import CICapableMixin
+
+            plugin = connection.get_plugin()
+            if isinstance(plugin, CICapableMixin):
+                try:
+                    from core.git_utils import parse_git_url
+
+                    parsed = parse_git_url(service.repo_url)
+                    if parsed:
+                        repo_full_name = f"{parsed['owner']}/{parsed['repo']}"
+                        variables = {
+                            "PTF_PROJECT": service.project.name,
+                            "PTF_SERVICE": service.name,
+                        }
+                        ci_result = plugin.provision_ci_variables(connection.get_config(), repo_full_name, variables)
+                        # Check for errors
+                        has_errors = any("error" in str(v) for v in ci_result.values())
+                        if has_errors:
+                            service.ci_variables_status = "failed"
+                            service.ci_variables_error = str(ci_result)
+                        else:
+                            service.ci_variables_status = "provisioned"
+                            service.ci_variables_error = ""
+                        service.save(update_fields=["ci_variables_status", "ci_variables_error"])
+                        logger.info(f"CI variable provisioning for {service.name}: {ci_result}")
+                except Exception as e:
+                    logger.warning(f"CI variable provisioning failed for {service.name}: {e}")
+                    service.ci_variables_status = "failed"
+                    service.ci_variables_error = str(e)
+                    service.save(update_fields=["ci_variables_status", "ci_variables_error"])
+
         logger.info(f"Successfully scaffolded service {service.id}: {service.name}")
         return result
 

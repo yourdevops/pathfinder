@@ -213,6 +213,60 @@
         </div>
     </div>
 
+    <!-- CI Variables Section -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg">
+        <div class="p-4 border-b border-dark-border">
+            <h2 class="text-lg font-semibold text-dark-text">CI Variables</h2>
+            <p class="text-dark-muted text-sm mt-1">Repository-level variables available to CI workflows.</p>
+        </div>
+        <div class="p-4">
+            {% if not service.repo_url %}
+            <p class="text-dark-muted text-sm text-center py-2">No repository configured.</p>
+            {% elif service.ci_variables_status == "provisioned" %}
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-2 py-1 text-xs rounded bg-green-500/20 text-green-300">Provisioned</span>
+            </div>
+            <div class="space-y-2">
+                <div class="flex items-center gap-3 text-sm">
+                    <code class="text-dark-accent font-mono">PTF_PROJECT</code>
+                    <span class="text-dark-muted">=</span>
+                    <span class="text-dark-text">{{ project.name }}</span>
+                </div>
+                <div class="flex items-center gap-3 text-sm">
+                    <code class="text-dark-accent font-mono">PTF_SERVICE</code>
+                    <span class="text-dark-muted">=</span>
+                    <span class="text-dark-text">{{ service.name }}</span>
+                </div>
+            </div>
+            {% elif service.ci_variables_status == "failed" %}
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-3 mb-2">
+                        <span class="px-2 py-1 text-xs rounded bg-red-500/20 text-red-300">Failed</span>
+                    </div>
+                    {% if service.ci_variables_error %}
+                    <p class="text-sm text-red-400 mt-1">{{ service.ci_variables_error|truncatechars:200 }}</p>
+                    {% endif %}
+                </div>
+                {% if can_edit %}
+                <form method="post" action="{% url 'projects:service_provision_variables' project_name=project.name service_name=service.name %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="px-3 py-1.5 text-sm bg-dark-accent hover:bg-dark-accent/80 text-white rounded transition-colors">
+                        Retry Provisioning
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="flex items-center gap-3">
+                <span class="px-2 py-1 text-xs rounded bg-gray-500/20 text-gray-300">Pending</span>
+                <span class="text-dark-muted text-sm">Variables will be provisioned when the repository is scaffolded.</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
     <!-- Manifest Preview Section (separate card) -->
     {% if manifest_yaml %}
     <div class="bg-dark-surface border border-dark-border rounded-lg">
