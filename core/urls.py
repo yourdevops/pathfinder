@@ -59,7 +59,6 @@ from .views import (
     webhooks,
 )
 from .views.ci_workflows import (
-    CompatibleStepsView,
     DeleteVersionView,
     DiscardDraftView,
     EngineRuntimesView,
@@ -152,7 +151,6 @@ ci_workflows_patterns = [
     path("", WorkflowListView.as_view(), name="workflow_list"),
     path("create/", WorkflowCreateView.as_view(), name="workflow_create"),
     path("composer/", WorkflowComposerView.as_view(), name="workflow_composer"),
-    path("compatible-steps/", CompatibleStepsView.as_view(), name="compatible_steps"),
     path("step-config/<uuid:step_uuid>/", StepConfigView.as_view(), name="step_config"),
     path("runtime-versions/", RuntimeVersionsView.as_view(), name="runtime_versions"),
     path("engine-runtimes/", EngineRuntimesView.as_view(), name="engine_runtimes"),

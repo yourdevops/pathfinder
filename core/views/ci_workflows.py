@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views import View
 
-from core.ci_manifest import get_compatible_steps, is_step_compatible
+from core.ci_manifest import compute_runtime_constraints, is_step_compatible
 from core.forms.ci_workflows import StepsRepoRegisterForm, WorkflowCreateForm
 from core.git_utils import parse_git_url
 from core.models import (
@@ -385,7 +385,7 @@ class WorkflowCreateView(LoginRequiredMixin, View):
     def post(self, request):
         form = WorkflowCreateForm(request.POST)
         if form.is_valid():
-            # Redirect to composer with params
+            # Redirect to composer with params (no runtime fields)
             from urllib.parse import urlencode
 
             params = urlencode(
@@ -393,8 +393,6 @@ class WorkflowCreateView(LoginRequiredMixin, View):
                     "name": form.cleaned_data["name"],
                     "description": form.cleaned_data.get("description", ""),
                     "engine": form.cleaned_data["engine"],
-                    "runtime_family": form.cleaned_data["runtime_family"],
-                    "runtime_version": form.cleaned_data["runtime_version"],
                 }
             )
             return redirect(f"{reverse('ci_workflows:workflow_composer')}?{params}")
@@ -476,13 +474,18 @@ def _validate_step_order(steps_data):
 class WorkflowComposerView(LoginRequiredMixin, View):
     """Step 2: Compose workflow steps with drag-and-drop ordering.
 
-    Handles both create (GET /composer/?name=...&runtime_family=...&runtime_version=...)
+    Handles both create (GET /composer/?name=...&engine=...)
     and edit (GET /<workflow_name>/edit/) modes.
+    Shows ALL active steps for the selected engine; runtime constraints
+    are derived from step intersection, not upfront selection.
     """
 
-    def _build_compatible_context(self, runtime_family, runtime_version):
-        """Build compatible/incompatible steps grouped by phase."""
-        compatible, incompatible = get_compatible_steps(runtime_family, runtime_version)
+    def _build_all_steps_context(self, engine):
+        """Build all active steps for the engine, grouped by phase."""
+        all_steps = (
+            CIStep.objects.filter(status="active", engine=engine).select_related("repository").order_by("phase", "name")
+        )
+
         phase_order = ["setup", "test", "build", "package"]
         phase_labels = {
             "setup": "Setup",
@@ -490,13 +493,28 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             "test": "Test",
             "package": "Package",
         }
-        compatible_by_phase = OrderedDict()
+        steps_by_phase = OrderedDict()
         for phase in phase_order:
-            phase_steps = [s for s in compatible if s.phase == phase]
+            phase_steps = [s for s in all_steps if s.phase == phase]
             if phase_steps:
-                compatible_by_phase[phase_labels[phase]] = phase_steps
-        step_inputs_map = {str(s.uuid): s.inputs_schema or {} for s in compatible}
-        return compatible_by_phase, incompatible, compatible, step_inputs_map
+                steps_by_phase[phase_labels[phase]] = phase_steps
+        # Steps without a phase
+        uncategorized = [s for s in all_steps if s.phase not in phase_order]
+        if uncategorized:
+            steps_by_phase["Other"] = uncategorized
+
+        step_inputs_map = {str(s.uuid): s.inputs_schema or {} for s in all_steps}
+        step_constraints_map = {str(s.uuid): s.runtime_constraints or {} for s in all_steps}
+
+        # Collect distinct runtime families for optional filter
+        runtime_families = set()
+        for s in all_steps:
+            if s.runtime_constraints:
+                for family in s.runtime_constraints:
+                    if family != "*":
+                        runtime_families.add(family)
+
+        return steps_by_phase, list(all_steps), step_inputs_map, step_constraints_map, sorted(runtime_families)
 
     def get(self, request, workflow_name=None):
         # Edit mode: load existing workflow
@@ -504,9 +522,8 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             workflow = get_object_or_404(CIWorkflow, name=workflow_name)
             name = workflow.name
             description = workflow.description
-            runtime_family = workflow.runtime_family
-            runtime_version = workflow.runtime_version
             workflow_uuid = str(workflow.uuid)
+            engine = workflow.engine
 
             # Build initial steps JSON from existing workflow steps
             workflow_steps = workflow.workflow_steps.select_related("step").order_by("order")
@@ -529,8 +546,7 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             # Create mode: read from query params
             name = request.GET.get("name", "")
             description = request.GET.get("description", "")
-            runtime_family = request.GET.get("runtime_family", "")
-            runtime_version = request.GET.get("runtime_version", "")
+            engine = request.GET.get("engine", "github_actions")
             workflow_uuid = ""
             initial_steps_json = []
 
@@ -556,14 +572,12 @@ class WorkflowComposerView(LoginRequiredMixin, View):
                 except CIWorkflow.DoesNotExist:
                     pass
 
-            if not name or not runtime_family or not runtime_version:
+            if not name:
                 return redirect("ci_workflows:workflow_create")
 
-        compatible_by_phase, incompatible, compatible, step_inputs_map = self._build_compatible_context(
-            runtime_family, runtime_version
+        steps_by_phase, all_steps, step_inputs_map, step_constraints_map, runtime_families = (
+            self._build_all_steps_context(engine)
         )
-
-        engine = workflow.engine if workflow_name else request.GET.get("engine", "github_actions")
 
         return render(
             request,
@@ -571,27 +585,24 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             {
                 "workflow_name": name,
                 "workflow_description": description,
-                "runtime_family": runtime_family,
-                "runtime_version": runtime_version,
                 "workflow_uuid": workflow_uuid,
                 "engine": engine,
                 "initial_steps_json": initial_steps_json,
-                "compatible_by_phase": compatible_by_phase,
-                "incompatible_steps": incompatible,
-                "compatible_steps": compatible,
+                "steps_by_phase": steps_by_phase,
+                "all_steps": all_steps,
                 "step_inputs_map": step_inputs_map,
+                "step_constraints_map": step_constraints_map,
+                "runtime_families": runtime_families,
             },
         )
 
     def post(self, request, workflow_name=None):
         name = request.POST.get("name", "")
         description = request.POST.get("description", "")
-        runtime_family = request.POST.get("runtime_family", "")
-        runtime_version = request.POST.get("runtime_version", "")
         steps_json = request.POST.get("steps_json", "[]")
         workflow_uuid = request.POST.get("workflow_uuid", "")
 
-        if not name or not runtime_family or not runtime_version:
+        if not name:
             return redirect("ci_workflows:workflow_create")
 
         try:
@@ -604,10 +615,9 @@ class WorkflowComposerView(LoginRequiredMixin, View):
         if ordering_errors:
             for err in ordering_errors:
                 messages.error(request, err)
-            # Re-render composer with current data so user can fix ordering
             engine_val = request.POST.get("engine") or request.GET.get("engine", "github_actions")
-            compatible_by_phase, incompatible, compatible, step_inputs_map = self._build_compatible_context(
-                runtime_family, runtime_version
+            steps_by_phase, all_steps, step_inputs_map, step_constraints_map, runtime_families = (
+                self._build_all_steps_context(engine_val)
             )
             return render(
                 request,
@@ -615,15 +625,51 @@ class WorkflowComposerView(LoginRequiredMixin, View):
                 {
                     "workflow_name": name,
                     "workflow_description": description,
-                    "runtime_family": runtime_family,
-                    "runtime_version": runtime_version,
                     "workflow_uuid": workflow_uuid,
                     "engine": engine_val,
                     "initial_steps_json": steps_data,
-                    "compatible_by_phase": compatible_by_phase,
-                    "incompatible_steps": incompatible,
-                    "compatible_steps": compatible,
+                    "steps_by_phase": steps_by_phase,
+                    "all_steps": all_steps,
                     "step_inputs_map": step_inputs_map,
+                    "step_constraints_map": step_constraints_map,
+                    "runtime_families": runtime_families,
+                },
+            )
+
+        # Compute runtime constraints from steps
+        step_objects = []
+        for s in steps_data:
+            try:
+                step_objects.append(CIStep.objects.get(uuid=s.get("id")))
+            except CIStep.DoesNotExist:
+                continue
+
+        constraint_result = compute_runtime_constraints(step_objects)
+        if constraint_result["conflicts"]:
+            for conflict in constraint_result["conflicts"]:
+                messages.error(
+                    request,
+                    f"Runtime conflict for {conflict['runtime']}: "
+                    f"steps {', '.join(conflict['steps'])} have incompatible constraints",
+                )
+            engine_val = request.POST.get("engine") or request.GET.get("engine", "github_actions")
+            steps_by_phase, all_steps, step_inputs_map, step_constraints_map, runtime_families = (
+                self._build_all_steps_context(engine_val)
+            )
+            return render(
+                request,
+                "core/ci_workflows/workflow_composer.html",
+                {
+                    "workflow_name": name,
+                    "workflow_description": description,
+                    "workflow_uuid": workflow_uuid,
+                    "engine": engine_val,
+                    "initial_steps_json": steps_data,
+                    "steps_by_phase": steps_by_phase,
+                    "all_steps": all_steps,
+                    "step_inputs_map": step_inputs_map,
+                    "step_constraints_map": step_constraints_map,
+                    "runtime_families": runtime_families,
                 },
             )
 
@@ -645,8 +691,9 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             workflow = get_object_or_404(CIWorkflow, uuid=workflow_uuid)
             workflow.name = name
             workflow.description = description
-            workflow.runtime_family = runtime_family
-            workflow.runtime_version = runtime_version
+            workflow.runtime_constraints = constraint_result["constraints"]
+            workflow.runtime_family = ""
+            workflow.runtime_version = ""
             workflow.artifact_type = artifact_type
             workflow.save()
             # Replace all steps
@@ -656,8 +703,9 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             workflow = CIWorkflow.objects.create(
                 name=name,
                 description=description,
-                runtime_family=runtime_family,
-                runtime_version=runtime_version,
+                runtime_constraints=constraint_result["constraints"],
+                runtime_family="",
+                runtime_version="",
                 artifact_type=artifact_type,
                 engine=engine_value,
                 created_by=request.user.username,
@@ -697,45 +745,6 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             )
 
         return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
-
-
-class CompatibleStepsView(LoginRequiredMixin, View):
-    """HTMX endpoint: return compatible/incompatible steps partial."""
-
-    def get(self, request):
-        runtime_family = request.GET.get("runtime_family", "")
-        runtime_version = request.GET.get("runtime_version", "")
-
-        if not runtime_family or not runtime_version:
-            return HttpResponse('<p class="text-dark-muted text-sm">Select a runtime to see available steps.</p>')
-
-        compatible, incompatible = get_compatible_steps(runtime_family, runtime_version)
-
-        phase_order = ["setup", "test", "build", "package"]
-        phase_labels = {
-            "setup": "Setup",
-            "build": "Build",
-            "test": "Test",
-            "package": "Package",
-        }
-        compatible_by_phase = OrderedDict()
-        for phase in phase_order:
-            phase_steps = [s for s in compatible if s.phase == phase]
-            if phase_steps:
-                compatible_by_phase[phase_labels[phase]] = phase_steps
-        step_inputs_map = {str(s.uuid): s.inputs_schema or {} for s in compatible}
-
-        return render(
-            request,
-            "core/ci_workflows/_compatible_steps.html",
-            {
-                "compatible_by_phase": compatible_by_phase,
-                "incompatible_steps": incompatible,
-                "step_inputs_map": step_inputs_map,
-                "runtime_family": runtime_family,
-                "runtime_version": runtime_version,
-            },
-        )
 
 
 class StepConfigView(LoginRequiredMixin, View):
@@ -1080,8 +1089,6 @@ class ForkWorkflowView(LoginRequiredMixin, View):
                 "name": new_name,
                 "description": f"Forked from {workflow.name}. {workflow.description}",
                 "engine": engine,
-                "runtime_family": workflow.runtime_family,
-                "runtime_version": workflow.runtime_version,
                 "fork_from": workflow.name,  # Composer will load steps from this workflow
             }
         )

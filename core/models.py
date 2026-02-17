@@ -820,8 +820,13 @@ class CIWorkflow(models.Model):
         help_text="DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.",
     )
     description = models.TextField(blank=True)
-    runtime_family = models.CharField(max_length=63)  # e.g., 'python'
-    runtime_version = models.CharField(max_length=20)  # e.g., '3.12'
+    runtime_family = models.CharField(max_length=63, blank=True)  # deprecated, kept for migration
+    runtime_version = models.CharField(max_length=20, blank=True)  # deprecated, kept for migration
+    runtime_constraints = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Derived runtime version constraints from composed steps. E.g., {'python': '>=3.11', 'node': '>=18'}",
+    )
     artifact_type = models.CharField(max_length=50, blank=True)  # derived from last package step
     engine = models.CharField(
         max_length=63,

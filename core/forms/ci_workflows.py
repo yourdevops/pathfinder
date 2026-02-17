@@ -6,7 +6,6 @@ from core.models import (
     CIWorkflow,
     IntegrationConnection,
     ProjectApprovedWorkflow,
-    RuntimeFamily,
     StepsRepository,
 )
 from core.validators import dns_label_validator
@@ -81,7 +80,7 @@ class StepsRepoRegisterForm(forms.Form):
 
 
 class WorkflowCreateForm(forms.Form):
-    """Form for creating a new CI workflow with runtime selection."""
+    """Form for creating a new CI workflow (name, description, engine, dev_workflow)."""
 
     name = forms.CharField(
         max_length=63,
@@ -108,22 +107,6 @@ class WorkflowCreateForm(forms.Form):
         choices=[],
         widget=forms.Select(attrs={"class": DARK_SELECT}),
     )
-    runtime_family = forms.ChoiceField(
-        choices=[],
-        widget=forms.Select(
-            attrs={
-                "class": DARK_SELECT,
-            }
-        ),
-    )
-    runtime_version = forms.ChoiceField(
-        choices=[],
-        widget=forms.Select(
-            attrs={
-                "class": DARK_SELECT,
-            }
-        ),
-    )
     dev_workflow = forms.ChoiceField(
         choices=CIWorkflow.DEV_WORKFLOW_CHOICES,
         initial="trunk_based",
@@ -138,64 +121,16 @@ class WorkflowCreateForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Populate engine choices
         from plugins.base import get_available_engines
 
         engine_choices = [("", "-- Select CI engine --"), *get_available_engines()]
         self.fields["engine"].choices = engine_choices
-
-        # Populate runtime_family choices based on selected engine or all
-        if self.data and self.data.get("engine"):
-            engine = self.data["engine"]
-            families = (
-                RuntimeFamily.objects.filter(repository__engine=engine)
-                .values_list("name", flat=True)
-                .distinct()
-                .order_by("name")
-            )
-        else:
-            families = RuntimeFamily.objects.values_list("name", flat=True).distinct().order_by("name")
-        family_choices = [("", "-- Select runtime --")] + [(f, f.title()) for f in families]
-        self.fields["runtime_family"].choices = family_choices
-
-        # Populate runtime_version if family is already selected (e.g. on form re-render)
-        if self.data and self.data.get("runtime_family"):
-            family = self.data["runtime_family"]
-            versions = self._get_versions_for_family(family)
-            self.fields["runtime_version"].choices = [("", "-- Select version --")] + [(v, v) for v in versions]
-        else:
-            self.fields["runtime_version"].choices = [("", "-- Select family first --")]
-
-    @staticmethod
-    def _get_versions_for_family(family_name):
-        """Get all unique versions for a runtime family across all repositories."""
-        runtimes = RuntimeFamily.objects.filter(name=family_name)
-        versions = set()
-        for rt in runtimes:
-            for v in rt.versions:
-                versions.add(str(v))
-        return sorted(versions, reverse=True)
 
     def clean_name(self):
         name = self.cleaned_data["name"]
         if CIWorkflow.objects.filter(name=name).exists():
             raise forms.ValidationError("A workflow with this name already exists.")
         return name
-
-    def clean_runtime_family(self):
-        family = self.cleaned_data["runtime_family"]
-        if not RuntimeFamily.objects.filter(name=family).exists():
-            raise forms.ValidationError("Selected runtime family does not exist.")
-        return family
-
-    def clean_runtime_version(self):
-        version = self.cleaned_data.get("runtime_version")
-        family = self.cleaned_data.get("runtime_family")
-        if family and version:
-            versions = self._get_versions_for_family(family)
-            if version not in versions:
-                raise forms.ValidationError("Selected version is not available for this runtime family.")
-        return version
 
 
 class ProjectCIConfigForm(forms.Form):
