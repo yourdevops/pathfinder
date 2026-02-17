@@ -104,8 +104,8 @@
                                         <!-- Expand config -->
                                         <button @click="toggleExpand(index)"
                                                 class="p-1 text-dark-muted hover:text-dark-text transition-colors"
-                                                title="Configure inputs"
-                                                x-show="hasInputs(step)">
+                                                title="Configure"
+                                                x-show="hasInputs(step) || hasOutputs(step)">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -124,37 +124,90 @@
 
                                 <!-- Step Config (expandable) -->
                                 <div x-show="step.expanded" x-transition class="border-t border-dark-border p-3 bg-dark-surface/50">
-                                    <template x-if="hasInputs(step)">
-                                        <div class="space-y-3">
-                                            <template x-for="entry in inputEntries(step)" :key="entry.name">
-                                                <div>
-                                                    <label class="block text-xs font-medium text-dark-text mb-1">
-                                                        <span x-text="entry.name"></span>
-                                                        <span x-show="entry.def.required" class="text-red-400">*</span>
-                                                    </label>
-                                                    <template x-if="entry.def.type === 'boolean'">
-                                                        <label class="flex items-center gap-2">
-                                                            <input type="checkbox"
-                                                                   class="rounded border-dark-border bg-dark-surface text-dark-accent focus:ring-dark-accent"
-                                                                   :checked="step.input_config[entry.name] !== undefined ? step.input_config[entry.name] : (entry.def.default || false)"
-                                                                   @change="updateStepConfig(index, entry.name, $event.target.checked)">
-                                                            <span class="text-xs text-dark-muted" x-text="entry.def.description || ''"></span>
+                                    <!-- Tab Bar -->
+                                    <div class="flex border-b border-dark-border mb-3">
+                                        <button @click="setConfigTab(index, 'inputs')"
+                                                class="px-3 py-1.5 text-xs font-medium transition-colors"
+                                                :class="step.configTab === 'inputs' ? 'border-b-2 border-dark-accent text-dark-accent' : 'text-dark-muted hover:text-dark-text'"
+                                                x-show="hasInputs(step)">
+                                            Inputs
+                                        </button>
+                                        <button @click="setConfigTab(index, 'outputs')"
+                                                class="px-3 py-1.5 text-xs font-medium transition-colors"
+                                                :class="step.configTab === 'outputs' ? 'border-b-2 border-dark-accent text-dark-accent' : 'text-dark-muted hover:text-dark-text'"
+                                                x-show="hasOutputs(step)">
+                                            Outputs
+                                        </button>
+                                    </div>
+
+                                    <!-- Inputs Tab -->
+                                    <div x-show="step.configTab === 'inputs'">
+                                        <template x-if="hasInputs(step)">
+                                            <div class="space-y-3">
+                                                <template x-for="entry in inputEntries(step)" :key="entry.name">
+                                                    <div>
+                                                        <label class="block text-xs font-medium text-dark-text mb-1">
+                                                            <span x-text="entry.name"></span>
+                                                            <span x-show="entry.def.required" class="text-red-400">*</span>
                                                         </label>
-                                                    </template>
-                                                    <template x-if="entry.def.type !== 'boolean'">
-                                                        <div>
-                                                            <input type="text"
-                                                                   class="w-full px-3 py-1.5 text-sm bg-dark-bg border border-dark-border rounded text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent"
-                                                                   :value="step.input_config[entry.name] !== undefined ? step.input_config[entry.name] : (entry.def.default || '')"
-                                                                   @input="updateStepConfig(index, entry.name, $event.target.value)"
-                                                                   :placeholder="entry.def.default || ''">
-                                                            <p class="text-xs text-dark-muted mt-0.5" x-text="entry.def.description || ''" x-show="entry.def.description"></p>
-                                                        </div>
-                                                    </template>
+                                                        <template x-if="entry.def.type === 'boolean'">
+                                                            <label class="flex items-center gap-2">
+                                                                <input type="checkbox"
+                                                                       class="rounded border-dark-border bg-dark-surface text-dark-accent focus:ring-dark-accent"
+                                                                       :checked="step.input_config[entry.name] !== undefined ? step.input_config[entry.name] : (entry.def.default || false)"
+                                                                       @change="updateStepConfig(index, entry.name, $event.target.checked)">
+                                                                <span class="text-xs text-dark-muted" x-text="entry.def.description || ''"></span>
+                                                            </label>
+                                                        </template>
+                                                        <template x-if="entry.def.type !== 'boolean'">
+                                                            <div>
+                                                                <input type="text"
+                                                                       class="w-full px-3 py-1.5 text-sm bg-dark-bg border border-dark-border rounded text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent"
+                                                                       :value="step.input_config[entry.name] !== undefined ? step.input_config[entry.name] : (entry.def.default || '')"
+                                                                       @input="validateInputValue(index, entry.name, $event.target.value)"
+                                                                       @change="updateStepConfig(index, entry.name, $event.target.value)"
+                                                                       :placeholder="entry.def.default || ''">
+                                                                <p x-show="step.validation_errors[entry.name]"
+                                                                   class="text-xs text-red-400 mt-0.5"
+                                                                   x-text="step.validation_errors[entry.name]"></p>
+                                                                <p class="text-xs text-dark-muted mt-0.5" x-text="entry.def.description || ''" x-show="entry.def.description"></p>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <!-- Outputs Tab -->
+                                    <div x-show="step.configTab === 'outputs'">
+                                        <template x-for="entry in outputEntries(step)" :key="entry.name">
+                                            <div class="flex items-center justify-between py-1.5 border-b border-dark-border/50 last:border-0">
+                                                <div class="min-w-0 flex-1 mr-3">
+                                                    <span class="font-mono text-xs text-dark-text" x-text="entry.name"></span>
+                                                    <p class="text-xs text-dark-muted truncate" x-text="entry.def.description || ''"></p>
                                                 </div>
-                                            </template>
-                                        </div>
-                                    </template>
+                                                <div class="flex items-center gap-2 flex-shrink-0">
+                                                    <code class="text-xs text-dark-muted bg-dark-bg px-1.5 py-0.5 rounded max-w-xs truncate"
+                                                          x-text="step.output_refs[entry.name] || ''"></code>
+                                                    <div x-data="copyBtn(step.output_refs[entry.name] || '')" class="flex-shrink-0">
+                                                        <button @click="copy()"
+                                                                class="p-1 text-dark-muted hover:text-dark-text transition-colors"
+                                                                title="Copy output reference">
+                                                            <svg x-show="!copied" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                                            </svg>
+                                                            <svg x-show="copied" x-cloak class="w-3.5 h-3.5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                        <p x-show="!hasOutputs(step)" class="text-xs text-dark-muted py-2">No outputs declared for this step.</p>
+                                    </div>
                                 </div>
                             </div>
                             </div>
@@ -233,14 +286,35 @@
 {% block scripts %}
 {{ initial_steps_json|json_script:"initial-steps-data" }}
 {{ step_constraints_map|json_script:"step-constraints-map-data" }}
+{{ step_outputs_map|json_script:"step-outputs-map" }}
+{{ step_output_refs_map|json_script:"step-output-refs-map" }}
+{{ step_slug_map|json_script:"step-slug-map" }}
 <script nonce="{{ csp_nonce }}">
 document.addEventListener('alpine:init', function() {
     var _initialSteps = JSON.parse(document.getElementById('initial-steps-data').textContent);
     var _stepConstraintsMap = JSON.parse(document.getElementById('step-constraints-map-data').textContent);
+    var _outputsMap = JSON.parse(document.getElementById('step-outputs-map').textContent);
+    var _outputRefsMap = JSON.parse(document.getElementById('step-output-refs-map').textContent);
+    var _slugMap = JSON.parse(document.getElementById('step-slug-map').textContent);
+
+    // Enrich initial steps with output data and config tab state
+    _initialSteps.forEach(function(step) {
+        step.outputs_schema = _outputsMap[step.id] || {};
+        step.output_refs = _outputRefsMap[step.id] || {};
+        step.slug = step.slug || _slugMap[step.id] || '';
+        step.validation_errors = {};
+        // Default tab: inputs if has inputs, else outputs if has outputs, else inputs
+        var hasIns = step.inputs_schema && Object.keys(step.inputs_schema).length > 0;
+        var hasOuts = step.outputs_schema && Object.keys(step.outputs_schema).length > 0;
+        step.configTab = hasIns ? 'inputs' : (hasOuts ? 'outputs' : 'inputs');
+    });
 
     Alpine.data('workflowComposer', function() { return {
         steps: _initialSteps,
         stepConstraintsMap: _stepConstraintsMap,
+        outputsMap: _outputsMap,
+        outputRefsMap: _outputRefsMap,
+        slugMap: _slugMap,
         dragIndex: -1,
         dropIndex: -1,
         runtimeFilter: '',
@@ -253,7 +327,10 @@ document.addEventListener('alpine:init', function() {
                 return;
             }
             this.addStepError = '';
-            this.steps.push({id: step.id, name: step.name, phase: step.phase, description: step.description, inputs_schema: step.inputs_schema, order: this.steps.length, input_config: {}, expanded: false});
+            var outs = this.outputsMap[step.id] || {};
+            var hasIns = step.inputs_schema && Object.keys(step.inputs_schema).length > 0;
+            var hasOuts = outs && Object.keys(outs).length > 0;
+            this.steps.push({id: step.id, name: step.name, phase: step.phase, description: step.description, inputs_schema: step.inputs_schema, outputs_schema: outs, output_refs: this.outputRefsMap[step.id] || {}, slug: this.slugMap[step.id] || '', order: this.steps.length, input_config: {}, expanded: false, configTab: hasIns ? 'inputs' : (hasOuts ? 'outputs' : 'inputs'), validation_errors: {}});
             this.updateOrders();
         },
         removeStep: function(index) {
@@ -279,12 +356,76 @@ document.addEventListener('alpine:init', function() {
             };
             return colors[phase] || 'bg-gray-500/20 text-gray-400';
         },
+        setConfigTab: function(index, tab) {
+            this.steps[index].configTab = tab;
+        },
         hasInputs: function(step) {
             return step.inputs_schema && Object.keys(step.inputs_schema).length > 0;
+        },
+        hasOutputs: function(step) {
+            return step.outputs_schema && Object.keys(step.outputs_schema).length > 0;
         },
         inputEntries: function(step) {
             if (!step.inputs_schema) return [];
             return Object.entries(step.inputs_schema).map(function(pair) { return {name: pair[0], def: pair[1]}; });
+        },
+        outputEntries: function(step) {
+            var entries = [];
+            var schema = step.outputs_schema || {};
+            for (var key in schema) {
+                if (schema.hasOwnProperty(key)) {
+                    entries.push({name: key, def: schema[key]});
+                }
+            }
+            return entries;
+        },
+        _parseOutputRef: function(value) {
+            var m = value.trim().match(
+                /^\$\{\{\s*steps\.([a-z0-9][a-z0-9-]*)\.outputs\.([a-z0-9][a-z0-9_-]*)\s*\}\}$/
+            );
+            if (m) return {stepSlug: m[1], outputName: m[2]};
+            return null;
+        },
+        validateInputValue: function(stepIndex, inputName, value) {
+            this.updateStepConfig(stepIndex, inputName, value);
+            var ref = this._parseOutputRef(value);
+            if (!ref) {
+                this.steps[stepIndex].validation_errors[inputName] = null;
+                return;
+            }
+            var refStepIndex = -1;
+            var refStep = null;
+            for (var i = 0; i < this.steps.length; i++) {
+                if (this.steps[i].slug === ref.stepSlug) {
+                    refStepIndex = i;
+                    refStep = this.steps[i];
+                    break;
+                }
+            }
+            if (!refStep) {
+                this.steps[stepIndex].validation_errors[inputName] = "Step '" + ref.stepSlug + "' not found in this workflow";
+                return;
+            }
+            if (refStepIndex >= stepIndex) {
+                this.steps[stepIndex].validation_errors[inputName] = "Step '" + ref.stepSlug + "' must appear before this step";
+                return;
+            }
+            var outputs = refStep.outputs_schema || {};
+            if (!outputs[ref.outputName]) {
+                this.steps[stepIndex].validation_errors[inputName] = "Output '" + ref.outputName + "' not found on step '" + ref.stepSlug + "'";
+                return;
+            }
+            this.steps[stepIndex].validation_errors[inputName] = null;
+        },
+        revalidateAllOutputRefs: function() {
+            for (var i = 0; i < this.steps.length; i++) {
+                var config = this.steps[i].input_config || {};
+                for (var key in config) {
+                    if (config.hasOwnProperty(key) && typeof config[key] === 'string') {
+                        this.validateInputValue(i, key, config[key]);
+                    }
+                }
+            }
         },
         stepsJson: function() {
             return JSON.stringify(this.steps);
@@ -457,6 +598,7 @@ document.addEventListener('alpine:init', function() {
             var item = this.steps.splice(fromIndex, 1)[0];
             this.steps.splice(toIndex, 0, item);
             this.updateOrders();
+            this.revalidateAllOutputRefs();
         },
         onDragEnd: function() {
             this.dragIndex = -1;
