@@ -184,5 +184,27 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- Outputs Schema -->
+    {% if step.outputs_schema %}
+    <div class="bg-dark-surface border border-dark-border rounded-lg p-5 mt-6">
+        <h2 class="text-sm font-medium text-dark-muted uppercase tracking-wider mb-3">Outputs</h2>
+        <div class="space-y-3">
+            {% for output_name, output_def in step.outputs_schema.items %}
+            <div class="border-b border-dark-border pb-3 last:border-0 last:pb-0">
+                <div class="flex items-center gap-2">
+                    <span class="font-mono text-sm text-dark-text">{{ output_name }}</span>
+                    {% if output_def.type %}
+                    <span class="text-xs text-dark-muted">({{ output_def.type }})</span>
+                    {% endif %}
+                </div>
+                {% if output_def.description %}
+                <p class="text-sm text-dark-muted mt-1">{{ output_def.description }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

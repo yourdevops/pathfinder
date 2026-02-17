@@ -256,6 +256,7 @@ def _classify_change(old_step, new_fields: dict) -> str | None:
     """
     interface_fields = {
         "inputs_schema": old_step.inputs_schema,
+        "outputs_schema": old_step.outputs_schema,
         "runtime_constraints": old_step.runtime_constraints,
         "produces": old_step.produces,
         "phase": old_step.phase,
@@ -469,6 +470,7 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
                 # SHA changed: re-parse and classify
                 new_fields = {
                     "inputs_schema": step_info["inputs"],
+                    "outputs_schema": step_info.get("outputs", {}),
                     "runtime_constraints": step_info["runtime_constraints"],
                     "produces": step_info["produces"],
                     "phase": step_info["phase"],
@@ -485,6 +487,7 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
                 existing_same_repo.tags = step_info["tags"]
                 existing_same_repo.produces = step_info["produces"]
                 existing_same_repo.inputs_schema = step_info["inputs"]
+                existing_same_repo.outputs_schema = step_info.get("outputs", {})
                 existing_same_repo.commit_sha = per_file_sha
                 existing_same_repo.raw_metadata = step_info["raw_metadata"]
                 existing_same_repo.file_path = file_path
@@ -516,6 +519,7 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
                     tags=step_info["tags"],
                     produces=step_info["produces"],
                     inputs_schema=step_info["inputs"],
+                    outputs_schema=step_info.get("outputs", {}),
                     commit_sha=per_file_sha,
                     raw_metadata=step_info["raw_metadata"],
                     file_path=file_path,
