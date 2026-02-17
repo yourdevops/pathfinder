@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 6.8 (Manifest and Plugin Interface)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: In Progress
-Last activity: 2026-02-17 - Plan 01 complete: Remove manifest_path, add resolve_artifact_ref
+Last activity: 2026-02-17 - Plan 02 complete: Step validation API with token auth
 
-Progress: [==========..............................] 25% (Phase 6.8)
+Progress: [====================....................] 50% (Phase 6.8)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 66
+- Total plans completed: 67
 - Average duration: 4 min
-- Total execution time: 4.11 hours
+- Total execution time: 4.16 hours
 
 **By Phase:**
 
@@ -45,10 +45,10 @@ Progress: [==========..............................] 25% (Phase 6.8)
 | 06.5-workflow-and-build-model-hardening | 2 | 8 min | 4 min |
 | 06.6-sync-operations-and-logging | 3 | 12 min | 4 min |
 | 06.7-version-lifecycle-automation | 4 | 9 min | 2.3 min |
-| 06.8-manifest-and-plugin-interface | 1 | 2 min | 2 min |
+| 06.8-manifest-and-plugin-interface | 2 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.7-02 (2 min), 06.7-03 (1 min), 06.7-04 (2 min), 06.8-01 (2 min)
+- Last 5 plans: 06.7-03 (1 min), 06.7-04 (2 min), 06.8-01 (2 min), 06.8-02 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -216,6 +216,9 @@ Recent decisions affecting current work:
 | 06.7-03 | Existing DeleteVersionView already guards builds and pinned_services | No view changes needed; guards verified in place |
 | 06.7-04 | Cleanup button enqueues scheduled_cleanup_versions via .enqueue(), not direct call | Per locked decision 13; background task keeps view responsive |
 | 06.7-04 | CI Configuration nav link placed between Audit Log and Notifications | Logical grouping with other system configuration items |
+| 06.8-02 | secrets.token_hex(32) for 64-char hex API token generation | Matches common API token patterns, sufficient entropy |
+| 06.8-02 | Token shown once at creation (GitHub PAT pattern) | Security best practice; token not stored in session or displayed again |
+| 06.8-02 | API endpoint outside Django namespace for clean /api/ prefix | REST convention; not part of settings or any other app namespace |
 
 ### Roadmap Evolution
 
@@ -291,5 +294,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06.8-01-PLAN.md
-Resume file: .planning/phases/06.8-manifest-and-plugin-interface/06.8-02-PLAN.md
+Stopped at: Completed 06.8-02-PLAN.md
+Resume file: .planning/phases/06.8-manifest-and-plugin-interface/06.8-03-PLAN.md
