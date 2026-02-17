@@ -29,6 +29,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6.4: CI Step Identity and Change Tracking** (INSERTED) - Step slugs, per-file SHA versioning, change detection, archival
 - [x] **Phase 6.5: Workflow and Build Model Hardening** (INSERTED) - CIWorkflow engine field, step ordering validation, archived status, engine-agnostic Build model, revoked verification status
 - [x] **Phase 6.6: Sync Operations and Logging** (INSERTED) - Webhook and scheduled sync triggers, sync operation logging, branch protection validation
+- [x] **Phase 6.7: Version Lifecycle Automation** (INSERTED) - Auto-update manifests on patch publish, retention cleanup for old versions
+- [ ] **Phase 6.8: Manifest and Plugin Interface** (INSERTED) - Artifact discovery via CI plugin, CI variables, step validation API, runtime derivation from steps
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
 ## Phase Details
@@ -268,6 +270,19 @@ Plans:
 - [x] 06-01-PLAN.md — Build model, webhook endpoint with HMAC auth, poll_build_details task, service activation
 - [x] 06-02-PLAN.md — Build history UI with table layout, filtering, pagination, HTMX auto-refresh
 
+### Phase 06.8: Manifest and Plugin Interface (INSERTED)
+
+**Goal:** Artifact discovery uses CI plugin API (not webhook payloads), CI variables are injected into manifests, a step validation API exists, dead manifest_path code is removed, and workflow runtimes are derived from steps with version constraints at the workflow level and concrete versions at the service level.
+**Depends on:** Phase 6
+**Gaps Addressed**: GAP-13, GAP-17, GAP-18, GAP-19, GAP-20 from docs/ci-workflows/REMEDIATION.md
+**Plans:** 4 plans
+
+Plans:
+- [ ] 06.8-01-PLAN.md — Remove manifest_path dead code, add resolve_artifact_ref to plugin interface (GAP-19, GAP-13)
+- [ ] 06.8-02-PLAN.md — Step validation API endpoint with token authentication (GAP-18)
+- [ ] 06.8-03-PLAN.md — CI variable provisioning via plugin interface (GAP-17)
+- [ ] 06.8-04-PLAN.md — Workflow composer redesign with derived runtime constraints (GAP-20)
+
 ### Phase 06.7: Version Lifecycle Automation (INSERTED)
 
 **Goal:** When a CI Workflow version is published, services using that workflow automatically receive updated manifests via PR (patch bumps only). Old versions are cleaned up per retention policy.
@@ -411,7 +426,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 6.3 -> 6.4 -> 6.5 -> 6.6 -> 6.7 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 6.3 -> 6.4 -> 6.5 -> 6.6 -> 6.7 -> 6.8 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -433,8 +448,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5
 | 6.5 Workflow and Build Model Hardening (INSERTED) | 2/2 | Complete | 2026-02-16 |
 | 6.6 Sync Operations and Logging (INSERTED) | 3/3 | Complete | 2026-02-16 |
 | 6.7 Version Lifecycle Automation (INSERTED) | 0/3 | Not started | - |
+| 6.8 Manifest and Plugin Interface (INSERTED) | 0/4 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-02-16 (Phase 6.6 complete - sync operations and logging)*
+*Last updated: 2026-02-17 (Phase 6.8 planned - 4 plans for manifest and plugin interface)*
