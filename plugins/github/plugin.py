@@ -13,6 +13,8 @@ from github.GithubException import GithubException
 
 from plugins.base import BasePlugin, CICapableMixin
 
+_GH_OUTPUT_REF_RE = re.compile(r"^\$\{\{\s*steps\.([a-z0-9][a-z0-9-]*)\.outputs\.([a-z0-9][a-z0-9_-]*)\s*\}\}$")
+
 
 class GitHubPlugin(CICapableMixin, BasePlugin):
     """
@@ -51,6 +53,7 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
             "name": file_content.get("name", ""),
             "description": file_content.get("description", ""),
             "inputs": file_content.get("inputs", {}),
+            "outputs": file_content.get("outputs", {}),
             "phase": pathfinder.get("phase", ""),
             "runtime_constraints": pathfinder.get("runtimes", {}),
             "tags": pathfinder.get("tags", []),
@@ -89,6 +92,24 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
                 return slug
 
         return ""
+
+    def format_step_id(self, step_slug: str) -> str:
+        """Return GitHub Actions step ID (slug is already lowercase with hyphens)."""
+        return step_slug
+
+    def format_output_reference(self, step_slug: str, output_name: str) -> str:
+        """Return GitHub Actions output reference expression."""
+        return f"${{{{ steps.{step_slug}.outputs.{output_name} }}}}"
+
+    def parse_output_reference(self, value: str) -> dict | None:
+        """Parse a GitHub Actions output reference expression.
+
+        Returns dict with step_slug and output_name if matched, None otherwise.
+        """
+        match = _GH_OUTPUT_REF_RE.match(value)
+        if match:
+            return {"step_slug": match.group(1), "output_name": match.group(2)}
+        return None
 
     def generate_manifest(self, workflow, version: str | None = None) -> str:
         """Generate a GitHub Actions workflow YAML for a CIWorkflow instance.
@@ -151,6 +172,7 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
                 "name": step.name,
                 "uses": uses_ref,
             }
+            step_entry["id"] = self.format_step_id(step.slug)
             if ws.input_config:
                 step_entry["with"] = ws.input_config
 

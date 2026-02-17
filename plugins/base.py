@@ -202,6 +202,40 @@ class CICapableMixin:
         """
         raise NotImplementedError
 
+    def format_step_id(self, step_slug: str) -> str:
+        """Return the engine-native step ID derived from slug.
+
+        Args:
+            step_slug: The URL-safe slug of the step.
+
+        Returns:
+            Engine-native step ID string.
+        """
+        raise NotImplementedError
+
+    def format_output_reference(self, step_slug: str, output_name: str) -> str:
+        """Return the engine-native output reference string for copy-paste.
+
+        Args:
+            step_slug: The URL-safe slug of the step.
+            output_name: The name of the output.
+
+        Returns:
+            Engine-native output reference expression.
+        """
+        raise NotImplementedError
+
+    def parse_output_reference(self, value: str) -> dict | None:
+        """Parse an input value to check if it matches the engine's output reference pattern.
+
+        Args:
+            value: The input value string to check.
+
+        Returns:
+            Dict with 'step_slug' and 'output_name' if matched, None otherwise.
+        """
+        raise NotImplementedError
+
     def provision_ci_variables(self, config: dict, repo_name: str, variables: dict[str, str]) -> dict:
         """Provision CI-level variables on the repository. Idempotent (create or update).
 

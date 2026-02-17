@@ -780,6 +780,10 @@ class CIStep(models.Model):
     tags = models.JSONField(default=list)
     produces = models.JSONField(null=True, blank=True)  # e.g., {"type": "container-image"}
     inputs_schema = models.JSONField(default=dict)  # full inputs from action.yml
+    outputs_schema = models.JSONField(
+        default=dict,
+        help_text="Output declarations from step definition (e.g., action.yml outputs block)",
+    )
     commit_sha = models.CharField(max_length=40, blank=True)
     raw_metadata = models.JSONField(default=dict)  # full parsed action.yml
     created_at = models.DateTimeField(auto_now_add=True)
