@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 6.8 (Manifest and Plugin Interface)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In Progress
-Last activity: 2026-02-17 - Plan 02 complete: Step validation API with token auth
+Last activity: 2026-02-17 - Plan 03 complete: CI variable provisioning via plugin interface
 
-Progress: [====================....................] 50% (Phase 6.8)
+Progress: [==============================..........] 75% (Phase 6.8)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 67
+- Total plans completed: 68
 - Average duration: 4 min
-- Total execution time: 4.16 hours
+- Total execution time: 4.21 hours
 
 **By Phase:**
 
@@ -45,10 +45,10 @@ Progress: [====================....................] 50% (Phase 6.8)
 | 06.5-workflow-and-build-model-hardening | 2 | 8 min | 4 min |
 | 06.6-sync-operations-and-logging | 3 | 12 min | 4 min |
 | 06.7-version-lifecycle-automation | 4 | 9 min | 2.3 min |
-| 06.8-manifest-and-plugin-interface | 2 | 5 min | 2.5 min |
+| 06.8-manifest-and-plugin-interface | 3 | 8 min | 2.7 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.7-03 (1 min), 06.7-04 (2 min), 06.8-01 (2 min), 06.8-02 (3 min)
+- Last 5 plans: 06.7-04 (2 min), 06.8-01 (2 min), 06.8-02 (3 min), 06.8-03 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -219,6 +219,9 @@ Recent decisions affecting current work:
 | 06.8-02 | secrets.token_hex(32) for 64-char hex API token generation | Matches common API token patterns, sufficient entropy |
 | 06.8-02 | Token shown once at creation (GitHub PAT pattern) | Security best practice; token not stored in session or displayed again |
 | 06.8-02 | API endpoint outside Django namespace for clean /api/ prefix | REST convention; not part of settings or any other app namespace |
+| 06.8-03 | CI variable provisioning is non-blocking | Failure does not prevent or roll back service creation |
+| 06.8-03 | try/create-catch-409/update for GitHub variable API | GitHub create_variable is not idempotent; 409 indicates existing variable |
+| 06.8-03 | Static engine-native PTF variable refs in env block | Identical expressions across services preserve manifest hash consistency |
 
 ### Roadmap Evolution
 
@@ -294,5 +297,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06.8-02-PLAN.md
-Resume file: .planning/phases/06.8-manifest-and-plugin-interface/06.8-03-PLAN.md
+Stopped at: Completed 06.8-03-PLAN.md
+Resume file: .planning/phases/06.8-manifest-and-plugin-interface/06.8-04-PLAN.md
