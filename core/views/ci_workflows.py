@@ -471,6 +471,56 @@ def _validate_step_order(steps_data):
     return errors
 
 
+def _validate_output_references(steps_data, ci_plugin=None):
+    """Validate all output references in step input configs.
+
+    For each step's input_config values, detect output references
+    and validate:
+    1. Referenced step exists in the workflow
+    2. Referenced step appears before the consuming step
+    3. Referenced output exists in the step's outputs_schema
+    """
+    if not ci_plugin:
+        return []
+
+    errors = []
+    # Build slug -> (index, CIStep) mapping from ordered steps
+    step_map = {}  # slug -> (index, CIStep)
+    ordered_steps = []
+
+    for i, entry in enumerate(steps_data):
+        try:
+            ci_step = CIStep.objects.get(uuid=entry.get("id"))
+            step_map[ci_step.slug] = (i, ci_step)
+            ordered_steps.append((i, ci_step, entry.get("input_config", {})))
+        except CIStep.DoesNotExist:
+            continue
+
+    for step_index, ci_step, input_config in ordered_steps:
+        for input_name, value in input_config.items():
+            if not isinstance(value, str):
+                continue
+            ref = ci_plugin.parse_output_reference(value)
+            if not ref:
+                continue
+            ref_slug = ref["step_slug"]
+            ref_output = ref["output_name"]
+
+            if ref_slug not in step_map:
+                errors.append(f'"{ci_step.name}" input "{input_name}": step "{ref_slug}" not found in workflow')
+                continue
+            ref_index, ref_step = step_map[ref_slug]
+            if ref_index >= step_index:
+                errors.append(f'"{ci_step.name}" input "{input_name}": step "{ref_slug}" must appear before this step')
+                continue
+            outputs = ref_step.outputs_schema or {}
+            if ref_output not in outputs:
+                errors.append(
+                    f'"{ci_step.name}" input "{input_name}": output "{ref_output}" not found on step "{ref_slug}"'
+                )
+    return errors
+
+
 class WorkflowComposerView(LoginRequiredMixin, View):
     """Step 2: Compose workflow steps with drag-and-drop ordering.
 
@@ -506,6 +556,21 @@ class WorkflowComposerView(LoginRequiredMixin, View):
         step_inputs_map = {str(s.uuid): s.inputs_schema or {} for s in all_steps}
         step_constraints_map = {str(s.uuid): s.runtime_constraints or {} for s in all_steps}
 
+        # Output maps for step output wiring
+        step_outputs_map = {str(s.uuid): s.outputs_schema or {} for s in all_steps}
+        step_slug_map = {str(s.uuid): s.slug for s in all_steps}
+
+        # Build output reference strings using CI plugin
+        ci_plugin = get_ci_plugin_for_engine(engine)
+        step_output_refs_map = {}
+        if ci_plugin:
+            for s in all_steps:
+                if s.outputs_schema:
+                    refs = {}
+                    for output_name in s.outputs_schema:
+                        refs[output_name] = ci_plugin.format_output_reference(s.slug, output_name)
+                    step_output_refs_map[str(s.uuid)] = refs
+
         # Collect distinct runtime families for optional filter
         runtime_families = set()
         for s in all_steps:
@@ -514,7 +579,16 @@ class WorkflowComposerView(LoginRequiredMixin, View):
                     if family != "*":
                         runtime_families.add(family)
 
-        return steps_by_phase, list(all_steps), step_inputs_map, step_constraints_map, sorted(runtime_families)
+        return (
+            steps_by_phase,
+            list(all_steps),
+            step_inputs_map,
+            step_constraints_map,
+            sorted(runtime_families),
+            step_outputs_map,
+            step_output_refs_map,
+            step_slug_map,
+        )
 
     def get(self, request, workflow_name=None):
         # Edit mode: load existing workflow
@@ -536,6 +610,7 @@ class WorkflowComposerView(LoginRequiredMixin, View):
                         "phase": ws.step.phase,
                         "description": ws.step.description[:80] if ws.step.description else "",
                         "inputs_schema": ws.step.inputs_schema or {},
+                        "slug": ws.step.slug,
                         "order": ws.order,
                         "input_config": ws.input_config or {},
                         "expanded": False,
@@ -564,6 +639,7 @@ class WorkflowComposerView(LoginRequiredMixin, View):
                                 "phase": ws.step.phase,
                                 "description": ws.step.description[:80] if ws.step.description else "",
                                 "inputs_schema": ws.step.inputs_schema or {},
+                                "slug": ws.step.slug,
                                 "order": ws.order,
                                 "input_config": ws.input_config or {},
                                 "expanded": False,
@@ -575,9 +651,16 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             if not name:
                 return redirect("ci_workflows:workflow_create")
 
-        steps_by_phase, all_steps, step_inputs_map, step_constraints_map, runtime_families = (
-            self._build_all_steps_context(engine)
-        )
+        (
+            steps_by_phase,
+            all_steps,
+            step_inputs_map,
+            step_constraints_map,
+            runtime_families,
+            step_outputs_map,
+            step_output_refs_map,
+            step_slug_map,
+        ) = self._build_all_steps_context(engine)
 
         return render(
             request,
@@ -593,6 +676,9 @@ class WorkflowComposerView(LoginRequiredMixin, View):
                 "step_inputs_map": step_inputs_map,
                 "step_constraints_map": step_constraints_map,
                 "runtime_families": runtime_families,
+                "step_outputs_map": step_outputs_map,
+                "step_output_refs_map": step_output_refs_map,
+                "step_slug_map": step_slug_map,
             },
         )
 
@@ -616,9 +702,16 @@ class WorkflowComposerView(LoginRequiredMixin, View):
             for err in ordering_errors:
                 messages.error(request, err)
             engine_val = request.POST.get("engine") or request.GET.get("engine", "github_actions")
-            steps_by_phase, all_steps, step_inputs_map, step_constraints_map, runtime_families = (
-                self._build_all_steps_context(engine_val)
-            )
+            (
+                steps_by_phase,
+                all_steps,
+                step_inputs_map,
+                step_constraints_map,
+                runtime_families,
+                step_outputs_map,
+                step_output_refs_map,
+                step_slug_map,
+            ) = self._build_all_steps_context(engine_val)
             return render(
                 request,
                 "core/ci_workflows/workflow_composer.html",
@@ -633,6 +726,9 @@ class WorkflowComposerView(LoginRequiredMixin, View):
                     "step_inputs_map": step_inputs_map,
                     "step_constraints_map": step_constraints_map,
                     "runtime_families": runtime_families,
+                    "step_outputs_map": step_outputs_map,
+                    "step_output_refs_map": step_output_refs_map,
+                    "step_slug_map": step_slug_map,
                 },
             )
 
@@ -653,9 +749,16 @@ class WorkflowComposerView(LoginRequiredMixin, View):
                     f"steps {', '.join(conflict['steps'])} have incompatible constraints",
                 )
             engine_val = request.POST.get("engine") or request.GET.get("engine", "github_actions")
-            steps_by_phase, all_steps, step_inputs_map, step_constraints_map, runtime_families = (
-                self._build_all_steps_context(engine_val)
-            )
+            (
+                steps_by_phase,
+                all_steps,
+                step_inputs_map,
+                step_constraints_map,
+                runtime_families,
+                step_outputs_map,
+                step_output_refs_map,
+                step_slug_map,
+            ) = self._build_all_steps_context(engine_val)
             return render(
                 request,
                 "core/ci_workflows/workflow_composer.html",
@@ -670,6 +773,46 @@ class WorkflowComposerView(LoginRequiredMixin, View):
                     "step_inputs_map": step_inputs_map,
                     "step_constraints_map": step_constraints_map,
                     "runtime_families": runtime_families,
+                    "step_outputs_map": step_outputs_map,
+                    "step_output_refs_map": step_output_refs_map,
+                    "step_slug_map": step_slug_map,
+                },
+            )
+
+        # Validate output references
+        engine_val = request.POST.get("engine") or request.GET.get("engine", "github_actions")
+        ci_plugin_for_refs = get_ci_plugin_for_engine(engine_val)
+        output_ref_errors = _validate_output_references(steps_data, ci_plugin_for_refs)
+        if output_ref_errors:
+            for err in output_ref_errors:
+                messages.error(request, err)
+            (
+                steps_by_phase,
+                all_steps,
+                step_inputs_map,
+                step_constraints_map,
+                runtime_families,
+                step_outputs_map,
+                step_output_refs_map,
+                step_slug_map,
+            ) = self._build_all_steps_context(engine_val)
+            return render(
+                request,
+                "core/ci_workflows/workflow_composer.html",
+                {
+                    "workflow_name": name,
+                    "workflow_description": description,
+                    "workflow_uuid": workflow_uuid,
+                    "engine": engine_val,
+                    "initial_steps_json": steps_data,
+                    "steps_by_phase": steps_by_phase,
+                    "all_steps": all_steps,
+                    "step_inputs_map": step_inputs_map,
+                    "step_constraints_map": step_constraints_map,
+                    "runtime_families": runtime_families,
+                    "step_outputs_map": step_outputs_map,
+                    "step_output_refs_map": step_output_refs_map,
+                    "step_slug_map": step_slug_map,
                 },
             )
 
