@@ -275,7 +275,7 @@ Plans:
 **Goal:** Steps declare outputs in the catalog (parsed during sync). The workflow composer lets users wire one step's output to another step's input via copy-paste of engine-native references. CI plugins translate these references to engine-native syntax during manifest generation.
 **Depends on:** Phase 6
 **Gaps Addressed**: GAP-21 from docs/ci-workflows/REMEDIATION.md
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 06.9-01-PLAN.md -- Model, plugin interface, sync parsing, step detail outputs, manifest step IDs
