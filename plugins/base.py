@@ -202,6 +202,19 @@ class CICapableMixin:
         """
         raise NotImplementedError
 
+    def provision_ci_variables(self, config: dict, repo_name: str, variables: dict[str, str]) -> dict:
+        """Provision CI-level variables on the repository. Idempotent (create or update).
+
+        Args:
+            config: Decrypted connection configuration.
+            repo_name: Full repository name (owner/repo).
+            variables: Dict of variable name -> value (e.g., {"PTF_PROJECT": "my-project"}).
+
+        Returns:
+            Dict with status per variable: {"PTF_PROJECT": "created", "PTF_SERVICE": "updated"}
+        """
+        raise NotImplementedError
+
 
 class BasePlugin(ABC):
     """

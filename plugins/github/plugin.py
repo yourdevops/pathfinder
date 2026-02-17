@@ -109,6 +109,10 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
             "on": {
                 "push": {"branches": ["main"]},
             },
+            "env": {
+                "PTF_PROJECT": "${{ vars.PTF_PROJECT }}",
+                "PTF_SERVICE": "${{ vars.PTF_SERVICE }}",
+            },
             "jobs": {
                 "build": {
                     "runs-on": "ubuntu-latest",
@@ -266,6 +270,28 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
 
             logging.getLogger(__name__).warning(f"Failed to resolve artifact ref for run {run_id}: {e}")
             return ""
+
+    def provision_ci_variables(self, config: dict, repo_name: str, variables: dict[str, str]) -> dict:
+        """Provision GitHub Actions repository variables."""
+        g = self._get_github_client(config)
+        repo = g.get_repo(repo_name)
+        results = {}
+        for name, value in variables.items():
+            try:
+                repo.create_variable(name, value)
+                results[name] = "created"
+            except GithubException as e:
+                if e.status == 409:
+                    # Variable already exists -- update it
+                    try:
+                        var = repo.get_variable(name)
+                        var.edit(name, value)
+                        results[name] = "updated"
+                    except Exception as update_err:
+                        results[name] = f"error: {update_err}"
+                else:
+                    results[name] = f"error: {e.data.get('message', str(e)) if isinstance(e.data, dict) else str(e)}"
+        return results
 
     def check_branch_protection(self, config: dict, repo_name: str, branch: str) -> dict:
         """Check branch protection rules on a GitHub repository branch."""
