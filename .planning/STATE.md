@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 6.8 (Manifest and Plugin Interface)
-Plan: 3 of 4 in current phase
-Status: In Progress
-Last activity: 2026-02-17 - Plan 03 complete: CI variable provisioning via plugin interface
+Plan: 4 of 4 in current phase
+Status: Complete
+Last activity: 2026-02-17 - Plan 04 complete: Derived runtime constraints from step intersection
 
-Progress: [==============================..........] 75% (Phase 6.8)
+Progress: [========================================] 100% (Phase 6.8)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 68
+- Total plans completed: 69
 - Average duration: 4 min
-- Total execution time: 4.21 hours
+- Total execution time: 4.36 hours
 
 **By Phase:**
 
@@ -45,10 +45,10 @@ Progress: [==============================..........] 75% (Phase 6.8)
 | 06.5-workflow-and-build-model-hardening | 2 | 8 min | 4 min |
 | 06.6-sync-operations-and-logging | 3 | 12 min | 4 min |
 | 06.7-version-lifecycle-automation | 4 | 9 min | 2.3 min |
-| 06.8-manifest-and-plugin-interface | 3 | 8 min | 2.7 min |
+| 06.8-manifest-and-plugin-interface | 4 | 17 min | 4.3 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.7-04 (2 min), 06.8-01 (2 min), 06.8-02 (3 min), 06.8-03 (3 min)
+- Last 5 plans: 06.8-01 (2 min), 06.8-02 (3 min), 06.8-03 (3 min), 06.8-04 (9 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -222,6 +222,10 @@ Recent decisions affecting current work:
 | 06.8-03 | CI variable provisioning is non-blocking | Failure does not prevent or roll back service creation |
 | 06.8-03 | try/create-catch-409/update for GitHub variable API | GitHub create_variable is not idempotent; 409 indicates existing variable |
 | 06.8-03 | Static engine-native PTF variable refs in env block | Identical expressions across services preserve manifest hash consistency |
+| 06.8-04 | runtime_family/runtime_version kept as blank=True deprecated fields | Migration coexistence; not removed yet to avoid breaking existing data |
+| 06.8-04 | Constraint intersection as pure functions in ci_manifest.py | Testability; intersect_semver_constraints() and compute_runtime_constraints() |
+| 06.8-04 | Client-side Alpine.js constraint checking mirrors server-side | Immediate UX feedback; canAddStep() blocks incompatible step additions |
+| 06.8-04 | CompatibleStepsView removed; runtime filtering is client-side only | Simplified architecture; all steps shown with optional filter |
 
 ### Roadmap Evolution
 
@@ -297,5 +301,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-17
-Stopped at: Completed 06.8-03-PLAN.md
-Resume file: .planning/phases/06.8-manifest-and-plugin-interface/06.8-04-PLAN.md
+Stopped at: Completed 06.8-04-PLAN.md (Phase 6.8 complete)
+Resume file: Next phase TBD
