@@ -486,7 +486,7 @@ def scaffold_new_repository(service, connection, template_temp_dir: str, variabl
 
             if ci_plugin:
                 manifest_yaml = ci_plugin.generate_manifest(service.ci_workflow)
-                manifest_path = ci_plugin.manifest_path(service)
+                manifest_path = ci_plugin.manifest_id(service.ci_workflow)
 
                 # Create directory structure and write manifest
                 manifest_full_path = os.path.join(repo_temp_dir, manifest_path)
@@ -583,7 +583,7 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str, va
 
             if ci_plugin:
                 manifest_yaml = ci_plugin.generate_manifest(service.ci_workflow)
-                manifest_path = ci_plugin.manifest_path(service)
+                manifest_path = ci_plugin.manifest_id(service.ci_workflow)
 
                 manifest_full_path = os.path.join(repo_temp_dir, manifest_path)
                 os.makedirs(os.path.dirname(manifest_full_path), exist_ok=True)

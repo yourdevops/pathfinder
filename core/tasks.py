@@ -901,7 +901,7 @@ def push_ci_manifest(service_id: int) -> dict:
         repo_name = f"{parsed['owner']}/{parsed['repo']}"
         source_branch = service.repo_branch or "main"
 
-        # Use manifest_id (workflow-based) instead of manifest_path (service-based)
+        # Resolve manifest file path from workflow
         manifest_file_path = ci_plugin.manifest_id(service.ci_workflow)
 
         # Build version-aware commit message

@@ -134,10 +134,6 @@ class CICapableMixin:
         """
         raise NotImplementedError
 
-    def manifest_path(self, service) -> str:
-        """Return the file path where manifest should be placed in the service repo."""
-        raise NotImplementedError
-
     def manifest_id(self, workflow) -> str:
         """Return manifest identifier (e.g., .github/workflows/ci-python-uv.yml).
 

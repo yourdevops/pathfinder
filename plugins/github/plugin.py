@@ -164,10 +164,6 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
         )
         return header + yaml_body
 
-    def manifest_path(self, service) -> str:
-        """Return the file path where manifest should be placed in the service repo."""
-        return f".github/workflows/{service.handler}.yml"
-
     def manifest_id(self, workflow) -> str:
         """Return manifest identifier based on workflow name."""
         return f".github/workflows/ci-{workflow.name}.yml"
