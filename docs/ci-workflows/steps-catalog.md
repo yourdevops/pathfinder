@@ -226,6 +226,10 @@ Pathfinder supplies these variables to CI when a workflow is assigned to a Servi
 
 Steps should be designed to use these variables for best integration.
 
+**Provisioning mechanism**: Variables are set at the **CI engine level** (e.g., GitHub repository variables, GitLab project CI/CD variables, Bitbucket pipeline variables) via the CI Plugin's API — never baked into the manifest file. This is required because the manifest must remain byte-identical across all services using the same workflow version for hash-based build verification to work (see [Build Authorization](build-authorization.md#deterministic-generation)).
+
+Some engines auto-inject repository-level variables into pipeline runs (GitLab, Bitbucket). Others require the manifest to reference them explicitly (GitHub Actions: `${{ vars.PTF_PROJECT }}`). These static references are engine-specific constants — identical for every service — so they do not affect the manifest hash. The CI Plugin handles both sides: provisioning values via API and including the correct references during manifest generation.
+
 ### Secrets
 
 CI Secrets are managed at the CI engine level. Steps should reference secrets available in the CI engine or use external secrets providers. Pathfinder does not manage secrets.

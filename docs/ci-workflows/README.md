@@ -17,6 +17,7 @@ A CI Workflow is a versioned, composable build definition that produces an artif
 |----------|-------------|
 | [Workflow Definition](workflow-definition.md) | Fields, runtimes, step ordering rules |
 | [Steps Catalog](steps-catalog.md) | Step definitions, metadata, batteries-included repos |
+| [Step Outputs](step-outputs.md) | Output wiring between steps, engine-native mechanisms |
 | [Versioning](versioning.md) | Semver model, draft/publish lifecycle, revocation |
 | [Build Authorization](build-authorization.md) | Manifest identification, verification flow, security model |
 | [Build Lifecycle](build-lifecycle.md) | Triggering, artifact discovery, build records |

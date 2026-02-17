@@ -8,7 +8,7 @@
 
 This document catalogs every gap between the CI Workflows design (defined in `docs/ci-workflows/`) and the current implementation (primarily `core/models.py`, `core/tasks.py`, `core/ci_steps.py`, `core/views/ci_workflows.py`, `core/views/webhooks.py`, `core/views/services.py`, and `plugins/github/plugin.py`). Each gap is assigned a severity and mapped to a remediation phase.
 
-**How to use**: Each remediation phase (R1 through R5) maps to a future GSD phase. Phases are ordered so that foundation changes land before features that depend on them. Execute phases sequentially; parallelizable phases are noted.
+**How to use**: Each remediation phase (R1 through R6) maps to a future GSD phase. R1-R5 remediate gaps between design and implementation. R6 adds new capability (step output wiring). Phases are ordered so that foundation changes land before features that depend on them. Execute phases sequentially; parallelizable phases are noted.
 
 **Migrations**: No data migrations are needed for any gap in this document. All existing Steps, Workflows, and related CI data were deleted, so schema changes can be applied fresh.
 
@@ -38,6 +38,7 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 | GAP-18 | Step Validation API | steps-catalog.md | Low | R5 |
 | GAP-19 | manifest_path Cleanup | plugin-interface.md | Low | R5 |
 | GAP-20 | Runtime Derived from Steps, Not Selected Upfront | workflow-definition.md | High | R5 |
+| GAP-21 | Step Output Wiring Between Steps | step-outputs.md | Medium | R6 |
 
 **Severity criteria**:
 - **Critical**: Data integrity or security risk (hard deletes losing data, missing verification states)
@@ -341,15 +342,18 @@ This document catalogs every gap between the CI Workflows design (defined in `do
 
 **Current Implementation**: `generate_manifest()` in `plugins/github/plugin.py:61` has no knowledge of the service context. No `PTF_*` environment variables are injected into the generated workflow.
 
-**Gap**: When pushing a manifest to a service repo, Pathfinder should inject `PTF_PROJECT`, `PTF_SERVICE`, and `PTF_ENVIRONMENT` as environment variables in the GitHub Actions workflow.
+**Gap**: When a workflow is assigned to a service, Pathfinder should provision `PTF_PROJECT`, `PTF_SERVICE`, and `PTF_ENVIRONMENT` as CI-level variables accessible to pipeline runs.
 
 **Impact**: CI steps cannot use Pathfinder context variables. Integration between Pathfinder and the CI pipeline is incomplete -- steps that need to know which service or project they belong to have no way to find out.
 
+**Constraint**: Variables must NOT be baked into the manifest file. Doing so would produce a different hash per service, breaking hash-based build verification (same issue as GAP-20's runtime version constraint). Values are provisioned at the CI engine level; the manifest may contain static engine-specific references (e.g., `${{ vars.PTF_PROJECT }}` for GitHub Actions) that are identical across all services.
+
 **Remediation**:
-- Modify `generate_manifest()` to accept an optional `service_context` dict
-- When provided, inject an `env` block into the workflow YAML with `PTF_PROJECT`, `PTF_SERVICE`, `PTF_ENVIRONMENT`
-- Update `push_ci_manifest` (`core/tasks.py:594`) to pass service context when generating or re-generating manifests
-- For stored version content, consider injecting variables at push time rather than at generation time
+- Add `provision_ci_variables(connection_config, repo, variables)` to `CICapableMixin` plugin interface -- idempotent create-or-update of repository-level CI variables
+- Implement for GitHub (repository variables API), GitLab (project CI/CD variables API), Bitbucket (pipeline variables API with list-then-upsert)
+- Call on workflow assignment to a service and on service environment changes
+- For engines that require explicit variable references in the manifest (GitHub Actions), include static reference block in `generate_manifest()` -- these are engine constants, not per-service values, so hash is unaffected
+- Jenkins deferred: no equivalent idempotent variable API exists; will require engine-specific design when Jenkins plugin is implemented
 
 ---
 
@@ -415,6 +419,28 @@ Two issues:
 - Move concrete version selection to the Service level — `Service.runtime_versions` or similar field where the service pins specific versions within the workflow's allowed range
 - **Manifest hash constraint**: Concrete runtime versions CANNOT be baked into the generated manifest — doing so would break hash-based build verification (every service pinning a different version would produce a different hash). The manifest must remain identical for all services using the same workflow version. Instead, Pathfinder manages a runtime config file in the service repo (e.g., `.python-version`, `.tool-versions`, `.nvmrc`) that is separate from the CI manifest. Setup steps read concrete versions from these standard toolchain files. This keeps version pinning independent from Pathfinder and follows ecosystem conventions.
 - Update the composer's step display to show runtime tags on each step rather than hiding incompatible steps entirely
+
+---
+
+### GAP-21: Step Output Wiring Between Steps
+
+**Design Reference**: step-outputs.md
+
+**Current Implementation**: The `CIStep` model (`core/models.py:696`) documents that steps define "inputs, outputs, and execution" but only `inputs_schema` is captured. No `outputs_schema` field exists. The `CIWorkflowStep.input_config` JSONField supports static value overrides only. `generate_manifest()` (`plugins/github/plugin.py:93`) does not assign step `id` attributes or resolve output references between steps.
+
+**Gap**: Steps in the CI steps library already declare `outputs:` blocks (e.g., `package/docker` exposes `image-ref` and `image-digest`, `test/pytest` exposes `result`, `scan` exposes `findings-count`). Pathfinder should:
+1. Capture output declarations in the Catalog during sync
+2. Allow workflow composers to wire one step's output to another step's input
+3. Translate output references to engine-native syntax during manifest generation
+
+**Impact**: Without output wiring, step inputs that depend on earlier step outputs must be hard-coded or left for the CI engine to resolve implicitly. This prevents composing workflows where, for example, a security scan step needs the image reference produced by a packaging step.
+
+**Remediation**:
+- Add `outputs_schema` JSONField to `CIStep` model (parsed from `outputs:` block during sync)
+- Extend `CIWorkflowStep.input_config` to support output references alongside static values (e.g., `{"image-ref": {"$ref": "package-docker.image-ref"}}`)
+- Update `scan_steps_repository` to parse and store output declarations; classify output removal as an interface change
+- Update `generate_manifest()` in each CI plugin to: (a) assign each step an `id` derived from slug, (b) resolve `$ref` entries to engine-native syntax
+- Add validation in the workflow composer: referenced step must precede the consuming step, referenced output must exist in the step's `outputs_schema`
 
 ---
 
@@ -561,6 +587,49 @@ Two issues:
 
 ---
 
+### Phase R6: Step Output Wiring
+
+**Goal**: Steps declare their outputs in the Catalog, workflow composers can wire one step's output to another step's input, and CI plugins translate these references to engine-native syntax during manifest generation.
+
+**Gaps Addressed**: GAP-21
+
+**Estimated Complexity**: Medium (2-3 plans)
+- Plan 1: Add `outputs_schema` to `CIStep`; update sync to parse and track outputs; classify output removal as interface change
+- Plan 2: Extend `input_config` with `$ref` support; add output wiring validation in composer; update composer UI for output selection
+- Plan 3: Update `generate_manifest()` in each CI plugin to assign step IDs and resolve output references to engine-native syntax
+
+**Dependencies**: R1 (step model and sync infrastructure), R5 Plan 1 (`generate_manifest()` improvements)
+
+**Key Changes**:
+- **Models**: `CIStep` -- add `outputs_schema` JSONField (parsed from engine-native outputs block)
+- **Tasks**: `scan_steps_repository` -- parse `outputs:` block alongside inputs; include output removal in interface change classification (`_classify_change`)
+- **Views**: Workflow composer -- add output wiring UI; validate that referenced steps precede consuming steps and that referenced outputs exist
+- **Plugins (GitHub Actions)**: `generate_manifest()` -- assign `id` to each step (derived from slug), resolve `$ref` entries to `${{ steps.<id>.outputs.<name> }}` expressions
+- **Plugins (GitLab CI)**: Generate `artifacts:reports:dotenv` on producing jobs; add `needs` entries on consuming jobs; map output names to dotenv variable names
+- **Plugins (Bitbucket)**: Add output names to `output-variables` list on producing steps; ensure scripts write to `$BITBUCKET_PIPELINES_VARIABLES_PATH`
+- **Plugins (Jenkins)**: Generate `script { env.X = sh(returnStdout:true, ...).trim() }` in producing stages; reference as `$VARIABLE_NAME` in consuming stages
+
+**Engine-Native Translation**:
+
+| Engine | Producer | Consumer |
+|--------|----------|----------|
+| GitHub Actions | Step `id` + `>> $GITHUB_OUTPUT` | `${{ steps.<id>.outputs.<name> }}` |
+| GitLab CI | `>> file.env` + `artifacts:reports:dotenv` | `$VARIABLE_NAME` (via `needs`) |
+| Bitbucket | `>> $BITBUCKET_PIPELINES_VARIABLES_PATH` + `output-variables` | `$VARIABLE_NAME` |
+| Jenkins | `env.X = sh(returnStdout:true, ...).trim()` | `$VARIABLE_NAME` |
+
+See [Step Outputs](step-outputs.md) for detailed engine documentation and constraints.
+
+**Risk Notes**:
+- GitHub Actions is the only engine where output references appear as expressions in the YAML; the other three use auto-injected environment variables. This means GitHub Actions manifest generation is more complex (must resolve `$ref` to expression syntax) while others mainly need boilerplate injection.
+- Output wiring validation must handle steps that declare no outputs (most setup steps). The composer should only offer wiring for steps that have declared outputs.
+- GitLab dotenv has a 5 KB file size limit and no multiline values; large outputs should use file artifacts instead. The composer may need to warn when wiring large outputs via dotenv.
+- Manifest hash implications: output references are deterministic expressions derived from step slugs. The same workflow always produces the same references, so hash-based verification is unaffected.
+
+**Done when**: `CIStep.outputs_schema` is populated during sync; output removal triggers interface change warnings; workflow composer allows wiring outputs to inputs with validation; `generate_manifest()` produces correct engine-native output references for GitHub Actions (priority), with GitLab CI, Bitbucket, and Jenkins following.
+
+---
+
 ## Schema Changes and Risk Assessment
 
 All existing Steps, Workflows, and related CI data were deleted. No data migrations or backfills are needed -- all schema changes apply to empty tables and can be created fresh via `makemigrations`.
@@ -584,6 +653,7 @@ All existing Steps, Workflows, and related CI data were deleted. No data migrati
 | R5 | CIWorkflow | Add `runtime_constraints` JSONField (derived from steps) |
 | R5 | CIWorkflow | Remove `runtime_family`, `runtime_version` fields |
 | R5 | Service | Add runtime version pinning field for concrete version selection |
+| R6 | CIStep | Add `outputs_schema` JSONField |
 
 ### Breaking Changes
 
@@ -613,7 +683,8 @@ Each phase produces independent migrations. To roll back:
     GAP-19 (Low)        |   GAP-20 (High)
     GAP-10 (Low)        |   GAP-06 (Medium)
     GAP-16 (Low)        |   GAP-07 (Medium)
-    GAP-17 (Low)        |   GAP-11 (Medium)
+    GAP-17 (Low)        |   GAP-21 (Medium)
+                        |   GAP-11 (Medium)
                         |   GAP-05 (Medium)
                         |   GAP-13 (Medium)
                         |   GAP-18 (Low)
@@ -629,12 +700,13 @@ Each phase produces independent migrations. To roll back:
 | High Impact / Low Effort | GAP-04, GAP-08, GAP-15 | Do first -- quick wins with high value |
 | High Impact / High Effort | GAP-01, GAP-02, GAP-03 | Plan carefully -- R1 is the largest phase |
 | Low Impact / Low Effort | GAP-10, GAP-16, GAP-17, GAP-19 | Bundle with related work in same phase |
-| Low Impact / High Effort | GAP-05, GAP-06, GAP-07, GAP-11, GAP-12, GAP-13, GAP-18 | Defer to later phases (R3-R5) or simplify scope |
+| Low Impact / High Effort | GAP-05, GAP-06, GAP-07, GAP-11, GAP-12, GAP-13, GAP-18, GAP-21 | Defer to later phases (R3-R6) or simplify scope |
 
 **Recommended execution order**:
 1. **R1** (Step Identity) and **R2** (Workflow & Build Hardening) -- in parallel, foundation work
 2. **R3** (Sync and Logging) -- depends on R1
 3. **R4** (Version Lifecycle) and **R5** (Manifest and Plugin) -- in parallel, both depend on R2
+4. **R6** (Step Output Wiring) -- depends on R1 and R5
 
 ---
 
@@ -669,12 +741,15 @@ The following design items are fully implemented and do not require remediation.
 ```
 R1 (Step Identity)  --------+--> R3 (Sync & Logging)
                              |
-R2 (Workflow & Build) --+---+--> R4 (Version Lifecycle)
-                        |
-                        +------> R5 (Manifest & Plugin)
+                             +----------------------------+
+                                                          |
+R2 (Workflow & Build) --+---+--> R4 (Version Lifecycle)   |
+                        |                                 v
+                        +------> R5 (Manifest & Plugin) --+--> R6 (Step Outputs)
 ```
 
 R1 and R2 have no dependencies and can execute in parallel.
 R3 depends on R1 (step slugs, archive status).
 R4 depends on R2 (workflow archived status, ci_run_id for deletion guards).
 R5 depends on R2 (engine field, build model).
+R6 depends on R1 (step model, sync infrastructure) and R5 (manifest generation improvements).
