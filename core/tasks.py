@@ -809,6 +809,20 @@ def poll_build_details(
         },
     )
 
+    # Resolve artifact reference via CI plugin for completed builds
+    if status in ("success",) and not artifact_ref:
+        from plugins.base import CICapableMixin
+
+        if isinstance(plugin, CICapableMixin):
+            try:
+                resolved_ref = plugin.resolve_artifact_ref(connection.get_config(), repo_name, run_id)
+                if resolved_ref:
+                    build.artifact_ref = resolved_ref
+                    build.save(update_fields=["artifact_ref"])
+                    logger.info(f"Resolved artifact ref for build {build.id}: {resolved_ref}")
+            except Exception as e:
+                logger.warning(f"Failed to resolve artifact ref for build {build.id}: {e}")
+
     # Activate service on first successful build
     if status == "success":
         activate_service_on_first_success(build)

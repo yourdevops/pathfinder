@@ -222,6 +222,51 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
             return {"number": pr.number, "html_url": pr.html_url, "title": pr.title}
         return None
 
+    def resolve_artifact_ref(self, config: dict, repo_name: str, run_id: int) -> str:
+        """Resolve container image reference from GitHub Packages for a workflow run.
+
+        Queries the GitHub Packages API to find a container image tagged with
+        the short SHA of the workflow run's head commit.
+
+        Returns image reference string or empty string if not found.
+        """
+        import requests
+
+        try:
+            g = self._get_github_client(config)
+            # Get the run to find the commit SHA
+            repo = g.get_repo(repo_name)
+            run = repo.get_workflow_run(run_id)
+            short_sha = run.head_sha[:7]
+
+            # Query GHCR for container tagged with sha-{short_sha}
+            token = g._Github__requester._Requester__auth.token
+            base_url = config.get("base_url", "https://api.github.com")
+            owner = repo_name.split("/")[0]
+            package_name = repo_name.split("/")[1]
+
+            # Try org packages first, then user packages
+            for endpoint in [
+                f"{base_url}/orgs/{owner}/packages/container/{package_name}/versions",
+                f"{base_url}/users/{owner}/packages/container/{package_name}/versions",
+            ]:
+                headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.v3+json"}
+                resp = requests.get(endpoint, headers=headers, timeout=15)
+                if resp.status_code == 200:
+                    for version in resp.json():
+                        tags = version.get("metadata", {}).get("container", {}).get("tags", [])
+                        if f"sha-{short_sha}" in tags:
+                            return f"ghcr.io/{repo_name}:sha-{short_sha}"
+                    # Found the package but no matching tag
+                    break
+
+            return ""
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).warning(f"Failed to resolve artifact ref for run {run_id}: {e}")
+            return ""
+
     def check_branch_protection(self, config: dict, repo_name: str, branch: str) -> dict:
         """Check branch protection rules on a GitHub repository branch."""
         try:

@@ -185,6 +185,23 @@ class CICapableMixin:
         """
         raise NotImplementedError
 
+    def resolve_artifact_ref(self, config: dict, repo_name: str, run_id: int) -> str:
+        """Resolve actual artifact reference (container image ref) from CI engine API.
+
+        Queries the CI engine's container registry or packages API to find the
+        container image produced by a specific CI run.
+
+        Args:
+            config: Decrypted connection configuration.
+            repo_name: Full repository name (owner/repo).
+            run_id: CI engine run identifier.
+
+        Returns:
+            Image reference string (e.g., 'ghcr.io/owner/repo:sha-abc1234')
+            or empty string if no artifact found.
+        """
+        raise NotImplementedError
+
 
 class BasePlugin(ABC):
     """
