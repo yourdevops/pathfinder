@@ -275,7 +275,7 @@ Plans:
 **Goal:** Artifact discovery uses CI plugin API (not webhook payloads), CI variables are injected into manifests, a step validation API exists, dead manifest_path code is removed, and workflow runtimes are derived from steps with version constraints at the workflow level and concrete versions at the service level.
 **Depends on:** Phase 6
 **Gaps Addressed**: GAP-13, GAP-17, GAP-18, GAP-19, GAP-20 from docs/ci-workflows/REMEDIATION.md
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] 06.8-01-PLAN.md — Remove manifest_path dead code, add resolve_artifact_ref to plugin interface (GAP-19, GAP-13)
