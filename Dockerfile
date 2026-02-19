@@ -1,12 +1,11 @@
 FROM node:22-slim AS frontend
 
-WORKDIR /build
+# Mirror project layout so Tailwind's relative content globs resolve within /app/
+WORKDIR /app/theme/static_src
 COPY theme/static_src/package.json theme/static_src/package-lock.json ./
 RUN npm ci
-COPY theme/static_src/ ./
+COPY . /app/
 RUN npm run build
-
-# ---
 
 FROM python:3.13-slim AS base
 
@@ -39,8 +38,8 @@ RUN uv sync --frozen --no-dev
 COPY --chown=ssp:ssp . .
 
 # Copy frontend build output (CSS + vendor JS)
-COPY --from=frontend --chown=ssp:ssp /static/css/dist/ theme/static/css/dist/
-COPY --from=frontend --chown=ssp:ssp /static/js/vendor/ theme/static/js/vendor/
+COPY --from=frontend --chown=ssp:ssp /app/theme/static/css/dist/ theme/static/css/dist/
+COPY --from=frontend --chown=ssp:ssp /app/theme/static/js/vendor/ theme/static/js/vendor/
 
 # Create necessary directories and make entrypoint executable
 RUN mkdir -p /app/staticfiles /app/data && \
@@ -58,4 +57,9 @@ EXPOSE 8000
 
 # Run via entrypoint (handles migrations), then CMD
 ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["uv", "run", "uvicorn", "pathfinder.asgi:application", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
+CMD ["uv", "run", "uvicorn", "pathfinder.asgi:application", \
+     "--host", "0.0.0.0", \
+     "--port", "8000", \
+     "--workers", "2", \
+     "--timeout-graceful-shutdown", "25", \
+     "--lifespan", "off"]

@@ -28,10 +28,11 @@ services:
     group_add:
       - ${DOCKER_GID:-999}
     restart: unless-stopped
+    stop_grace_period: 30s
     networks:
       - yourdevops_public
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      test: ["CMD", "uv", "run", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
       interval: 30s
       timeout: 10s
       retries: 3
