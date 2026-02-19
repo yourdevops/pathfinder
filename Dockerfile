@@ -27,7 +27,7 @@ RUN uv sync --frozen --no-dev
 COPY --chown=ssp:ssp . .
 
 # Create necessary directories and make entrypoint executable
-RUN mkdir -p /app/staticfiles /app/manifests /app/data && \
+RUN mkdir -p /app/staticfiles /app/data && \
     chmod +x /app/entrypoint.sh && \
     chown -R ssp:ssp /app
 
