@@ -2,7 +2,7 @@
 
 from django.urls import path
 
-from . import views
+from . import views, webhooks
 
 app_name = "github"
 
@@ -18,4 +18,5 @@ urlpatterns = [
         views.GitHubInstallationCallbackView.as_view(),
         name="installation_callback",
     ),
+    path("webhook/", webhooks.github_webhook, name="webhook"),
 ]
