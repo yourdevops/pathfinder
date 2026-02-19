@@ -276,7 +276,7 @@ Plans:
 
 **Goal:** Refactor webhook handling from hardcoded core endpoints into a pluggable framework where plugins own their webhook handlers. Core provides routing infrastructure; current /webhooks/build/ and /webhooks/steps-repo/ are GitHub-specific and must move into the GitHub plugin.
 **Depends on:** Phase 6
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 06.10-01-PLAN.md -- Move webhook handlers to GitHub plugin, register /integrations/github/webhook/, add get_webhook_url() to plugin interface
