@@ -1,3 +1,13 @@
+FROM node:22-slim AS frontend
+
+WORKDIR /build
+COPY theme/static_src/package.json theme/static_src/package-lock.json ./
+RUN npm ci
+COPY theme/static_src/ ./
+RUN npm run build
+
+# ---
+
 FROM python:3.13-slim AS base
 
 # Install uv
@@ -27,6 +37,10 @@ RUN uv sync --frozen --no-dev
 
 # Copy application code
 COPY --chown=ssp:ssp . .
+
+# Copy frontend build output (CSS + vendor JS)
+COPY --from=frontend --chown=ssp:ssp /static/css/dist/ theme/static/css/dist/
+COPY --from=frontend --chown=ssp:ssp /static/js/vendor/ theme/static/js/vendor/
 
 # Create necessary directories and make entrypoint executable
 RUN mkdir -p /app/staticfiles /app/data && \

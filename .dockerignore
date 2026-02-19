@@ -2,6 +2,7 @@
 secrets/
 staticfiles/
 **/__pycache__/**
+**/node_modules/**
 .git
 .cache
 .claude
