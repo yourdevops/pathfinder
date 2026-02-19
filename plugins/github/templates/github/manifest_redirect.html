@@ -18,7 +18,7 @@
             </p>
             <p class="text-sm text-dark-muted">
                 If you're not redirected automatically,
-                <a href="#" onclick="document.getElementById('manifest-form').submit(); return false;"
+                <a href="#" id="manifest-submit-link"
                    class="text-dark-accent hover:text-dark-accent-hover underline">
                     click here
                 </a>.
@@ -33,6 +33,11 @@
 </div>
 
 <script nonce="{{ csp_nonce }}">
+    // Fallback manual submit link
+    document.getElementById('manifest-submit-link').addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('manifest-form').submit();
+    });
     // Auto-submit the form after a brief delay to show the loading message
     setTimeout(function() {
         document.getElementById('manifest-form').submit();

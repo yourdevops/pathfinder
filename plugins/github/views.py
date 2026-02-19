@@ -2,8 +2,10 @@
 
 import json
 import secrets
+from urllib.parse import urlparse
 
 import requests
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, render
@@ -20,8 +22,6 @@ def get_default_app_name():
     """Generate a default GitHub App name based on hostname."""
     config = SiteConfiguration.get_instance()
     if config.external_url:
-        from urllib.parse import urlparse
-
         parsed = urlparse(config.external_url)
         hostname = parsed.netloc.split(":")[0]  # Remove port if present
         # Create a readable name from hostname
@@ -120,7 +120,7 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
         manifest_url = f"{github_base}/organizations/{org}/settings/apps/new"
 
         # Render an intermediate page that auto-posts to GitHub
-        return render(
+        response = render(
             request,
             "github/manifest_redirect.html",
             {
@@ -129,6 +129,16 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
                 "organization": org,
             },
         )
+
+        # Override CSP to allow form-action to the GitHub manifest URL.
+        # Django's CSP middleware reads response._csp_config if set.
+        parsed = urlparse(manifest_url)
+        target_origin = f"{parsed.scheme}://{parsed.netloc}"
+        csp_config = {k: list(v) for k, v in settings.SECURE_CSP.items()}
+        csp_config["form-action"] = [*csp_config.get("form-action", []), target_origin]
+        response._csp_config = csp_config
+
+        return response
 
     def _build_manifest(self, external_url, data):
         """Build the GitHub App manifest JSON."""

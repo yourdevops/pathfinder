@@ -2,6 +2,48 @@
 
 {% block title %}Create GitHub Connection{% endblock %}
 
+{% block extra_head %}
+<script nonce="{{ csp_nonce }}">
+document.addEventListener('alpine:init', function() {
+    Alpine.data('githubCreate', function(authType, setupMode, externalUrl, org, appName) {
+        return {
+            authType: authType,
+            setupMode: setupMode,
+            externalUrlConfigured: externalUrl,
+            organization: org,
+            appName: appName,
+            appNameTouched: false,
+            organizationTouched: false,
+            get defaultAppName() {
+                if (this.organization.trim()) {
+                    return 'pathfinder-' + this.organization.trim().toLowerCase();
+                }
+                return '';
+            },
+            get organizationError() {
+                if (!this.organizationTouched) return '';
+                if (this.authType === 'app' && this.setupMode === 'automatic' && !this.organization.trim()) {
+                    return 'Organization is required for automatic setup';
+                }
+                return '';
+            },
+            get canSubmit() {
+                if (this.authType === 'app' && this.setupMode === 'automatic') {
+                    return this.organization.trim().length > 0;
+                }
+                return true;
+            },
+            updateAppName: function() {
+                if (!this.appNameTouched) {
+                    this.appName = this.defaultAppName;
+                }
+            }
+        };
+    });
+});
+</script>
+{% endblock %}
+
 {% block content %}
 <div class="p-8">
     <div class="mb-6">
@@ -10,39 +52,7 @@
         </a>
     </div>
 
-    <div class="max-w-2xl mx-auto" x-data="{
-        authType: '{{ form.auth_type.value|default:'app' }}',
-        setupMode: '{{ form.setup_mode.value|default:'automatic' }}',
-        externalUrlConfigured: {{ external_url_configured|yesno:'true,false' }},
-        organization: '{{ form.organization.value|default:'' }}',
-        appName: '{{ form.app_name.value|default:'' }}',
-        appNameTouched: false,
-        organizationTouched: false,
-        get defaultAppName() {
-            if (this.organization.trim()) {
-                return 'pathfinder-' + this.organization.trim().toLowerCase();
-            }
-            return '';
-        },
-        get organizationError() {
-            if (!this.organizationTouched) return '';
-            if (this.authType === 'app' && this.setupMode === 'automatic' && !this.organization.trim()) {
-                return 'Organization is required for automatic setup';
-            }
-            return '';
-        },
-        get canSubmit() {
-            if (this.authType === 'app' && this.setupMode === 'automatic') {
-                return this.organization.trim().length > 0;
-            }
-            return true;
-        },
-        updateAppName() {
-            if (!this.appNameTouched) {
-                this.appName = this.defaultAppName;
-            }
-        }
-    }">
+    <div class="max-w-2xl mx-auto" x-data="githubCreate('{{ form.auth_type.value|default:'app' }}', '{{ form.setup_mode.value|default:'automatic' }}', {{ external_url_configured|yesno:'true,false' }}, '{{ form.organization.value|default:'' }}', '{{ form.app_name.value|default:'' }}')">
         <form method="post" class="space-y-6">
             {% csrf_token %}
 

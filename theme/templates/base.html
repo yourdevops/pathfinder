@@ -72,7 +72,7 @@
         // Ensure dark mode class is set before render to prevent flash
         document.documentElement.classList.add('dark');
     </script>
-
+    {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-dark-bg text-dark-text min-h-screen">
     {% if user.is_authenticated %}
