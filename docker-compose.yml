@@ -5,13 +5,13 @@ services:
   web:
     labels:
       - traefik.enable=true
-      - traefik.http.routers.ssp.rule=Host(`ssp.yourdevops.me`)
-      - traefik.http.services.ssp.loadbalancer.server.port=8000
-      - traefik.http.routers.ssp.tls=true
+      - traefik.http.routers.pathfinder.rule=Host(`pathfinder.yourdevops.me`)
+      - traefik.http.services.pathfinder.loadbalancer.server.port=8000
+      - traefik.http.routers.pathfinder.tls=true
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ssp-portal
+    container_name: pathfinder-portal
     ports:
       - "8000:8000"
     environment:
@@ -46,7 +46,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ssp-worker
+    container_name: pathfinder-worker
     command: python manage.py db_worker --queue-name "*"
     environment:
       - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
@@ -63,7 +63,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ssp-scheduler
+    container_name: pathfinder-scheduler
     command: python manage.py run_task_scheduler
     environment:
       - DJANGO_DEBUG=${DJANGO_DEBUG:-False}

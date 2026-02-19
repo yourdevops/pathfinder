@@ -13,3 +13,30 @@ jobs:
       uses: yourdevops/ci-steps-library/ci-steps/setup-python-uv@ce87e11fefada8560d310b73566b7e68d9e10fb8
     - name: Lint with Ruff
       uses: yourdevops/ci-steps-library/ci-steps/lint-ruff@ce87e11fefada8560d310b73566b7e68d9e10fb8
+    # Custom steps here
+    - name: Install SSH key
+      uses: shimataro/ssh-key-action@v2
+      with:
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+
+    - name: Copy .env file
+      run: |
+        # Create consolidated .env file to the project root
+        printf "%s" "${{ secrets.ENV_FILE }}" > .env
+
+    - name: Deploy to server
+      env:
+        REMOTE_HOST: ${{ vars.SRV_01_IP }}
+        REMOTE_USER: ${{ vars.SRV_01_USER }}
+        REMOTE_PATH: /home/${{ vars.SRV_01_USER }}/${{ github.event.repository.name }}/
+      run: |
+        rsync -avz --delete \
+          --exclude '.git*' \
+          ./ $REMOTE_USER@$REMOTE_HOST:$REMOTE_PATH
+
+        ssh $REMOTE_USER@$REMOTE_HOST "
+        DOCKER_GID=\$(stat -c '%g' /var/run/docker.sock 2>/dev/null || echo 0) && \
+        cd $REMOTE_PATH && \
+        echo \"DOCKER_GID=\$DOCKER_GID\" >> .env && \
+        docker compose up --build -d --remove-orphans"

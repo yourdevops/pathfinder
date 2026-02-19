@@ -5,6 +5,7 @@ This module provides the GitHubPlugin class implementing GitHub App authenticati
 and repository operations via the PyGithub library.
 """
 
+import os
 import re
 from typing import Any
 
@@ -157,16 +158,18 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
             step = ws.step
             repo = step.repository
 
-            # Build uses reference
+            # Build uses reference: derive subdirectory from file_path
+            # e.g. file_path="setup/python/action.yml" -> step_dir="setup/python"
+            step_dir = os.path.dirname(step.file_path) if step.file_path else step.directory_name
             parsed = parse_git_url(repo.git_url)
             if parsed and parsed.get("owner") and parsed.get("repo"):
-                uses_ref = f"{parsed['owner']}/{parsed['repo']}/ci-steps/{step.directory_name}"
+                uses_ref = f"{parsed['owner']}/{parsed['repo']}/{step_dir}"
                 if step.commit_sha:
                     uses_ref += f"@{step.commit_sha}"
                 else:
                     uses_ref += "@main"
             else:
-                uses_ref = f"./ci-steps/{step.directory_name}"
+                uses_ref = f"./{step_dir}"
 
             step_entry = {
                 "name": step.name,
