@@ -1019,7 +1019,7 @@ def push_ci_manifest(service_id: int) -> dict:
 
         site_config = SiteConfiguration.get_instance()
         if site_config and site_config.external_url:
-            webhook_url = f"{site_config.external_url.rstrip('/')}/webhooks/build/"
+            webhook_url = plugin.get_webhook_url(site_config.external_url)
             try:
                 plugin.configure_webhook(
                     config,

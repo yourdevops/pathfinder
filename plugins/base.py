@@ -295,6 +295,21 @@ class BasePlugin(ABC):
         field_lower = field_name.lower()
         return any(pattern in field_lower for pattern in self.sensitive_field_patterns)
 
+    def get_webhook_url(self, external_url: str) -> str:
+        """Return the full external webhook URL for this plugin.
+
+        Plugins that receive webhooks override this to return their
+        webhook endpoint URL. Core code calls this without knowing
+        the plugin name, keeping core plugin-agnostic.
+
+        Args:
+            external_url: The site's external URL (e.g., 'https://pathfinder.example.com').
+
+        Returns:
+            Full webhook URL string, or empty string if plugin has no webhook.
+        """
+        return ""
+
     @abstractmethod
     def get_config_schema(self) -> dict[str, Any]:
         """

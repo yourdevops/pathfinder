@@ -90,7 +90,7 @@ class StepsRepoRegisterView(OperatorRequiredMixin, View):
                         parsed = parse_git_url(repo.git_url)
                         if plugin and parsed:
                             repo_full_name = f"{parsed['owner']}/{parsed['repo']}"
-                            webhook_url = f"{site_config.external_url.rstrip('/')}/webhooks/steps-repo/"
+                            webhook_url = plugin.get_webhook_url(site_config.external_url)
                             plugin.configure_webhook(
                                 config,
                                 repo_full_name,

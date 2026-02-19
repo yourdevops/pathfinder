@@ -811,7 +811,7 @@ class ServiceRegisterWebhookView(LoginRequiredMixin, View):
             return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
 
         repo_name = f"{parsed['owner']}/{parsed['repo']}"
-        webhook_url = f"{site_config.external_url.rstrip('/')}/webhooks/build/"
+        webhook_url = plugin.get_webhook_url(site_config.external_url)
 
         try:
             plugin.configure_webhook(

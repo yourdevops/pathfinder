@@ -371,6 +371,13 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
 
     # --- BasePlugin implementation ---
 
+    def get_webhook_url(self, external_url: str) -> str:
+        """Return the full external webhook URL for this plugin."""
+        from django.urls import reverse
+
+        webhook_path = reverse("github:webhook")
+        return f"{external_url.rstrip('/')}{webhook_path}"
+
     def get_config_schema(self) -> dict[str, Any]:
         """Return the configuration schema for GitHub connections."""
         return {

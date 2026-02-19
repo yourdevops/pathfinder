@@ -56,7 +56,6 @@ from .views import (
     UserEditView,
     UserListView,
     UserManagementView,
-    webhooks,
 )
 from .views.ci_workflows import (
     DeleteVersionView,
@@ -435,10 +434,4 @@ settings_patterns = [
     path("api-tokens/", ApiTokensView.as_view(), name="api_tokens"),
     path("notifications/", NotificationsView.as_view(), name="notifications"),
     path("ci-config/", CIConfigSettingsView.as_view(), name="settings_ci_config"),
-]
-
-# Webhooks URLs
-webhooks_patterns = [
-    path("build/", webhooks.build_webhook, name="build_webhook"),
-    path("steps-repo/", webhooks.steps_repo_webhook, name="steps_repo_webhook"),
 ]
