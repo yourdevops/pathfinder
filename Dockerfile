@@ -42,9 +42,6 @@ RUN DJANGO_SECRET_KEY=build-time-placeholder uv run python manage.py collectstat
 # Expose port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/')" || exit 1
-
-# Run via entrypoint (handles migrations)
+# Run via entrypoint (handles migrations), then CMD
 ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["uv", "run", "uvicorn", "pathfinder.asgi:application", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]

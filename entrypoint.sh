@@ -13,6 +13,5 @@ uv run python manage.py migrate --noinput
 echo "Collecting static files..."
 uv run python manage.py collectstatic --noinput
 
-# Start uvicorn (ASGI server)
-echo "Starting uvicorn server..."
-exec uv run uvicorn pathfinder.asgi:application --host 0.0.0.0 --port 8000 --workers 2
+# Execute the CMD passed to the container
+exec "$@"
