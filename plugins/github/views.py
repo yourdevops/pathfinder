@@ -153,8 +153,7 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
 
         callback_path = reverse("github:manifest_callback")
         install_path = reverse("github:installation_callback")
-        # Webhook URL uses the same mount point; no route defined yet
-        webhook_path = callback_path.rsplit("manifest/callback/", 1)[0] + "webhook/"
+        webhook_path = reverse("github:webhook")
 
         return {
             "name": app_name,
