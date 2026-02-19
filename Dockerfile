@@ -16,7 +16,9 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
     libpq-dev \
+    openssh-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files and install dependencies

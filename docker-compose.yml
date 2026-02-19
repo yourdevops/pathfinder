@@ -2,7 +2,7 @@
 # Compatible with both Docker Compose and Podman Compose
 
 services:
-  web:
+  portal:
     labels:
       - traefik.enable=true
       - traefik.http.routers.pathfinder.rule=Host(`pathfinder.yourdevops.me`)
@@ -28,8 +28,6 @@ services:
     group_add:
       - ${DOCKER_GID:-999}
     restart: unless-stopped
-    depends_on:
-      - worker
     networks:
       - yourdevops_public
     healthcheck:
@@ -52,6 +50,9 @@ services:
     volumes:
       - data:/app/data
     restart: unless-stopped
+    depends_on:
+      portal:
+        condition: service_healthy
     networks:
       - yourdevops_public
 
@@ -68,6 +69,9 @@ services:
     volumes:
       - data:/app/data
     restart: unless-stopped
+    depends_on:
+      portal:
+        condition: service_healthy
     networks:
       - yourdevops_public
 
