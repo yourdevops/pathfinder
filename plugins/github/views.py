@@ -9,6 +9,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.views import View
 
 from core.models import IntegrationConnection, SiteConfiguration
@@ -150,15 +151,19 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
         if not app_name:
             app_name = get_default_app_name()
 
+        callback_path = reverse("github:manifest_callback")
+        # Webhook URL uses the same mount point; no route defined yet
+        webhook_path = callback_path.rsplit("manifest/callback/", 1)[0] + "webhook/"
+
         return {
             "name": app_name,
             "url": external_url,
             "hook_attributes": {
-                "url": f"{external_url}/plugins/github/webhook/",
+                "url": f"{external_url}{webhook_path}",
                 "active": True,
             },
-            "redirect_url": f"{external_url}/plugins/github/manifest/callback/",
-            "callback_urls": [f"{external_url}/plugins/github/webhook/"],
+            "redirect_url": f"{external_url}{callback_path}",
+            "callback_urls": [f"{external_url}{webhook_path}"],
             "public": False,
             "default_permissions": {
                 "contents": "write",
