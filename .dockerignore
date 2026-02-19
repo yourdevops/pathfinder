@@ -1,0 +1,17 @@
+.venv
+secrets/
+staticfiles/
+**/__pycache__/**
+.git
+.cache
+.claude
+.github
+.pids
+.planning
+.ruff_cache
+.vscode
+data/
+docs/
+.env
+.env.*
+*.md
