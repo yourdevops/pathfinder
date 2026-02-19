@@ -154,11 +154,6 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STORAGES = {
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
 
 # Session settings
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
@@ -218,6 +213,28 @@ CACHES = {
         "LOCATION": CACHE_DIR,
         "TIMEOUT": 3600,  # 60 minutes
     }
+}
+
+# Logging - ensure errors are visible in container logs
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
+    },
+    "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+    },
 }
 
 # Integration health check interval (seconds)
