@@ -1,5 +1,7 @@
 """GitHub plugin forms."""
 
+from urllib.parse import urlparse
+
 from django import forms
 
 from core.models import IntegrationConnection
@@ -85,6 +87,15 @@ class GitHubConnectionForm(forms.Form):
         required=False,
         help_text="Leave blank for github.com, or enter your GitHub Enterprise Server URL",
     )
+
+    def clean_base_url(self):
+        url = self.cleaned_data.get("base_url", "").strip()
+        if not url:
+            return ""
+        parsed = urlparse(url)
+        if parsed.scheme != "https":
+            raise forms.ValidationError("GitHub Enterprise URL must use HTTPS.")
+        return url
 
     def clean_name(self):
         name = self.cleaned_data.get("name", "").lower().strip()

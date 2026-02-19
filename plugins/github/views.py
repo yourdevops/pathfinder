@@ -2,7 +2,7 @@
 
 import json
 import secrets
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
 import requests
 from django.conf import settings
@@ -99,8 +99,8 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
 
         # Store pending connection data in session
         state = secrets.token_urlsafe(32)
-        request.session["github_manifest_state"] = state
-        request.session["github_manifest_data"] = {
+        request.session["github_manifest"] = {
+            "state": state,
             "name": data["name"],
             "organization": data["organization"],
             "app_name": data.get("app_name") or f"pathfinder-{data['organization']}",
@@ -125,7 +125,7 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
             request,
             "github/manifest_redirect.html",
             {
-                "manifest_url": manifest_url,
+                "manifest_url": f"{manifest_url}?{urlencode({'state': state})}",
                 "manifest_json": json.dumps(manifest),
                 "organization": org,
             },
@@ -152,6 +152,7 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
             app_name = get_default_app_name()
 
         callback_path = reverse("github:manifest_callback")
+        install_path = reverse("github:installation_callback")
         # Webhook URL uses the same mount point; no route defined yet
         webhook_path = callback_path.rsplit("manifest/callback/", 1)[0] + "webhook/"
 
@@ -163,6 +164,8 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
                 "active": True,
             },
             "redirect_url": f"{external_url}{callback_path}",
+            "setup_url": f"{external_url}{install_path}",
+            "setup_on_update": True,
             "callback_urls": [f"{external_url}{webhook_path}"],
             "public": False,
             "default_permissions": {
@@ -226,20 +229,19 @@ class GitHubManifestCallbackView(LoginRequiredMixin, OperatorRequiredMixin, View
         code = request.GET.get("code")
         state = request.GET.get("state")
 
+        # Retrieve and consume session data atomically
+        manifest_data = request.session.pop("github_manifest", None)
+        if not manifest_data:
+            messages.error(request, "Session expired. Please try connecting again.")
+            return redirect("github:create")
+
         # Validate state
-        stored_state = request.session.get("github_manifest_state")
-        if not state or state != stored_state:
+        if not state or state != manifest_data.get("state"):
             messages.error(request, "Invalid state parameter. Please try again.")
             return redirect("github:create")
 
         if not code:
             messages.error(request, "No authorization code received from GitHub.")
-            return redirect("github:create")
-
-        # Get stored data
-        manifest_data = request.session.get("github_manifest_data", {})
-        if not manifest_data:
-            messages.error(request, "Session expired. Please try again.")
             return redirect("github:create")
 
         # Exchange code for app credentials
@@ -253,15 +255,17 @@ class GitHubManifestCallbackView(LoginRequiredMixin, OperatorRequiredMixin, View
         conversion_url = f"{github_base}/app-manifests/{code}/conversions"
 
         try:
-            response = requests.post(
+            api_response = requests.post(
                 conversion_url,
                 headers={"Accept": "application/vnd.github+json"},
                 timeout=30,
             )
-            response.raise_for_status()
-            app_data = response.json()
-        except requests.RequestException as e:
-            messages.error(request, f"Failed to complete GitHub App setup: {e}")
+            api_response.raise_for_status()
+            app_data = api_response.json()
+        except requests.RequestException as error:
+            status = getattr(error.response, "status_code", None)
+            detail = f" (HTTP {status})" if status else ""
+            messages.error(request, f"Failed to complete GitHub App setup{detail}.")
             return redirect("github:create")
 
         # Extract credentials from response
@@ -298,12 +302,12 @@ class GitHubManifestCallbackView(LoginRequiredMixin, OperatorRequiredMixin, View
         connection.set_config(config)
         connection.save()
 
-        # Clean up session
-        del request.session["github_manifest_state"]
-        del request.session["github_manifest_data"]
+        # Store connection ID in session for installation callback matching
+        request.session["github_install"] = {
+            "connection_id": connection.id,
+        }
 
-        # Redirect to installation
-        # The app needs to be installed on the organization
+        # Redirect to GitHub App installation
         github_web = manifest_data.get("base_url", "").rstrip("/") or "https://github.com"
         if "api" in github_web:
             github_web = github_web.replace("api.", "").replace("/api/v3", "")
@@ -311,17 +315,16 @@ class GitHubManifestCallbackView(LoginRequiredMixin, OperatorRequiredMixin, View
         app_slug = app_data.get("slug", "")
         if app_slug:
             install_url = f"{github_web}/apps/{app_slug}/installations/new"
-            messages.info(
-                request,
-                f"GitHub App created! Please install it on your organization to complete setup. "
-                f'<a href="{install_url}" target="_blank" class="underline">Install App</a>',
-            )
-        else:
-            messages.success(
-                request,
-                "GitHub App created successfully. Please install it on your organization.",
-            )
+            owner_id = app_data.get("owner", {}).get("id")
+            if owner_id:
+                install_url += f"?target_id={owner_id}"
+            return redirect(install_url)
 
+        # No slug — can't redirect; show message instead
+        messages.success(
+            request,
+            "GitHub App created successfully. Please install it on your organization.",
+        )
         return redirect("connections:detail", connection_name=connection.name)
 
 
@@ -331,21 +334,15 @@ class GitHubInstallationCallbackView(LoginRequiredMixin, OperatorRequiredMixin, 
     def get(self, request):
         installation_id = request.GET.get("installation_id")
 
-        if not installation_id:
-            messages.error(request, "No installation ID received.")
-            return redirect("connections:list")
+        # Retrieve and consume session data
+        install_data = request.session.pop("github_install", None)
 
-        # Find the pending connection for this installation
-        # This is tricky - we need to match by app_id or other criteria
-        # For now, we'll update the most recent pending GitHub connection
-        try:
-            connection = (
-                IntegrationConnection.objects.filter(plugin_name="github", status="pending")
-                .order_by("-created_at")
-                .first()
-            )
-
-            if connection:
+        if installation_id and install_data:
+            # Best case: session + installation_id — match by stored connection ID
+            try:
+                connection = IntegrationConnection.objects.get(
+                    id=install_data["connection_id"],
+                )
                 config = connection.get_config()
                 config["installation_id"] = installation_id
                 connection.set_config(config)
@@ -353,7 +350,16 @@ class GitHubInstallationCallbackView(LoginRequiredMixin, OperatorRequiredMixin, 
                 connection.save()
                 messages.success(request, "GitHub App installed successfully on your organization!")
                 return redirect("connections:detail", connection_name=connection.name)
-        except Exception as e:
-            messages.error(request, f"Error completing installation: {e}")
+            except IntegrationConnection.DoesNotExist:
+                messages.error(request, "Connection record not found. Please try again.")
+                return redirect("connections:list")
+        elif installation_id:
+            # No session but have installation_id — webhook should handle it
+            messages.info(
+                request,
+                "Installation received. The connection will be updated shortly.",
+            )
+        else:
+            messages.info(request, "App setup in progress. Installation will complete via webhook.")
 
         return redirect("connections:list")
