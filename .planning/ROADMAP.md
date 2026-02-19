@@ -31,6 +31,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6.6: Sync Operations and Logging** (INSERTED) - Webhook and scheduled sync triggers, sync operation logging, branch protection validation
 - [x] **Phase 6.7: Version Lifecycle Automation** (INSERTED) - Auto-update manifests on patch publish, retention cleanup for old versions
 - [ ] **Phase 6.8: Manifest and Plugin Interface** (INSERTED) - Artifact discovery via CI plugin, CI variables, step validation API, runtime derivation from steps
+- [ ] **Phase 6.9: Step Output Wiring** (INSERTED) - Steps declare outputs, composer wires outputs to inputs, engine-native references
+- [ ] **Phase 6.10: Pluggable Webhook Routing Framework** (INSERTED) - Core webhook dispatcher with plugin-supplied route registration
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
 ## Phase Details
@@ -270,6 +272,16 @@ Plans:
 - [x] 06-01-PLAN.md — Build model, webhook endpoint with HMAC auth, poll_build_details task, service activation
 - [x] 06-02-PLAN.md — Build history UI with table layout, filtering, pagination, HTMX auto-refresh
 
+### Phase 06.10: Pluggable Webhook Routing Framework (INSERTED)
+
+**Goal:** Refactor webhook handling from hardcoded core endpoints into a pluggable framework where plugins own their webhook handlers. Core provides routing infrastructure; current /webhooks/build/ and /webhooks/steps-repo/ are GitHub-specific and must move into the GitHub plugin.
+**Depends on:** Phase 6
+**Plans:** 2 plans
+
+Plans:
+- [ ] 06.10-01-PLAN.md -- Move webhook handlers to GitHub plugin, register /integrations/github/webhook/, add get_webhook_url() to plugin interface
+- [ ] 06.10-02-PLAN.md -- Update all hardcoded webhook URL references to use plugin-aware resolution
+
 ### Phase 06.9: Step Output Wiring (INSERTED)
 
 **Goal:** Steps declare outputs in the catalog (parsed during sync). The workflow composer lets users wire one step's output to another step's input via copy-paste of engine-native references. CI plugins translate these references to engine-native syntax during manifest generation.
@@ -437,7 +449,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 6.3 -> 6.4 -> 6.5 -> 6.6 -> 6.7 -> 6.8 -> 6.9 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 6.3 -> 6.4 -> 6.5 -> 6.6 -> 6.7 -> 6.8 -> 6.9 -> 6.10 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -461,8 +473,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5
 | 6.7 Version Lifecycle Automation (INSERTED) | 0/3 | Not started | - |
 | 6.8 Manifest and Plugin Interface (INSERTED) | 0/4 | Not started | - |
 | 6.9 Step Output Wiring (INSERTED) | 0/2 | Not started | - |
+| 6.10 Pluggable Webhook Routing Framework (INSERTED) | 0/0 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-02-17 (Phase 6.9 planned - 2 plans for step output wiring)*
+*Last updated: 2026-02-19 (Phase 6.10 inserted - Pluggable Webhook Routing Framework)*
