@@ -21,9 +21,11 @@ jobs:
         known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
 
     - name: Copy .env file
+      env:
+        ENV_FILE: ${{ secrets.ENV_FILE }}
       run: |
         # Create consolidated .env file to the project root
-        printf "%s" "${{ secrets.ENV_FILE }}" > .env
+        printf "%s" "$ENV_FILE" > .env
 
     - name: Deploy to server
       env:
