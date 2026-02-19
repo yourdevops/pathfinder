@@ -44,7 +44,7 @@ services:
       dockerfile: Dockerfile
     container_name: pathfinder-worker
     entrypoint: []
-    command: uv run python manage.py db_worker --queue-name "*"
+    command: uv run python manage.py db_worker --queue-name "*" --verbosity 2
     environment:
       - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
@@ -64,7 +64,7 @@ services:
       dockerfile: Dockerfile
     container_name: pathfinder-scheduler
     entrypoint: []
-    command: uv run python manage.py run_task_scheduler
+    command: uv run python manage.py run_task_scheduler --verbosity 2
     environment:
       - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}

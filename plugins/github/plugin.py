@@ -497,15 +497,29 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
         """
         try:
             g = self._get_github_client(config)
-            # Get authenticated user and rate limit to verify connection
-            user = g.get_user()
             rate = g.get_rate_limit()
+
+            auth_type = config.get("auth_type", "app")
+            if auth_type == "token":
+                # PAT: GET /user works with user-scoped tokens
+                user = g.get_user()
+                identity = user.login
+            else:
+                # GitHub App: installation tokens can't call GET /user,
+                # use GET /app via the App JWT instead
+                app_id = int(config["app_id"])
+                private_key = config["private_key"]
+                base_url = config.get("base_url")
+                auth = Auth.AppAuth(app_id, private_key)
+                gi = GithubIntegration(auth=auth, base_url=base_url) if base_url else GithubIntegration(auth=auth)
+                app = gi.get_app()
+                identity = f"{app.name}[bot]"
 
             return {
                 "status": "healthy",
-                "message": f"Connected as {user.login} ({rate.rate.remaining}/{rate.rate.limit} API calls/hour remaining)",
+                "message": f"Connected as {identity} ({rate.rate.remaining}/{rate.rate.limit} API calls/hour remaining)",
                 "details": {
-                    "authenticated_user": user.login,
+                    "authenticated_as": identity,
                     "rate_limit_remaining": rate.rate.remaining,
                     "rate_limit_limit": rate.rate.limit,
                     "rate_limit_reset": rate.rate.reset.isoformat() if rate.rate.reset else None,
