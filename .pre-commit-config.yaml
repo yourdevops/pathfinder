@@ -22,3 +22,29 @@ repos:
       - id: ruff-check
         args: [--fix]
       - id: ruff-format
+
+  # SAST
+  - repo: https://github.com/PyCQA/bandit
+    rev: "1.9.3"
+    hooks:
+      - id: bandit
+        args: ['-c', 'pyproject.toml']
+
+  - repo: https://github.com/semgrep/semgrep
+    rev: v1.152.0
+    hooks:
+      - id: semgrep
+        args: ['--config', 'p/python', '--config', 'p/django', '--error']
+
+  - repo: https://github.com/bridgecrewio/checkov
+    rev: 3.2.504
+    hooks:
+      - id: checkov
+        files: (Dockerfile|docker-compose\.ya?ml)$
+        types: [file]
+        args: ['--framework', 'dockerfile']
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.0
+    hooks:
+      - id: gitleaks

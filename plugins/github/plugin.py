@@ -350,7 +350,7 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
                     rules["requires_pr"] = True
                     if reviews.required_approving_review_count >= 1:
                         rules["required_reviews"] = True
-            except Exception:
+            except GithubException:
                 pass  # No PR requirement configured -- both remain False
 
             valid = all(rules.values())

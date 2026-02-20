@@ -2,6 +2,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect, render
 from django.urls import NoReverseMatch, reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 
 from ..forms import LoginForm
@@ -37,9 +38,11 @@ class LoginView(View):
             else:
                 request.session.set_expiry(86400)  # 1 day
 
-            # Redirect to next URL or default
+            # Redirect to next URL or default (validate to prevent open redirect)
             next_url = request.GET.get("next")
-            if next_url:
+            if next_url and url_has_allowed_host_and_scheme(
+                next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()
+            ):
                 return redirect(next_url)
             return redirect(get_default_redirect_url())
 
@@ -49,10 +52,11 @@ class LoginView(View):
 class LogoutView(LoginRequiredMixin, View):
     """Handle user logout."""
 
-    def get(self, request):
+    http_method_names = ["get", "post"]
+
+    def _do_logout(self, request):
         logout(request)
         return redirect("auth:login")
 
-    def post(self, request):
-        logout(request)
-        return redirect("auth:login")
+    get = _do_logout
+    post = _do_logout

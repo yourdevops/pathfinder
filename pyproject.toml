@@ -67,3 +67,7 @@ ignore = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["pathfinder"]
+
+[tool.bandit]
+exclude_dirs = ["tests"]
+skips = ["B101"]  # allow assert in non-test code (Django checks use it)

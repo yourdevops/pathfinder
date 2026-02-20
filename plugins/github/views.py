@@ -1,6 +1,7 @@
 """GitHub plugin views."""
 
 import json
+import re
 import secrets
 from urllib.parse import urlencode, urlparse
 
@@ -17,6 +18,8 @@ from core.permissions import OperatorRequiredMixin
 
 from .forms import GitHubConnectionForm
 from .plugin import GitHubPlugin
+
+_CREATE_URL_NAME = "github:create"
 
 
 def get_default_app_name():
@@ -95,7 +98,7 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
                 request,
                 "External URL must be configured for automatic GitHub App setup.",
             )
-            return redirect("github:create")
+            return redirect(_CREATE_URL_NAME)
 
         # Store pending connection data in session
         state = secrets.token_urlsafe(32)
@@ -218,7 +221,7 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
         connection.save()
 
         messages.success(request, f'GitHub connection "{connection.name}" created successfully.')
-        return redirect("connections:detail", connection_name=connection.name)
+        return redirect(_CREATE_URL_NAME, connection_name=connection.name)
 
 
 class GitHubManifestCallbackView(LoginRequiredMixin, OperatorRequiredMixin, View):
@@ -232,25 +235,52 @@ class GitHubManifestCallbackView(LoginRequiredMixin, OperatorRequiredMixin, View
         manifest_data = request.session.pop("github_manifest", None)
         if not manifest_data:
             messages.error(request, "Session expired. Please try connecting again.")
-            return redirect("github:create")
+            return redirect(_CREATE_URL_NAME)
 
         # Validate state
         if not state or state != manifest_data.get("state"):
             messages.error(request, "Invalid state parameter. Please try again.")
-            return redirect("github:create")
+            return redirect(_CREATE_URL_NAME)
 
-        if not code:
+        # Validate code format (alphanumeric) to prevent URL injection/SSRF
+        if not code or not re.fullmatch(r"[a-zA-Z0-9_\-]+", code):
             messages.error(request, "No authorization code received from GitHub.")
-            return redirect("github:create")
+            return redirect(_CREATE_URL_NAME)
 
         # Exchange code for app credentials
-        github_base = manifest_data.get("base_url", "").rstrip("/") or "https://api.github.com"
-        # Convert web URL to API URL if needed
-        if not github_base.startswith("https://api.") and "api/v3" not in github_base:
-            github_base = github_base.replace("https://", "https://api.")
-            if not github_base.endswith("/api/v3"):
-                github_base = f"{github_base}/api/v3" if "github.com" not in github_base else "https://api.github.com"
+        app_data = self._exchange_code(manifest_data, code)
+        if not app_data:
+            messages.error(request, "Failed to complete GitHub App setup.")
+            return redirect(_CREATE_URL_NAME)
 
+        # Extract and validate credentials
+        app_id = str(app_data.get("id", ""))
+        private_key = app_data.get("pem", "")
+        if not app_id or not private_key:
+            messages.error(request, "GitHub did not return valid app credentials.")
+            return redirect(_CREATE_URL_NAME)
+
+        connection = self._create_connection(request, manifest_data, app_data, app_id, private_key)
+
+        # Store connection ID in session for installation callback matching
+        request.session["github_install"] = {"connection_id": connection.id}
+
+        return self._redirect_to_installation(request, manifest_data, app_data, connection)
+
+    @staticmethod
+    def _get_api_base(base_url):
+        """Resolve a base URL to the GitHub API root."""
+        github_base = base_url.rstrip("/") or "https://api.github.com"
+        if github_base.startswith("https://api.") or "api/v3" in github_base:
+            return github_base
+        github_base = github_base.replace("https://", "https://api.")
+        if "github.com" in github_base:
+            return "https://api.github.com"
+        return f"{github_base}/api/v3"
+
+    def _exchange_code(self, manifest_data, code):
+        """Exchange the manifest code for app credentials via GitHub API."""
+        github_base = self._get_api_base(manifest_data.get("base_url", ""))
         conversion_url = f"{github_base}/app-manifests/{code}/conversions"
 
         try:
@@ -260,32 +290,20 @@ class GitHubManifestCallbackView(LoginRequiredMixin, OperatorRequiredMixin, View
                 timeout=30,
             )
             api_response.raise_for_status()
-            app_data = api_response.json()
-        except requests.RequestException as error:
-            status = getattr(error.response, "status_code", None)
-            detail = f" (HTTP {status})" if status else ""
-            messages.error(request, f"Failed to complete GitHub App setup{detail}.")
-            return redirect("github:create")
+            return api_response.json()
+        except requests.RequestException:
+            return None
 
-        # Extract credentials from response
-        app_id = str(app_data.get("id", ""))
-        private_key = app_data.get("pem", "")
-        webhook_secret = app_data.get("webhook_secret", "")
-        client_id = app_data.get("client_id", "")
-        client_secret = app_data.get("client_secret", "")
-
-        if not app_id or not private_key:
-            messages.error(request, "GitHub did not return valid app credentials.")
-            return redirect("github:create")
-
-        # Create connection in pending status (needs installation)
+    @staticmethod
+    def _create_connection(request, manifest_data, app_data, app_id, private_key):
+        """Create an IntegrationConnection in pending status."""
         config = {
             "auth_type": "app",
             "app_id": app_id,
             "private_key": private_key,
-            "webhook_secret": webhook_secret,
-            "client_id": client_id,
-            "client_secret": client_secret,
+            "webhook_secret": app_data.get("webhook_secret", ""),
+            "client_id": app_data.get("client_id", ""),
+            "client_secret": app_data.get("client_secret", ""),
             "organization": manifest_data.get("organization", ""),
         }
         if manifest_data.get("base_url"):
@@ -295,18 +313,16 @@ class GitHubManifestCallbackView(LoginRequiredMixin, OperatorRequiredMixin, View
             name=manifest_data["name"],
             plugin_name="github",
             description=f"GitHub App for {manifest_data.get('organization', 'unknown')}",
-            status="pending",  # Pending until installed
+            status="pending",
             created_by=request.user.username,
         )
         connection.set_config(config)
         connection.save()
+        return connection
 
-        # Store connection ID in session for installation callback matching
-        request.session["github_install"] = {
-            "connection_id": connection.id,
-        }
-
-        # Redirect to GitHub App installation
+    @staticmethod
+    def _redirect_to_installation(request, manifest_data, app_data, connection):
+        """Redirect user to install the newly created GitHub App."""
         github_web = manifest_data.get("base_url", "").rstrip("/") or "https://github.com"
         if "api" in github_web:
             github_web = github_web.replace("api.", "").replace("/api/v3", "")
@@ -319,7 +335,6 @@ class GitHubManifestCallbackView(LoginRequiredMixin, OperatorRequiredMixin, View
                 install_url += f"?target_id={owner_id}"
             return redirect(install_url)
 
-        # No slug — can't redirect; show message instead
         messages.success(
             request,
             "GitHub App created successfully. Please install it on your organization.",
@@ -331,7 +346,9 @@ class GitHubInstallationCallbackView(LoginRequiredMixin, OperatorRequiredMixin, 
     """Handle callback after GitHub App installation."""
 
     def get(self, request):
-        installation_id = request.GET.get("installation_id")
+        raw_installation_id = request.GET.get("installation_id")
+        # Validate installation_id is numeric to prevent injection
+        installation_id = raw_installation_id if raw_installation_id and raw_installation_id.isdigit() else None
 
         # Retrieve and consume session data
         install_data = request.session.pop("github_install", None)

@@ -52,7 +52,9 @@ USER ssp
 # Collect static files (build-time only, real SECRET_KEY injected at runtime)
 RUN DJANGO_SECRET_KEY=build-time-placeholder uv run python manage.py collectstatic --noinput
 
-# Expose port
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"
+
 EXPOSE 8000
 
 # Run via entrypoint (handles migrations), then CMD

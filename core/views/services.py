@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
+from django.utils.html import format_html
 from django.views.decorators.vary import vary_on_headers
 from django.views.generic import ListView, TemplateView, View
 from formtools.wizard.views import SessionWizardView
@@ -24,6 +25,7 @@ from core.models import (
     Build,
     GroupMembership,
     Project,
+    ProjectCIConfig,
     ProjectMembership,
     Service,
     get_available_workflows_for_project,
@@ -215,7 +217,7 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
                 try:
                     ci_config = project.ci_config
                     allow_drafts = ci_config.allow_draft_workflows
-                except Exception:
+                except ProjectCIConfig.DoesNotExist:
                     pass
 
                 versions_map = {}
@@ -489,7 +491,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
             try:
                 ci_config = self.project.ci_config
                 allow_drafts = ci_config.allow_draft_workflows
-            except Exception:
+            except ProjectCIConfig.DoesNotExist:
                 pass
 
             # Build the map: {workflow_id_str: [{id, version, status, label, author}, ...]}
@@ -676,12 +678,21 @@ class ServiceScaffoldStatusView(LoginRequiredMixin, View):
         status_label = service.get_scaffold_status_display()
 
         if service.scaffold_status in ("pending", "running"):
-            html = f'''<span class="px-2 py-1 text-xs rounded {status_class}"
-                      hx-get="{request.path}"
-                      hx-trigger="every 3s"
-                      hx-swap="outerHTML">Scaffold: {status_label}</span>'''
+            html = format_html(
+                '<span class="px-2 py-1 text-xs rounded {}"'
+                ' hx-get="{}"'
+                ' hx-trigger="every 3s"'
+                ' hx-swap="outerHTML">Scaffold: {}</span>',
+                status_class,
+                request.path,
+                status_label,
+            )
         else:
-            html = f'<span class="px-2 py-1 text-xs rounded {status_class}">Scaffold: {status_label}</span>'
+            html = format_html(
+                '<span class="px-2 py-1 text-xs rounded {}">Scaffold: {}</span>',
+                status_class,
+                status_label,
+            )
 
         return HttpResponse(html)
 

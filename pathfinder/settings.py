@@ -24,7 +24,7 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() in ("true", "1", "yes")
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 if not SECRET_KEY:
     if DEBUG:
-        SECRET_KEY = "django-insecure-dev-only-key-do-not-use-in-production"
+        SECRET_KEY = "django-insecure-dev-only-key-do-not-use-in-production"  # nosec B105
     else:
         raise ValueError("DJANGO_SECRET_KEY environment variable is required in production")
 
