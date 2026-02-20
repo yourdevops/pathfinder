@@ -23,10 +23,7 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() in ("true", "1", "yes")
 
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 if not SECRET_KEY:
-    if DEBUG:
-        SECRET_KEY = "django-insecure-dev-only-key-do-not-use-in-production"  # nosec B105
-    else:
-        raise ValueError("DJANGO_SECRET_KEY environment variable is required in production")
+    raise ValueError("DJANGO_SECRET_KEY environment variable is required")
 
 ALLOWED_HOSTS = [
     h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if h.strip()
@@ -57,7 +54,6 @@ INSTALLED_APPS = [
 # Tailwind CSS
 TAILWIND_APP_NAME = "theme"
 INTERNAL_IPS = ["127.0.0.1"]  # For django-browser-reload if used
-# NPM_BIN_PATH = '/usr/local/bin/npm'  # Uncomment if needed
 
 # Custom User Model - MUST be set before first migration
 AUTH_USER_MODEL = "core.User"
