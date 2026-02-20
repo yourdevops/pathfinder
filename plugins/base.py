@@ -295,6 +295,26 @@ class BasePlugin(ABC):
         field_lower = field_name.lower()
         return any(pattern in field_lower for pattern in self.sensitive_field_patterns)
 
+    def get_clone_credentials(self, config: dict[str, Any]) -> tuple[str, str] | None:
+        """Return credentials for HTTPS git clone operations.
+
+        Plugins override this to provide the appropriate credentials
+        for their auth type. Core code calls this without knowing the
+        auth mechanism, keeping core plugin-agnostic.
+
+        Args:
+            config: The decrypted configuration dictionary.
+
+        Returns:
+            (username, token) tuple for URL embedding, or None if unavailable.
+            The URL will be built as: https://{username}:{token}@host/path
+        """
+        # Default: PAT-style — token as username, empty password
+        for key in ("personal_token", "token", "access_token"):
+            if config.get(key):
+                return (config[key], "")
+        return None
+
     def get_webhook_url(self, external_url: str) -> str:
         """Return the full external webhook URL for this plugin.
 

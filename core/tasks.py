@@ -239,8 +239,10 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
         return result
 
     except Exception as e:
+        from core.git_utils import scrub_credentials
+
         # Mark as failed
-        error_msg = str(e)
+        error_msg = scrub_credentials(str(e))
         logger.exception(f"Failed to scaffold service {service_id}")
         service.scaffold_status = "failed"
         service.scaffold_error = error_msg
@@ -579,7 +581,9 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
         }
 
     except Exception as e:
-        error_msg = str(e)
+        from core.git_utils import scrub_credentials
+
+        error_msg = scrub_credentials(str(e))
         logger.exception(f"Failed to scan steps repository {repository_id}")
         repository.scan_status = "error"
         repository.scan_error = error_msg
@@ -593,7 +597,7 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
                 step_slug="",
                 action="skipped",
                 severity="error",
-                message=f"Scan failed: {e}",
+                message=f"Scan failed: {error_msg}",
             )
         return {"error": error_msg}
 

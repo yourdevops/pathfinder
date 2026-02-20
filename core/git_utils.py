@@ -67,6 +67,15 @@ def parse_git_url(url: str) -> dict | None:
         return None
 
 
+def scrub_credentials(text: str) -> str:
+    """Strip embedded credentials from HTTPS git URLs in text.
+
+    Replaces patterns like https://user:token@host/... and
+    https://token@host/... with https://***@host/...
+    """
+    return re.sub(r"https://[^@]+@", "https://***@", text)
+
+
 def build_authenticated_git_url(git_url: str, connection=None) -> str:
     """
     Build authenticated Git URL with embedded credentials.
@@ -89,46 +98,48 @@ def build_authenticated_git_url(git_url: str, connection=None) -> str:
     owner = parsed_url["owner"]
     repo = parsed_url["repo"]
 
-    config = connection.get_config()
-    auth_type = config.get("auth_type", "token")
-
-    token = None
-
-    if auth_type == "token":
-        # Personal Access Token
-        token = config.get("personal_token")
-    elif auth_type == "app":
-        # GitHub App - need to get installation token
-        plugin = connection.get_plugin()
-        if plugin:
-            try:
-                # Get GitHub client which handles installation token
-                github_client = plugin._get_github_client_app(config)
-                # The installation token is in the requester
-                token = github_client.requester._Requester__authorizationHeader.split(" ")[-1]
-            except Exception as e:
-                logger.warning(f"Failed to get GitHub App installation token: {e}")
-                # Fall back to public access
-                return git_url
-    else:
-        # Unknown auth type, try to use any token-like field
-        for key in ("personal_token", "token", "access_token"):
-            if config.get(key):
-                token = config.get(key)
-                break
-
-    if not token:
+    plugin = connection.get_plugin()
+    if not plugin:
         return git_url
 
-    # Build authenticated URL
-    # Format: https://{token}@{host}/{owner}/{repo}.git
-    # For GitHub App: https://x-access-token:{token}@{host}/{owner}/{repo}.git
-    if auth_type == "app":
-        auth_url = f"https://x-access-token:{token}@{host}/{owner}/{repo}.git"
-    else:
-        auth_url = f"https://{token}@{host}/{owner}/{repo}.git"
+    config = connection.get_config()
 
-    return auth_url
+    try:
+        credentials = plugin.get_clone_credentials(config)
+    except Exception as e:
+        logger.warning(f"Failed to get clone credentials: {e}")
+        return git_url
+
+    if not credentials:
+        return git_url
+
+    username, password = credentials
+    if password:
+        return f"https://{username}:{password}@{host}/{owner}/{repo}.git"
+    return f"https://{username}@{host}/{owner}/{repo}.git"
+
+
+def _clone_repo(git_url: str, branch: str, auth_url: str | None, prefix: str, **kwargs):
+    """Internal clone helper with credential scrubbing on errors."""
+    temp_dir = tempfile.mkdtemp(prefix=prefix)
+
+    try:
+        url_to_clone = auth_url or git_url
+        repo = git.Repo.clone_from(url_to_clone, temp_dir, branch=branch, single_branch=True, **kwargs)
+        return repo, temp_dir
+
+    except git.GitCommandError as e:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        raise git.GitCommandError(
+            scrub_credentials(str(e.command)),
+            e.status,
+            scrub_credentials(e.stderr or ""),
+            scrub_credentials(e.stdout or ""),
+        ) from None
+
+    except Exception:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        raise
 
 
 def clone_repo_shallow(git_url: str, branch: str = "main", auth_url: str | None = None, depth: int = 1):
@@ -147,20 +158,8 @@ def clone_repo_shallow(git_url: str, branch: str = "main", auth_url: str | None 
     Raises:
         git.GitCommandError: If clone fails
     """
-    temp_dir = tempfile.mkdtemp(prefix="ssp_clone_")
-
-    try:
-        url_to_clone = auth_url or git_url
-        logger.info(f"Cloning repository (branch={branch}, depth={depth})")
-
-        repo = git.Repo.clone_from(url_to_clone, temp_dir, depth=depth, branch=branch, single_branch=True)
-
-        return repo, temp_dir
-
-    except Exception:
-        # Clean up on failure
-        shutil.rmtree(temp_dir, ignore_errors=True)
-        raise
+    logger.info(f"Cloning repository (branch={branch}, depth={depth})")
+    return _clone_repo(git_url, branch, auth_url, prefix="ssp_clone_", depth=depth)
 
 
 def clone_repo_full(git_url: str, branch: str = "main", auth_url: str | None = None):
@@ -181,20 +180,8 @@ def clone_repo_full(git_url: str, branch: str = "main", auth_url: str | None = N
     Raises:
         git.GitCommandError: If clone fails
     """
-    temp_dir = tempfile.mkdtemp(prefix="ssp_clone_full_")
-
-    try:
-        url_to_clone = auth_url or git_url
-        logger.info(f"Full cloning repository (branch={branch})")
-
-        repo = git.Repo.clone_from(url_to_clone, temp_dir, branch=branch, single_branch=True)
-
-        return repo, temp_dir
-
-    except Exception:
-        # Clean up on failure
-        shutil.rmtree(temp_dir, ignore_errors=True)
-        raise
+    logger.info(f"Full cloning repository (branch={branch})")
+    return _clone_repo(git_url, branch, auth_url, prefix="ssp_clone_full_")
 
 
 def read_manifest_from_repo(repo_path: str) -> dict:
@@ -527,6 +514,14 @@ def scaffold_new_repository(service, connection, template_temp_dir: str, variabl
             "repo_url": repo_url,
         }
 
+    except git.GitCommandError as e:
+        raise git.GitCommandError(
+            scrub_credentials(str(e.command)),
+            e.status,
+            scrub_credentials(e.stderr or ""),
+            scrub_credentials(e.stdout or ""),
+        ) from None
+
     finally:
         # Cleanup
         shutil.rmtree(repo_temp_dir, ignore_errors=True)
@@ -630,6 +625,14 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str, va
             "status": "success",
             "pr_url": pr_url,
         }
+
+    except git.GitCommandError as e:
+        raise git.GitCommandError(
+            scrub_credentials(str(e.command)),
+            e.status,
+            scrub_credentials(e.stderr or ""),
+            scrub_credentials(e.stdout or ""),
+        ) from None
 
     finally:
         # Cleanup

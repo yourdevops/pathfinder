@@ -446,6 +446,27 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
             return Github(auth=Auth.Token(token), base_url=base_url)
         return Github(auth=Auth.Token(token))
 
+    def get_clone_credentials(self, config: dict[str, Any]) -> tuple[str, str] | None:
+        """Return credentials for HTTPS git clone operations."""
+        auth_type = config.get("auth_type", "token")
+        if auth_type == "app":
+            token = self._get_installation_token(config)
+            return ("x-access-token", token)
+        pat = config.get("personal_token")
+        return (pat, "") if pat else None
+
+    def _get_installation_token(self, config: dict[str, Any]) -> str:
+        """Get a short-lived installation access token for GitHub App."""
+        app_id = int(config["app_id"])
+        private_key = config["private_key"]
+        installation_id = int(config["installation_id"])
+        base_url = config.get("base_url")
+
+        auth = Auth.AppAuth(app_id, private_key)
+        gi = GithubIntegration(auth=auth, base_url=base_url) if base_url else GithubIntegration(auth=auth)
+        installation_auth = gi.get_access_token(installation_id)
+        return installation_auth.token
+
     def _get_github_client_app(self, config: dict[str, Any]) -> Github:
         """
         Get authenticated GitHub client for GitHub App installation.
@@ -456,24 +477,11 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
         Returns:
             Authenticated Github client instance.
         """
-        app_id = int(config["app_id"])
-        private_key = config["private_key"]
-        installation_id = int(config["installation_id"])
+        token = self._get_installation_token(config)
         base_url = config.get("base_url")
-
-        # Create App authentication
-        auth = Auth.AppAuth(app_id, private_key)
-
-        # Get GithubIntegration for installation token
-        gi = GithubIntegration(auth=auth, base_url=base_url) if base_url else GithubIntegration(auth=auth)
-
-        # Get installation access token
-        installation_auth = gi.get_access_token(installation_id)
-
-        # Create Github client with installation token
         if base_url:
-            return Github(auth=Auth.Token(installation_auth.token), base_url=base_url)
-        return Github(auth=Auth.Token(installation_auth.token))
+            return Github(auth=Auth.Token(token), base_url=base_url)
+        return Github(auth=Auth.Token(token))
 
     def _get_github_client(self, config: dict[str, Any]) -> Github:
         """
