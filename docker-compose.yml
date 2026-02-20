@@ -12,8 +12,6 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: pathfinder-portal
-    ports:
-      - "8000:8000"
     environment:
       - DJANGO_DEBUG=${DJANGO_DEBUG:-False}
       - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-dev-secret-key-change-in-production}
