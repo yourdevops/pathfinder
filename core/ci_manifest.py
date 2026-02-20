@@ -124,6 +124,114 @@ def _parse_constraint(constraint_str: str):
     return parsed
 
 
+def _is_tighter_lower(current, ver, inclusive):
+    """Return True if (ver, inclusive) is a tighter lower bound than current."""
+    if current is None:
+        return True
+    cur_ver, cur_inc = current
+    if ver > cur_ver:
+        return True
+    return ver == cur_ver and not cur_inc and inclusive
+
+
+def _is_tighter_upper(current, ver, inclusive):
+    """Return True if (ver, inclusive) is a tighter upper bound than current."""
+    if current is None:
+        return True
+    cur_ver, cur_inc = current
+    if ver < cur_ver:
+        return True
+    return ver == cur_ver and not cur_inc and inclusive
+
+
+_CONFLICT = object()  # sentinel for exact-version conflicts
+
+
+def _apply_exact(ver, lower, upper, exact):
+    if exact is not None and exact != ver:
+        return lower, upper, _CONFLICT
+    return lower, upper, ver
+
+
+def _apply_compatible(ver, lower, upper, exact):
+    # ~=3.10 means >=3.10, <(next major)
+    if _is_tighter_lower(lower, ver, True):
+        lower = (ver, True)
+    next_major = semver.Version(ver.major + 1)
+    if _is_tighter_upper(upper, next_major, False):
+        upper = (next_major, False)
+    return lower, upper, exact
+
+
+def _apply_bound(op, ver, lower, upper, exact):
+    bound_ops = {
+        ">=": (True, True),  # (is_lower, inclusive)
+        ">": (True, False),
+        "<=": (False, True),
+        "<": (False, False),
+    }
+    is_lower, inclusive = bound_ops[op]
+    if is_lower and _is_tighter_lower(lower, ver, inclusive):
+        lower = (ver, inclusive)
+    elif not is_lower and _is_tighter_upper(upper, ver, inclusive):
+        upper = (ver, inclusive)
+    return lower, upper, exact
+
+
+def _apply_constraint(op, ver, lower, upper, exact):
+    """Apply a single (op, ver) constraint, returning updated (lower, upper, exact).
+
+    Returns exact=_CONFLICT sentinel if == constraints conflict.
+    """
+    if op == "==":
+        return _apply_exact(ver, lower, upper, exact)
+    if op == "!=":
+        return lower, upper, exact
+    if op == "~=":
+        return _apply_compatible(ver, lower, upper, exact)
+    return _apply_bound(op, ver, lower, upper, exact)
+
+
+def _validate_exact(exact, lower, upper):
+    """Check exact version fits within bounds. Returns formatted string or None."""
+    if lower is not None:
+        lb_ver, lb_inc = lower
+        if exact < lb_ver or (exact == lb_ver and not lb_inc):
+            return None
+    if upper is not None:
+        ub_ver, ub_inc = upper
+        if exact > ub_ver or (exact == ub_ver and not ub_inc):
+            return None
+    return f"=={exact}"
+
+
+def _bounds_conflict(lower, upper):
+    """Return True if lower and upper bounds are mutually exclusive."""
+    if lower is None or upper is None:
+        return False
+    lb_ver, lb_inc = lower
+    ub_ver, ub_inc = upper
+    if lb_ver > ub_ver:
+        return True
+    return lb_ver == ub_ver and not (lb_inc and ub_inc)
+
+
+def _format_bounds(lower, upper):
+    """Build the result constraint string from lower/upper bounds."""
+    parts = []
+    if lower is not None:
+        lb_ver, lb_inc = lower
+        ver_str = _format_version(lb_ver)
+        parts.append(f"{'>=' if lb_inc else '>'}{ver_str}")
+    if upper is not None:
+        ub_ver, ub_inc = upper
+        ver_str = _format_version(ub_ver)
+        parts.append(f"{'<=' if ub_inc else '<'}{ver_str}")
+    if not parts:
+        return "*"
+    return ",".join(parts)
+
+
 def intersect_semver_constraints(constraint_strings: list[str]) -> str | None:
     """Intersect a list of semver constraint strings for a single runtime family.
 
@@ -134,85 +242,22 @@ def intersect_semver_constraints(constraint_strings: list[str]) -> str | None:
         The tightest combined constraint string, or None if constraints conflict.
         If all are wildcards, returns "*".
     """
-    # Filter out wildcards
     non_wildcard = [c for c in constraint_strings if c.strip() != "*"]
     if not non_wildcard:
         return "*"
 
-    lower_bound = None  # (version, inclusive)
-    upper_bound = None  # (version, inclusive)
-    exact = None
-
+    lower, upper, exact = None, None, None
     for cs in non_wildcard:
-        parsed = _parse_constraint(cs)
-        for op, ver in parsed:
-            if op == "==":
-                if exact is not None and exact != ver:
-                    return None  # Conflicting exact versions
-                exact = ver
-            elif op == "!=":
-                # Can't easily combine != constraints in a simple string; skip for now
-                continue
-            elif op == "~=":
-                # ~=3.10 means >=3.10, <4.0
-                if lower_bound is None or ver > lower_bound[0] or (ver == lower_bound[0] and not lower_bound[1]):
-                    lower_bound = (ver, True)
-                next_major = semver.Version(ver.major + 1)
-                if (
-                    upper_bound is None
-                    or next_major < upper_bound[0]
-                    or (next_major == upper_bound[0] and not upper_bound[1])
-                ):
-                    upper_bound = (next_major, False)
-            elif op == ">=":
-                if lower_bound is None or ver > lower_bound[0] or (ver == lower_bound[0] and not lower_bound[1]):
-                    lower_bound = (ver, True)
-            elif op == ">":
-                if lower_bound is None or ver > lower_bound[0] or (ver == lower_bound[0]):
-                    lower_bound = (ver, False)
-            elif op == "<=":
-                if upper_bound is None or ver < upper_bound[0] or (ver == upper_bound[0] and not upper_bound[1]):
-                    upper_bound = (ver, True)
-            elif op == "<":
-                if upper_bound is None or ver < upper_bound[0] or (ver == upper_bound[0]):
-                    upper_bound = (ver, False)
+        for op, ver in _parse_constraint(cs):
+            lower, upper, exact = _apply_constraint(op, ver, lower, upper, exact)
+            if exact is _CONFLICT:
+                return None
 
-    # If we have an exact version, check it fits the bounds
     if exact is not None:
-        if lower_bound:
-            lb_ver, lb_inc = lower_bound
-            if exact < lb_ver or (exact == lb_ver and not lb_inc):
-                return None
-        if upper_bound:
-            ub_ver, ub_inc = upper_bound
-            if exact > ub_ver or (exact == ub_ver and not ub_inc):
-                return None
-        return f"=={exact}"
-
-    # Check bounds don't conflict
-    if lower_bound and upper_bound:
-        lb_ver, lb_inc = lower_bound
-        ub_ver, ub_inc = upper_bound
-        if lb_ver > ub_ver:
-            return None
-        if lb_ver == ub_ver and not (lb_inc and ub_inc):
-            return None
-
-    # Build result string
-    parts = []
-    if lower_bound:
-        lb_ver, lb_inc = lower_bound
-        # Format version without trailing .0.0 for cleaner display
-        ver_str = _format_version(lb_ver)
-        parts.append(f"{'>=' if lb_inc else '>'}{ver_str}")
-    if upper_bound:
-        ub_ver, ub_inc = upper_bound
-        ver_str = _format_version(ub_ver)
-        parts.append(f"{'<=' if ub_inc else '<'}{ver_str}")
-
-    if not parts:
-        return "*"
-    return ",".join(parts)
+        return _validate_exact(exact, lower, upper)
+    if _bounds_conflict(lower, upper):
+        return None
+    return _format_bounds(lower, upper)
 
 
 def _format_version(ver: semver.Version) -> str:
@@ -224,6 +269,26 @@ def _format_version(ver: semver.Version) -> str:
     return str(ver)
 
 
+def _collect_family_constraints(steps):
+    """Collect per-family constraints from steps (model instances or dicts)."""
+    family_constraints: dict[str, list[tuple[str, str]]] = {}
+
+    for step in steps:
+        if hasattr(step, "runtime_constraints"):
+            rc, name = step.runtime_constraints, step.name
+        else:
+            rc, name = step.get("runtime_constraints", {}), step.get("name", "unknown")
+
+        if not rc or rc == {"*": "*"}:
+            continue
+
+        for family, constraint in rc.items():
+            if family != "*":
+                family_constraints.setdefault(family, []).append((str(constraint), name))
+
+    return family_constraints
+
+
 def compute_runtime_constraints(steps) -> dict:
     """Compute derived runtime constraints from a list of CIStep instances.
 
@@ -233,32 +298,7 @@ def compute_runtime_constraints(steps) -> dict:
     Returns:
         Dict with 'constraints' (family -> range) and 'conflicts' (list of conflict details).
     """
-    # Collect constraints per runtime family, with step attribution
-    family_constraints: dict[str, list[tuple[str, str]]] = {}  # family -> [(constraint, step_name)]
-
-    for step in steps:
-        if hasattr(step, "runtime_constraints"):
-            rc = step.runtime_constraints
-            name = step.name
-        else:
-            rc = step.get("runtime_constraints", {})
-            name = step.get("name", "unknown")
-
-        if not rc:
-            continue
-
-        # Wildcard steps are runtime-agnostic, skip
-        if rc == {"*": "*"}:
-            continue
-
-        for family, constraint in rc.items():
-            if family == "*":
-                continue
-            if family not in family_constraints:
-                family_constraints[family] = []
-            family_constraints[family].append((str(constraint), name))
-
-    # Intersect constraints per family
+    family_constraints = _collect_family_constraints(steps)
     constraints = {}
     conflicts = []
 

@@ -14,9 +14,13 @@ import os
 from pathlib import Path
 
 from django.utils.csp import CSP
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load .env (does not override existing OS/CI env vars)
+load_dotenv(BASE_DIR / ".env")
 
 # Security settings driven by DEBUG (secure by default)
 DEBUG = os.environ.get("DJANGO_DEBUG", "False").lower() in ("true", "1", "yes")

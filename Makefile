@@ -5,7 +5,7 @@ PID_DIR := .pids
 WEB_PID := $(PID_DIR)/web.pid
 WORKER_PID := $(PID_DIR)/worker.pid
 
-.PHONY: run stop clean help venv migrate build
+.PHONY: run stop clean help venv migrate build test
 
 help:
 	@echo "Pathfinder Development Commands"
@@ -47,6 +47,9 @@ stop:
 clean: stop
 	@rm -rf $(PID_DIR)
 	@echo "Cleaned up"
+
+test: venv
+	@uv run pytest
 
 run: venv $(PID_DIR) stop
 	@./scripts/run-dev.sh "uv run python" $(WEB_PID) $(WORKER_PID)

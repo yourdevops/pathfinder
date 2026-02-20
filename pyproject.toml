@@ -8,37 +8,39 @@ dependencies = [
     "asgiref==3.11.0",
     "Django==6.0.1",
     "django-auditlog==3.4.1",
-    "django-htmx>=1.21.0",
+    "django-htmx>=1.27.0",
     "django-tailwind==4.4.2",
     "pytailwindcss==0.3.0",
     "python-dateutil==2.9.0.post0",
     "six==1.17.0",
     "sqlparse==0.5.5",
     # Phase 3: External Integrations
-    "cryptography>=44.0.0",
-    "PyGithub>=2.5.0",
+    "cryptography>=46.0.5",
+    "PyGithub>=2.8.1",
     "docker>=7.1.0",
-    "django-tasks[database]>=0.4.0",
-    "django-scheduled-tasks>=0.2.0",
-    "django-formtools>=2.5.0",
+    "django-tasks>=0.11.0,<0.12",
+    "django-scheduled-tasks>=0.2.17",
+    "django-formtools>=2.5.1",
     # Phase 4: Blueprints
-    "semver>=3.0.0",
-    "GitPython>=3.1.0",
-    "PyYAML>=6.0.0",
+    "semver>=3.0.4",
+    "GitPython>=3.1.46",
+    "PyYAML>=6.0.3",
     # Phase 5: Services
-    "Jinja2>=3.1.0",
+    "Jinja2>=3.1.6",
     # Deployment
-    "gunicorn>=23.0.0",
-    "uvicorn[standard]>=0.34.0",
+    "gunicorn>=25.1.0",
+    "uvicorn[standard]>=0.41.0",
     "python-dotenv>=1.2.1",
     "whitenoise>=6.11.0",
 ]
 
 [dependency-groups]
 dev = [
-    "pre-commit>=4.0.0",
-    "ruff>=0.9.0",
-    "django-upgrade>=1.23.0",
+    "pre-commit>=4.5.1",
+    "ruff>=0.15.2",
+    "django-upgrade>=1.29.1",
+    "pytest>=9.0.2",
+    "pytest-django>=4.12.0",
 ]
 
 [tool.ruff]
@@ -67,6 +69,11 @@ ignore = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["pathfinder"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "pathfinder.settings"
+python_files = ["test_*.py"]
+pythonpath = ["."]
 
 [tool.bandit]
 exclude_dirs = ["tests"]
