@@ -56,7 +56,7 @@
     <div class="bg-dark-surface border border-dark-border rounded-lg p-6">
         <h2 class="text-lg font-semibold text-dark-text mb-6">{{ step_title }}</h2>
 
-        <form method="post" id="wizard-form">
+        <form method="post" id="wizard-form" x-data="validatedForm">
             {% csrf_token %}
             {{ wizard.management_form }}
 

@@ -294,10 +294,14 @@ class GroupCreateForm(forms.Form):
             attrs={
                 "class": "input-field w-full",
                 "placeholder": "Group name (DNS-compatible)",
+                "pattern": "[a-z0-9]([a-z0-9\\-]*[a-z0-9])?",
+                "title": "Lowercase letters, numbers, and hyphens only. No leading/trailing hyphens.",
+                "data-dns-slug": True,
+                "data-recommend-max": "20",
             }
         ),
         label="Name",
-        help_text="Lowercase letters, numbers, and hyphens only. Max 63 characters.",
+        help_text="Lowercase letters, numbers, and hyphens only.",
     )
     description = forms.CharField(
         required=False,
@@ -405,8 +409,10 @@ class ProjectCreateForm(forms.ModelForm):
                         " focus:ring-2 focus:ring-dark-accent"
                     ),
                     "placeholder": "my-project",
-                    "pattern": "[a-z0-9][a-z0-9-]*[a-z0-9]|[a-z0-9]",
+                    "pattern": "[a-z0-9]([a-z0-9\\-]*[a-z0-9])?",
                     "title": "Lowercase letters, numbers, and hyphens only",
+                    "data-dns-slug": True,
+                    "data-recommend-max": "20",
                 }
             ),
             "description": forms.Textarea(
@@ -511,6 +517,10 @@ class EnvironmentForm(forms.ModelForm):
                         " focus:ring-2 focus:ring-dark-accent"
                     ),
                     "placeholder": "e.g., dev, staging, production",
+                    "pattern": "[a-z0-9]([a-z0-9\\-]*[a-z0-9])?",
+                    "title": "Lowercase letters, numbers, and hyphens only. No leading/trailing hyphens.",
+                    "data-dns-slug": True,
+                    "data-recommend-max": "20",
                 }
             ),
             "description": forms.Textarea(

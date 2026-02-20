@@ -6,11 +6,10 @@
     <div>
         <label class="block text-sm font-medium text-dark-text mb-2">Project</label>
         {{ wizard.form.project }}
+        <p class="mt-1 text-sm text-red-400 {% if not wizard.form.project.errors %}hidden{% endif %}"
+           data-validation-for="{{ wizard.form.project.html_name }}">{{ wizard.form.project.errors.0 }}</p>
         {% if wizard.form.project.help_text %}
         <p class="mt-1 text-sm text-dark-muted">{{ wizard.form.project.help_text }}</p>
-        {% endif %}
-        {% if wizard.form.project.errors %}
-        <p class="mt-1 text-sm text-red-400">{{ wizard.form.project.errors.0 }}</p>
         {% endif %}
     </div>
 
@@ -18,10 +17,9 @@
     <div>
         <label class="block text-sm font-medium text-dark-text mb-2">Service Name</label>
         {{ wizard.form.name }}
+        <p class="mt-1 text-sm text-red-400 {% if not wizard.form.name.errors %}hidden{% endif %}"
+           data-validation-for="{{ wizard.form.name.html_name }}">{{ wizard.form.name.errors.0 }}</p>
         <p class="mt-1 text-sm text-dark-muted">{{ wizard.form.name.help_text }}</p>
-        {% if wizard.form.name.errors %}
-        <p class="mt-1 text-sm text-red-400">{{ wizard.form.name.errors.0 }}</p>
-        {% endif %}
     </div>
 </div>
 

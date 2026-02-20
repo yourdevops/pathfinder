@@ -20,7 +20,7 @@
             </div>
 
             <!-- Form -->
-            <form method="post" hx-post="{{ action_url }}" hx-swap="none">
+            <form method="post" hx-post="{{ action_url }}" hx-swap="none" x-data="validatedForm">
                 {% csrf_token %}
                 <div class="p-6 space-y-4">
                     <!-- Key -->
@@ -33,6 +33,7 @@
                                title="Start with a letter, use letters, numbers, and underscores only"
                                value="{{ edit_key|default:'' }}"
                                {% if editing %}readonly{% endif %}>
+                        <p class="text-red-400 text-sm mt-1 hidden" data-validation-for="key"></p>
                         <p class="text-dark-muted text-xs mt-1">{% if editing %}Key cannot be changed when editing.{% else %}Uppercase letters, numbers, and underscores. Must start with a letter.{% endif %}</p>
                         {% if locked_keys %}
                         <p class="text-amber-400 text-xs mt-1">

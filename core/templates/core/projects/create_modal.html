@@ -3,7 +3,8 @@
      x-data @keydown.escape.window="$el.remove()">
     <div class="absolute inset-0 bg-black/50" @click="$el.closest('#create-project-modal').remove()"></div>
     <div class="relative bg-dark-surface border border-dark-border rounded-lg shadow-xl w-full max-w-md mx-4">
-        <form hx-post="{% url 'projects:create' %}" hx-target="#create-project-modal" hx-swap="outerHTML">
+        <form hx-post="{% url 'projects:create' %}" hx-target="#create-project-modal" hx-swap="outerHTML"
+              x-data="validatedForm">
             {% csrf_token %}
             <div class="p-6">
                 <div class="flex items-center justify-between mb-4">
@@ -21,10 +22,9 @@
                     <div>
                         <label for="id_name" class="block text-sm font-medium text-dark-text mb-1">Name</label>
                         {{ form.name }}
-                        {% if form.name.errors %}
-                        <p class="mt-1 text-sm text-red-400">{{ form.name.errors.0 }}</p>
-                        {% endif %}
-                        <p class="mt-1 text-xs text-dark-muted">Lowercase letters, numbers, hyphens. Max 20 chars.</p>
+                        <p class="mt-1 text-sm text-red-400 {% if not form.name.errors %}hidden{% endif %}"
+                           data-validation-for="name">{{ form.name.errors.0 }}</p>
+                        <p class="mt-1 text-xs text-dark-muted">Lowercase letters, numbers, and hyphens only.</p>
                     </div>
 
                     <!-- Description Field -->

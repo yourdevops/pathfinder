@@ -33,7 +33,135 @@
                 }
             };
         });
-        Alpine.data('ciSelector', function(initialWf, initialVer, versionsMap) {
+        Alpine.data('validatedForm', function() {
+            return {
+                _touched: {},
+                _inputs: [],
+                init: function() {
+                    var self = this;
+                    var form = this.$el;
+                    form.setAttribute('novalidate', '');
+                    self._inputs = form.querySelectorAll('input[pattern], input[required], textarea[required], select[required]');
+                    var slugInputs = form.querySelectorAll('input[data-dns-slug]');
+                    slugInputs.forEach(function(input) {
+                        input.addEventListener('input', function() {
+                            var pos = input.selectionStart;
+                            var before = input.value;
+                            input.value = self._dnsSlugify(before);
+                            var diff = input.value.length - before.length;
+                            input.setSelectionRange(pos + diff, pos + diff);
+                        });
+                    });
+                    form.querySelectorAll('input[data-recommend-max]').forEach(function(input) {
+                        var rec = parseInt(input.getAttribute('data-recommend-max'));
+                        var max = parseInt(input.getAttribute('maxlength')) || 63;
+                        var name = input.name || input.id;
+                        var msgEl = form.querySelector('[data-validation-for="' + name + '"]');
+                        var counter = document.createElement('span');
+                        counter.className = 'text-xs shrink-0 ml-auto';
+                        self._updateCounter(counter, input.value.length, rec, max);
+                        if (msgEl) {
+                            var row = document.createElement('div');
+                            row.className = 'flex items-baseline gap-4 mt-1';
+                            msgEl.parentNode.insertBefore(row, msgEl);
+                            msgEl.classList.remove('mt-1');
+                            row.appendChild(msgEl);
+                            row.appendChild(counter);
+                        } else {
+                            counter.className = 'text-xs text-right mt-1';
+                            input.insertAdjacentElement('afterend', counter);
+                        }
+                        input.addEventListener('input', function() {
+                            self._updateCounter(counter, input.value.length, rec, max);
+                        });
+                    });
+                    self._inputs.forEach(function(input) {
+                        var name = input.name || input.id;
+                        input.addEventListener('blur', function() {
+                            self._touched[name] = true;
+                            self._validateField(input, true);
+                        });
+                        input.addEventListener('input', function() {
+                            if (self._touched[name]) {
+                                self._validateField(input, false);
+                            }
+                        });
+                    });
+                    form.addEventListener('submit', function(e) {
+                        var allValid = true;
+                        self._inputs.forEach(function(input) {
+                            var name = input.name || input.id;
+                            self._touched[name] = true;
+                            if (!self._validateField(input, true)) {
+                                allValid = false;
+                            }
+                        });
+                        if (!allValid) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }
+                    });
+                },
+                _updateCounter: function(el, len, rec, max) {
+                    el.classList.remove('text-red-400', 'text-amber-400', 'text-green-400', 'text-dark-muted');
+                    if (len >= max) {
+                        el.textContent = len + ' / ' + max;
+                        el.classList.add('text-red-400');
+                    } else if (len > rec) {
+                        el.textContent = len + ' / ' + max;
+                        el.classList.add('text-amber-400');
+                    } else if (len > 0) {
+                        el.textContent = len + ' / ' + rec;
+                        el.classList.add('text-green-400');
+                    } else {
+                        el.textContent = '0 / ' + rec;
+                        el.classList.add('text-dark-muted');
+                    }
+                },
+                _dnsSlugify: function(val) {
+                    return val.toLowerCase().replace(/[\s._]+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-{2,}/g, '-');
+                },
+                _patternMessage: function(input) {
+                    if (input.hasAttribute('data-dns-slug')) {
+                        var v = input.value;
+                        if (v.charAt(0) === '-') return 'Cannot start with a hyphen';
+                        if (v.charAt(v.length - 1) === '-') return 'Cannot end with a hyphen';
+                        return 'Only lowercase letters, numbers, and hyphens allowed';
+                    }
+                    return input.title || 'Invalid format';
+                },
+                _validateField: function(input, isBlur) {
+                    var name = input.name || input.id;
+                    var msgEl = this.$el.querySelector('[data-validation-for="' + name + '"]');
+                    if (!msgEl) return true;
+                    var valid = input.checkValidity();
+                    if (!valid && !isBlur && input.validity.patternMismatch && input.hasAttribute('data-dns-slug')) {
+                        valid = true;
+                    }
+                    if (valid) {
+                        msgEl.textContent = '';
+                        msgEl.classList.add('hidden');
+                        input.classList.remove('border-red-500');
+                    } else {
+                        var message = 'Invalid value';
+                        if (input.validity.valueMissing) {
+                            message = 'This field is required';
+                        } else if (input.validity.patternMismatch) {
+                            message = this._patternMessage(input);
+                        } else if (input.validity.tooLong) {
+                            message = 'Maximum ' + input.maxLength + ' characters';
+                        } else if (input.validity.tooShort) {
+                            message = 'Minimum ' + input.minLength + ' characters';
+                        }
+                        msgEl.textContent = message;
+                        msgEl.classList.remove('hidden');
+                        input.classList.add('border-red-500');
+                    }
+                    return valid;
+                }
+            };
+        });
+        Alpine.data('ciWorkflowSelector', function(initialWf, initialVer, versionsMap) {
             return {
                 wfVal: String(initialWf),
                 wfInitial: String(initialWf),

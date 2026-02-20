@@ -27,15 +27,14 @@
 
     <!-- Form -->
     <div class="bg-dark-surface border border-dark-border rounded-lg">
-        <form method="post" class="p-6 space-y-4">
+        <form method="post" class="p-6 space-y-4" x-data="validatedForm">
             {% csrf_token %}
 
             <div>
                 <label for="id_name" class="block text-sm font-medium text-dark-text mb-1">Name</label>
                 {{ form.name }}
-                {% if form.name.errors %}
-                <p class="text-red-400 text-sm mt-1">{{ form.name.errors.0 }}</p>
-                {% endif %}
+                <p class="text-red-400 text-sm mt-1 {% if not form.name.errors %}hidden{% endif %}"
+                   data-validation-for="name">{{ form.name.errors.0 }}</p>
                 <p class="text-dark-muted text-xs mt-1">Lowercase letters, numbers, and hyphens only. E.g., dev, staging, production</p>
             </div>
 

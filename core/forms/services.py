@@ -19,6 +19,7 @@ class ProjectStepForm(forms.Form):
 
     project = forms.ModelChoiceField(
         queryset=Project.objects.filter(status="active"),
+        empty_label="Select a project\u2026",
         widget=forms.Select(
             attrs={
                 "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
@@ -34,7 +35,10 @@ class ProjectStepForm(forms.Form):
             attrs={
                 "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
                 "placeholder": "my-service",
-                "pattern": "[a-z0-9][a-z0-9-]*[a-z0-9]|[a-z0-9]",
+                "pattern": "[a-z0-9]([a-z0-9\\-]*[a-z0-9])?",
+                "title": "Lowercase letters, numbers, and hyphens only. No leading/trailing hyphens.",
+                "data-dns-slug": True,
+                "data-recommend-max": "40",
             }
         ),
         label="Service Name",
@@ -210,17 +214,19 @@ class WorkflowSelectionForm(forms.Form):
         queryset=CIWorkflow.objects.none(),
         required=False,
         empty_label="No CI Workflow",
-        widget=forms.Select(
-            attrs={
-                "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text",
-            }
-        ),
+        widget=forms.HiddenInput(),
         label="CI Workflow",
         help_text="Select a CI Workflow to assign to this service. Only workflows approved for the project are shown.",
     )
 
+    version_id = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput(),
+    )
+
     def __init__(self, *args, project=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.project = project
         if project:
             self.fields["ci_workflow"].queryset = get_available_workflows_for_project(project)
             # Pre-select the project's default workflow if configured
@@ -230,6 +236,35 @@ class WorkflowSelectionForm(forms.Form):
                     self.fields["ci_workflow"].initial = ci_config.default_workflow
             except ProjectCIConfig.DoesNotExist:
                 pass
+
+    def clean_version_id(self):
+        from core.models import CIWorkflowVersion
+
+        version_id = self.cleaned_data.get("version_id", "")
+        if not version_id or version_id == "none":
+            return ""
+
+        ci_workflow = self.cleaned_data.get("ci_workflow")
+        if not ci_workflow:
+            return ""
+
+        try:
+            version = CIWorkflowVersion.objects.get(
+                id=int(version_id),
+                workflow=ci_workflow,
+                status__in=[CIWorkflowVersion.Status.AUTHORIZED, CIWorkflowVersion.Status.DRAFT],
+            )
+            # Check draft permission
+            if version.status == CIWorkflowVersion.Status.DRAFT and self.project:
+                try:
+                    ci_config = self.project.ci_config
+                    if not ci_config.allow_draft_workflows:
+                        raise forms.ValidationError("This project does not allow draft workflow versions.")
+                except ProjectCIConfig.DoesNotExist:
+                    raise forms.ValidationError("This project does not allow draft workflow versions.") from None
+            return str(version.id)
+        except (CIWorkflowVersion.DoesNotExist, ValueError):
+            raise forms.ValidationError("Invalid workflow version selected.") from None
 
 
 class ReviewStepForm(forms.Form):

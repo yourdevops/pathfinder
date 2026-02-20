@@ -14,7 +14,7 @@
         <h1 class="text-2xl font-bold mb-6">Create Group</h1>
 
         <div class="card">
-            <form method="post" class="space-y-6">
+            <form method="post" class="space-y-6" x-data="validatedForm">
                 {% csrf_token %}
 
                 <div>
@@ -22,9 +22,8 @@
                         {{ form.name.label }}
                     </label>
                     {{ form.name }}
-                    {% if form.name.errors %}
-                    <p class="mt-1 text-sm text-red-400">{{ form.name.errors.0 }}</p>
-                    {% endif %}
+                    <p class="mt-1 text-sm text-red-400 {% if not form.name.errors %}hidden{% endif %}"
+                       data-validation-for="name">{{ form.name.errors.0 }}</p>
                     <p class="mt-1 text-xs text-dark-muted">{{ form.name.help_text }}</p>
                 </div>
 

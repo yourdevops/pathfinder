@@ -10,7 +10,7 @@
         <div class="p-4 space-y-5">
             <!-- Row 1: Workflow + Version inline -->
             {% if can_edit %}
-            <form x-data="ciSelector('{{ ci_workflow.id|default:"" }}', '{{ service.ci_workflow_version_id|default:"none" }}', {{ workflow_versions_json }})"
+            <form x-data="ciWorkflowSelector('{{ ci_workflow.id|default:"" }}', '{{ service.ci_workflow_version_id|default:"none" }}', {{ workflow_versions_json }})"
                   method="post" action="{% url 'projects:service_assign_workflow' project_name=project.name service_name=service.name %}"
                   hx-post="{% url 'projects:service_assign_workflow' project_name=project.name service_name=service.name %}"
                   hx-target="#tab-content">

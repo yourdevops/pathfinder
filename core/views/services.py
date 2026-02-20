@@ -189,6 +189,8 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
             # Add workflow list and detail context for step 3
             project_data = self.get_cleaned_data_for_step("project")
             if project_data:
+                from core.models import CIWorkflowVersion, ProjectCIConfig
+
                 project = project_data.get("project") or self.project
                 workflows = get_available_workflows_for_project(project)
                 context["available_workflows"] = workflows
@@ -201,6 +203,59 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
                     }
                     for wf in workflows
                 }
+
+                # Build versions map for all available workflows (same logic as CI tab)
+                workflow_ids = list(workflows.values_list("id", flat=True))
+                all_versions_qs = CIWorkflowVersion.objects.filter(
+                    workflow_id__in=workflow_ids,
+                    status__in=[CIWorkflowVersion.Status.AUTHORIZED, CIWorkflowVersion.Status.DRAFT],
+                ).order_by("-published_at", "-created_at")
+
+                allow_drafts = False
+                try:
+                    ci_config = project.ci_config
+                    allow_drafts = ci_config.allow_draft_workflows
+                except Exception:
+                    pass
+
+                versions_map = {}
+                for wf_id in workflow_ids:
+                    versions_for_wf = []
+                    for v in all_versions_qs:
+                        if v.workflow_id != wf_id:
+                            continue
+                        if not allow_drafts and v.status == "draft":
+                            continue
+                        versions_for_wf.append(
+                            {
+                                "id": str(v.id),
+                                "version": v.version or "",
+                                "status": v.status,
+                                "label": "Draft"
+                                if v.status == "draft"
+                                else ("v" + v.version if v.version else "Draft"),
+                                "author": str(v.author) if v.author else "",
+                            }
+                        )
+                    versions_map[str(wf_id)] = versions_for_wf
+                context["workflow_versions_json"] = json.dumps(versions_map)
+
+                # Defaults: pre-select project's default workflow and its latest version
+                default_workflow_id = ""
+                default_version_id = "none"
+                try:
+                    ci_config = project.ci_config
+                    if ci_config.default_workflow:
+                        dw_id = str(ci_config.default_workflow_id)
+                        if dw_id in versions_map:
+                            default_workflow_id = dw_id
+                            versions_for_default = versions_map[dw_id]
+                            if versions_for_default:
+                                default_version_id = versions_for_default[0]["id"]
+                except ProjectCIConfig.DoesNotExist:
+                    pass
+                context["default_workflow_id"] = default_workflow_id
+                context["default_version_id"] = default_version_id
 
         elif self.steps.current == "review":
             # Compile all data for review
@@ -219,6 +274,21 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         service_name = project_data.get("name")
         ci_workflow = workflow_data.get("ci_workflow")
 
+        # Resolve version label for review display
+        version_id = workflow_data.get("version_id", "")
+        ci_workflow_version = None
+        ci_workflow_version_label = "Not pinned"
+        if version_id and version_id != "none" and ci_workflow:
+            from core.models import CIWorkflowVersion
+
+            try:
+                ci_workflow_version = CIWorkflowVersion.objects.get(id=int(version_id), workflow=ci_workflow)
+                ci_workflow_version_label = (
+                    "Draft" if ci_workflow_version.status == "draft" else f"v{ci_workflow_version.version}"
+                )
+            except (CIWorkflowVersion.DoesNotExist, ValueError):
+                pass
+
         return {
             "project": project,
             "service_name": service_name,
@@ -233,6 +303,8 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
             "env_vars": config_data.get("env_vars_json", []),
             "ci_workflow": ci_workflow,
             "ci_workflow_name": ci_workflow.name if ci_workflow else "None",
+            "ci_workflow_version": ci_workflow_version,
+            "ci_workflow_version_label": ci_workflow_version_label,
         }
 
     def done(self, form_list, form_dict, **kwargs):
@@ -270,6 +342,17 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         workflow_data = form_dict["workflow"].cleaned_data
         ci_workflow = workflow_data.get("ci_workflow")
 
+        # Resolve version if provided
+        ci_workflow_version = None
+        version_id = workflow_data.get("version_id", "")
+        if version_id and version_id != "none" and ci_workflow:
+            import contextlib
+
+            from core.models import CIWorkflowVersion
+
+            with contextlib.suppress(CIWorkflowVersion.DoesNotExist, ValueError):
+                ci_workflow_version = CIWorkflowVersion.objects.get(id=int(version_id), workflow=ci_workflow)
+
         # Determine if scaffolding is needed:
         # - NEW repos: always scaffold (to create the repo), CI manifest optional
         # - EXISTING repos: only scaffold if CI workflow selected (to push manifest via PR)
@@ -284,6 +367,7 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
             repo_is_new=repo_is_new,
             env_vars=env_vars,
             ci_workflow=ci_workflow,
+            ci_workflow_version=ci_workflow_version,
             status="draft",
             scaffold_status=scaffold_status,
             created_by=self.request.user.username,

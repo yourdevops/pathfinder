@@ -47,6 +47,11 @@
     <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">
         <p class="text-sm text-dark-muted">CI Workflow</p>
         <p class="text-dark-text font-medium mt-1">{{ review_data.ci_workflow_name }}</p>
+        {% if review_data.ci_workflow %}
+        <div class="mt-2 flex items-center gap-2 text-sm">
+            <span class="text-dark-muted">Version:</span>
+            <span class="text-dark-text">{{ review_data.ci_workflow_version_label }}</span>
+        </div>
         {% if review_data.ci_workflow.dev_workflow %}
         <div class="mt-2 flex items-center gap-2 text-sm">
             <span class="text-dark-muted">Development Workflow:</span>
@@ -58,6 +63,7 @@
                 </svg>
             </a>
         </div>
+        {% endif %}
         {% endif %}
     </div>
 
