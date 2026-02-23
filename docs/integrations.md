@@ -147,49 +147,11 @@ See [environments.md](environments.md) for the full Environment model, connectio
 
 ---
 
-## Blueprints Compatibility
+## Template Compatibility
 
-Blueprints declare which plugin types they require for deployment in their `ssp-template.yaml` manifest.
+Service templates (`kind: ServiceTemplate`) are code scaffolding only — they do not declare CI or deployment requirements. All registered service templates are available in all projects.
 
-### Template Requirements
-
-```yaml
-# In pathfinder-template.yaml
-deploy:
-  required_plugins:
-    - kubernetes
-```
-
-See [blueprints.md](blueprints.md) for full manifest documentation.
-
-### Availability Logic
-
-An Service Template is available in a Project if at least one Environment in the Project has a Connection with matching plugin type.
-
-```
-Template: python-k8s-service
-  deploy.required_plugins: [kubernetes]
-
-Project: team-a
-  Environment: dev
-    connections: [dev-k3s (kubernetes), jenkins-cd (jenkins)]
-  Environment: prod
-    connections: [prod-eks (kubernetes)]
-
-Result: python-k8s-service is available in team-a (both envs have kubernetes)
-```
-
-### Deployment Connection Selection
-
-When deploying an service to an environment:
-
-1. Get app's template → `required_plugin_types`
-2. Find connections in target environment matching those plugin types
-3. If exactly one match: use it
-4. If multiple matches of same type: use the one marked `is_default`
-5. If no connection marked `is_default`: use the first connection of that type (by created_at)
-6. Admin/operator can override per Deployment
-7. Override is stored and used for future deployments
+Deployment target matching (which environments a service can deploy to, which connection to use) is a separate concern to be designed with the deployment model. See [templates/design.md](templates/design.md) for the current manifest format.
 
 ---
 

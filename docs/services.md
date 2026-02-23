@@ -30,7 +30,7 @@ Service:
   - current_build: FK Build (nullable)
 
   # Service-level Environment Variables (defaults for all deployments)
-  - env_vars: array of { key, value, lock }
+  - env_vars: array of { key, value, lock, description }
 
   # Status
   - status: enum (draft, active)
@@ -141,22 +141,9 @@ Multiple Deployments can exist for the same (app, environment) pair. The most re
 
 ### Environment Variables
 
-Services and Deployments extend the environment variable cascade defined in [projects.md](projects.md#environment-variables).
+Service sits between Project and Environment in the variable cascade. Service-level vars are defaults that can be overridden at the Environment level. See [Environment Variables](env-vars.md) for variable shape, cascade rules, and override logic.
 
-**Cascade Order:** Project → Environment → Service → Deployment
-
-- Service-level vars are defaults for all deployments of that app
-- Deployment-level vars are specific to one (app, environment) pair
-- Locked vars (🔒) from upstream levels are read-only
-- Unlocked vars can be overridden or removed
-
-See [projects.md](projects.md#environment-variables) for lock behavior and merge rules.
-
-### Pre-populated Defaults
-
-- Service: `APP_NAME` = `{app-name}` with lock=true
-
-**Note:** Only configuration values are supported. Secrets must come from external sources (Vault, K8s Secrets).
+`PTF_SERVICE` is system-injected (locked) with the service name as its value.
 
 ---
 
@@ -251,7 +238,7 @@ Build #42 (commit abc123)
 - Faster promotions (no rebuild time)
 
 **Environment Differences:**
-- Configuration via environment variables (Project → Environment → Service)
+- Configuration via environment variables (Project → Service → Environment)
 - Secrets injected at deploy time
 - Resource limits per environment
 

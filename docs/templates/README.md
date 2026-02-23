@@ -1,51 +1,40 @@
 # Templates
 
-A Template is a versioned git repository that defines a reusable service scaffold. Templates carry a `pathfinder.yaml` manifest (`kind: template`) that declares the service's name, required variables, and runtimes. When an operator creates a service from a template, Pathfinder scaffolds a new repository from the template's file tree and transforms the manifest to `kind: service` -- making the service self-describing. Pathfinder re-reads `pathfinder.yaml` at every build to keep variable requirements current.
+A Template is a versioned git repository that provides a reusable file tree for scaffolding new services. Templates carry a `pathfinder.yaml` manifest that declares metadata — description, runtime hints, and suggested variables. When an operator creates a service from a template, Pathfinder copies the template's files into a new repository, seeds the metadata into its database, and drops the manifest. After scaffolding, Pathfinder's database is the source of truth for all service configuration.
+
+## What Templates Do
+
+- Provide a starting file tree for new service repositories
+- Declare runtime hints used to recommend compatible CI Workflows during service creation
+- Suggest initial environment variables (names and descriptions) that are seeded into the service record
 
 ## What Templates Do Not Do
 
-- Define CI Workflows -- CI pipeline composition is a [CI Workflows](../ci-workflows/README.md) concern
-- Inject CI steps, generate CI manifests, or select a CI engine
-- Manage runtime version selection for builds -- runtimes in `pathfinder.yaml` are a hint for CI Workflow recommendation only; concrete version selection happens in the CI Workflow
-- Auto-discover templates from connected repositories -- registration is manual
-- Define component or infrastructure templates (databases, queues, etc.) -- that is a future concern
-- Contain variable values -- `pathfinder.yaml` declares what variables a service needs; values are configured in Pathfinder's `env_vars` system
+- Define CI Workflows — CI pipeline composition is a [CI Workflows](../ci-workflows/README.md) concern
+- Persist in the service repo after scaffolding — `pathfinder.yaml` is excluded from the scaffolded output
+- Enforce variables at build time — variable enforcement is Pathfinder's responsibility, using its database as the source of truth
+- Manage runtime version selection for builds — runtimes are a hint for CI Workflow recommendation only
+- Auto-discover templates from connected repositories — registration is manual
+- Define component or infrastructure templates (databases, queues, etc.) — future concern
+- Contain variable values — only names and descriptions
 
 ## Documentation
 
 | Document | Description |
 |----------|-------------|
-| [Manifest Schema](manifest-schema.md) | `pathfinder.yaml` field reference for templates and services |
-| [Variable Lifecycle](variable-lifecycle.md) | How `required_vars` are detected, enforced, and cleaned up at build time |
-| [Scaffolding](scaffolding.md) | Full wizard flow from template selection to running service repo |
+| [Design](design.md) | Manifest format, service creation wizard, and unified environment variables model |
 | [Template Registration](template-registration.md) | Registering templates, git tags as versions, and sync |
-| [Examples](examples.md) | Complete `pathfinder.yaml` samples for common service stacks |
-
----
+| [Environment Variables](../env-vars.md) | Variable cascade, override rules, and deployment gate |
 
 ## Quick Reference
-
-### Manifest Kind Values
-
-| Kind | Used In | What Pathfinder Does |
-|------|---------|----------------------|
-| `template` | Template repositories | Reads on registration and version sync; used in scaffolding wizard |
-| `service` | Scaffolded service repos | Reads at every build webhook to discover required variables |
-
-### Variable States
-
-| State | Meaning | Deployment |
-|-------|---------|------------|
-| Satisfied | Declared in manifest; value exists in `env_vars` | Allowed |
-| Unsatisfied | Declared in manifest; no value in `env_vars` | Blocked |
-| Stale | Previously declared; removed from manifest; value still in `env_vars` | Allowed (cleanup recommended) |
 
 ### Quick Definitions
 
 | Term | Definition |
 |------|------------|
-| `pathfinder.yaml` | Manifest file in the repo root; identifies the repo as a template or service |
-| `required_vars` | Variable declarations (name + description only) -- not values |
-| `env_vars` | Variable values configured in Pathfinder -- the existing cascade system |
-| git tag | A version of a template -- each tag is a selectable option in the wizard |
-| Scaffolding | The process of creating a service repo from a template; transforms `kind: template` to `kind: service` |
+| `pathfinder.yaml` | Manifest file in the template repo root; declares template metadata |
+| `name` | The template's unique identity in Pathfinder — immutable after registration, used as slug and audit reference |
+| `required_vars` | Variable declarations in the manifest (name + description) — not values |
+| `env_vars` | Variable values stored in Pathfinder's database at each cascade level |
+| git tag | A version of a template — each tag is a selectable option in the wizard |
+| Scaffolding | Copying a template's file tree into a new repo (excluding the manifest) and seeding metadata into Pathfinder |

@@ -9,7 +9,7 @@ Environment:
   - name: string (DNS-compatible, max 20 chars, unique within project)
   - description: text (e.g., "Development environment for feature testing")
   - project: FK Project
-  - env_vars: array of { key, value, lock }
+  - env_vars: array of { key, value, lock, description }
   - is_production: bool
   - is_default: bool (one per project, used for service creation)
   - status: enum (active, inactive)
@@ -58,19 +58,15 @@ See [integrations.md](integrations.md) for full IntegrationConnection model.
 
 ### Environment Variables
 
-Environment-level vars in the cascade: Project → **Environment** → Service → Deployment
+Environment sits below Service in the variable cascade, and can override unlocked Project and Service variables. See [Environment Variables](env-vars.md) for variable shape, cascade rules, and override logic.
 
-- Pre-populated: `ENV` = `{env-name}` with lock=true
-- Can override unlocked Project vars
-- Uses the same Key | Value | Lock | [X] table UI
-
-See [projects.md](projects.md#environment-variables) for merge behavior and lock mechanism.
+`PTF_ENVIRONMENT` is system-injected (locked) with the environment name as its value.
 
 ---
 
-## Example: Multi-Service Environment Setup
+## Example: Environment Setup
 
-Consider `team-a` Project with a `dev` Environment where infrastructure (VPC, k3s cluster) is provisioned externally.
+Consider `team-a` Project with a `dev` Environment.
 
 **Step 1: Platform team creates Connections:**
 ```yaml
@@ -78,66 +74,29 @@ IntegrationConnection: dev-k3s
   plugin_name: kubernetes
   config: { kubeconfig: "...", default_namespace: "apps" }
 
-IntegrationConnection: jenkins-cd
-  plugin_name: jenkins
-  config: { url: "https://jenkins-cd.internal", credentials: "..." }
-
 IntegrationConnection: yourdevops-github
   plugin_name: github
   config: { organization: "yourdevops", ... }
 ```
 
-**Step 2: Platform team registers Service Blueprints (from git repos with pathfinder-template.yaml):**
-```yaml
-# python-k8s-service/ssp-template.yaml
-name: python-k8s-service
-description: Python service deployed to Kubernetes
-ci:
-  type: jenkins
-deploy:
-  type: container
-  mechanism: direct
-  required_plugins: [kubernetes]
-tags: [python, container, k8s]
-
-# python-lambda-vpc/ssp-template.yaml
-name: python-lambda-vpc
-description: Python Lambda with VPC networking via Terraform
-ci:
-  type: jenkins
-deploy:
-  type: serverless
-  mechanism: pipeline
-  required_plugins: [jenkins]
-tags: [python, serverless, lambda, aws]
-```
-
-**Step 3: Platform team configures Environment connections:**
+**Step 2: Platform team configures Environment connections:**
 ```yaml
 Environment: dev
   project: team-a
   connections:
     - connection: dev-k3s
       is_default: true
-    - connection: jenkins-cd
-      is_default: true
-      config_override: { job_name: "terraform-lambda-deploy" }
     - connection: yourdevops-github
       is_default: true
 ```
 
-**Template availability (automatic):**
-- `python-k8s-service` requires `kubernetes` → available (dev has `dev-k3s`)
-- `python-lambda-vpc` requires `jenkins` → available (dev has `jenkins-cd`)
-
-**Developer experience:**
+**Step 3: Developer creates a service from a template:**
 1. Developer starts wizard, selects `team-a` project
-2. Sees two template cards: `python-k8s-service` and `python-lambda-vpc`
-3. Selects `python-lambda-vpc`, names service `order-processor`
-4. Page 3 shows serverless-specific options (handler, runtime, timeout)
-5. Page 4 shows `dev` environment, deployment via "jenkins-cd"
-6. On deploy, Pathfinder triggers Jenkins with: `PROJECT_NAME=team-a`, `ENV=dev`, `APP_NAME=order-processor`
-7. Terraform uses data blocks to find VPC by naming convention, deploys Lambda
+2. Picks a registered service template (e.g., `python-fastapi`)
+3. Names the service, reviews seeded variables
+4. Pathfinder scaffolds the repo via the GitHub connection
+
+Templates are code scaffolding only — they do not declare CI or deployment requirements. Deployment target matching (which environments a service can deploy to) is a separate concern to be designed with the deployment model.
 
 ---
 

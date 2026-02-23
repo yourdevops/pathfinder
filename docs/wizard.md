@@ -1,192 +1,137 @@
-# Intake Flow (Service Onboarding "Wizard")
+# Service Creation Wizard
 
-A 4-page wizard for creating new Services. The wizard is **template-driven**: selecting a template determines what options appear throughout the flow.
+A 5-page wizard for creating new Services. Built on `django-formtools` `SessionWizardView` with session-based state. A progress bar with numbered step indicators tracks completion throughout the flow.
 
-## Design Principle: Template-First
-
-The Service Template is the "golden path" that defines:
-- What type of service this is (container, serverless, static)
-- How it's built (CI system, build steps)
-- How it's deployed (direct, GitOps, pipeline)
-- What configuration options are relevant
-
-By selecting a template early, the wizard can:
-1. Show only relevant configuration options
-2. Pre-fill sensible defaults for that service type
-3. Guide developers without overwhelming them
+Every page has "Back" and "Next" buttons to navigate without losing wizard data.
 
 ---
 
-Every page should have a "Back" and "Next" button to go to the previous and next page without losing the wizard data.
+### Page 1 — Service
 
-### Page 1 - Choose Your Path
-
-**Project Selector** (required)
-- Show only projects the user has access to
-- Display format: `{name}` with `description` as subtitle
-- Spoiler: "Project missing on the list?" → link to request form
-- **Selecting a project determines which blueprints are available** (based on Environment connections)
-
-**Service Template Selector** (required)
-- Shows blueprints available for the selected project
-- Blueprints are available when at least one Environment has a Connection matching `deploy.required_plugins` from the template manifest
-- Display format: Card with icon, name, description, tags
-- Tags indicate: language, deploy type, cloud provider
-
-**Template Card Example:**
-```
-┌─────────────────────────────────────────┐
-│ 🐍 python-k8s-service                   │
-│ Python service deployed to Kubernetes   │
-│ [python] [container] [k8s]              │
-└─────────────────────────────────────────┘
-```
+**Project** (required)
+- Select from active projects the user has access to
+- If the wizard is launched from a project context (`/projects/<name>/services/create/`), the project is pre-filled and locked
 
 **Service Name** (required)
-- Text input with real-time validation
-- Rules: lowercase, hyphens only, 1-40 chars
-- Show service_handler preview: `{project-name}-{app-name}`
-- Show remaining character count
-- Validate uniqueness within project on blur
+- DNS-compatible: lowercase letters, numbers, hyphens (RFC 1123 label format, max 63 chars)
+- Uniqueness validated within the selected project
+- Combined handler `{project-name}-{service-name}` must not exceed 63 chars total
 
 ---
 
-### Page 2 - Source Code
+### Page 2 — Repository
 
-**Source Code Provider** (required)
-- Dropdown showing healthy SCM connections only
-- If template specifies `ci_connection`, pre-select compatible SCM
-- Format: `{connection-name} ({plugin})` e.g., "yourdevops (GitHub)"
-- Spoiler: "Not seeing your workspace?" → link to request form
+**SCM Connection** (required)
+- Selects a `ProjectConnection` for the chosen project
+- The project's default connection is pre-selected automatically
 
-**Repository Configuration:**
+**Repository Mode** (required, radio select)
+- **Create new repository** (default) — repo is created via the SCM plugin during scaffolding. Auto-generated repo name: `{project-name}-{service-name}` (shown as preview)
+- **Use existing repository** — enter the repository URL directly
 
-Checkbox: `[ ] Initialize new repository` (default: false)
-- If checked: Creates new repo in selected workspace
-  - GitHub: repo name = service_handler
-  - BitBucket: project = project-name, repo = app-name
-  - Validate repo doesn't exist; block if it does with error message
+**Template Picker** (only when "Create new" is selected)
+- Visual cards showing template name, description, and runtime badges
+- **"None (empty repository)"** is selected by default
+- When a template is selected, a **version dropdown** appears (populated from cached version records, latest selected by default)
+- Hidden when "Use existing" is selected — you cannot scaffold a template into an existing repo
 
-- If unchecked: Show existing repository selector
-  - Dropdown of repos from the selected SCM connection
-  - Search/filter capability for large repo lists
+The Service Template is a "golden path" that defines what type of service this is, what runtimes it needs, and what configuration is required. By selecting a template during repository setup, the wizard can pre-populate environment variables and recommend compatible CI Workflows. Templates are an enhancement, not a gate — services can be created without one.
 
-**Branch configuration** (only if existing repo was selected):
-- Branch name: `{prefix}/` + text input
-- Branch prefix: configured in Global Settings (e.g., `ssp`, `feature`)
-- Base branch selector: list branches from repo, default to `main`
-- Validate branch doesn't already exist; show error: "Branch '{name}' already exists. Choose a different name."
-- Help text: "SSP will create this branch, commit template contents and open a pull request to the base branch."
+For template manifest format and lifecycle, see [Template Design](templates/design.md).
 
-**File Handling for Existing Repos:**
-When applying template to an existing repository, file handling follows the template's `source.on_copy` configuration. If not specified, all template files overwrite existing files. See [blueprints.md](blueprints.md) for details.
+**Branch** (required, default: `main`)
+- For new repos: the default branch name
+- For existing repos: the base branch for the feature PR (label changes to "Base Branch")
 
 ---
 
-### Page 3 - Configuration
+### Page 3 — CI Workflow
 
-Header: "You can skip this step and configure these settings later."
+**CI Workflow** (optional)
+- Visual card selector listing all CI Workflows approved for the project
+- Each workflow shows: name, runtime constraint badges, artifact type badge, and description
+- The project's `default_workflow` (from `ProjectCIConfig`) is pre-selected if configured
 
-**This page is dynamic based on template.deploy_type:**
+**Version** (appears when a workflow is selected)
+- Dropdown of `AUTHORIZED` versions, with `DRAFT` versions included only if `project.ci_config.allow_draft_workflows` is enabled
+- "Not pinned" means latest authorized version is used
 
-#### For `container` deploy type:
+**No Workflow** is a valid choice — selecting it shows a warning: *"Service will be saved in Draft status — A CI Workflow is required to transition the service to Active status."*
 
-**Port Mappings**
-- Container port (default from template if specified)
-- Protocol selector (TCP/UDP)
-
-**Resource Limits** (all optional)
-- CPU request / limit: default from template or 0.5 cores
-- Memory request / limit: default from template or 512M
-
-**Health Check** (optional)
-- Endpoint: e.g., `/health`
-- Interval, timeout, retries
-
-**Volume Mounts**
-- Placeholder for future implementation
-
-#### For `serverless` deploy type:
-
-**Function Configuration**
-- Handler: e.g., `handler.main` (pre-filled from template)
-- Runtime: e.g., `python3.13` (pre-filled from template)
-- Timeout: default 30s
-- Memory: default 256MB
-
-#### For `static` deploy type:
-
-**Build Output**
-- Build directory: e.g., `dist/`, `build/`, `public/`
-- Index document: default `index.html`
-- Error document: default `404.html`
-
-**CDN Configuration** (optional)
-- Enable WAF protection: default false
-- Cache TTL: default 1 hour
-
-#### Common to all types:
-
-**Environment Variables** (app-level)
-- Table editor with Key | Value | Lock | [X] columns
-- These are app-level defaults in the cascade: Project → Environment → **Service** → Deployment
-- Locked vars cannot be overridden at deployment time
-- Deployment-specific overrides are configured in the Deploy modal (see [services.md](services.md))
+If a template was selected on Page 2 and declares `runtimes`, compatible workflows are shown first. All workflows remain accessible.
 
 ---
 
-### Page 4 - Review and Deploy
+### Page 4 — Configuration
 
-**Configuration Summary**
-- Template selected and its properties
-- All selections from previous pages
-- Warnings for any issues detected
+Environment variables for the new service, using the unified env vars model (see [Environment Variables](env-vars.md)).
 
-**Deploy Now** (only shown if "Initialize new repository" is checked)
-- Checkbox: `[ ] Deploy to <default environment name> after first successful build`
-- Note: "Deployment will be queued and executed automatically once CI completes the first build."
-- If checked:
-  - Expand deployment-level environment variables section (see [services.md](services.md#environment-variables-in-deploy-modal))
-  - Create button: "Create Service" changes to "Create & Deploy Service"
+**System variables** (read-only, locked)
+- `SERVICE_NAME` = `{service-name}` — injected automatically, cannot be removed or changed
 
-**For existing repositories:**
-- "Deploy Now" checkbox is hidden
-- Show info: "Deployment will be available after the PR is merged and first build completes."
-- This enforces proper PR review workflow before any deployment
+**Inherited from Project** (read-only, collapsible section)
+- Project-level variables with their values and lock state
+- Each variable shows either a "Locked" or "Inherited" badge
+- Shown for awareness — edit them in Project settings, not here
 
-**Creation Workflow:**
+**Service variables** (editable)
+- If a template was selected on Page 2 and declares `required_vars`, those are **pre-populated** as rows: key filled from the manifest, description shown as helper text, value empty, lock off. After creation, these are plain service-level variables — no "template origin" marker
+- Keys are auto-uppercased and sanitized to `[A-Z][A-Z0-9_]*` format
+- The operator can fill in values, toggle lock, remove variables, or add new ones via "+ Add Variable"
+- If no template was selected, this section starts empty
 
-1. If "Initialize repository" was selected:
-   - Create repo via SCM connection API
-   - Clone template
-   - Commit to `main` branch in a single commit and push
-   - If BitBucket: create project if needed
+Info note: *"You can leave values empty now — operator will be asked to fill these values on specific Deployment Environment level."*
 
-2. If existing repo was selected:
-   - Clone repo
-   - Create configured branch from base
-   - Apply template contents per `on_copy` rules
-   - Commit and push
-   - Create pull request to base branch
+---
 
-3. Create Service record in Pathfinder database with:
-   - Reference to selected template
-   - deploy_type from template (for deployment routing)
+### Page 5 — Review & Confirm
 
-4. If new repository was created:
-   - Register webhook (if supported)
-   - Trigger initial build (optional)
+Read-only summary of all selections:
+- Project name, service name, service handler (shown in monospace)
+- Repository mode ("New repository" or "Existing repository") and branch
+- Existing repository URL (if applicable)
+- CI Workflow name and pinned version (or "None" / "Not pinned")
+- Service-level environment variables (if any)
+- A "What happens next" info box (different text for new vs existing repo)
 
-5. If "Deploy Now" was selected (new repos only):
-   - Queue deployment to run after first successful build
-   - Route to matching connection in target environment
-   - Execute via connection's mechanism (direct/gitops/pipeline)
+**Confirmation checkbox** (required): *"I confirm the service configuration is correct"*
 
-**Error Handling:**
-- On fails: show error, do not create the service yet, allow retry or cancel
+No changes are made until the operator confirms.
+
+---
+
+## Scaffolding Execution
+
+After confirmation, Pathfinder executes the following. The `scaffold_repository` task runs as a background job (queue: `repository_scaffolding`). The service detail page polls scaffold status via HTMX every 3 seconds while the task is running.
+
+**Scaffold status** is set to `"pending"` if scaffolding is needed, otherwise `"not_required"`:
+- Scaffolding is needed when: `repo_is_new == True` OR a CI Workflow is assigned
+- Existing repo with no workflow: no scaffolding needed
+
+### New repository
+
+1. Create repository via the SCM plugin
+2. If a template was selected: fetch template at the selected tag's commit SHA, copy file tree to the new repo **excluding `pathfinder.yaml`**
+3. Apply variable substitution (`service_name`, `project_name`, `service_handler`) to template files
+4. If a CI Workflow was selected: push CI Workflow manifest to the repo (`ci_manifest_status` → `"synced"`)
+5. Commit and push to the default branch
+6. Create the Service record with `status="draft"` and all collected data. The record stores the template name and version as plain text fields (`template_name`, `template_version`) for audit trail — not as a foreign key
+7. Register webhook (if supported by SCM plugin)
+
+### Existing repository
+
+1. Create a feature branch `feature/{service-name}` from the base branch
+2. If a CI Workflow was selected: include CI manifest in the branch (`ci_manifest_status` → `"pending_pr"`)
+3. Commit, push, and open a pull request to the base branch
+4. Create the Service record, store env vars
+
+### Post-creation
+
+- On completion: `scaffold_status` updated to `"success"` or `"failed"`, `repo_url` filled in for new repos
+- Success message varies by new/existing/CI workflow combination
+- User is redirected to project detail page
+
+### Error handling
+
+- On failure: show error, allow retry or cancel
 - If PR creation fails: create service anyway, show warning with manual PR link
-
-**Post-Creation:**
-- Redirect to service detail page
-- For new repos with "Deploy Now": deployment queued as background job
-- Track build status, get artifact from CI, then deploy to target Environment

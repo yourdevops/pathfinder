@@ -62,10 +62,7 @@ class Deployment:
     completed_at = DateTimeField()
 ```
 
-**`env_vars_snapshot`:** The full merged environment variable cascade (Project -> Environment -> Service) is resolved and frozen at deployment creation time. The snapshot is stored on the Deployment record for auditability and reproducibility. Subsequent changes to upstream variables do not affect running or completed deployments. Changing variables requires a new deployment.
-
-- Edge case: Locked variables from upstream levels (Project, Environment) are included in the snapshot as read-only. They cannot be overridden at deploy time.
-- Edge case: If a project-level variable changes between two deployments to the same environment, the two deployments have different snapshots. The diff is visible in the deployment history.
+**`env_vars_snapshot`:** The full merged environment variable cascade (Project → Service → Environment) is resolved and frozen at deployment creation time. The snapshot is stored on the Deployment record for auditability and reproducibility. Subsequent changes to upstream variables do not affect running or completed deployments. Changing variables requires a new deployment. See [Environment Variables](../env-vars.md) for cascade rules.
 
 **`artifact_ref`:** Copied from the Build record at deployment creation. The same artifact is reused for promotions across environments without rebuilding.
 

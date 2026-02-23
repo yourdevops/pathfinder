@@ -18,17 +18,17 @@ See [Integrations](../integrations.md) for the full connection model and default
 
 ## Environment Variable Cascade
 
-Deployment env vars follow the cascade defined in [Environments](../environments.md) and [Services](../services.md):
+Deployment env vars follow the cascade defined in [Environment Variables](../env-vars.md):
 
-**Cascade order:** Project -> Environment -> Service -> (deployment snapshot)
+**Cascade order:** Project → Service → Environment → Deployment
 
-Per locked decision: env vars are **snapshot at deploy time**. The full merged result is frozen when the deployment is created and stored on the Deployment record as `env_vars_snapshot`. Changing variables after deployment creation has no effect on running or completed deployments -- changes require a new deployment.
+Env vars are **snapshot at deploy time**. The full merged result is frozen when the deployment is created and stored on the Deployment record as `env_vars_snapshot`. Changing variables after deployment creation has no effect on running or completed deployments — changes require a new deployment.
 
 **Snapshot rules:**
 
 - The snapshot is the FULL merged result of the cascade at the moment of deployment creation.
-- Locked vars from upstream levels (Project, Environment) are included as-is and cannot be overridden at deploy time.
-- The snapshot is immutable -- it represents exactly what was deployed.
+- Locked vars from upstream levels are included as-is and cannot be overridden at deploy time.
+- The snapshot is immutable — it represents exactly what was deployed.
 
 **Edge cases:**
 

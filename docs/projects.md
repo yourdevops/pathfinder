@@ -8,7 +8,7 @@ Projects are the primary organizational unit in Pathfinder. They group related S
 Project:
   - name: string (unique, DNS-compatible, max 20 chars)
   - description: text
-  - env_vars: array of { key, value, lock }
+  - env_vars: array of { key, value, lock, description }
   - status: enum (active, inactive, archived)
   - created_by: string (username, denormalized)
   - created_at, updated_at: datetime
@@ -59,40 +59,9 @@ See [rbac.md](rbac.md) for full permission model documentation.
 
 ## Environment Variables
 
-Environment variables are inherited by Environments and Services, and use a granular lock mechanism.
+Project is the top level of the variable cascade. Variables defined here are inherited by Services and Environments. See [Environment Variables](env-vars.md) for variable shape, cascade rules, and override logic.
 
-### Data Structure
-
-```
-env_vars: [
-  { key: "PROJECT_NAME", value: "my-project", lock: true },
-  { key: "LOG_LEVEL", value: "info", lock: false },
-  ...
-]
-```
-
-### UI Representation
-
-| Key | Value | Lock | |
-|-----|-------|:----:|---|
-| PROJECT_NAME | my-project | ☑ | [X] |
-| LOG_LEVEL | info | ☐ | [X] |
-| [+ Add Variable] |
-
-### Merge Behavior
-
-Variables are merged in order: **Project → Environment → Service → Deployment**
-
-- If `lock=true`: Value is read-only at all downstream levels
-- If `lock=false`: Value is pre-populated but can be overridden or removed downstream
-
-### Pre-populated Defaults
-
-- Project: `PROJECT_NAME` = `{project-name}` with lock=true
-
-### Drift Detection
-
-Drift detection is ABSENT in the initial implementation. To apply new env var values, the service should be redeployed or even re-created, depending on the changes made.
+`PTF_PROJECT` is system-injected (locked) with the project name as its value.
 
 ---
 
