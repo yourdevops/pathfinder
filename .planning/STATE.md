@@ -256,6 +256,7 @@ Recent decisions affecting current work:
 - Phase 6.8 inserted after Phase 6: Manifest and Plugin Interface (URGENT)
 - Phase 6.9 inserted after Phase 6: Plan execution of the Phase R6: Step Output Wiring (URGENT)
 - Phase 6.10 inserted after Phase 6: Pluggable Webhook Routing Framework (URGENT)
+- Phase 6.11 inserted after Phase 6: Templates documentation folder (URGENT)
 
 ### Pending Todos
 
