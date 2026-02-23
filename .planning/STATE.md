@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 6.11 in progress - Templates Documentation Folder
+**Current focus:** Phase 6.11 complete - Templates Documentation Folder
 
 ## Current Position
 
 Phase: 6.11 (Templates Documentation Folder)
-Plan: 3 of 4 in current phase
-Status: In Progress
-Last activity: 2026-02-23 - Completed 06.11-03: Scaffolding and examples docs
+Plan: 4 of 4 in current phase
+Status: Complete
+Last activity: 2026-02-23 - Completed 06.11-04: Templates README entry point
 
-Progress: [==============================----------] 75% (Phase 6.11)
+Progress: [========================================] 100% (Phase 6.11)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 76
+- Total plans completed: 77
 - Average duration: 4 min
 - Total execution time: 4.55 hours
 
@@ -48,14 +48,15 @@ Progress: [==============================----------] 75% (Phase 6.11)
 | 06.8-manifest-and-plugin-interface | 4 | 17 min | 4.3 min |
 | 06.9-step-output-wiring | 2 | 7 min | 3.5 min |
 | 06.10-pluggable-webhook-routing-framework | 2 | 4 min | 2 min |
-| 06.11-templates-documentation-folder | 3 | 6 min | 2 min |
+| 06.11-templates-documentation-folder | 4 | 7 min | 1.75 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.10-02 (1 min), 06.11-01 (2 min), 06.11-02 (2 min), 06.11-03 (2 min)
+- Last 5 plans: 06.11-01 (2 min), 06.11-02 (2 min), 06.11-03 (2 min), 06.11-04 (1 min)
 - Trend: stable
 
 *Updated after each plan completion*
 | Phase 06.11 P03 | 2 | 2 tasks | 2 files |
+| Phase 06.11 P04 | 1 | 1 task | 1 file |
 
 ## Accumulated Context
 
@@ -242,6 +243,7 @@ Recent decisions affecting current work:
 | 06.10-02 | GitHub App manifest uses reverse('github:webhook') for webhook URL | Type-safe; replaces fragile string manipulation on callback path |
 - [Phase 06.11-03]: Non-scaffolded services receive CI Workflow manifest via PR, not direct push
 - [Phase 06.11-03]: Manifest transformation changes exactly two fields (kind and name); all others preserved
+- [Phase 06.11-04]: README structure mirrors docs/ci-workflows/README.md exactly: concept, non-goals, doc table, quick reference
 
 ### Roadmap Evolution
 
@@ -321,5 +323,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 06.11-03-PLAN.md
-Resume file: .planning/phases/06.11-templates-documentation-folder/06.11-03-SUMMARY.md
+Stopped at: Completed 06.11-04-PLAN.md (Phase 6.11 complete)
+Resume file: .planning/phases/06.11-templates-documentation-folder/06.11-04-SUMMARY.md
