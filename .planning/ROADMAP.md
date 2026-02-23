@@ -278,7 +278,7 @@ Plans:
 **Goal:** Create docs/templates/ documentation folder (structured like docs/ci-workflows/) that designs the Templates system end-to-end using a unified pathfinder.yaml manifest with kind: template and kind: service
 **Depends on:** Phase 6
 **Requirements:** BPRT-01, BPRT-02, BPRT-03, BPRT-04, BPRT-05, BPRT-06
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] 06.11-01-PLAN.md — manifest-schema.md: unified pathfinder.yaml field reference for templates and services
