@@ -34,7 +34,6 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 6.9: Step Output Wiring** (INSERTED) - Steps declare outputs, composer wires outputs to inputs, engine-native references
 - [ ] **Phase 6.10: Pluggable Webhook Routing Framework** (INSERTED) - Core webhook dispatcher with plugin-supplied route registration
 - [ ] **Phase 6.11: Templates Documentation Folder** (INSERTED) - Design docs for the unified pathfinder.yaml Templates system end-to-end
-- [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
 ## Phase Details
 
@@ -281,10 +280,10 @@ Plans:
 **Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 06.11-01-PLAN.md — manifest-schema.md: unified pathfinder.yaml field reference for templates and services
-- [ ] 06.11-02-PLAN.md — variable-lifecycle.md and template-registration.md: build-time enforcement and operator registration flow
-- [ ] 06.11-03-PLAN.md — scaffolding.md and examples.md: wizard redesign and copy-paste YAML samples
-- [ ] 06.11-04-PLAN.md — README.md: entry point mirroring docs/ci-workflows/README.md structure
+- [ ] 06.07-01-PLAN.md — manifest-schema.md: unified pathfinder.yaml field reference for templates and services
+- [ ] 06.07-02-PLAN.md — variable-lifecycle.md and template-registration.md: build-time enforcement and operator registration flow
+- [ ] 06.07-03-PLAN.md — scaffolding.md and examples.md: wizard redesign and copy-paste YAML samples
+- [ ] 06.07-04-PLAN.md — README.md: entry point mirroring docs/ci-workflows/README.md structure
 
 ### Phase 06.10: Pluggable Webhook Routing Framework (INSERTED)
 
@@ -293,8 +292,8 @@ Plans:
 **Plans:** 2/2 plans complete
 
 Plans:
-- [ ] 06.10-01-PLAN.md -- Move webhook handlers to GitHub plugin, register /integrations/github/webhook/, add get_webhook_url() to plugin interface
-- [ ] 06.10-02-PLAN.md -- Update all hardcoded webhook URL references to use plugin-aware resolution
+- [ ] 06.07-01-PLAN.md -- Move webhook handlers to GitHub plugin, register /integrations/github/webhook/, add get_webhook_url() to plugin interface
+- [ ] 06.07-02-PLAN.md -- Update all hardcoded webhook URL references to use plugin-aware resolution
 
 ### Phase 06.9: Step Output Wiring (INSERTED)
 
@@ -443,54 +442,3 @@ Plans:
 - [x] 06.3-01-PLAN.md — Security domain README and secrets management documentation
 - [x] 06.3-02-PLAN.md — SLSA provenance and artifact signing documentation
 - [x] 06.3-03-PLAN.md — SOX-compliant RBAC with granular permissions and approval workflow
-
-### Phase 7: Deployments
-**Goal**: Developers can deploy services to environments; Docker plugin runs containers
-**Depends on**: Phase 6
-**Requirements**: DPLY-01, DPLY-02, DPLY-03, DPLY-04, DPLY-05, DPLY-06, DPLY-07, DPLY-08
-**Success Criteria** (what must be TRUE):
-  1. Contributor can deploy service to non-production environment; owner required for production
-  2. Deploy modal shows environment selector, build selector, and merged environment variables
-  3. Deployment triggers Docker plugin to run container with configured settings
-  4. Deployment shows status progression: pending -> running -> success/failed
-  5. User can view deployment history per environment with artifact reference snapshot
-**Plans**: TBD
-
-Plans:
-- [ ] 07-01: TBD
-- [ ] 07-02: TBD
-
-## Progress
-
-**Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 6.3 -> 6.4 -> 6.5 -> 6.6 -> 6.7 -> 6.8 -> 6.9 -> 6.10 -> 6.11 -> 7
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Foundation & Security | 6/6 | Complete | 2026-01-22 |
-| 2. Core Domain | 4/4 | Complete | 2026-01-22 |
-| 3. Integrations | 6/6 | Complete | 2026-01-23 |
-| 3.1 Unified Sidebar Navigation (INSERTED) | 3/3 | Complete | 2026-01-26 |
-| 4. Blueprints | 3/3 | Complete | 2026-01-26 |
-| 4.1 Replace UUID URLs with Slugs (INSERTED) | 4/4 | Complete | 2026-01-26 |
-| 5. Services | 4/4 | Complete | 2026-01-26 |
-| 5.1 CI Workflows Builder (INSERTED) | 4/4 | Complete | 2026-01-29 |
-| 5.2 CI Workflows — Project & Service Pairing (INSERTED) | 2/3 | Complete | 2026-01-31 |
-| 5.3 CI Steps Redesign (INSERTED) | 3/3 | Complete | 2026-02-02 |
-| 6. Builds | 2/2 | Complete | 2026-02-03 |
-| 6.1 Fix CI Workflows Design-Implementation Gap (INSERTED) | 5/5 | Complete | 2026-02-11 |
-| 6.2 Deployment Design Documentation (INSERTED) | 3/3 | Complete | 2026-02-12 |
-| 6.3 Security & Compliance Design (INSERTED) | 3/3 | Complete | 2026-02-13 |
-| 6.4 CI Step Identity and Change Tracking (INSERTED) | 3/3 | Complete | 2026-02-16 |
-| 6.5 Workflow and Build Model Hardening (INSERTED) | 2/2 | Complete | 2026-02-16 |
-| 6.6 Sync Operations and Logging (INSERTED) | 3/3 | Complete | 2026-02-16 |
-| 6.7 Version Lifecycle Automation (INSERTED) | 0/3 | Not started | - |
-| 6.8 Manifest and Plugin Interface (INSERTED) | 0/4 | Not started | - |
-| 6.9 Step Output Wiring (INSERTED) | 0/2 | Not started | - |
-| 6.10 Pluggable Webhook Routing Framework (INSERTED) | 0/0 | Not started | - |
-| 6.11 Templates Documentation Folder (INSERTED) | 0/4 | Not started | - |
-| 7. Deployments | 0/2 | Not started | - |
-
----
-*Roadmap created: 2026-01-22*
-*Last updated: 2026-02-23 (Phase 6.11 inserted - Templates Documentation Folder)*
