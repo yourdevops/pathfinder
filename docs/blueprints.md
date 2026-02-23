@@ -1,6 +1,6 @@
 # Blueprints - DEPRECATED
 
-!!! Deprecated in favor of [docs/pathfinder.md](pathfinder.md) !!!
+!!! Deprecated in favor of [ci-workflows](ci-workflows/README.md) and [templates](templates/README.md) !!!
 
 Blueprints are "golden paths" that define how applications (services) are built and deployed. They contain source code scaffolding, CI configuration, and deployment metadata.
 

@@ -6,6 +6,8 @@ import semver
 
 from core.models import CIStep
 
+_CONSTRAINT_RE = re.compile(r"^(>=|<=|>|<|==|!=|~=)?\s*(\S+)$")
+
 
 def normalize_version(version_str: str) -> str:
     """
@@ -47,7 +49,7 @@ def is_step_compatible(step, runtime_family: str, runtime_version: str) -> bool:
         return True
 
     # Parse constraint: e.g. ">=3.10", "<4.0", "==3.12"
-    match = re.match(r"^(>=|<=|>|<|==|!=|~=)?\s*(.+)$", str(constraint_value))
+    match = _CONSTRAINT_RE.match(str(constraint_value))
     if not match:
         return False
 
@@ -111,7 +113,7 @@ def _parse_constraint(constraint_str: str):
     parts = [c.strip() for c in constraint_str.split(",") if c.strip()]
     parsed = []
     for part in parts:
-        match = re.match(r"^(>=|<=|>|<|==|!=|~=)?\s*(.+)$", part)
+        match = _CONSTRAINT_RE.match(part)
         if not match:
             continue
         op = match.group(1) or ">="

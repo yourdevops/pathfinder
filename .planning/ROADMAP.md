@@ -272,6 +272,15 @@ Plans:
 - [x] 06-01-PLAN.md — Build model, webhook endpoint with HMAC auth, poll_build_details task, service activation
 - [x] 06-02-PLAN.md — Build history UI with table layout, filtering, pagination, HTMX auto-refresh
 
+### Phase 06.11: Templates documentation folder (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Depends on:** Phase 6
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 06.11 to break down)
+
 ### Phase 06.10: Pluggable Webhook Routing Framework (INSERTED)
 
 **Goal:** Refactor webhook handling from hardcoded core endpoints into a pluggable framework where plugins own their webhook handlers. Core provides routing infrastructure; current /webhooks/build/ and /webhooks/steps-repo/ are GitHub-specific and must move into the GitHub plugin.
