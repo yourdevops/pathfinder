@@ -33,6 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 6.8: Manifest and Plugin Interface** (INSERTED) - Artifact discovery via CI plugin, CI variables, step validation API, runtime derivation from steps
 - [ ] **Phase 6.9: Step Output Wiring** (INSERTED) - Steps declare outputs, composer wires outputs to inputs, engine-native references
 - [ ] **Phase 6.10: Pluggable Webhook Routing Framework** (INSERTED) - Core webhook dispatcher with plugin-supplied route registration
+- [ ] **Phase 6.11: Templates Documentation Folder** (INSERTED) - Design docs for the unified pathfinder.yaml Templates system end-to-end
 - [ ] **Phase 7: Deployments** - Deploy flow, Docker execution, deployment history
 
 ## Phase Details
@@ -274,12 +275,16 @@ Plans:
 
 ### Phase 06.11: Templates documentation folder (INSERTED)
 
-**Goal:** [Urgent work - to be planned]
+**Goal:** Create docs/templates/ documentation folder (structured like docs/ci-workflows/) that designs the Templates system end-to-end using a unified pathfinder.yaml manifest with kind: template and kind: service
 **Depends on:** Phase 6
-**Plans:** 0 plans
+**Requirements:** BPRT-01, BPRT-02, BPRT-03, BPRT-04, BPRT-05, BPRT-06
+**Plans:** 4 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 06.11 to break down)
+- [ ] 06.11-01-PLAN.md — manifest-schema.md: unified pathfinder.yaml field reference for templates and services
+- [ ] 06.11-02-PLAN.md — variable-lifecycle.md and template-registration.md: build-time enforcement and operator registration flow
+- [ ] 06.11-03-PLAN.md — scaffolding.md and examples.md: wizard redesign and copy-paste YAML samples
+- [ ] 06.11-04-PLAN.md — README.md: entry point mirroring docs/ci-workflows/README.md structure
 
 ### Phase 06.10: Pluggable Webhook Routing Framework (INSERTED)
 
@@ -458,7 +463,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 6.3 -> 6.4 -> 6.5 -> 6.6 -> 6.7 -> 6.8 -> 6.9 -> 6.10 -> 7
+Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5.2 -> 5.3 -> 6 -> 6.1 -> 6.2 -> 6.3 -> 6.4 -> 6.5 -> 6.6 -> 6.7 -> 6.8 -> 6.9 -> 6.10 -> 6.11 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -483,8 +488,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 3.1 -> 4 -> 4.1 -> 5 -> 5.1 -> 5
 | 6.8 Manifest and Plugin Interface (INSERTED) | 0/4 | Not started | - |
 | 6.9 Step Output Wiring (INSERTED) | 0/2 | Not started | - |
 | 6.10 Pluggable Webhook Routing Framework (INSERTED) | 0/0 | Not started | - |
+| 6.11 Templates Documentation Folder (INSERTED) | 0/4 | Not started | - |
 | 7. Deployments | 0/2 | Not started | - |
 
 ---
 *Roadmap created: 2026-01-22*
-*Last updated: 2026-02-19 (Phase 6.10 inserted - Pluggable Webhook Routing Framework)*
+*Last updated: 2026-02-23 (Phase 6.11 inserted - Templates Documentation Folder)*

@@ -1,4 +1,4 @@
-exclude: '^theme/static/js/vendor/'
+exclude: '^(theme/static/js/vendor/|\.planning/)'
 
 repos:
   - repo: https://github.com/adamchainz/django-upgrade
