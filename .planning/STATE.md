@@ -10,16 +10,16 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 6.11 (Templates Documentation Folder)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: In Progress
-Last activity: 2026-02-23 - Completed 06.11-02: Variable lifecycle and template registration docs
+Last activity: 2026-02-23 - Completed 06.11-03: Scaffolding and examples docs
 
-Progress: [====================--------------------] 50% (Phase 6.11)
+Progress: [==============================----------] 75% (Phase 6.11)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 75
+- Total plans completed: 76
 - Average duration: 4 min
 - Total execution time: 4.55 hours
 
@@ -48,13 +48,14 @@ Progress: [====================--------------------] 50% (Phase 6.11)
 | 06.8-manifest-and-plugin-interface | 4 | 17 min | 4.3 min |
 | 06.9-step-output-wiring | 2 | 7 min | 3.5 min |
 | 06.10-pluggable-webhook-routing-framework | 2 | 4 min | 2 min |
-| 06.11-templates-documentation-folder | 2 | 4 min | 2 min |
+| 06.11-templates-documentation-folder | 3 | 6 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 06.10-01 (3 min), 06.10-02 (1 min), 06.11-01 (2 min), 06.11-02 (2 min)
+- Last 5 plans: 06.10-02 (1 min), 06.11-01 (2 min), 06.11-02 (2 min), 06.11-03 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
+| Phase 06.11 P03 | 2 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -239,6 +240,8 @@ Recent decisions affecting current work:
 | 06.10-01 | get_webhook_url() uses reverse() for URL resolution | Type-safe; lazy import avoids circular imports |
 | 06.10-01 | Updated 3 hardcoded webhook URLs to use plugin.get_webhook_url() | Prevents 404s after old routes removed; keeps core plugin-agnostic |
 | 06.10-02 | GitHub App manifest uses reverse('github:webhook') for webhook URL | Type-safe; replaces fragile string manipulation on callback path |
+- [Phase 06.11-03]: Non-scaffolded services receive CI Workflow manifest via PR, not direct push
+- [Phase 06.11-03]: Manifest transformation changes exactly two fields (kind and name); all others preserved
 
 ### Roadmap Evolution
 
@@ -318,5 +321,5 @@ None
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed 06.11-02-PLAN.md
-Resume file: .planning/phases/06.11-templates-documentation-folder/06.11-02-SUMMARY.md
+Stopped at: Completed 06.11-03-PLAN.md
+Resume file: .planning/phases/06.11-templates-documentation-folder/06.11-03-SUMMARY.md
