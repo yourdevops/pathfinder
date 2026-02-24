@@ -22,15 +22,11 @@ from .connections import (
 from .dashboard import DashboardView
 from .env_vars import (
     EnvVarAddRowView,
+    EnvVarDeleteView,
     EnvVarDisplayRowView,
     EnvVarEditRowView,
+    EnvVarSaveView,
     EnvVarToggleLockView,
-)
-from .env_vars import (
-    EnvVarDeleteView as EnvVarDeleteViewNew,
-)
-from .env_vars import (
-    EnvVarSaveView as EnvVarSaveViewNew,
 )
 from .groups import (
     GroupAddMemberView,
@@ -49,9 +45,6 @@ from .projects import (
     EnvironmentDetachConnectionView,
     EnvironmentDetailView,
     EnvironmentUpdateView,
-    EnvVarDeleteView,
-    EnvVarModalView,
-    EnvVarSaveView,
     ProjectApproveWorkflowView,
     ProjectArchiveView,
     ProjectAttachConnectionView,
@@ -60,9 +53,6 @@ from .projects import (
     ProjectCreateView,
     ProjectDetachConnectionView,
     ProjectDetailView,
-    ProjectEnvVarDeleteView,
-    ProjectEnvVarModalView,
-    ProjectEnvVarSaveView,
     ProjectListView,
     ProjectRemoveApprovedWorkflowView,
     ProjectUpdateCIConfigView,
@@ -95,12 +85,9 @@ __all__ = [
     "DashboardView",
     "EnvVarAddRowView",
     "EnvVarDeleteView",
-    "EnvVarDeleteViewNew",
     "EnvVarDisplayRowView",
     "EnvVarEditRowView",
-    "EnvVarModalView",
     "EnvVarSaveView",
-    "EnvVarSaveViewNew",
     "EnvVarToggleLockView",
     "EnvironmentAttachConnectionView",
     "EnvironmentCreateView",
@@ -128,9 +115,6 @@ __all__ = [
     "ProjectCreateView",
     "ProjectDetachConnectionView",
     "ProjectDetailView",
-    "ProjectEnvVarDeleteView",
-    "ProjectEnvVarModalView",
-    "ProjectEnvVarSaveView",
     "ProjectListView",
     "ProjectRemoveApprovedWorkflowView",
     "ProjectUpdateCIConfigView",

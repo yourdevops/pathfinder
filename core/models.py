@@ -531,13 +531,6 @@ class Service(models.Model):
             return False
         return self.ci_workflow.updated_at > self.ci_manifest_pushed_at
 
-    def get_merged_env_vars(self):
-        # DEPRECATED: Use core.utils.resolve_env_vars() instead. Kept for backwards compat during migration.
-        """Return service env vars merged with project vars via resolve_env_vars."""
-        from core.utils import resolve_env_vars
-
-        return resolve_env_vars(self.project, service=self)
-
 
 # --- CI Workflow Domain Models ---
 

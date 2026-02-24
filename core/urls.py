@@ -19,9 +19,6 @@ from .views import (
     EnvironmentDetachConnectionView,
     EnvironmentDetailView,
     EnvironmentUpdateView,
-    EnvVarDeleteView,
-    EnvVarModalView,
-    EnvVarSaveView,
     GeneralSettingsView,
     GroupAddMemberView,
     GroupCreateView,
@@ -42,9 +39,6 @@ from .views import (
     ProjectCreateView,
     ProjectDetachConnectionView,
     ProjectDetailView,
-    ProjectEnvVarDeleteView,
-    ProjectEnvVarModalView,
-    ProjectEnvVarSaveView,
     ProjectListView,
     ProjectRemoveApprovedWorkflowView,
     ProjectUpdateCIConfigView,
@@ -86,18 +80,12 @@ from .views.ci_workflows import (
     WorkflowManifestView,
 )
 from .views.env_vars import (
-    EnvVarAddRowView as EnvVarAddRowViewNew,
-)
-from .views.env_vars import (
-    EnvVarDeleteView as EnvVarDeleteViewNew,
-)
-from .views.env_vars import (
+    EnvVarAddRowView,
+    EnvVarDeleteView,
     EnvVarDisplayRowView,
     EnvVarEditRowView,
+    EnvVarSaveView,
     EnvVarToggleLockView,
-)
-from .views.env_vars import (
-    EnvVarSaveView as EnvVarSaveViewNew,
 )
 from .views.services import (
     BuildLogsView,
@@ -289,21 +277,6 @@ projects_patterns = [
         name="environment_delete",
     ),
     path(
-        "<dns:project_name>/environments/<dns:env_name>/env-vars/",
-        EnvVarModalView.as_view(),
-        name="env_var_modal",
-    ),
-    path(
-        "<dns:project_name>/environments/<dns:env_name>/env-vars/save/",
-        EnvVarSaveView.as_view(),
-        name="env_var_save",
-    ),
-    path(
-        "<dns:project_name>/environments/<dns:env_name>/env-vars/<str:key>/delete/",
-        EnvVarDeleteView.as_view(),
-        name="env_var_delete",
-    ),
-    path(
         "<dns:project_name>/members/add/",
         AddMemberModalView.as_view(),
         name="add_member_modal",
@@ -312,27 +285,6 @@ projects_patterns = [
         "<dns:project_name>/members/<dns:group_name>/remove/",
         RemoveMemberView.as_view(),
         name="remove_member",
-    ),
-    # Project-level env vars
-    path(
-        "<dns:project_name>/env-vars/",
-        ProjectEnvVarModalView.as_view(),
-        name="project_env_var_modal",
-    ),
-    path(
-        "<dns:project_name>/env-vars/<str:key>/edit/",
-        ProjectEnvVarModalView.as_view(),
-        name="project_env_var_edit",
-    ),
-    path(
-        "<dns:project_name>/env-vars/save/",
-        ProjectEnvVarSaveView.as_view(),
-        name="project_env_var_save",
-    ),
-    path(
-        "<dns:project_name>/env-vars/<str:key>/delete/",
-        ProjectEnvVarDeleteView.as_view(),
-        name="project_env_var_delete",
     ),
     # Unified env var CRUD — Project-level
     path(
@@ -347,17 +299,17 @@ projects_patterns = [
     ),
     path(
         "<dns:project_name>/env-vars/add-row/",
-        EnvVarAddRowViewNew.as_view(),
+        EnvVarAddRowView.as_view(),
         name="project_env_var_add_row",
     ),
     path(
         "<dns:project_name>/env-vars/save-new/",
-        EnvVarSaveViewNew.as_view(),
+        EnvVarSaveView.as_view(),
         name="project_env_var_save_new",
     ),
     path(
         "<dns:project_name>/env-vars/delete-new/",
-        EnvVarDeleteViewNew.as_view(),
+        EnvVarDeleteView.as_view(),
         name="project_env_var_delete_new",
     ),
     path(
@@ -378,17 +330,17 @@ projects_patterns = [
     ),
     path(
         "<dns:project_name>/environments/<dns:env_name>/env-vars/add-row/",
-        EnvVarAddRowViewNew.as_view(),
+        EnvVarAddRowView.as_view(),
         name="env_env_var_add_row",
     ),
     path(
         "<dns:project_name>/environments/<dns:env_name>/env-vars/save-new/",
-        EnvVarSaveViewNew.as_view(),
+        EnvVarSaveView.as_view(),
         name="env_env_var_save_new",
     ),
     path(
         "<dns:project_name>/environments/<dns:env_name>/env-vars/delete-new/",
-        EnvVarDeleteViewNew.as_view(),
+        EnvVarDeleteView.as_view(),
         name="env_env_var_delete_new",
     ),
     path(
@@ -409,17 +361,17 @@ projects_patterns = [
     ),
     path(
         "<dns:project_name>/services/<dns:service_name>/env-vars/add-row/",
-        EnvVarAddRowViewNew.as_view(),
+        EnvVarAddRowView.as_view(),
         name="service_env_var_add_row",
     ),
     path(
         "<dns:project_name>/services/<dns:service_name>/env-vars/save-new/",
-        EnvVarSaveViewNew.as_view(),
+        EnvVarSaveView.as_view(),
         name="service_env_var_save_new",
     ),
     path(
         "<dns:project_name>/services/<dns:service_name>/env-vars/delete-new/",
-        EnvVarDeleteViewNew.as_view(),
+        EnvVarDeleteView.as_view(),
         name="service_env_var_delete_new",
     ),
     path(
