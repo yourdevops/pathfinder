@@ -1,172 +1,318 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-01-21
+**Analysis Date:** 2026-02-24
 
 ## Directory Layout
 
 ```
-pathfinder/
-├── pathfinder/                  # Django project configuration package
-│   ├── __init__.py          # Empty package marker
-│   ├── settings.py          # Django settings (database, middleware, apps)
-│   ├── urls.py              # Root URL router (currently: admin only)
-│   ├── wsgi.py              # WSGI application entrypoint for production
-│   └── asgi.py              # ASGI application entrypoint (async, currently unused)
-├── manage.py                # Django CLI utility for development tasks
-├── docker-compose.yml       # Container orchestration for local dev and deployment
-├── Dockerfile               # Container image definition (Python 3.13 slim base)
-├── entrypoint.sh            # Container startup script (migrations + gunicorn)
-├── requirements.txt         # Python dependencies (not present yet, needed)
-├── README.md                # Project overview and quick start
-├── CLAUDE.md                # Agent instructions for code generation
-├── docs/                    # Design and feature documentation
-│   ├── 1-design.md          # Overall design principles and glossary
-│   ├── blueprints.md        # Service template / blueprint specification
-│   ├── services.md          # Service, Build, Deployment models and lifecycle
-│   ├── environments.md      # Environment and deployment target configuration
-│   ├── integrations.md      # Integration plugin and connection architecture
-│   ├── projects.md          # Project model and membership
-│   ├── rbac.md              # User, group, and permission model
-│   ├── wizard.md            # Service creation wizard UI specification
-│   ├── deployments.md       # Deployment patterns and mechanisms
-│   └── roadmap.md           # Future features and release planning
-├── venv/                    # Python virtual environment (git-ignored)
-├── db.sqlite3               # SQLite database (git-ignored)
-├── staticfiles/             # Collected static files (git-ignored, generated)
-└── manifests/               # Generated deployment manifests (git-ignored, tracked separately)
+pathfinder/                          # Project root
+├── pathfinder/                      # Django project config package
+│   ├── settings.py                  # Django settings (apps, middleware, DB, CSP, tasks, caches)
+│   ├── urls.py                      # Root URL router + plugin URL autodiscovery
+│   ├── asgi.py                      # ASGI entrypoint (HTTP + WebSocket via Channels)
+│   └── wsgi.py                      # WSGI entrypoint (fallback, not used in production)
+├── core/                            # Core Django app: all domain models, views, tasks
+│   ├── models.py                    # All domain models (single file, ~1200 lines)
+│   ├── tasks.py                     # All background tasks (~1400 lines)
+│   ├── consumers.py                 # WebSocket consumer (ServiceConsumer)
+│   ├── routing.py                   # WebSocket URL patterns
+│   ├── urls.py                      # All HTTP URL pattern groups
+│   ├── views/                       # View modules by feature area
+│   │   ├── __init__.py              # Re-exports all views for core/urls.py imports
+│   │   ├── api.py                   # API endpoints (step validation)
+│   │   ├── audit.py                 # Audit log views
+│   │   ├── auth.py                  # Login/logout views
+│   │   ├── ci_workflows.py          # CI workflow + steps catalog views
+│   │   ├── connections.py           # Integration connection views
+│   │   ├── dashboard.py             # Dashboard view
+│   │   ├── env_vars.py              # Environment variable bulk-save view
+│   │   ├── groups.py                # Group management views
+│   │   ├── projects.py              # Project + environment views
+│   │   ├── services.py              # Service views + creation wizard
+│   │   ├── settings.py              # Settings views (general, user management, etc.)
+│   │   ├── setup.py                 # Initial setup / unlock flow views
+│   │   ├── templates.py             # Service template views
+│   │   └── users.py                 # User management views
+│   ├── forms/                       # Django form classes by feature area
+│   │   ├── base.py                  # Shared form base classes
+│   │   ├── ci_workflows.py          # CI workflow forms
+│   │   ├── services.py              # Service creation wizard forms
+│   │   └── templates.py             # Template registration forms
+│   ├── templates/core/              # Django templates (co-located with app)
+│   │   ├── audit/                   # Audit log templates
+│   │   ├── auth/                    # Login/logout templates
+│   │   ├── ci_workflows/            # CI workflow templates
+│   │   ├── components/              # Shared partial components
+│   │   ├── connections/             # Integration connection templates
+│   │   ├── dashboard/               # Dashboard templates
+│   │   ├── env_vars/                # Environment variable templates
+│   │   ├── groups/                  # Group management templates
+│   │   ├── projects/                # Project/environment templates
+│   │   ├── services/                # Service templates
+│   │   │   └── wizard/              # Service creation wizard step templates
+│   │   ├── settings/                # Settings page templates
+│   │   ├── setup/                   # Initial setup templates
+│   │   ├── templates/               # Service template browser templates
+│   │   └── users/                   # User management templates
+│   ├── templatetags/                # Custom template tags and filters
+│   │   ├── audit_tags.py            # Audit log template tags
+│   │   └── core_filters.py          # General-purpose template filters
+│   ├── static/core/                 # App-specific static files (images)
+│   ├── migrations/                  # Database migrations
+│   ├── management/commands/         # Management commands
+│   │   └── cleanup_versions.py      # `manage.py cleanup_versions`
+│   ├── tests/                       # Unit tests for core app
+│   ├── apps.py                      # CoreConfig (registers custom User model)
+│   ├── admin.py                     # Django admin registrations
+│   ├── ci_manifest.py               # CI manifest utilities (runtime compatibility, constraint intersection)
+│   ├── ci_steps.py                  # CI step utility functions
+│   ├── context_processors.py        # Template context processors (user_roles, navigation_context)
+│   ├── converters.py                # URL converters (DnsLabelConverter)
+│   ├── decorators.py                # View decorators (admin_required, operator_required)
+│   ├── encryption.py                # Fernet encryption/decryption for sensitive config
+│   ├── git_utils.py                 # Git operations (clone, scan, parse URLs)
+│   ├── middleware.py                # SetupMiddleware (enforces initial setup flow)
+│   ├── permissions.py               # Permission functions and view mixins (RBAC)
+│   ├── utils.py                     # Shared utilities (env var cascade, setup token, resolve_env_vars)
+│   └── validators.py                # DNS label validator for name fields
+├── plugins/                         # Integration plugin packages
+│   ├── __init__.py                  # autodiscover() function
+│   ├── base.py                      # BasePlugin, CICapableMixin, PluginRegistry, helper functions
+│   ├── github/                      # GitHub App integration plugin
+│   │   ├── __init__.py              # Registers GitHubPlugin with registry
+│   │   ├── plugin.py                # GitHubPlugin (BasePlugin + CICapableMixin implementation)
+│   │   ├── forms.py                 # GitHub connection wizard forms
+│   │   ├── views.py                 # GitHub-specific views
+│   │   ├── urls.py                  # GitHub plugin URL patterns
+│   │   ├── webhooks.py              # GitHub webhook handler (signature verification, event dispatch)
+│   │   └── templates/github/        # GitHub-specific templates
+│   └── docker/                      # Docker integration plugin
+│       ├── __init__.py              # Registers DockerPlugin with registry
+│       ├── plugin.py                # DockerPlugin implementation
+│       ├── forms.py                 # Docker connection wizard forms
+│       ├── views.py                 # Docker-specific views
+│       ├── urls.py                  # Docker plugin URL patterns
+│       └── templates/docker/        # Docker-specific templates
+├── theme/                           # Tailwind CSS build and base template
+│   ├── static_src/                  # npm build source
+│   │   └── src/                     # Tailwind CSS input files
+│   ├── static/css/dist/             # Compiled Tailwind CSS output
+│   ├── static/js/vendor/            # Vendor JS (Alpine.js CSP build, HTMX)
+│   └── templates/base.html          # Global base HTML template (Alpine.js component registrations)
+├── tests/                           # Integration / cross-app tests
+│   ├── core/                        # Core app test modules
+│   └── plugins/                     # Plugin test modules
+├── docs/                            # Design and feature documentation
+│   ├── ci-workflows/                # CI workflow design docs
+│   ├── deployments/                 # Deployment design docs
+│   ├── security/                    # Security design docs
+│   └── templates/                   # Template system docs
+├── data/                            # Runtime data (git-ignored except .gitkeep)
+│   ├── db.sqlite3                   # SQLite database
+│   └── cache/                       # File-based Django cache (build logs)
+├── secrets/                         # Auto-generated secrets (git-ignored)
+│   ├── initialUnlockToken           # Unlock token for first-run setup
+│   └── encryption.key               # Fernet encryption key (fallback if PTF_ENCRYPTION_KEY unset)
+├── staticfiles/                     # Collected static files (git-ignored, generated)
+├── scripts/                         # Dev scripts
+│   └── run-dev.sh                   # Starts web + worker processes for `make run`
+├── manage.py                        # Django CLI entrypoint
+├── pyproject.toml                   # uv dependencies + ruff + pytest + import-linter config
+├── uv.lock                          # Locked dependency versions
+├── Makefile                         # Dev commands (run, stop, build, migrate, test)
+├── Dockerfile                       # Container image (Python 3.13, uv, Gunicorn + Uvicorn)
+├── docker-compose.yml               # Three services: portal, worker, scheduler
+├── entrypoint.sh                    # Container startup (migrations + gunicorn)
+└── CLAUDE.md                        # AI agent instructions for this codebase
 ```
+
+---
 
 ## Directory Purposes
 
-**`pathfinder/`:** Django project configuration package containing settings, routing, and WSGI/ASGI entrypoints. Currently minimal, no custom apps registered yet.
+**`pathfinder/` (config package):**
+- Purpose: Django project-level configuration — not a feature app
+- Key files: `settings.py` (all Django settings), `urls.py` (root URL routing with plugin autodiscovery), `asgi.py` (Channels protocol router)
+- Do not add feature code here
 
-**`docs/`:** Comprehensive design documentation covering all features: Projects, Services, Environments, Integrations, RBAC, Blueprints, Wizard UI, and roadmap. Source of truth for implementation.
+**`core/` (the app):**
+- Purpose: Sole Django app — owns all domain models, all views, all background tasks
+- Everything that is not a plugin or theme lives here
+- `models.py` is a single large file with all models registered to `auditlog`
+- `tasks.py` is a single large file with all `@task`-decorated functions
+- `views/` has one module per feature area; `core/views/__init__.py` re-exports everything for `core/urls.py`
 
-**`venv/`:** Python virtual environment directory. Contains all installed dependencies. Activated via `source venv/bin/activate` before running Django management commands.
+**`plugins/` (plugin packages):**
+- Purpose: Provider-specific implementations extending core via `BasePlugin` / `CICapableMixin`
+- Each plugin is a Python package with `__init__.py` that registers itself on import
+- Plugin templates are served by adding `plugins/*/templates` directories to `TEMPLATES[0]["DIRS"]` in `settings.py`
+- Core never imports from `plugins.github` or `plugins.docker` directly — only through `registry.get(name)` or `plugins.base` helpers
+
+**`theme/` (CSS + base template):**
+- Purpose: Tailwind CSS build pipeline and global `base.html` template
+- `theme/static_src/` — npm build source; `theme/static/` — compiled output
+- `theme/templates/base.html` — all pages inherit from this; Alpine.js component registrations (`Alpine.data()`) live here
+- Import-linter enforces that theme never imports from core or plugins
+
+**`data/` (runtime data):**
+- SQLite database at `data/db.sqlite3`; file-based cache at `data/cache/`; mounted as Docker volume `data`
+
+**`secrets/` (auto-generated):**
+- `initialUnlockToken` — generated on first run, deleted after setup completes
+- `encryption.key` — Fernet key fallback; production should use `PTF_ENCRYPTION_KEY` env var
+
+---
 
 ## Key File Locations
 
 **Entry Points:**
-
-- `pathfinder/wsgi.py`: WSGI entry point for Gunicorn/production servers. Sets `DJANGO_SETTINGS_MODULE` and calls `get_wsgi_application()`.
-- `pathfinder/asgi.py`: ASGI entry point for async application servers. Currently unused but available for future async support.
-- `manage.py`: Development CLI utility. Runs `django.core.management.execute_from_command_line()` with `DJANGO_SETTINGS_MODULE` set to `pathfinder.settings`.
-- `entrypoint.sh`: Container startup script. Runs migrations, collects static files, starts Gunicorn with 2 workers and 4 threads.
+- `pathfinder/asgi.py`: ASGI entrypoint — HTTP + WebSocket protocol routing
+- `manage.py`: Django CLI; used for migrations, `db_worker`, `run_task_scheduler`, `cleanup_versions`
+- `entrypoint.sh`: Docker container startup script
 
 **Configuration:**
+- `pathfinder/settings.py`: All Django settings including CSP, task queues, cache, session, logging
+- `pathfinder/urls.py`: Root URL router with plugin autodiscovery
+- `pyproject.toml`: Dependencies (uv), linting (ruff), testing (pytest), import contracts (import-linter)
+- `Makefile`: Developer commands
 
-- `pathfinder/settings.py`: Django settings module. Database backend (SQLite at `db.sqlite3`), installed apps (currently: admin, auth, contenttypes, sessions, messages, staticfiles), middleware stack (security, sessions, CSRF, auth, messages, clickjacking), templates, static files configuration.
-- `docker-compose.yml`: Multi-container orchestration configuration. Defines `ssp` service with build context, environment variables, volume mounts, healthcheck, and Traefik labels for reverse proxy.
-- `Dockerfile`: Container image definition. Base: Python 3.13 slim, installs libpq-dev (PostgreSQL support for future), creates non-root user `ssp:ssp`, runs migrations and static collection before starting Gunicorn.
-- `requirements.txt`: Python dependencies list (file does not exist yet, needs to be created with Django 6.x and dependencies).
+**Core Domain:**
+- `core/models.py`: All Django models (User, Group, Project, Environment, Service, IntegrationConnection, CIStep, CIWorkflow, CIWorkflowVersion, Build, Template, etc.)
+- `core/tasks.py`: All background tasks (scaffold_repository, scan_steps_repository, verify_build, etc.)
+- `core/urls.py`: All HTTP URL patterns grouped by feature namespace
+- `core/permissions.py`: RBAC functions and view mixins
+- `core/utils.py`: `resolve_env_vars()` (env var cascade), setup token utilities
+- `core/encryption.py`: `encrypt_config()` / `decrypt_config()` (Fernet)
+- `core/git_utils.py`: Git protocol operations (clone, scan repos, parse URLs)
+- `core/ci_manifest.py`: Runtime compatibility checking and constraint intersection
 
-**Database:**
+**Plugin Infrastructure:**
+- `plugins/base.py`: `BasePlugin`, `CICapableMixin`, `PluginRegistry`, `get_ci_plugin_for_engine()`, `get_available_engines()`
+- `plugins/__init__.py`: `autodiscover()` function
 
-- `db.sqlite3`: SQLite database file (git-ignored). Stores all application data: Users, Projects, Services, Builds, Deployments, Environments, IntegrationConnections, Repositories, Groups, Permissions.
+**WebSocket:**
+- `core/consumers.py`: `ServiceConsumer` (poll-based WebSocket for service page real-time updates)
+- `core/routing.py`: WebSocket URL patterns (`ws/services/<int:service_id>/`)
 
-**Static Files:**
+**Templates:**
+- `theme/templates/base.html`: Global base template — Alpine.js registrations, navigation, CSP nonce injection
+- `core/templates/core/components/`: Shared HTMX partial components
+- `core/templates/core/<feature>/`: Feature-specific full-page and partial templates
+- `plugins/<name>/templates/<name>/`: Plugin-specific templates
 
-- `staticfiles/`: Collected static files (CSS, JS, images). Generated by `python manage.py collectstatic`. Git-ignored.
+**Testing:**
+- `tests/core/`: Core app integration tests
+- `tests/plugins/`: Plugin tests
+- `core/tests/`: Core app unit tests
+
+---
 
 ## Naming Conventions
 
 **Files:**
-
-- Django app directories: snake_case (e.g., `core`, `integrations`, `services`)
-- Python modules: snake_case (e.g., `models.py`, `views.py`, `serializers.py`)
-- Django templates: kebab-case (e.g., `service-detail.html`, `wizard-page-1.html`)
-- Static files (CSS/JS): kebab-case (e.g., `style.css`, `wizard.js`)
+- Python modules: `snake_case.py` (e.g., `ci_workflows.py`, `git_utils.py`)
+- Django templates: `snake_case.html` or `kebab-case.html` (e.g., `list.html`, `wizard-step.html`)
+- Test files: `test_<subject>.py` (e.g., `test_models.py`, `test_permissions.py`)
 
 **Directories:**
+- Django app directories: `snake_case` (e.g., `core/`, `plugins/`, `theme/`)
+- Plugin packages: lowercase provider name (e.g., `github/`, `docker/`)
+- Template subdirectories: `snake_case` matching feature name (e.g., `ci_workflows/`, `env_vars/`)
 
-- Feature packages: lowercase snake_case (e.g., `pathfinder/integrations/`, `pathfinder/core/`)
-- Plugin directories: lowercase with hyphens (e.g., `integrations/plugins/github/`, `integrations/plugins/jenkins/`)
-- Template directories: lowercase (e.g., `templates/`, `templates/wizard/`)
+**Database / Model Identifiers:**
+- Entity name fields (Project, Service, Group, etc.): DNS-label format enforced by `dns_label_validator` — lowercase letters, digits, hyphens; max 63 chars
+- Service handler: `{project-name}-{service-name}` (computed property)
+- URL parameters use `<dns:name>` type converter (e.g., `<dns:project_name>`, `<dns:workflow_name>`)
+- UUIDs used for external references (`uuid` field); primary keys are BigAutoField integers
 
-**Database/Model Identifiers:**
+**Views:**
+- Class-based views named `<Entity><Action>View` (e.g., `ProjectDetailView`, `ServiceCreateWizard`, `WorkflowPublishVersionView`)
+- HTMX partial views follow same naming but templates are `_partial.html` convention
 
-- Entity names (Project, Service, Environment, etc.): DNS-compatible format `^[a-z0-9]([a-z0-9-]*[a-z0-9])?$`
-- Max 63 characters (DNS label limit)
-- Service handler: `{project-name}-{service-name}` (max 63 chars total)
-- Deployment name: `{project-name}-{service-name}-{env-name}` (max 63 chars total)
-
-## Where to Add New Code
-
-**New Django App:**
-
-1. Create directory under `pathfinder/` (e.g., `pathfinder/core/`, `pathfinder/wizard/`)
-2. Create `__init__.py` (empty package marker)
-3. Create `apps.py` with AppConfig subclass
-4. Create `models.py` for ORM models
-5. Create `views.py` for views or `views/` directory with multiple view modules
-6. Create `urls.py` with URL patterns (if app-specific)
-7. Create `forms.py` for Django Forms
-8. Register in `pathfinder/settings.py` INSTALLED_APPS as `'pathfinder.core'`
-9. Add app-specific URL patterns to `pathfinder/urls.py` with `include()` if needed
-
-**New Feature (Service Logic):**
-
-- Main business logic: `pathfinder/services/` (e.g., `pathfinder/services/wizard_orchestrator.py`)
-- Service lifecycle helpers: `pathfinder/services/` (e.g., `pathfinder/services/build_manager.py`, `pathfinder/services/deployment_manager.py`)
-- Helpers called by views and signals
-
-**New Integration Plugin:**
-
-1. Create directory: `pathfinder/integrations/plugins/{plugin-name}/`
-2. Create `__init__.py` with plugin class registration
-3. Create plugin implementation file (e.g., `github.py`)
-4. Implement base plugin interface with capability declarations
-5. Optionally add `templates/` and `static/` subdirectories for custom UI
-6. Plugin auto-discovered at startup via `integrations/plugins/` scanner
-
-**New Templates:**
-
-- Feature-specific templates: `pathfinder/{app}/templates/{app}/*.html`
-- Wizard steps: `pathfinder/wizard/templates/wizard/page-{n}.html` (following Django app template layout)
-- Base layout: `pathfinder/core/templates/base.html` (inherited by all pages)
-- Shared components: `pathfinder/core/templates/components/*.html`
-
-**New Tests:**
-
-- Unit tests: `pathfinder/{app}/tests/test_{module}.py` (adjacent to source)
-- Test fixtures: `pathfinder/{app}/tests/fixtures.py` or `pathfinder/tests/factories/` using Factory Boy
-- Test database: Uses temporary in-memory SQLite during test runs (Django default)
-
-**New Management Command:**
-
-1. Create directory: `pathfinder/{app}/management/commands/`
-2. Create file: `pathfinder/{app}/management/commands/{command-name}.py`
-3. Implement Command class extending `django.core.management.BaseCommand`
-4. Callable via: `python manage.py {command-name}`
-
-## Special Directories
-
-**`manifests/`:**
-- Purpose: Stores generated deployment manifests (YAML files for Kubernetes, Terraform, etc.)
-- Generated: Yes, created during deployment
-- Committed: No (git-ignored in `.gitignore` with pattern `manifests/*.yml`, `manifests/*.yaml`)
-- Preservation: `.gitkeep` file ensures directory exists in repository
-- Naming: One file per deployment or environment: `{service-handler}-{env-name}.yaml`
-
-**`staticfiles/`:**
-- Purpose: Collected static files for production serving
-- Generated: Yes, created by `python manage.py collectstatic`
-- Committed: No (git-ignored)
-- Includes: CSS, JS, images from all apps and `static/` directories
-- Used by: Production web server (Gunicorn typically served by Traefik/nginx)
-
-**`.claude/`:**
-- Purpose: Claude Code AI configuration and local settings
-- Generated: Yes, created by Claude Code IDE
-- Committed: No (would be git-ignored or contains local settings)
-- Contents: Agent settings, local JSON configuration
-
-**`.planning/codebase/`:**
-- Purpose: GSD (GitHub Software Development) codebase analysis documents
-- Contents: `ARCHITECTURE.md`, `STRUCTURE.md`, `CONVENTIONS.md`, `TESTING.md`, `CONCERNS.md`, `STACK.md`, `INTEGRATIONS.md`
-- Generated: Yes, created by mapping agents
-- Committed: Yes, version-controlled for team reference
+**URL Namespaces:**
+- `setup`, `auth`, `dashboard`, `users`, `groups`, `audit`, `ci_workflows`, `connections`, `projects`, `settings`, `services`, `templates`
+- Plugin namespaces match plugin name: `github`, `docker`
 
 ---
 
-*Structure analysis: 2026-01-21*
+## Where to Add New Code
+
+**New view (existing feature area):**
+- Add class to the appropriate `core/views/<feature>.py`
+- Re-export from `core/views/__init__.py` if needed by `core/urls.py`
+- Add URL pattern to the matching pattern list in `core/urls.py`
+- Add template to `core/templates/core/<feature>/`
+
+**New feature area (new section of the app):**
+- Create `core/views/<feature>.py`
+- Create `core/forms/<feature>.py` if forms needed
+- Create `core/templates/core/<feature>/` directory with templates
+- Add URL pattern group in `core/urls.py`, import and register in `pathfinder/urls.py`
+- Do NOT create a new Django app — keep all core logic in `core/`
+
+**New domain model:**
+- Add to `core/models.py`
+- Create migration: `uv run python manage.py makemigrations`
+- Register with `auditlog` at the bottom of `core/models.py` if it needs change tracking
+
+**New background task:**
+- Add `@task(queue_name="...")` function to `core/tasks.py`
+- Use an existing queue name or add a new one to `TASKS["default"]["QUEUES"]` in `settings.py`
+
+**New plugin:**
+1. Create directory `plugins/<name>/`
+2. Create `plugins/<name>/__init__.py` — must import plugin class and call `registry.register(instance)`
+3. Create `plugins/<name>/plugin.py` — implement `BasePlugin`; implement `CICapableMixin` if CI engine support is needed
+4. Create `plugins/<name>/forms.py` for wizard forms
+5. Create `plugins/<name>/urls.py` returning URL patterns from `get_urlpatterns()`
+6. Create `plugins/<name>/views.py` for plugin-specific views
+7. Optionally create `plugins/<name>/templates/<name>/` for plugin templates
+8. Update import-linter independence contract in `pyproject.toml` to include the new plugin module
+
+**New Alpine.js component (multi-step logic):**
+- Register via `Alpine.data('componentName', function() {...})` using `alpine:init` event listener in `theme/templates/base.html` if truly shared across pages
+- Register in `{% block extra_head %}` of the specific page template if page-specific
+- Never use `=>` arrow functions or semicolons in Alpine CSP expressions
+
+**New template tag or filter:**
+- Add to `core/templatetags/core_filters.py` for general filters
+- Add to `core/templatetags/audit_tags.py` for audit-specific tags
+- Load in template with `{% load core_filters %}`
+
+---
+
+## Special Directories
+
+**`data/`:**
+- Purpose: Runtime persistent data — SQLite DB and file cache
+- Generated: Yes (auto-created by `settings.py`)
+- Committed: No (git-ignored, mounted as Docker volume)
+
+**`secrets/`:**
+- Purpose: Auto-generated secret files for local/dev use
+- Generated: Yes (created by `core/utils.py` and `core/encryption.py`)
+- Committed: No (git-ignored)
+
+**`staticfiles/`:**
+- Purpose: Collected static files served by WhiteNoise in production
+- Generated: Yes (by `python manage.py collectstatic` or `make build`)
+- Committed: No (git-ignored)
+
+**`theme/static_src/node_modules/`:**
+- Purpose: npm dependencies for Tailwind CSS build
+- Generated: Yes (by npm install)
+- Committed: No (git-ignored)
+
+**`.planning/`:**
+- Purpose: GSD planning documents — codebase analysis, phase plans, quick fixes
+- Generated: Yes (by GSD mapping and planning agents)
+- Committed: Yes (version-controlled for team reference)
+
+**`.import_linter_cache/`:**
+- Purpose: import-linter analysis cache
+- Generated: Yes (by `lint-imports` pre-commit hook)
+- Committed: No (git-ignored)
+
+---
+
+*Structure analysis: 2026-02-24*
