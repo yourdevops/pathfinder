@@ -3,6 +3,13 @@
 from django import forms
 
 from core.models import IntegrationConnection
+from plugins.base import PluginRegistry
+
+
+def _get_scm_plugin_names():
+    """Return plugin_name values for SCM-category plugins."""
+    return [p.name for p in PluginRegistry.by_category("scm")]
+
 
 DARK_INPUT = "w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:outline-none focus:border-dark-accent"
 DARK_SELECT = "w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:border-dark-accent"
@@ -12,7 +19,7 @@ class TemplateRegisterForm(forms.Form):
     """Form for registering a new service template."""
 
     connection = forms.ModelChoiceField(
-        queryset=IntegrationConnection.objects.filter(status="active"),
+        queryset=IntegrationConnection.objects.filter(status="active", plugin_name__in=_get_scm_plugin_names()),
         required=False,
         empty_label="None (public repo)",
         help_text="Select an SCM connection for private repositories.",
