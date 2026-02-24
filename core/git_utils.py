@@ -184,32 +184,32 @@ def clone_repo_full(git_url: str, branch: str = "main", auth_url: str | None = N
     return _clone_repo(git_url, branch, auth_url, prefix="ssp_clone_full_")
 
 
-def read_manifest_from_repo(repo_path: str) -> dict:
+def read_pathfinder_manifest(repo_path: str) -> dict:
+    """Read and validate pathfinder.yaml from template repo root.
+
+    Returns parsed manifest dict with validated fields.
+    Raises FileNotFoundError if manifest is missing.
+    Raises ValueError if manifest is invalid.
     """
-    Read and parse manifest file from repository.
+    manifest_path = os.path.join(repo_path, "pathfinder.yaml")
+    if not os.path.exists(manifest_path):
+        raise FileNotFoundError("pathfinder.yaml not found in repository root")
 
-    Looks for ssp-template.yaml first, then pathfinder-template.yaml.
+    with open(manifest_path) as f:
+        data = yaml.safe_load(f)
 
-    Args:
-        repo_path: Path to cloned repository
+    if not isinstance(data, dict):
+        raise ValueError("pathfinder.yaml must be a YAML mapping")
+    if data.get("kind") != "ServiceTemplate":
+        raise ValueError(f"Expected kind: ServiceTemplate, got: {data.get('kind')}")
+    if not data.get("name"):
+        raise ValueError("name field is required in pathfinder.yaml")
 
-    Returns:
-        Parsed manifest dictionary
+    name = data["name"]
+    if not re.match(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$", name):
+        raise ValueError(f"name '{name}' must be DNS-compatible (lowercase letters, numbers, hyphens)")
 
-    Raises:
-        FileNotFoundError: If no manifest file found
-        yaml.YAMLError: If manifest is invalid YAML
-    """
-
-    manifest_names = ["ssp-template.yaml", "pathfinder-template.yaml"]
-
-    for name in manifest_names:
-        manifest_path = os.path.join(repo_path, name)
-        if os.path.exists(manifest_path):
-            with open(manifest_path) as f:
-                return yaml.safe_load(f)
-
-    raise FileNotFoundError(f"Manifest file not found. Expected one of: {', '.join(manifest_names)}")
+    return data
 
 
 def list_tags_from_repo(repo: git.Repo) -> list:
@@ -352,7 +352,7 @@ def apply_template_to_directory(src_dir: str, dest_dir: str, variables: dict, ex
     """
 
     if exclude_files is None:
-        exclude_files = ["ssp-template.yaml", "pathfinder-template.yaml", ".git"]
+        exclude_files = ["pathfinder.yaml", ".git"]
 
     # Copy all files except excluded
     for item in os.listdir(src_dir):
