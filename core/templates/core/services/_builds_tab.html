@@ -1,4 +1,4 @@
-<div id="builds-tab-content" class="space-y-6"{% if has_running_builds %} hx-get="?tab=builds{% if show_workflow_tabs %}&build_tab={{ active_build_tab }}{% endif %}{% if status_filter and status_filter != 'all' %}&status={{ status_filter }}{% endif %}{% if sort_by %}&sort={{ sort_by }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" hx-trigger="every 5s" hx-target="#builds-tab-content" hx-swap="innerHTML"{% endif %}>
+<div id="builds-tab-content" class="space-y-6" {% if oob %}hx-swap-oob="true"{% endif %}>
     <!-- Header with title and filter -->
     <div class="flex items-center justify-between">
         <h1 class="text-2xl font-bold text-dark-text">Builds</h1>

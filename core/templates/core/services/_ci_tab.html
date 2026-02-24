@@ -152,58 +152,7 @@
 
             <!-- Row 2: Manifest Status + Push (only if workflow assigned) -->
             {% if service.ci_workflow %}
-            <div class="flex items-center justify-between pt-4 border-t border-dark-border/50">
-                <!-- Left: Status -->
-                <div class="flex items-center gap-3">
-                    {% if ci_manifest_status == "never_pushed" %}
-                    <span class="px-2 py-1 text-xs rounded bg-gray-500/20 text-gray-300">Never Pushed</span>
-                    {% elif ci_manifest_status == "pending_pr" %}
-                    <span class="px-2 py-1 text-xs rounded bg-blue-500/20 text-blue-300">Pending PR</span>
-                    {% elif ci_manifest_status == "synced" and not ci_manifest_out_of_sync %}
-                    <span class="px-2 py-1 text-xs rounded bg-green-500/20 text-green-300">Synced</span>
-                    {% elif ci_manifest_status == "out_of_sync" or ci_manifest_out_of_sync %}
-                    <span class="px-2 py-1 text-xs rounded bg-amber-500/20 text-amber-300">Out of Sync</span>
-                    {% else %}
-                    <span class="px-2 py-1 text-xs rounded bg-gray-500/20 text-gray-300">{{ ci_manifest_status|title }}</span>
-                    {% endif %}
-
-                    {% if ci_manifest_pushed_at %}
-                    <span class="text-sm text-dark-muted">
-                        Last pushed: {{ ci_manifest_pushed_at|timesince }} ago
-                    </span>
-                    {% endif %}
-                </div>
-
-                <!-- Right: Actions -->
-                <div class="flex items-center gap-3">
-                    {% if ci_manifest_pr_url %}
-                    <a href="{{ ci_manifest_pr_url }}" target="_blank"
-                       class="text-sm text-dark-accent hover:underline">
-                        View Pull Request
-                    </a>
-                    {% endif %}
-
-                    {% if can_edit %}
-                        {% if ci_manifest_status == "never_pushed" or ci_manifest_status == "out_of_sync" or ci_manifest_out_of_sync %}
-                        <form method="post" action="{% url 'projects:service_push_manifest' project_name=project.name service_name=service.name %}">
-                            {% csrf_token %}
-                            <button type="submit"
-                                    class="px-3 py-1.5 text-sm bg-dark-accent hover:bg-dark-accent/80 text-white rounded transition-colors">
-                                Push Manifest
-                            </button>
-                        </form>
-                        {% elif ci_manifest_status == "pending_pr" %}
-                        <form method="post" action="{% url 'projects:service_push_manifest' project_name=project.name service_name=service.name %}">
-                            {% csrf_token %}
-                            <button type="submit"
-                                    class="px-3 py-1.5 text-sm bg-dark-accent hover:bg-dark-accent/80 text-white rounded transition-colors">
-                                Update Pull Request
-                            </button>
-                        </form>
-                        {% endif %}
-                    {% endif %}
-                </div>
-            </div>
+            {% include "core/services/_ci_manifest_status.html" %}
             {% endif %}
 
             <!-- Row 3: Auto-update Toggle (only if workflow assigned) -->

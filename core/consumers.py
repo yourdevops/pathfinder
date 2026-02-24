@@ -6,6 +6,7 @@ import logging
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
+from django.template.loader import render_to_string
 
 logger = logging.getLogger(__name__)
 
@@ -144,13 +145,131 @@ class ServiceConsumer(AsyncWebsocketConsumer):
         """Compute SHA-256 hash of state dict for change detection."""
         return hashlib.sha256(json.dumps(state, default=str, sort_keys=True).encode()).hexdigest()
 
+    def build_template_context(self, state):
+        """Build template context matching ServiceDetailView.get_context_data."""
+        from core.models import Build, Service
+
+        service = Service.objects.select_related(
+            "ci_workflow",
+            "ci_workflow_version",
+            "project",
+        ).get(id=self.service_id)
+
+        project = service.project
+
+        # Build stats
+        builds_qs = Build.objects.filter(service=service).order_by("-created_at")
+        total_builds = state["stats"]["total"]
+        last_build = builds_qs.first()
+        completed_count = state["stats"]["completed"]
+        success_count = state["stats"]["success"]
+        success_rate = round(success_count * 100 / completed_count) if completed_count > 0 else None
+
+        avg_duration = state["stats"]["avg_duration"]
+        avg_build_time_seconds = round(avg_duration) if avg_duration else None
+
+        recent_builds = list(builds_qs[:5])
+
+        # CI workflow info
+        ci_workflow = service.ci_workflow
+        ci_workflow_version = service.ci_workflow_version
+
+        # Builds tab: first page, default sort, no filters
+        from django.core.paginator import Paginator
+
+        paginator = Paginator(builds_qs, 20)
+        page_obj = paginator.get_page(1)
+
+        # Check running builds and any builds
+        has_running_builds = Build.objects.filter(service=service, status__in=["pending", "running"]).exists()
+        has_any_builds = total_builds > 0
+
+        # Workflow tabs for builds
+        current_workflow_name = ci_workflow.name if ci_workflow else None
+        all_builds = Build.objects.filter(service=service)
+        if current_workflow_name:
+            other_builds_qs = all_builds.exclude(workflow_name=current_workflow_name)
+        else:
+            other_builds_qs = all_builds
+        show_workflow_tabs = other_builds_qs.exists()
+
+        return {
+            "service": service,
+            "project": project,
+            "total_builds": total_builds,
+            "last_build": last_build,
+            "success_rate": success_rate,
+            "avg_build_time_seconds": avg_build_time_seconds,
+            "recent_builds": recent_builds,
+            "ci_workflow": ci_workflow,
+            "ci_workflow_version": ci_workflow_version,
+            "show_empty_state": total_builds == 0,
+            # Builds tab context
+            "builds": page_obj,
+            "page_obj": page_obj,
+            "has_running_builds": has_running_builds,
+            "has_any_builds": has_any_builds,
+            "status_filter": "all",
+            "sort_by": "-started_at",
+            "search_query": "",
+            "status_choices": [
+                ("all", "All"),
+                ("running", "Running"),
+                ("success", "Success"),
+                ("failed", "Failed"),
+            ],
+            "show_workflow_tabs": show_workflow_tabs,
+            "other_builds_count": other_builds_qs.count(),
+            "current_workflow_name": current_workflow_name,
+            "active_build_tab": "current",
+            # CI manifest status context
+            "ci_manifest_status": service.ci_manifest_status,
+            "ci_manifest_out_of_sync": service.ci_manifest_out_of_sync,
+            "ci_manifest_pr_url": service.ci_manifest_pr_url,
+            "ci_manifest_pushed_at": service.ci_manifest_pushed_at,
+            "can_edit": False,  # WS push is read-only; interactive forms use HTTP
+        }
+
     @database_sync_to_async
     def render_updates(self, state):
         """
         Render HTML for out-of-band swap updates.
 
-        Placeholder: will be expanded in Plan 03 when template partials are ready.
-        Returns empty string for now -- the consumer structure and polling loop
-        are fully functional.
+        Renders all OOB-targetable partials and concatenates them into a single
+        WS message. HTMX silently ignores OOB swaps for IDs not present in DOM.
         """
-        return ""
+        ctx = self.build_template_context(state)
+        ctx["oob"] = True
+        parts = []
+
+        # Dashboard sections
+        if ctx["total_builds"] == 0:
+            parts.append(render_to_string("core/services/_dashboard_empty.html", ctx))
+        else:
+            parts.append(render_to_string("core/services/_stats_row.html", ctx))
+
+        parts.append(render_to_string("core/services/_recent_builds.html", ctx))
+        parts.append(render_to_string("core/services/_ci_pipeline_card.html", ctx))
+
+        # Builds tab (always sent; HTMX ignores if element not in DOM)
+        parts.append(render_to_string("core/services/_builds_tab.html", ctx))
+
+        # CI manifest status (only when workflow is assigned)
+        if ctx["ci_workflow"]:
+            parts.append(render_to_string("core/services/_ci_manifest_status.html", ctx))
+
+        # Scaffold badge (only when relevant)
+        if state.get("scaffold_status") in ("pending", "running", "failed"):
+            scaffold_display = state["scaffold_status"].replace("_", " ").title()
+            status_class = {
+                "pending": "bg-gray-500/20 text-gray-300",
+                "running": "bg-blue-500/20 text-blue-300",
+                "failed": "bg-red-500/20 text-red-300",
+            }.get(state["scaffold_status"], "bg-gray-500/20 text-gray-300")
+            parts.append(
+                f'<span id="scaffold-badge" hx-swap-oob="true"'
+                f' class="px-2 py-0.5 text-xs rounded {status_class}">'
+                f"Scaffold: {scaffold_display}</span>"
+            )
+
+        return "".join(parts)

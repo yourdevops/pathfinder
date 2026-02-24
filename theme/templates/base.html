@@ -386,6 +386,19 @@
         // Ensure dark mode class is set before render to prevent flash
         document.documentElement.classList.add('dark');
     </script>
+    <style nonce="{{ csp_nonce }}">
+        @keyframes ws-highlight { from { background-color: rgba(59, 130, 246, 0.15); } to { background-color: transparent; } }
+        [data-ws-updated] { animation: ws-highlight 2s ease-out; }
+    </style>
+    <script nonce="{{ csp_nonce }}">
+        document.addEventListener('htmx:wsAfterMessage', function() {
+            var builds = document.getElementById('builds-tab-content');
+            if (builds) {
+                builds.style.opacity = '0.7';
+                setTimeout(function() { builds.style.opacity = '1'; }, 150);
+            }
+        });
+    </script>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-dark-bg text-dark-text min-h-screen">

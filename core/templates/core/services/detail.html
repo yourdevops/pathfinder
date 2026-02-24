@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="p-8">
+<div class="p-8" hx-ext="ws" ws-connect="/ws/services/{{ service.id }}/">
     <div id="tab-content">
         {% include tab_template %}
     </div>
