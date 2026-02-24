@@ -1,5 +1,6 @@
 {% load humanize %}
 
+<div id="dashboard-stats-row" {% if oob %}hx-swap-oob="true"{% endif %}>
 {% if not ci_workflow %}
 <!-- No CI Workflow assigned -->
 <div class="bg-dark-surface border-2 border-dashed border-dark-border rounded-lg p-8 text-center">
@@ -37,3 +38,4 @@
     {% endif %}
 </div>
 {% endif %}
+</div>
