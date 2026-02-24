@@ -302,6 +302,7 @@ Recent decisions affecting current work:
 - Phase 6.11 inserted after Phase 6: Templates documentation folder (URGENT)
 - Phase 7 added: Implement unified Environment Variables management
 - Phase 8 added: Implement Service Templates
+- Phase 9 added: WebSockets for Service's pages
 
 ### Pending Todos
 
