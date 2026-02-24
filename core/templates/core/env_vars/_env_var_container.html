@@ -29,7 +29,8 @@
         <div>
             {# Display row (when not editing this row) #}
             <div x-show="editingIdx !== idx"
-                 class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-dark-surface/50 hover:bg-dark-surface mb-1">
+                 class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-dark-surface/50 hover:bg-dark-surface mb-1 transition-all duration-500"
+                 :class="idx === lastAddedIdx ? 'ring-1 ring-green-500/50' : ''">
 
                 {# Lock icon #}
                 {% if current_level != "environment" %}
@@ -123,7 +124,8 @@
                 <span class="text-dark-muted">=</span>
 
                 {# Value input #}
-                <input type="text" :value="v.value" @input="v.value = $event.target.value"
+                <input type="text" :value="v.value" @input="updateEditValue($event.target.value)"
+                       @keydown.enter.prevent="saveEdit()"
                        placeholder="value"
                        class="flex-1 min-w-0 px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-text font-mono text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent">
 
@@ -153,7 +155,7 @@
 
                 {# Description input (collapsible) #}
                 <div x-show="showEditDesc" x-cloak class="absolute left-0 top-full mt-1 w-full px-4 z-10">
-                    <input type="text" :value="v.description" @input="v.description = $event.target.value"
+                    <input type="text" :value="v.description" @input="updateEditDesc($event.target.value)"
                            placeholder="Description (optional)"
                            class="w-full px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-muted text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent">
                 </div>
@@ -179,13 +181,15 @@
 
         {# Key input #}
         <input type="text" :value="newVar.key" @input="updateNewKey($event.target.value)"
+               @keydown.enter.prevent="confirmAdd()"
                placeholder="VARIABLE_NAME"
                class="w-40 px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-text font-mono text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent uppercase">
 
         <span class="text-dark-muted">=</span>
 
         {# Value input #}
-        <input type="text" :value="newVar.value" @input="newVar.value = $event.target.value"
+        <input type="text" :value="newVar.value" @input="updateNewValue($event.target.value)"
+               @keydown.enter.prevent="confirmAdd()"
                placeholder="value"
                class="flex-1 min-w-0 px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-text font-mono text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent">
 
@@ -215,7 +219,7 @@
 
         {# Description input (collapsible) #}
         <div x-show="showNewDesc" x-cloak class="absolute left-0 top-full mt-1 w-full px-4 z-10">
-            <input type="text" :value="newVar.description" @input="newVar.description = $event.target.value"
+            <input type="text" :value="newVar.description" @input="updateNewDesc($event.target.value)"
                    placeholder="Description (optional)"
                    class="w-full px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-muted text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent">
         </div>

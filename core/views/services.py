@@ -196,8 +196,17 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
                         "description": "Service name (system-injected)",
                     },
                 ]
-                context["ptf_vars_json"] = json.dumps(ptf_vars)
+                context["ptf_vars"] = ptf_vars
                 context["ptf_env_note"] = "PTF_ENVIRONMENT will be injected per-environment at deployment time."
+
+                # Pass current env vars as JSON for Alpine initFromData
+                form = context.get("wizard", {}).get("form")
+                initial_env_vars = "[]"
+                if form and hasattr(form, "data") and form.data:
+                    initial_env_vars = form.data.get("configuration-env_vars_json", "[]") or "[]"
+                elif form and form.initial:
+                    initial_env_vars = form.initial.get("env_vars_json", "[]") or "[]"
+                context["initial_env_vars_json"] = initial_env_vars
 
         elif self.steps.current == "workflow":
             # Add workflow list and detail context for step 3
@@ -254,20 +263,29 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
                     versions_map[str(wf_id)] = versions_for_wf
                 context["workflow_versions_json"] = json.dumps(versions_map)
 
-                # Defaults: pre-select project's default workflow and its latest version
+                # Restore previous selection if user navigated back, else use project defaults
                 default_workflow_id = ""
                 default_version_id = "none"
-                try:
-                    ci_config = project.ci_config
-                    if ci_config.default_workflow:
-                        dw_id = str(ci_config.default_workflow_id)
-                        if dw_id in versions_map:
-                            default_workflow_id = dw_id
-                            versions_for_default = versions_map[dw_id]
-                            if versions_for_default:
-                                default_version_id = versions_for_default[0]["id"]
-                except ProjectCIConfig.DoesNotExist:
-                    pass
+                workflow_data = self.get_cleaned_data_for_step("workflow")
+                if workflow_data:
+                    wf = workflow_data.get("ci_workflow")
+                    if wf:
+                        default_workflow_id = str(wf.id)
+                    vid = workflow_data.get("version_id")
+                    if vid:
+                        default_version_id = str(vid)
+                else:
+                    try:
+                        ci_config = project.ci_config
+                        if ci_config.default_workflow:
+                            dw_id = str(ci_config.default_workflow_id)
+                            if dw_id in versions_map:
+                                default_workflow_id = dw_id
+                                versions_for_default = versions_map[dw_id]
+                                if versions_for_default:
+                                    default_version_id = versions_for_default[0]["id"]
+                    except ProjectCIConfig.DoesNotExist:
+                        pass
                 context["default_workflow_id"] = default_workflow_id
                 context["default_version_id"] = default_version_id
 

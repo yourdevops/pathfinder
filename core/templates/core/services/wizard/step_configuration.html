@@ -1,160 +1,248 @@
 {% extends "core/services/wizard/base.html" %}
 
-{% block extra_head %}
-<script nonce="{{ csp_nonce }}">
-document.addEventListener('alpine:init', function() {
-    Alpine.data('envVarWizard', function() {
-        return {
-            vars: [],
-            ptfVars: [],
-            showDesc: {},
-            lastAddedIdx: -1,
-
-            initFromField: function(fieldId, ptfData) {
-                this.ptfVars = ptfData;
-                var el = document.getElementById(fieldId);
-                if (el && el.value && el.value !== '[]') {
-                    try { this.vars = JSON.parse(el.value); } catch(e) { this.vars = []; }
-                }
-            },
-
-            addVar: function() {
-                this.vars.push({ key: '', value: '', lock: false, description: '' });
-                this.syncField();
-                var self = this;
-                self.lastAddedIdx = self.vars.length - 1;
-                setTimeout(function() { self.lastAddedIdx = -1; }, 1500);
-            },
-
-            removeVar: function(idx) {
-                this.vars.splice(idx, 1);
-                this.syncField();
-            },
-
-            updateKey: function(idx, val) {
-                this.vars[idx].key = val.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
-                this.syncField();
-            },
-
-            updateValue: function(idx, val) {
-                this.vars[idx].value = val;
-                this.syncField();
-            },
-
-            updateDesc: function(idx, val) {
-                this.vars[idx].description = val;
-                this.syncField();
-            },
-
-            toggleLock: function(idx) {
-                this.vars[idx].lock = !this.vars[idx].lock;
-                this.syncField();
-            },
-
-            toggleDesc: function(key) {
-                this.showDesc[key] = !this.showDesc[key];
-            },
-
-            syncField: function() {
-                var el = document.getElementById('id_configuration-env_vars_json');
-                if (el) { el.value = JSON.stringify(this.vars); }
-            }
-        };
-    });
-});
-</script>
-{% endblock %}
-
 {% block wizard_content %}
-<div x-data="envVarWizard"
-     x-init="initFromField('id_configuration-env_vars_json', {{ ptf_vars_json|default:'[]' }})">
+{# Info banner #}
+<div class="mb-4 p-3 rounded-lg bg-blue-900/20 border border-blue-500/30 text-sm text-blue-300">
+    Variables with empty values can be filled later on each environment's settings page before deployment.
+</div>
 
-    <!-- Info banner -->
-    <div class="mb-4 p-3 rounded-lg bg-blue-900/20 border border-blue-500/30 text-sm text-blue-300">
-        Variables with empty values can be filled later on each environment's settings page before deployment.
+{# Environment Variables section #}
+<div x-data="envVarEditor"
+     x-init="initFromData({{ initial_env_vars_json|default:'[]' }}, '', '', 'service', true, 'id_configuration-env_vars_json')">
+
+    <div class="flex items-center gap-2 mb-4">
+        <h3 class="text-sm font-semibold text-dark-muted uppercase tracking-wider">Environment Variables</h3>
+        <span class="px-1.5 py-0.5 text-xs rounded-full bg-dark-border text-dark-muted"
+              x-text="vars.length + {{ ptf_vars|length }}"></span>
     </div>
 
-    <!-- System PTF_* vars (read-only) -->
-    <div class="mb-2 space-y-1">
-        <template x-for="(pvar, i) in ptfVars" :key="i">
-            <div class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-dark-surface/30">
-                <span class="flex-shrink-0 text-gray-600">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                </span>
-                <code class="font-mono text-dark-text text-sm" x-text="pvar.key"></code>
-                <span class="text-dark-muted">=</span>
-                <span class="text-dark-muted font-mono text-sm" x-text="pvar.value"></span>
+    {# System PTF_* vars (read-only upstream) #}
+    {% for pvar in ptf_vars %}
+    <div class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-dark-surface/30 mb-1">
+        <span class="flex-shrink-0 text-gray-600">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+        </span>
+        <div class="relative" x-data="{ tip: false }">
+            <code class="font-mono text-dark-text text-sm cursor-default"
+                  @mouseenter="tip = true"
+                  @mouseleave="tip = false">{{ pvar.key }}</code>
+            <div x-show="tip" x-cloak
+                 class="absolute left-0 bottom-full mb-1 px-3 py-1.5 text-xs rounded bg-dark-bg border border-dark-border text-dark-muted whitespace-nowrap z-10 shadow-lg">
+                From: system. {{ pvar.description }}
             </div>
-        </template>
+        </div>
+        <span class="text-dark-muted">=</span>
+        <code class="text-dark-muted font-mono text-sm">{{ pvar.value }}</code>
     </div>
+    {% endfor %}
 
-    <!-- PTF_ENVIRONMENT note -->
+    {# PTF_ENVIRONMENT note #}
     <p class="text-xs text-dark-muted mb-4">{{ ptf_env_note }}</p>
 
-    <!-- Separator -->
-    <div class="border-t border-dark-border my-4"></div>
+    {# Separator #}
+    <div class="border-t border-dark-border/50 my-3"></div>
 
-    <!-- Editable service vars -->
-    <div class="space-y-1">
-        <template x-for="(v, idx) in vars" :key="idx">
-            <div>
-                <div class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-dark-surface/50 transition-all duration-500"
-                     :class="idx === lastAddedIdx ? 'ring-1 ring-green-500/50' : ''">
-                    <!-- Lock toggle -->
-                    <button type="button" @click="toggleLock(idx)"
-                            :class="v.lock ? 'text-red-400' : 'text-gray-700/30 hover:text-gray-500'"
-                            class="flex-shrink-0 transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  x-bind:d="v.lock ? 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' : 'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z'" />
-                        </svg>
-                    </button>
-                    <!-- Key input -->
-                    <input type="text" :value="v.key" @input="updateKey(idx, $event.target.value)"
-                           class="bg-transparent border-0 font-mono text-dark-text text-sm w-40 focus:ring-0 p-0"
-                           placeholder="KEY_NAME">
-                    <span class="text-dark-muted">=</span>
-                    <!-- Value input -->
-                    <input type="text" :value="v.value" @input="updateValue(idx, $event.target.value)"
-                           class="bg-transparent border-0 font-mono text-dark-muted text-sm flex-1 focus:ring-0 p-0"
-                           placeholder="value">
-                    <!-- Description toggle -->
-                    <button type="button" @click="toggleDesc(v.key || idx)"
-                            class="flex-shrink-0 text-dark-muted hover:text-dark-accent transition-colors" title="Edit description">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </button>
-                    <!-- Remove button -->
-                    <button type="button" @click="removeVar(idx)"
-                            class="flex-shrink-0 text-dark-muted hover:text-red-400 transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+    {# Current-level variables (Alpine-driven, same as settings pages) #}
+    <template x-for="(v, idx) in vars" :key="idx">
+        <div>
+            {# Display row (when not editing this row) #}
+            <div x-show="editingIdx !== idx"
+                 class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-dark-surface/50 hover:bg-dark-surface mb-1 transition-all duration-500"
+                 :class="idx === lastAddedIdx ? 'ring-1 ring-green-500/50' : ''">
+
+                {# Lock icon #}
+                <button type="button" @click="toggleLock(idx)"
+                        :class="v.lock ? 'text-red-400 hover:text-red-300' : 'text-gray-700/30 hover:text-gray-500'"
+                        class="flex-shrink-0 transition-colors"
+                        :title="v.lock ? 'Locked. Click to unlock.' : 'Unlocked. Click to lock.'">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              x-bind:d="v.lock ? 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' : 'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z'" />
+                    </svg>
+                </button>
+
+                {# Key with tooltip #}
+                <div class="relative" x-data="{ tip: false }">
+                    <code class="text-dark-text font-mono text-sm cursor-default"
+                          @mouseenter="tip = true"
+                          @mouseleave="tip = false"
+                          x-text="v.key"></code>
+                    <div x-show="tip" x-cloak
+                         class="absolute left-0 bottom-full mb-1 px-3 py-1.5 text-xs rounded bg-dark-bg border border-dark-border text-dark-muted whitespace-nowrap z-10 shadow-lg">
+                        <span>From: service</span>
+                        <template x-if="v.description">
+                            <span x-text="'. ' + v.description"></span>
+                        </template>
+                    </div>
                 </div>
-                <!-- Description row (collapsible) -->
-                <div x-show="showDesc[v.key || idx]"
-                     class="px-4 py-2 bg-dark-surface/30 rounded-b-lg -mt-1 ml-7">
-                    <input type="text" :value="v.description" @input="updateDesc(idx, $event.target.value)"
-                           class="bg-transparent border-0 text-dark-muted text-xs w-full focus:ring-0 p-0"
-                           placeholder="Description (optional)">
+
+                <span class="text-dark-muted">=</span>
+
+                {# Value #}
+                <template x-if="v.value">
+                    <code class="text-dark-muted font-mono text-sm truncate flex-1 min-w-0" x-text="v.value"></code>
+                </template>
+                <template x-if="!v.value">
+                    <span class="text-dark-muted italic text-sm flex-1">not set</span>
+                </template>
+
+                {# Edit/Delete actions #}
+                <div class="flex items-center gap-1 flex-shrink-0">
+                    <button type="button" @click="startEdit(idx)"
+                            class="p-1 text-dark-muted hover:text-dark-accent transition-colors" title="Edit variable">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                    </button>
+                    <button type="button" @click="removeVar(idx)"
+                            class="p-1 text-dark-muted hover:text-red-400 transition-colors" title="Delete variable">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
                 </div>
             </div>
-        </template>
+
+            {# Edit row (when editing this row) #}
+            <div x-show="editingIdx === idx"
+                 class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-dark-surface border border-dark-accent/30 mb-1 relative">
+
+                {# Lock toggle in edit mode #}
+                <button type="button" @click="toggleLock(idx)"
+                        :class="v.lock ? 'text-red-400' : 'text-gray-700/30 hover:text-gray-500'"
+                        class="flex-shrink-0 transition-colors"
+                        :title="v.lock ? 'Locked. Click to unlock.' : 'Unlocked. Click to lock.'">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              x-bind:d="v.lock ? 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' : 'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z'" />
+                    </svg>
+                </button>
+
+                {# Key input (read-only during edit) #}
+                <input type="text" :value="v.key" readonly
+                       class="w-40 px-2 py-1 bg-dark-bg/50 border border-dark-border rounded text-dark-text font-mono text-sm cursor-not-allowed uppercase">
+
+                <span class="text-dark-muted">=</span>
+
+                {# Value input #}
+                <input type="text" :value="v.value" @input="updateEditValue($event.target.value)"
+                       @keydown.enter.prevent="saveEdit()"
+                       placeholder="value"
+                       class="flex-1 min-w-0 px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-text font-mono text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent">
+
+                {# Description toggle #}
+                <button type="button" @click="showEditDesc = !showEditDesc"
+                        class="flex-shrink-0 p-1 text-dark-muted hover:text-dark-accent transition-colors" title="Edit description">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </button>
+
+                {# Save edit #}
+                <button type="button" @click="saveEdit()"
+                        class="flex-shrink-0 p-1 text-green-400 hover:text-green-300 transition-colors" title="Save">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                </button>
+
+                {# Cancel edit #}
+                <button type="button" @click="cancelEdit()"
+                        class="flex-shrink-0 p-1 text-dark-muted hover:text-red-400 transition-colors" title="Cancel">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                {# Description input (collapsible) #}
+                <div x-show="showEditDesc" x-cloak class="absolute left-0 top-full mt-1 w-full px-4 z-10">
+                    <input type="text" :value="v.description" @input="updateEditDesc($event.target.value)"
+                           placeholder="Description (optional)"
+                           class="w-full px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-muted text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent">
+                </div>
+            </div>
+        </div>
+    </template>
+
+    {# Add row (shown when addingNew) #}
+    <div x-show="addingNew" x-cloak
+         class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-dark-surface border border-dark-accent/30 mb-1 relative">
+
+        {# Lock toggle for new var #}
+        <button type="button" @click="newVar.lock = !newVar.lock"
+                :class="newVar.lock ? 'text-red-400' : 'text-gray-700/30 hover:text-gray-500'"
+                class="flex-shrink-0 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      x-bind:d="newVar.lock ? 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' : 'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z'" />
+            </svg>
+        </button>
+
+        {# Key input #}
+        <input type="text" :value="newVar.key" @input="updateNewKey($event.target.value)"
+               @keydown.enter.prevent="confirmAdd()"
+               placeholder="VARIABLE_NAME"
+               class="w-40 px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-text font-mono text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent uppercase">
+
+        <span class="text-dark-muted">=</span>
+
+        {# Value input #}
+        <input type="text" :value="newVar.value" @input="updateNewValue($event.target.value)"
+               @keydown.enter.prevent="confirmAdd()"
+               placeholder="value"
+               class="flex-1 min-w-0 px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-text font-mono text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent">
+
+        {# Description toggle #}
+        <button type="button" @click="showNewDesc = !showNewDesc"
+                class="flex-shrink-0 p-1 text-dark-muted hover:text-dark-accent transition-colors" title="Add description">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </button>
+
+        {# Confirm add #}
+        <button type="button" @click="confirmAdd()"
+                class="flex-shrink-0 p-1 text-green-400 hover:text-green-300 transition-colors" title="Add">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+        </button>
+
+        {# Cancel add #}
+        <button type="button" @click="cancelAdd()"
+                class="flex-shrink-0 p-1 text-dark-muted hover:text-red-400 transition-colors" title="Cancel">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        {# Description input (collapsible) #}
+        <div x-show="showNewDesc" x-cloak class="absolute left-0 top-full mt-1 w-full px-4 z-10">
+            <input type="text" :value="newVar.description" @input="updateNewDesc($event.target.value)"
+                   placeholder="Description (optional)"
+                   class="w-full px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-muted text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent">
+        </div>
     </div>
 
-    <!-- Add variable button -->
-    <button type="button" @click="addVar()" class="mt-3 flex items-center gap-2 text-sm text-dark-accent hover:text-dark-text transition-colors">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
-        Add variable
-    </button>
+    {# No variables message #}
+    <div x-show="vars.length === 0" x-cloak class="text-center py-6">
+        <p class="text-dark-muted text-sm">No service environment variables defined yet.</p>
+    </div>
 
-    <!-- Hidden JSON field for form submission -->
+    {# Add variable button #}
+    <div class="mt-3">
+        <button type="button" x-show="!addingNew" @click="startAdd()"
+                class="flex items-center gap-2 px-4 py-2 text-sm text-dark-muted hover:text-dark-accent border border-dashed border-dark-border hover:border-dark-accent rounded-lg transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add variable
+        </button>
+    </div>
+
+    {# Hidden JSON field for form submission #}
     {{ wizard.form.env_vars_json }}
 </div>
 {% endblock %}

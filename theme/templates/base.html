@@ -178,13 +178,22 @@
                 isEditable: true,
                 saveSuccess: false,
                 saveError: '',
+                syncFieldId: '',
+                lastAddedIdx: -1,
 
-                initFromData: function(initialVars, saveUrl, csrfToken, currentLevel, isEditable) {
+                initFromData: function(initialVars, saveUrl, csrfToken, currentLevel, isEditable, syncFieldId) {
                     this.vars = initialVars || [];
                     this.saveUrl = saveUrl;
                     this.csrfToken = csrfToken;
                     this.currentLevel = currentLevel || 'project';
                     this.isEditable = isEditable !== false;
+                    this.syncFieldId = syncFieldId || '';
+                },
+
+                syncField: function() {
+                    if (!this.syncFieldId) { return; }
+                    var el = document.getElementById(this.syncFieldId);
+                    if (el) { el.value = JSON.stringify(this.vars); }
                 },
 
                 startEdit: function(idx) {
@@ -209,6 +218,7 @@
                     this.editBackup = null;
                     this.showEditDesc = false;
                     this.dirty = true;
+                    this.syncField();
                 },
 
                 startAdd: function() {
@@ -231,24 +241,45 @@
                     self.vars.forEach(function(v) { if (v.key === k) { dup = true; } });
                     if (dup) { return; }
                     self.vars.push({ key: self.newVar.key, value: self.newVar.value, lock: self.newVar.lock, description: self.newVar.description });
+                    self.lastAddedIdx = self.vars.length - 1;
+                    setTimeout(function() { self.lastAddedIdx = -1; }, 1500);
                     self.addingNew = false;
                     self.showNewDesc = false;
                     self.dirty = true;
+                    self.syncField();
                 },
 
                 removeVar: function(idx) {
                     this.vars.splice(idx, 1);
                     this.dirty = true;
+                    this.syncField();
                 },
 
                 toggleLock: function(idx) {
                     if (!this.vars[idx].value) { return; }
                     this.vars[idx].lock = !this.vars[idx].lock;
                     this.dirty = true;
+                    this.syncField();
                 },
 
                 updateNewKey: function(val) {
                     this.newVar.key = val.toUpperCase().replace(/[^A-Z0-9_]/g, '');
+                },
+
+                updateNewValue: function(val) {
+                    this.newVar.value = val;
+                },
+
+                updateNewDesc: function(val) {
+                    this.newVar.description = val;
+                },
+
+                updateEditValue: function(val) {
+                    this.vars[this.editingIdx].value = val;
+                },
+
+                updateEditDesc: function(val) {
+                    this.vars[this.editingIdx].description = val;
                 },
 
                 updateEditKey: function(idx, val) {
