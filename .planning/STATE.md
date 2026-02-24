@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 08 (Implement Service Templates)
-Plan: 2 of 5 in current phase
+Plan: 3 of 5 in current phase
 Status: In Progress
-Last activity: 2026-02-24 - Completed 08-02-PLAN.md (template CRUD UI)
+Last activity: 2026-02-24 - Completed 08-03-PLAN.md (sync task and template-aware scaffolding)
 
-Progress: [================                        ] 40% (Phase 08 - 2/5 plans complete)
+Progress: [========================                ] 60% (Phase 08 - 3/5 plans complete)
 
 ## Performance Metrics
 
@@ -51,7 +51,7 @@ Progress: [================                        ] 40% (Phase 08 - 2/5 plans c
 | 06.11-templates-documentation-folder | 4 | 7 min | 1.75 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-06 (1 min), 07-07 (6 min), 08-01 (2 min), 08-02 (5 min)
+- Last 5 plans: 07-07 (6 min), 08-01 (2 min), 08-02 (5 min), 08-03 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -66,6 +66,7 @@ Progress: [================                        ] 40% (Phase 08 - 2/5 plans c
 | Phase 07 P07 | 6 | 2 tasks | 12 files |
 | Phase 08 P01 | 2 | 2 tasks | 3 files |
 | Phase 08 P02 | 5 | 2 tasks | 10 files |
+| Phase 08 P03 | 3 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -272,6 +273,9 @@ Recent decisions affecting current work:
 | 08-02 | Registration: shallow clone first, full clone for tags | Optimizes for common failure case (bad manifest) |
 | 08-02 | Deregister guard: template.services.exists() blocks delete | Preserves scaffolding history and audit traceability |
 | 08-02 | Templates sidebar between CI Workflows and Integrations | Logical grouping with other catalog items |
+| 08-03 | sync_template reuses steps_scan queue | Same background worker for all repo scanning |
+| 08-03 | Existing repo scaffolding sets scaffold_status=not_required | CI manifest push handled by dedicated push_ci_manifest task |
+| 08-03 | Non-semver tags filtered via parse_version_tag fallback detection | Avoids creating versions for non-semver tags |
 
 ### Roadmap Evolution
 
@@ -353,5 +357,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 08-02-PLAN.md
-Resume file: Phase 08 in progress. Next: 08-03-PLAN.md
+Stopped at: Completed 08-03-PLAN.md
+Resume file: Phase 08 in progress. Next: 08-04-PLAN.md
