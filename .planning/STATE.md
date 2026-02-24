@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-01-21)
 
 **Core value:** Developers can deploy production-ready services in minutes through self-service, while platform teams maintain governance and visibility.
-**Current focus:** Phase 07 - Implement Unified Environment Variables Management
+**Current focus:** Phase 08 - Implement Service Templates
 
 ## Current Position
 
-Phase: 07 (Implement Unified Environment Variables Management)
-Plan: 7 of 7 in current phase
-Status: Complete (verified, human-approved)
-Last activity: 2026-02-24 - Phase 07 complete: all 7 plans executed, human verification passed
+Phase: 08 (Implement Service Templates)
+Plan: 1 of 5 in current phase
+Status: In Progress
+Last activity: 2026-02-24 - Completed 08-01-PLAN.md (data models and manifest parser)
 
-Progress: [========================================] 100% (Phase 07 - 7/7 plans complete)
+Progress: [========                                ] 20% (Phase 08 - 1/5 plans complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 79
+- Total plans completed: 80
 - Average duration: 4 min
 - Total execution time: 4.6 hours
 
@@ -51,7 +51,7 @@ Progress: [========================================] 100% (Phase 07 - 7/7 plans 
 | 06.11-templates-documentation-folder | 4 | 7 min | 1.75 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-03 (3 min), 07-04 (4 min), 07-05 (5 min), 07-06 (1 min), 07-07 (6 min)
+- Last 5 plans: 07-05 (5 min), 07-06 (1 min), 07-07 (6 min), 08-01 (2 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -64,6 +64,7 @@ Progress: [========================================] 100% (Phase 07 - 7/7 plans 
 | Phase 07 P05 | 5 | 1 task (partial) | 5 files |
 | Phase 07 P06 | 1 | 2 tasks | 4 files |
 | Phase 07 P07 | 6 | 2 tasks | 12 files |
+| Phase 08 P01 | 2 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -264,6 +265,9 @@ Recent decisions affecting current work:
 | 07-07 | Alpine envVarEditor component in base.html for client-side bulk save | Shared across project/env/service settings pages |
 | 07-07 | Bulk save replaces entity env_vars entirely | Simpler than incremental diff, single JSON POST |
 | 07-07 | Mixed rendering: server-rendered upstream + Alpine current-level | Upstream is read-only, no need for client-side state |
+| 08-01 | read_pathfinder_manifest replaces read_manifest_from_repo entirely | Old ssp-template.yaml/pathfinder-template.yaml filenames removed |
+| 08-01 | Template.name sourced from manifest, validated as DNS label | Keyed on manifest name, not user-provided |
+| 08-01 | Service.template_version is CharField not FK | Historical reference stability |
 
 ### Roadmap Evolution
 
@@ -292,7 +296,7 @@ None yet.
 
 ### Blockers/Concerns
 
-None. Phase 07 fully verified and human-approved.
+None.
 
 ### Quick Tasks Completed
 
@@ -345,5 +349,5 @@ None. Phase 07 fully verified and human-approved.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 07-07-PLAN.md (Phase 07 complete)
-Resume file: Phase 07 complete. Next: Phase 08 or new phase planning.
+Stopped at: Completed 08-01-PLAN.md
+Resume file: Phase 08 in progress. Next: 08-02-PLAN.md
