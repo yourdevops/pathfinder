@@ -52,14 +52,20 @@
     <p class="text-dark-muted -mt-3">{{ service.description }}</p>
     {% endif %}
 
-    <!-- Section 2: Stats Row -->
-    {% include "core/services/_stats_row.html" %}
+    <!-- Section 2: Stats Row or Empty State -->
+    {% if total_builds == 0 %}
+        {% include "core/services/_dashboard_empty.html" %}
+    {% else %}
+        {% include "core/services/_stats_row.html" %}
+    {% endif %}
 
     <!-- Section 3: CI Pipeline Status -->
     {% include "core/services/_ci_pipeline_card.html" %}
 
-    <!-- Section 4: Recent Builds -->
-    {% include "core/services/_recent_builds.html" %}
+    <!-- Section 4: Recent Builds (only when builds exist) -->
+    {% if total_builds > 0 %}
+        {% include "core/services/_recent_builds.html" %}
+    {% endif %}
 
     <!-- Section 5: Service Info (2-column) -->
     <div class="grid grid-cols-2 gap-4">

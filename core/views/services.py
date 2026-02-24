@@ -602,6 +602,9 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
             context["ci_workflow"] = self.service.ci_workflow
             context["ci_workflow_version"] = self.service.ci_workflow_version
 
+            # Empty state convenience boolean
+            context["show_empty_state"] = context["total_builds"] == 0
+
             # Counts
             context["environments_count"] = self.project.environments.filter(status="active").count()
             context["service_vars_count"] = len(self.service.env_vars) if self.service.env_vars else 0
