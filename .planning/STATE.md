@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 08 (Implement Service Templates)
-Plan: 1 of 5 in current phase
+Plan: 2 of 5 in current phase
 Status: In Progress
-Last activity: 2026-02-24 - Completed 08-01-PLAN.md (data models and manifest parser)
+Last activity: 2026-02-24 - Completed 08-02-PLAN.md (template CRUD UI)
 
-Progress: [========                                ] 20% (Phase 08 - 1/5 plans complete)
+Progress: [================                        ] 40% (Phase 08 - 2/5 plans complete)
 
 ## Performance Metrics
 
@@ -51,7 +51,7 @@ Progress: [========                                ] 20% (Phase 08 - 1/5 plans c
 | 06.11-templates-documentation-folder | 4 | 7 min | 1.75 min |
 
 **Recent Trend:**
-- Last 5 plans: 07-05 (5 min), 07-06 (1 min), 07-07 (6 min), 08-01 (2 min)
+- Last 5 plans: 07-06 (1 min), 07-07 (6 min), 08-01 (2 min), 08-02 (5 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -65,6 +65,7 @@ Progress: [========                                ] 20% (Phase 08 - 1/5 plans c
 | Phase 07 P06 | 1 | 2 tasks | 4 files |
 | Phase 07 P07 | 6 | 2 tasks | 12 files |
 | Phase 08 P01 | 2 | 2 tasks | 3 files |
+| Phase 08 P02 | 5 | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -268,6 +269,9 @@ Recent decisions affecting current work:
 | 08-01 | read_pathfinder_manifest replaces read_manifest_from_repo entirely | Old ssp-template.yaml/pathfinder-template.yaml filenames removed |
 | 08-01 | Template.name sourced from manifest, validated as DNS label | Keyed on manifest name, not user-provided |
 | 08-01 | Service.template_version is CharField not FK | Historical reference stability |
+| 08-02 | Registration: shallow clone first, full clone for tags | Optimizes for common failure case (bad manifest) |
+| 08-02 | Deregister guard: template.services.exists() blocks delete | Preserves scaffolding history and audit traceability |
+| 08-02 | Templates sidebar between CI Workflows and Integrations | Logical grouping with other catalog items |
 
 ### Roadmap Evolution
 
@@ -349,5 +353,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 08-01-PLAN.md
-Resume file: Phase 08 in progress. Next: 08-02-PLAN.md
+Stopped at: Completed 08-02-PLAN.md
+Resume file: Phase 08 in progress. Next: 08-03-PLAN.md
