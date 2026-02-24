@@ -344,6 +344,29 @@
                 }
             };
         });
+        Alpine.data('templateSelector', function(initialTpl, initialVer, versionsMap) {
+            return {
+                tplVal: String(initialTpl),
+                tplOpen: false,
+                verVal: String(initialVer),
+                verOpen: false,
+                versions: [],
+                init: function() {
+                    this.versions = versionsMap[this.tplVal] || [];
+                },
+                pickTpl: function(id) {
+                    this.tplVal = id;
+                    this.tplOpen = false;
+                    this.versions = versionsMap[id] || [];
+                    this.verVal = this.versions.length > 0 ? this.versions[0].tag : '';
+                    this.verOpen = false;
+                },
+                pickVer: function(tag) {
+                    this.verVal = tag;
+                    this.verOpen = false;
+                }
+            };
+        });
     });
     </script>
     <!-- HTMX -->

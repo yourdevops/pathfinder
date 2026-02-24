@@ -10,6 +10,8 @@ from core.models import (
     ProjectCIConfig,
     ProjectConnection,
     Service,
+    Template,
+    TemplateVersion,
     get_available_workflows_for_project,
 )
 
@@ -142,6 +144,16 @@ class RepositoryStepForm(forms.Form):
         help_text="Target branch for new repo, or base branch for existing repo PR",
     )
 
+    template_id = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput(),
+    )
+
+    template_version_tag = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput(),
+    )
+
     def __init__(self, *args, project=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.project = project
@@ -155,6 +167,33 @@ class RepositoryStepForm(forms.Form):
             default_connection = queryset.filter(is_default=True).first()
             if default_connection:
                 self.fields["scm_connection"].initial = default_connection
+
+    def clean_template_id(self):
+        template_id = self.cleaned_data.get("template_id", "")
+        if not template_id:
+            return ""
+        try:
+            template = Template.objects.get(id=int(template_id), sync_status="synced")
+            return str(template.id)
+        except (Template.DoesNotExist, ValueError):
+            raise forms.ValidationError("Selected template is not available.") from None
+
+    def clean_template_version_tag(self):
+        tag = self.cleaned_data.get("template_version_tag", "")
+        if not tag:
+            return ""
+        template_id = self.cleaned_data.get("template_id", "")
+        if not template_id:
+            return ""
+        try:
+            TemplateVersion.objects.get(
+                template_id=int(template_id),
+                tag_name=tag,
+                available=True,
+            )
+            return tag
+        except (TemplateVersion.DoesNotExist, ValueError):
+            raise forms.ValidationError("Selected template version is not available.") from None
 
     def clean(self):
         cleaned_data = super().clean()
