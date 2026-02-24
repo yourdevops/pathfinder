@@ -34,8 +34,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6.9: Step Output Wiring** (INSERTED) - Steps declare outputs, composer wires outputs to inputs, engine-native references
 - [x] **Phase 6.10: Pluggable Webhook Routing Framework** (INSERTED) - Core webhook dispatcher with plugin-supplied route registration
 - [x] **Phase 6.11: Templates Documentation Folder** (INSERTED) - Design docs for the unified pathfinder.yaml Templates system end-to-end
-- [x] **Phase 7: Implement unified Environment Variables management** - Three-level cascade (project → service → environment), bulk editing, lock/unlock
+- [x] **Phase 7: Implement unified Environment Variables management** - Three-level cascade (project -> service -> environment), bulk editing, lock/unlock
 - [x] **Phase 8: Implement Service Templates** - Template registration via pathfinder.yaml, version sync via git tags, wizard integration with env var pre-population
+- [ ] **Phase 9: WebSockets for Service's pages** - Real-time push updates via Django Channels + htmx-ext-ws OOB swaps, dashboard empty states and polish
 
 ## Phase Details
 
@@ -116,9 +117,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [x] 03.1-01-PLAN.md — Expandable sidebar sections with Alpine.js Persist
-- [x] 03.1-02-PLAN.md — Home dashboard with stats and activity feed
-- [x] 03.1-03-PLAN.md — Project sidebar refinements (Details first, back button)
+- [x] 03.1-01-PLAN.md -- Expandable sidebar sections with Alpine.js Persist
+- [x] 03.1-02-PLAN.md -- Home dashboard with stats and activity feed
+- [x] 03.1-03-PLAN.md -- Project sidebar refinements (Details first, back button)
 
 ### Phase 4: Blueprints
 **Goal**: Platform engineers can publish service templates; developers can browse available blueprints
@@ -133,9 +134,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [x] 04-01-PLAN.md — Blueprint and BlueprintVersion models with sync task
-- [x] 04-02-PLAN.md — Blueprint views, URLs, and templates (list, register, detail)
-- [x] 04-03-PLAN.md — Availability filtering and HTMX sync updates
+- [x] 04-01-PLAN.md -- Blueprint and BlueprintVersion models with sync task
+- [x] 04-02-PLAN.md -- Blueprint views, URLs, and templates (list, register, detail)
+- [x] 04-03-PLAN.md -- Availability filtering and HTMX sync updates
 
 ### Phase 4.1: Replace UUID URLs with Slugs (INSERTED)
 **Goal**: All URLs use human-readable name-based slugs instead of UUIDs; naming uniqueness enforced at model level
@@ -153,10 +154,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [x] 04.1-01-PLAN.md — DNS label validator, URL path converter, model validators
-- [x] 04.1-02-PLAN.md — Project and Environment URL refactoring
-- [x] 04.1-03-PLAN.md — Group and Blueprint URL refactoring
-- [x] 04.1-04-PLAN.md — Connection URL refactoring and plugin redirects
+- [x] 04.1-01-PLAN.md -- DNS label validator, URL path converter, model validators
+- [x] 04.1-02-PLAN.md -- Project and Environment URL refactoring
+- [x] 04.1-03-PLAN.md -- Group and Blueprint URL refactoring
+- [x] 04.1-04-PLAN.md -- Connection URL refactoring and plugin redirects
 
 ### Phase 5: Services
 **Goal**: Developers can create services via wizard and see repositories scaffolded from blueprints
@@ -171,10 +172,10 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [x] 05-01-PLAN.md — Service model with handler property and migrations
-- [x] 05-02-PLAN.md — Service creation wizard (SessionWizardView, 4 steps)
-- [x] 05-03-PLAN.md — Repository scaffolding background task
-- [x] 05-04-PLAN.md — Service list and detail pages with sidebar
+- [x] 05-01-PLAN.md -- Service model with handler property and migrations
+- [x] 05-02-PLAN.md -- Service creation wizard (SessionWizardView, 4 steps)
+- [x] 05-03-PLAN.md -- Repository scaffolding background task
+- [x] 05-04-PLAN.md -- Service list and detail pages with sidebar
 
 ### Phase 5.1: CI Workflows Builder (INSERTED)
 **Goal**: Platform engineers can scan a CI steps repository, browse a steps catalog, compose CI Workflows from compatible steps, and preview the generated GitHub Actions manifest
@@ -200,12 +201,12 @@ Plans:
 **Plans**: 4 plans
 
 Plans:
-- [x] 05.1-01-PLAN.md — Remove Blueprints, add CI Workflow models, update navigation
-- [x] 05.1-02-PLAN.md — Repository scanning, steps catalog, and runtimes views
-- [x] 05.1-03-PLAN.md — Workflow composer with runtime compatibility filtering
-- [x] 05.1-04-PLAN.md — Manifest generation, workflow list and detail views
+- [x] 05.1-01-PLAN.md -- Remove Blueprints, add CI Workflow models, update navigation
+- [x] 05.1-02-PLAN.md -- Repository scanning, steps catalog, and runtimes views
+- [x] 05.1-03-PLAN.md -- Workflow composer with runtime compatibility filtering
+- [x] 05.1-04-PLAN.md -- Manifest generation, workflow list and detail views
 
-### Phase 5.2: CI Workflows — Project & Service Pairing (INSERTED)
+### Phase 5.2: CI Workflows -- Project & Service Pairing (INSERTED)
 **Goal**: Services can be paired with CI Workflows; projects gain CI configuration capabilities enabling the build pipeline connection in Phase 6
 **Depends on**: Phase 5.1
 **Requirements**: None (continuation of CI Workflows integration per docs/ci-workflows.md)
@@ -223,9 +224,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [x] 05.2-01-PLAN.md — Models, migrations, and Project CI Configuration UI
-- [x] 05.2-02-PLAN.md — Service CI tab, manifest push task, GitHubPlugin update
-- [ ] 05.2-03-PLAN.md — Service creation wizard workflow step + verification (deferred)
+- [x] 05.2-01-PLAN.md -- Models, migrations, and Project CI Configuration UI
+- [x] 05.2-02-PLAN.md -- Service CI tab, manifest push task, GitHubPlugin update
+- [ ] 05.2-03-PLAN.md -- Service creation wizard workflow step + verification (deferred)
 
 ### Phase 5.3: CI Steps Redesign (INSERTED)
 **Goal**: CI capabilities are delivered through the plugin system; step discovery is engine-agnostic; core/git_utils.py contains only generic git operations; plugin-specific actions (manifest generation, step file parsing, manifest paths) live in plugin implementations
@@ -254,9 +255,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [x] 05.3-01-PLAN.md — CICapableMixin, GitHubPlugin CI implementation, model migrations, core/ci_steps.py, clean git_utils.py
-- [x] 05.3-02-PLAN.md — Refactor tasks, views, forms; remove RuntimesView and Runtimes nav
-- [x] 05.3-03-PLAN.md — Table layouts for Steps and Repositories pages, HTMX filter dropdowns
+- [x] 05.3-01-PLAN.md -- CICapableMixin, GitHubPlugin CI implementation, model migrations, core/ci_steps.py, clean git_utils.py
+- [x] 05.3-02-PLAN.md -- Refactor tasks, views, forms; remove RuntimesView and Runtimes nav
+- [x] 05.3-03-PLAN.md -- Table layouts for Steps and Repositories pages, HTMX filter dropdowns
 
 ### Phase 6: Builds
 **Goal**: GitHub Actions can report build status; services transition from draft to active on first successful build
@@ -271,8 +272,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [x] 06-01-PLAN.md — Build model, webhook endpoint with HMAC auth, poll_build_details task, service activation
-- [x] 06-02-PLAN.md — Build history UI with table layout, filtering, pagination, HTMX auto-refresh
+- [x] 06-01-PLAN.md -- Build model, webhook endpoint with HMAC auth, poll_build_details task, service activation
+- [x] 06-02-PLAN.md -- Build history UI with table layout, filtering, pagination, HTMX auto-refresh
 
 ### Phase 06.11: Templates documentation folder (INSERTED)
 
@@ -282,10 +283,10 @@ Plans:
 **Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 06.07-01-PLAN.md — manifest-schema.md: unified pathfinder.yaml field reference for templates and services
-- [ ] 06.07-02-PLAN.md — variable-lifecycle.md and template-registration.md: build-time enforcement and operator registration flow
-- [ ] 06.07-03-PLAN.md — scaffolding.md and examples.md: wizard redesign and copy-paste YAML samples
-- [ ] 06.07-04-PLAN.md — README.md: entry point mirroring docs/ci-workflows/README.md structure
+- [ ] 06.07-01-PLAN.md -- manifest-schema.md: unified pathfinder.yaml field reference for templates and services
+- [ ] 06.07-02-PLAN.md -- variable-lifecycle.md and template-registration.md: build-time enforcement and operator registration flow
+- [ ] 06.07-03-PLAN.md -- scaffolding.md and examples.md: wizard redesign and copy-paste YAML samples
+- [ ] 06.07-04-PLAN.md -- README.md: entry point mirroring docs/ci-workflows/README.md structure
 
 ### Phase 06.10: Pluggable Webhook Routing Framework (INSERTED)
 
@@ -316,10 +317,10 @@ Plans:
 **Plans:** 4/4 plans complete
 
 Plans:
-- [ ] 06.8-01-PLAN.md — Remove manifest_path dead code, add resolve_artifact_ref to plugin interface (GAP-19, GAP-13)
-- [ ] 06.8-02-PLAN.md — Step validation API endpoint with token authentication (GAP-18)
-- [ ] 06.8-03-PLAN.md — CI variable provisioning via plugin interface (GAP-17)
-- [ ] 06.8-04-PLAN.md — Workflow composer redesign with derived runtime constraints (GAP-20)
+- [ ] 06.8-01-PLAN.md -- Remove manifest_path dead code, add resolve_artifact_ref to plugin interface (GAP-19, GAP-13)
+- [ ] 06.8-02-PLAN.md -- Step validation API endpoint with token authentication (GAP-18)
+- [ ] 06.8-03-PLAN.md -- CI variable provisioning via plugin interface (GAP-17)
+- [ ] 06.8-04-PLAN.md -- Workflow composer redesign with derived runtime constraints (GAP-20)
 
 ### Phase 06.7: Version Lifecycle Automation (INSERTED)
 
@@ -356,9 +357,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [x] 06.6-01-PLAN.md — Sync logging models, StepsRepository fields, branch protection plugin interface, scan_steps_repository instrumentation
-- [x] 06.6-02-PLAN.md — Steps repo webhook handler, management command for scheduled scan, webhook registration on repo creation
-- [x] 06.6-03-PLAN.md — Sync history UI on repo detail page with HTMX expandable detail
+- [x] 06.6-01-PLAN.md -- Sync logging models, StepsRepository fields, branch protection plugin interface, scan_steps_repository instrumentation
+- [x] 06.6-02-PLAN.md -- Steps repo webhook handler, management command for scheduled scan, webhook registration on repo creation
+- [x] 06.6-03-PLAN.md -- Sync history UI on repo detail page with HTMX expandable detail
 
 ### Phase 06.5: Workflow and Build Model Hardening (INSERTED)
 
@@ -374,8 +375,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [x] 06.5-01-PLAN.md — CIWorkflow engine field, step ordering validation, archived status
-- [x] 06.5-02-PLAN.md — Build model engine-agnostic rename, revoked verification status, map_run_status plugin interface
+- [x] 06.5-01-PLAN.md -- CIWorkflow engine field, step ordering validation, archived status
+- [x] 06.5-02-PLAN.md -- Build model engine-agnostic rename, revoked verification status, map_run_status plugin interface
 
 ### Phase 06.4: CI Step Identity and Change Tracking (INSERTED)
 
@@ -396,9 +397,9 @@ Plans:
   8. cleanup_archived_steps task safely removes unreferenced archived steps
 
 Plans:
-- [x] 06.4-01-PLAN.md — CIStep model fields (slug, status, file_path, last_change_type), UniqueConstraint, clone_repo_full
-- [x] 06.4-02-PLAN.md — Rewrite scan_steps_repository (per-file SHA, slug, collision detection, change detection, archival), cleanup task, ci_manifest filter
-- [x] 06.4-03-PLAN.md — Views and templates for archived/changed step badges and warnings
+- [x] 06.4-01-PLAN.md -- CIStep model fields (slug, status, file_path, last_change_type), UniqueConstraint, clone_repo_full
+- [x] 06.4-02-PLAN.md -- Rewrite scan_steps_repository (per-file SHA, slug, collision detection, change detection, archival), cleanup task, ci_manifest filter
+- [x] 06.4-03-PLAN.md -- Views and templates for archived/changed step badges and warnings
 
 ### Phase 06.1: Fix the gap between the CI Workflows design and the actual implementation (INSERTED)
 
@@ -417,11 +418,11 @@ Plans:
 **Plans:** 5 plans
 
 Plans:
-- [x] 06.1-01-PLAN.md — CIWorkflowVersion model, Build/Service updates, plugin interface, deterministic manifest
-- [x] 06.1-02-PLAN.md — verify_build task, poll_build_details chain, draft auto-creation
-- [x] 06.1-03-PLAN.md — Version management UI (publish, version history, revoke)
-- [x] 06.1-04-PLAN.md — Build verification badges, fork workflow, service settings
-- [x] 06.1-05-PLAN.md — Human verification checkpoint
+- [x] 06.1-01-PLAN.md -- CIWorkflowVersion model, Build/Service updates, plugin interface, deterministic manifest
+- [x] 06.1-02-PLAN.md -- verify_build task, poll_build_details chain, draft auto-creation
+- [x] 06.1-03-PLAN.md -- Version management UI (publish, version history, revoke)
+- [x] 06.1-04-PLAN.md -- Build verification badges, fork workflow, service settings
+- [x] 06.1-05-PLAN.md -- Human verification checkpoint
 
 ### Phase 06.2: Deployment Design Documentation (INSERTED)
 
@@ -430,20 +431,20 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [x] 06.2-01-PLAN.md — README overview and deployment methods documentation
-- [x] 06.2-02-PLAN.md — Deployment lifecycle and promotion documentation
-- [x] 06.2-03-PLAN.md — Plugin interface, environment binding, logging, and services.md alignment
+- [x] 06.2-01-PLAN.md -- README overview and deployment methods documentation
+- [x] 06.2-02-PLAN.md -- Deployment lifecycle and promotion documentation
+- [x] 06.2-03-PLAN.md -- Plugin interface, environment binding, logging, and services.md alignment
 
-### Phase 06.3: Security & Compliance Design — Secrets, SLSA L3, SOX RBAC (INSERTED)
+### Phase 06.3: Security & Compliance Design -- Secrets, SLSA L3, SOX RBAC (INSERTED)
 
 **Goal:** Design documentation for secrets management, artifact provenance signing (SLSA Level 3), and SOX-compliant RBAC changes; incorporate deployment review findings into design docs
 **Depends on:** Phase 6.2
 **Plans:** 3 plans
 
 Plans:
-- [x] 06.3-01-PLAN.md — Security domain README and secrets management documentation
-- [x] 06.3-02-PLAN.md — SLSA provenance and artifact signing documentation
-- [x] 06.3-03-PLAN.md — SOX-compliant RBAC with granular permissions and approval workflow
+- [x] 06.3-01-PLAN.md -- Security domain README and secrets management documentation
+- [x] 06.3-02-PLAN.md -- SLSA provenance and artifact signing documentation
+- [x] 06.3-03-PLAN.md -- SOX-compliant RBAC with granular permissions and approval workflow
 
 ### Phase 7: Implement unified Environment Variables management
 
@@ -474,3 +475,26 @@ Plans:
 - [ ] 08-03-PLAN.md -- sync_template task; manual sync view; scaffold_repository rewrite for template-aware scaffolding
 - [ ] 08-04-PLAN.md -- Wizard template picker (dropdown + version selector); env var pre-population; service creation template fields
 - [ ] 08-05-PLAN.md -- Human verification of complete template system
+
+### Phase 9: WebSockets for Service's pages
+
+**Goal:** Real-time push updates to all service-context pages via a single WebSocket connection per service detail view, replacing HTMX polling with Django Channels + htmx-ext-ws OOB swaps; includes dashboard empty state improvements and UI polish
+**Depends on:** Phase 8
+**Requirements:** SRVC-09
+**Success Criteria** (what must be TRUE):
+  1. WebSocket connection opens on service detail page and persists across tab switches
+  2. Dashboard stats, recent builds, and CI pipeline card update within 3 seconds when data changes
+  3. Builds list tab refreshes automatically when any build changes status
+  4. CI workflow tab shows manifest sync status updates in real-time
+  5. Sidebar shows green dot when WebSocket is connected, gray when disconnected
+  6. Dashboard shows contextual empty states (no workflow -> assign CTA, no builds -> fetch CTA)
+  7. Commit SHAs in recent builds are clickable links
+  8. CI Pipeline card has accent border based on health status
+  9. Page works without WebSocket (manual refresh fallback)
+**Plans:** 4 plans
+
+Plans:
+- [ ] 09-01-PLAN.md -- Install Django Channels + htmx-ext-ws, configure ASGI routing, CSP, dev server, create ServiceConsumer
+- [ ] 09-02-PLAN.md -- Extract dashboard partials with OOB IDs, conditional empty states, clickable SHAs, CI accent borders
+- [ ] 09-03-PLAN.md -- Wire WebSocket into detail.html, implement OOB rendering, connection status indicator, remove HTMX polling
+- [ ] 09-04-PLAN.md -- Human verification of complete WebSocket real-time update system
