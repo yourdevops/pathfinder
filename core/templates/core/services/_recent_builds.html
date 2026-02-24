@@ -1,0 +1,65 @@
+{% load humanize core_filters %}
+
+<div id="dashboard-recent-builds" {% if oob %}hx-swap-oob="true"{% endif %}>
+    <div class="bg-dark-surface border border-dark-border rounded-lg">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-dark-border">
+            <h2 class="text-sm font-semibold text-dark-text uppercase tracking-wider">Recent Builds</h2>
+            {% if total_builds > 0 %}
+            <a href="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}?tab=builds"
+               hx-get="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}?tab=builds"
+               hx-target="#tab-content"
+               hx-push-url="true"
+               class="text-xs text-dark-accent hover:underline">View all ({{ total_builds }})</a>
+            {% endif %}
+        </div>
+        {% if recent_builds %}
+        <div class="divide-y divide-dark-border">
+            {% for build in recent_builds %}
+            <div class="flex items-center gap-4 px-5 py-3 hover:bg-gray-800/50 transition-colors">
+                <!-- Status dot -->
+                <span class="w-2 h-2 rounded-full shrink-0
+                    {% if build.status == 'success' %}bg-green-400
+                    {% elif build.status == 'failed' %}bg-red-400
+                    {% elif build.status == 'running' or build.status == 'pending' %}bg-blue-400 animate-pulse
+                    {% elif build.status == 'cancelled' %}bg-gray-400
+                    {% endif %}"></span>
+                <!-- Commit -->
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                        {% if build.ci_run_url %}
+                        <a href="{{ build.ci_run_url }}" target="_blank" rel="noopener noreferrer"
+                           class="text-sm font-mono text-blue-400 hover:underline">{{ build.commit_sha|slice:":7" }}</a>
+                        {% elif service.repo_url %}
+                        <a href="{{ service.repo_url|strip_git_suffix }}/commit/{{ build.commit_sha }}" target="_blank" rel="noopener noreferrer"
+                           class="text-sm font-mono text-blue-400 hover:underline">{{ build.commit_sha|slice:":7" }}</a>
+                        {% else %}
+                        <span class="text-sm font-mono text-blue-400">{{ build.commit_sha|slice:":7" }}</span>
+                        {% endif %}
+                        {% if build.commit_message %}
+                        <span class="text-sm text-dark-muted truncate">{{ build.commit_message|truncatechars:60 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Branch -->
+                <span class="text-xs text-dark-muted font-mono shrink-0">{{ build.branch|default:"-" }}</span>
+                <!-- Duration -->
+                <span class="text-xs text-dark-muted shrink-0 w-14 text-right">
+                    {% if build.duration_seconds %}{{ build.duration_seconds|format_duration }}{% elif build.status == 'running' or build.status == 'pending' %}...{% else %}-{% endif %}
+                </span>
+                <!-- Time -->
+                <span class="text-xs text-dark-muted shrink-0 w-24 text-right" title="{{ build.created_at|date:'Y-m-d H:i:s' }}">
+                    {{ build.created_at|timesince }} ago
+                </span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <svg class="w-8 h-8 text-dark-muted mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+            </svg>
+            <p class="text-dark-muted text-sm">No builds yet</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
