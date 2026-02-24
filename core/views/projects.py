@@ -33,6 +33,8 @@ from core.permissions import (
     ProjectOwnerMixin,
     ProjectViewerMixin,
 )
+from core.utils import resolve_env_vars
+from core.views.env_vars import _get_env_var_urls
 
 
 class ProjectListView(LoginRequiredMixin, ListView):
@@ -152,6 +154,12 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
                 id__in=already_approved_ids
             )
             context["approve_workflow_form"] = ApproveWorkflowForm(project=self.project)
+
+            # Env vars resolved cascade for unified component
+            resolved_vars = resolve_env_vars(self.project)
+            context["resolved_vars"] = resolved_vars
+            context["is_editable_env_vars"] = self.user_project_role == "owner"
+            context.update(_get_env_var_urls("project", self.project.name))
 
         return context
 
