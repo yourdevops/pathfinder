@@ -310,7 +310,7 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
                     # Variable already exists -- update it
                     try:
                         var = repo.get_variable(name)
-                        var.edit(name, value)
+                        var.edit(value)
                         results[name] = "updated"
                     except Exception as update_err:
                         results[name] = f"error: {update_err}"
