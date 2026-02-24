@@ -85,6 +85,20 @@ from .views.ci_workflows import (
     WorkflowListView,
     WorkflowManifestView,
 )
+from .views.env_vars import (
+    EnvVarAddRowView as EnvVarAddRowViewNew,
+)
+from .views.env_vars import (
+    EnvVarDeleteView as EnvVarDeleteViewNew,
+)
+from .views.env_vars import (
+    EnvVarDisplayRowView,
+    EnvVarEditRowView,
+    EnvVarToggleLockView,
+)
+from .views.env_vars import (
+    EnvVarSaveView as EnvVarSaveViewNew,
+)
 from .views.services import (
     BuildLogsView,
     ServiceAssignWorkflowView,
@@ -319,6 +333,99 @@ projects_patterns = [
         "<dns:project_name>/env-vars/<str:key>/delete/",
         ProjectEnvVarDeleteView.as_view(),
         name="project_env_var_delete",
+    ),
+    # Unified env var CRUD — Project-level
+    path(
+        "<dns:project_name>/env-vars/row/",
+        EnvVarDisplayRowView.as_view(),
+        name="project_env_var_row",
+    ),
+    path(
+        "<dns:project_name>/env-vars/edit-row/",
+        EnvVarEditRowView.as_view(),
+        name="project_env_var_edit_row",
+    ),
+    path(
+        "<dns:project_name>/env-vars/add-row/",
+        EnvVarAddRowViewNew.as_view(),
+        name="project_env_var_add_row",
+    ),
+    path(
+        "<dns:project_name>/env-vars/save-new/",
+        EnvVarSaveViewNew.as_view(),
+        name="project_env_var_save_new",
+    ),
+    path(
+        "<dns:project_name>/env-vars/delete-new/",
+        EnvVarDeleteViewNew.as_view(),
+        name="project_env_var_delete_new",
+    ),
+    path(
+        "<dns:project_name>/env-vars/toggle-lock/",
+        EnvVarToggleLockView.as_view(),
+        name="project_env_var_toggle_lock",
+    ),
+    # Unified env var CRUD — Environment-level
+    path(
+        "<dns:project_name>/environments/<dns:env_name>/env-vars/row/",
+        EnvVarDisplayRowView.as_view(),
+        name="env_env_var_row",
+    ),
+    path(
+        "<dns:project_name>/environments/<dns:env_name>/env-vars/edit-row/",
+        EnvVarEditRowView.as_view(),
+        name="env_env_var_edit_row",
+    ),
+    path(
+        "<dns:project_name>/environments/<dns:env_name>/env-vars/add-row/",
+        EnvVarAddRowViewNew.as_view(),
+        name="env_env_var_add_row",
+    ),
+    path(
+        "<dns:project_name>/environments/<dns:env_name>/env-vars/save-new/",
+        EnvVarSaveViewNew.as_view(),
+        name="env_env_var_save_new",
+    ),
+    path(
+        "<dns:project_name>/environments/<dns:env_name>/env-vars/delete-new/",
+        EnvVarDeleteViewNew.as_view(),
+        name="env_env_var_delete_new",
+    ),
+    path(
+        "<dns:project_name>/environments/<dns:env_name>/env-vars/toggle-lock/",
+        EnvVarToggleLockView.as_view(),
+        name="env_env_var_toggle_lock",
+    ),
+    # Unified env var CRUD — Service-level
+    path(
+        "<dns:project_name>/services/<dns:service_name>/env-vars/row/",
+        EnvVarDisplayRowView.as_view(),
+        name="service_env_var_row",
+    ),
+    path(
+        "<dns:project_name>/services/<dns:service_name>/env-vars/edit-row/",
+        EnvVarEditRowView.as_view(),
+        name="service_env_var_edit_row",
+    ),
+    path(
+        "<dns:project_name>/services/<dns:service_name>/env-vars/add-row/",
+        EnvVarAddRowViewNew.as_view(),
+        name="service_env_var_add_row",
+    ),
+    path(
+        "<dns:project_name>/services/<dns:service_name>/env-vars/save-new/",
+        EnvVarSaveViewNew.as_view(),
+        name="service_env_var_save_new",
+    ),
+    path(
+        "<dns:project_name>/services/<dns:service_name>/env-vars/delete-new/",
+        EnvVarDeleteViewNew.as_view(),
+        name="service_env_var_delete_new",
+    ),
+    path(
+        "<dns:project_name>/services/<dns:service_name>/env-vars/toggle-lock/",
+        EnvVarToggleLockView.as_view(),
+        name="service_env_var_toggle_lock",
     ),
     # Project connections
     path(

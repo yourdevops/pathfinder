@@ -20,6 +20,18 @@ from .connections import (
     PluginListView,
 )
 from .dashboard import DashboardView
+from .env_vars import (
+    EnvVarAddRowView,
+    EnvVarDisplayRowView,
+    EnvVarEditRowView,
+    EnvVarToggleLockView,
+)
+from .env_vars import (
+    EnvVarDeleteView as EnvVarDeleteViewNew,
+)
+from .env_vars import (
+    EnvVarSaveView as EnvVarSaveViewNew,
+)
 from .groups import (
     GroupAddMemberView,
     GroupCreateView,
@@ -81,9 +93,15 @@ __all__ = [
     "ConnectionListView",
     "ConnectionTestView",
     "DashboardView",
+    "EnvVarAddRowView",
     "EnvVarDeleteView",
+    "EnvVarDeleteViewNew",
+    "EnvVarDisplayRowView",
+    "EnvVarEditRowView",
     "EnvVarModalView",
     "EnvVarSaveView",
+    "EnvVarSaveViewNew",
+    "EnvVarToggleLockView",
     "EnvironmentAttachConnectionView",
     "EnvironmentCreateView",
     "EnvironmentDeleteView",
