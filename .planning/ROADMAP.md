@@ -36,7 +36,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6.11: Templates Documentation Folder** (INSERTED) - Design docs for the unified pathfinder.yaml Templates system end-to-end
 - [x] **Phase 7: Implement unified Environment Variables management** - Three-level cascade (project -> service -> environment), bulk editing, lock/unlock
 - [x] **Phase 8: Implement Service Templates** - Template registration via pathfinder.yaml, version sync via git tags, wizard integration with env var pre-population
-- [ ] **Phase 9: WebSockets for Service's pages** - Real-time push updates via Django Channels + htmx-ext-ws OOB swaps, dashboard empty states and polish
+- [x] **Phase 9: WebSockets for Service's pages** - Real-time push updates via Django Channels + htmx-ext-ws OOB swaps, dashboard empty states and polish (completed 2026-02-24)
 
 ## Phase Details
 
@@ -491,7 +491,7 @@ Plans:
   7. Commit SHAs in recent builds are clickable links
   8. CI Pipeline card has accent border based on health status
   9. Page works without WebSocket (manual refresh fallback)
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 
 Plans:
 - [ ] 09-01-PLAN.md -- Install Django Channels + htmx-ext-ws, configure ASGI routing, CSP, dev server, create ServiceConsumer
