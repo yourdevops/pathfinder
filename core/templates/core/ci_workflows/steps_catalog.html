@@ -18,7 +18,7 @@
         <select name="engine"
                 hx-get="{% url 'ci_workflows:steps_table' %}"
                 hx-target="#steps-table-body"
-                hx-include="[name='engine'],[name='runtime'],[name='runtime_version']"
+                hx-include="[name='engine'],[name='runtime']"
                 hx-trigger="change"
                 class="bg-dark-surface border border-dark-border rounded-lg text-dark-text text-sm px-3 py-2 focus:outline-none focus:border-dark-accent">
             <option value="">All Engines</option>
@@ -30,9 +30,8 @@
         <select name="runtime"
                 hx-get="{% url 'ci_workflows:steps_table' %}"
                 hx-target="#steps-table-body"
-                hx-include="[name='engine'],[name='runtime'],[name='runtime_version']"
+                hx-include="[name='engine'],[name='runtime']"
                 hx-trigger="change"
-                hx-get-2="{% url 'ci_workflows:runtime_versions' %}"
                 class="bg-dark-surface border border-dark-border rounded-lg text-dark-text text-sm px-3 py-2 focus:outline-none focus:border-dark-accent"
                 id="runtime-filter">
             <option value="">All Runtimes</option>
@@ -41,17 +40,6 @@
             {% endfor %}
         </select>
 
-        <select name="runtime_version" id="version-filter"
-                hx-get="{% url 'ci_workflows:steps_table' %}"
-                hx-target="#steps-table-body"
-                hx-include="[name='engine'],[name='runtime'],[name='runtime_version']"
-                hx-trigger="change"
-                class="bg-dark-surface border border-dark-border rounded-lg text-dark-text text-sm px-3 py-2 focus:outline-none focus:border-dark-accent">
-            <option value="">All Versions</option>
-            {% for ver in runtime_versions %}
-            <option value="{{ ver }}" {% if ver == selected_runtime_version %}selected{% endif %}>{{ ver }}</option>
-            {% endfor %}
-        </select>
     </div>
 
     <!-- Steps Table -->
@@ -146,25 +134,5 @@ Alpine.data('stepsCatalogSort', function () {
 });
 }); // alpine:init
 
-// When HTMX swaps in new table rows, re-apply sort if active
-document.body.addEventListener('htmx:afterSwap', function(event) {
-    if (event.detail.target && event.detail.target.id === 'steps-table-body') {
-        // Also trigger dynamic version loading when runtime changes
-        const runtimeSelect = document.getElementById('runtime-filter');
-        const versionSelect = document.getElementById('version-filter');
-        if (runtimeSelect && versionSelect) {
-            const runtime = runtimeSelect.value;
-            if (runtime) {
-                fetch('{% url "ci_workflows:runtime_versions" %}?runtime=' + encodeURIComponent(runtime))
-                    .then(r => r.text())
-                    .then(html => {
-                        versionSelect.innerHTML = '<option value="">All Versions</option>' + html;
-                    });
-            } else {
-                versionSelect.innerHTML = '<option value="">All Versions</option>';
-            }
-        }
-    }
-});
 </script>
 {% endblock %}

@@ -26,7 +26,8 @@
         </div>
     </div>
 
-    <!-- Hidden form that auto-submits to GitHub -->
+    <!-- Hidden form that auto-submits to GitHub (external target, no Django CSRF needed) -->
+    <!-- nosemgrep: python.django.security.django-no-csrf-token.django-no-csrf-token -->
     <form id="manifest-form" method="post" action="{{ manifest_url }}">
         <input type="hidden" name="manifest" value="{{ manifest_json }}">
     </form>

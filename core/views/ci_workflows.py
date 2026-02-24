@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views import View
 
-from core.ci_manifest import compute_runtime_constraints, is_step_compatible
+from core.ci_manifest import compute_runtime_constraints
 from core.forms.ci_workflows import StepsRepoRegisterForm, WorkflowCreateForm
 from core.git_utils import parse_git_url
 from core.models import (
@@ -20,7 +20,6 @@ from core.models import (
     CIWorkflow,
     CIWorkflowStep,
     CIWorkflowVersion,
-    RuntimeFamily,
     StepsRepository,
     compute_manifest_hash,
 )
@@ -254,16 +253,12 @@ def _filter_steps(request):
 
     selected_engine = request.GET.get("engine", "")
     selected_runtime = request.GET.get("runtime", "")
-    selected_runtime_version = request.GET.get("runtime_version", "")
-
     if selected_engine:
         steps = steps.filter(engine=selected_engine)
 
     steps_list = list(steps)
 
-    if selected_runtime and selected_runtime_version:
-        steps_list = [s for s in steps_list if is_step_compatible(s, selected_runtime, selected_runtime_version)]
-    elif selected_runtime:
+    if selected_runtime:
         steps_list = [s for s in steps_list if selected_runtime in (s.runtime_constraints or {})]
 
     # Annotate engine display names
@@ -278,23 +273,12 @@ def _filter_steps(request):
         if s:
             all_runtimes.update(s.keys())
 
-    # Collect runtime versions from RuntimeFamily if a runtime is selected
-    runtime_versions = []
-    if selected_runtime:
-        for rt in RuntimeFamily.objects.filter(name=selected_runtime):
-            for v in rt.versions:
-                if str(v) not in runtime_versions:
-                    runtime_versions.append(str(v))
-        runtime_versions.sort(reverse=True)
-
     return {
         "steps": steps_list,
         "engines": engines,
         "runtimes": sorted(all_runtimes),
         "selected_engine": selected_engine,
         "selected_runtime": selected_runtime,
-        "selected_runtime_version": selected_runtime_version,
-        "runtime_versions": runtime_versions,
     }
 
 
@@ -403,45 +387,6 @@ class WorkflowCreateView(LoginRequiredMixin, View):
                 "form": form,
             },
         )
-
-
-class RuntimeVersionsView(LoginRequiredMixin, View):
-    """HTMX endpoint: return version <option> elements for a runtime family."""
-
-    def get(self, request):
-        family = request.GET.get("runtime_family", "") or request.GET.get("runtime", "")
-        if not family:
-            return HttpResponse('<option value="">-- Select family first --</option>')
-
-        runtimes = RuntimeFamily.objects.filter(name=family)
-        versions = set()
-        for rt in runtimes:
-            for v in rt.versions:
-                versions.add(str(v))
-
-        options = ['<option value="">-- Select version --</option>']
-        for v in sorted(versions, reverse=True):
-            options.append(f'<option value="{v}">{v}</option>')
-        return HttpResponse("\n".join(options))
-
-
-class EngineRuntimesView(LoginRequiredMixin, View):
-    """HTMX endpoint: return runtime family <option> elements for a selected engine."""
-
-    def get(self, request):
-        engine = request.GET.get("engine", "")
-        if not engine:
-            return HttpResponse('<option value="">-- Select engine first --</option>')
-        families = (
-            RuntimeFamily.objects.filter(repository__engine=engine)
-            .values_list("name", flat=True)
-            .distinct()
-            .order_by("name")
-        )
-        options = ['<option value="">-- Select runtime --</option>']
-        for f in families:
-            options.append(f'<option value="{f}">{f.title()}</option>')
-        return HttpResponse("\n".join(options))
 
 
 def _validate_step_order(steps_data):

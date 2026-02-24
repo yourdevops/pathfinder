@@ -8,6 +8,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.html import format_html
 from django.views.decorators.vary import vary_on_headers
@@ -523,10 +524,15 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
                 f'Service "{service_name}" created. You can assign a CI Workflow later to push a manifest.',
             )
 
-        response = redirect("projects:detail", project_name=project.name)
+        url = reverse(
+            "projects:service_detail",
+            kwargs={"project_name": project.name, "service_name": service.name},
+        )
         if self.request.htmx:
-            response["HX-Redirect"] = response.url
-        return response
+            response = HttpResponse(status=200)
+            response["HX-Redirect"] = url
+            return response
+        return redirect(url)
 
 
 @method_decorator(vary_on_headers("HX-Request"), name="dispatch")
