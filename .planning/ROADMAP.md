@@ -30,10 +30,12 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 6.5: Workflow and Build Model Hardening** (INSERTED) - CIWorkflow engine field, step ordering validation, archived status, engine-agnostic Build model, revoked verification status
 - [x] **Phase 6.6: Sync Operations and Logging** (INSERTED) - Webhook and scheduled sync triggers, sync operation logging, branch protection validation
 - [x] **Phase 6.7: Version Lifecycle Automation** (INSERTED) - Auto-update manifests on patch publish, retention cleanup for old versions
-- [ ] **Phase 6.8: Manifest and Plugin Interface** (INSERTED) - Artifact discovery via CI plugin, CI variables, step validation API, runtime derivation from steps
-- [ ] **Phase 6.9: Step Output Wiring** (INSERTED) - Steps declare outputs, composer wires outputs to inputs, engine-native references
-- [ ] **Phase 6.10: Pluggable Webhook Routing Framework** (INSERTED) - Core webhook dispatcher with plugin-supplied route registration
-- [ ] **Phase 6.11: Templates Documentation Folder** (INSERTED) - Design docs for the unified pathfinder.yaml Templates system end-to-end
+- [x] **Phase 6.8: Manifest and Plugin Interface** (INSERTED) - Artifact discovery via CI plugin, CI variables, step validation API, runtime derivation from steps
+- [x] **Phase 6.9: Step Output Wiring** (INSERTED) - Steps declare outputs, composer wires outputs to inputs, engine-native references
+- [x] **Phase 6.10: Pluggable Webhook Routing Framework** (INSERTED) - Core webhook dispatcher with plugin-supplied route registration
+- [x] **Phase 6.11: Templates Documentation Folder** (INSERTED) - Design docs for the unified pathfinder.yaml Templates system end-to-end
+- [x] **Phase 7: Implement unified Environment Variables management** - Three-level cascade (project → service → environment), bulk editing, lock/unlock
+- [x] **Phase 8: Implement Service Templates** - Template registration via pathfinder.yaml, version sync via git tags, wizard integration with env var pre-population
 
 ## Phase Details
 
