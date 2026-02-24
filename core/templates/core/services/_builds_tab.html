@@ -4,7 +4,8 @@
         <h1 class="text-2xl font-bold text-dark-text">Builds</h1>
 
         <div class="flex items-center gap-4">
-            <!-- Fetch button - always visible -->
+            <!-- Fetch button -->
+            {% if can_edit %}
             <form method="post" action="{% url 'projects:service_fetch_builds' project.name service.name %}">
                 {% csrf_token %}
                 <button type="submit"
@@ -16,6 +17,7 @@
                     Fetch Builds
                 </button>
             </form>
+            {% endif %}
 
             {% if has_any_builds %}
             <!-- Search field -->

@@ -94,6 +94,9 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
     form_list = WIZARD_FORMS
 
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+
         # Get project from URL if provided
         project_name = kwargs.get("project_name")
         if project_name:
@@ -540,6 +543,10 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
     """Service detail with HTMX tab navigation."""
 
     def dispatch(self, request, *args, **kwargs):
+        # Let LoginRequiredMixin handle unauthenticated users first
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+
         # Get project and service from URL
         project_name = kwargs.get("project_name")
         service_name = kwargs.get("service_name")
@@ -783,6 +790,8 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
             # Empty state check
             context["has_any_builds"] = Build.objects.filter(service=self.service).exists()
 
+            context["can_edit"] = self.user_project_role in ("contributor", "owner")
+
         elif tab == "environments":
             # Show per-environment resolved cascade views
             environments = self.project.environments.filter(status="active").order_by("order", "name")
@@ -814,6 +823,9 @@ class ServiceDeleteView(LoginRequiredMixin, View):
     """Delete a service (owner only)."""
 
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+
         project_name = kwargs.get("project_name")
         service_name = kwargs.get("service_name")
 
@@ -881,6 +893,9 @@ class ServiceAssignWorkflowView(LoginRequiredMixin, View):
     """Assign or change the CI Workflow for a service."""
 
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+
         project_name = kwargs.get("project_name")
         service_name = kwargs.get("service_name")
 
@@ -1176,6 +1191,9 @@ class ServicePushManifestView(LoginRequiredMixin, View):
     """Enqueue push_ci_manifest background task for a service."""
 
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+
         project_name = kwargs.get("project_name")
         service_name = kwargs.get("service_name")
 
