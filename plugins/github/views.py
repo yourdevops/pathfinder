@@ -175,6 +175,8 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
                 "contents": "write",
                 "metadata": "read",
                 "pull_requests": "write",
+                "variables": "write",
+                "webhooks": "write",
                 "workflows": "write",
                 "actions": "read",
             },
