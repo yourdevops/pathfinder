@@ -51,6 +51,88 @@
         <p class="mt-1 text-sm text-red-400">{{ wizard.form.branch.errors.0 }}</p>
         {% endif %}
     </div>
+
+    {% if available_templates %}
+    <!-- Template Selection (only for new repos) -->
+    <div x-show="isNew" x-data="templateSelector('{{ default_template_id }}', '{{ default_version_tag }}', {{ template_versions_json }})" class="space-y-4">
+        <!-- Hidden inputs bound to Alpine state -->
+        <input type="hidden" name="repository-template_id" :value="tplVal">
+        <input type="hidden" name="repository-template_version_tag" :value="verVal">
+
+        <div class="flex items-start gap-4">
+            <!-- Template Dropdown -->
+            <div class="flex-1 min-w-0">
+                <label class="text-sm font-medium text-dark-text mb-2 block">Template</label>
+                <div class="relative" @click.outside="tplOpen = false">
+                    <button type="button" @click="tplOpen = !tplOpen"
+                            class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-dark-border bg-dark-bg hover:border-dark-border/80 text-left transition-colors">
+                        <span x-show="tplVal === ''" class="text-sm text-dark-muted">No template</span>
+                        {% for tpl in available_templates %}
+                        <div x-show="tplVal === '{{ tpl.id }}'" x-cloak class="flex items-center gap-2 min-w-0">
+                            <span class="text-sm font-medium text-dark-text truncate">{{ tpl.name }}</span>
+                            {% if tpl.runtimes %}{% for rt in tpl.runtimes %}{% for fam, con in rt.items %}<span class="flex-shrink-0 px-1.5 py-0.5 text-xs rounded bg-blue-500/20 text-blue-300">{{ fam|title }} {{ con }}</span>{% endfor %}{% endfor %}{% endif %}
+                        </div>
+                        {% endfor %}
+                        <svg :class="{ 'rotate-180': tplOpen }" class="w-4 h-4 text-dark-muted flex-shrink-0 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+
+                    <div x-show="tplOpen" x-cloak class="absolute z-20 mt-1 w-full bg-dark-surface border border-dark-border rounded-lg shadow-lg max-h-72 overflow-y-auto">
+                        <div @click="pickTpl('')"
+                             :class="tplVal === '' && 'bg-dark-accent/5'"
+                             class="p-3 cursor-pointer hover:bg-dark-bg/50 border-b border-dark-border/50 transition-colors">
+                            <span class="text-sm text-dark-muted">No template</span>
+                        </div>
+
+                        {% for tpl in available_templates %}
+                        <div @click="pickTpl('{{ tpl.id }}')"
+                             :class="tplVal === '{{ tpl.id }}' && 'bg-dark-accent/5'"
+                             class="p-3 cursor-pointer hover:bg-dark-bg/50 transition-colors {% if not forloop.last %}border-b border-dark-border/30{% endif %}">
+                            <div class="flex items-center gap-2 mb-0.5 flex-wrap">
+                                <span class="text-sm font-medium text-dark-text">{{ tpl.name }}</span>
+                                {% if tpl.runtimes %}{% for rt in tpl.runtimes %}{% for fam, con in rt.items %}<span class="px-1.5 py-0.5 text-xs rounded bg-blue-500/20 text-blue-300">{{ fam|title }} {{ con }}</span>{% endfor %}{% endfor %}{% endif %}
+                            </div>
+                            {% if tpl.description %}
+                            <p class="text-xs text-dark-muted truncate">{{ tpl.description|truncatechars:100 }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Version Dropdown (appears when template selected) -->
+            <div class="w-56 flex-shrink-0" x-show="tplVal !== ''" x-cloak>
+                <label class="text-sm font-medium text-dark-text mb-2 block">Version</label>
+                <div class="relative" @click.outside="verOpen = false">
+                    <button type="button" @click="verOpen = !verOpen"
+                            class="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-dark-border bg-dark-bg hover:border-dark-border/80 text-left transition-colors">
+                        <span x-show="verVal === ''" class="text-sm text-dark-muted">Select version...</span>
+                        <template x-for="ver in versions">
+                            <span x-show="verVal === ver.tag" class="text-sm text-dark-text" x-text="ver.tag"></span>
+                        </template>
+                        <svg :class="{ 'rotate-180': verOpen }" class="w-4 h-4 text-dark-muted flex-shrink-0 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+
+                    <div x-show="verOpen" x-cloak class="absolute z-20 mt-1 w-full bg-dark-surface border border-dark-border rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                        <template x-for="ver in versions">
+                            <div @click="pickVer(ver.tag)"
+                                 :class="verVal === ver.tag && 'bg-dark-accent/5'"
+                                 class="px-3 py-2.5 cursor-pointer hover:bg-dark-bg/50 transition-colors">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm text-dark-text" x-text="ver.tag"></span>
+                                    <span class="text-xs text-dark-muted font-mono" x-text="ver.sha"></span>
+                                </div>
+                            </div>
+                        </template>
+                        <div x-show="versions.length === 0" class="px-3 py-2.5">
+                            <span class="text-sm text-dark-muted">No versions available</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 {% if wizard.form.non_field_errors %}

@@ -40,6 +40,16 @@
         {% endif %}
     </div>
 
+    <!-- Template -->
+    <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">
+        <p class="text-sm text-dark-muted">Template</p>
+        {% if review_data.template_name %}
+        <p class="text-dark-text font-medium mt-1">{{ review_data.template_name }}{% if review_data.template_version_tag %} @ {{ review_data.template_version_tag }}{% endif %}</p>
+        {% else %}
+        <p class="text-dark-muted mt-1">None</p>
+        {% endif %}
+    </div>
+
     <!-- CI Workflow -->
     <div class="p-4 bg-dark-bg border border-dark-border rounded-lg">
         <p class="text-sm text-dark-muted">CI Workflow</p>

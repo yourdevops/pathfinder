@@ -28,6 +28,8 @@ from core.models import (
     ProjectCIConfig,
     ProjectMembership,
     Service,
+    Template,
+    get_available_templates_for_project,
     get_available_workflows_for_project,
 )
 from core.permissions import can_access_project, get_user_project_role, has_system_role
@@ -181,6 +183,49 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
                 if project and service_name:
                     context["preview_repo_name"] = f"{project.name}-{service_name}"
 
+                # Template picker context
+                templates = get_available_templates_for_project(project)
+                context["available_templates"] = templates
+
+                # Build versions map: {template_id_str: [{tag, sha}, ...]}
+                versions_map = {}
+                for tpl in templates:
+                    versions_map[str(tpl.id)] = [
+                        {"tag": v.tag_name, "sha": v.commit_sha[:8]}
+                        for v in tpl.versions.filter(available=True).order_by("-sort_key")
+                    ]
+                context["template_versions_json"] = json.dumps(versions_map)
+
+                # Default template from ProjectTemplateConfig
+                default_template_id = ""
+                default_version_tag = ""
+                # Restore previous selection if back-navigating
+                repo_data = self.get_cleaned_data_for_step("repository")
+                if repo_data:
+                    tid = repo_data.get("template_id", "")
+                    if tid:
+                        default_template_id = str(tid)
+                    vtag = repo_data.get("template_version_tag", "")
+                    if vtag:
+                        default_version_tag = str(vtag)
+                elif project:
+                    from core.models import ProjectTemplateConfig
+
+                    try:
+                        tpl_config = project.template_config
+                        if tpl_config.default_template:
+                            dt_id = str(tpl_config.default_template_id)
+                            if dt_id in versions_map:
+                                default_template_id = dt_id
+                                vers = versions_map[dt_id]
+                                if vers:
+                                    default_version_tag = vers[0]["tag"]
+                    except ProjectTemplateConfig.DoesNotExist:
+                        pass
+
+                context["default_template_id"] = default_template_id
+                context["default_version_tag"] = default_version_tag
+
         elif self.steps.current == "configuration":
             # Build PTF system vars and context for Alpine.js wizard component
             project_data = self.get_cleaned_data_for_step("project")
@@ -206,6 +251,22 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
                 ]
                 context["ptf_vars"] = ptf_vars
 
+                # Seed env vars from template required_vars if template selected
+                repo_data = self.get_cleaned_data_for_step("repository")
+                template_seeded_vars = []
+                if repo_data:
+                    template_id = repo_data.get("template_id", "")
+                    if template_id:
+                        try:
+                            tpl = Template.objects.get(id=int(template_id))
+                            if tpl.required_vars:
+                                template_seeded_vars = [
+                                    {"key": k, "value": "", "lock": False, "description": v}
+                                    for k, v in tpl.required_vars.items()
+                                ]
+                        except (Template.DoesNotExist, ValueError):
+                            pass
+
                 # Pass current env vars as JSON for Alpine initFromData
                 form = context.get("wizard", {}).get("form")
                 initial_env_vars = "[]"
@@ -213,6 +274,11 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
                     initial_env_vars = form.data.get("configuration-env_vars_json", "[]") or "[]"
                 elif form and form.initial:
                     initial_env_vars = form.initial.get("env_vars_json", "[]") or "[]"
+
+                # Merge template-seeded vars with any previously entered vars
+                if template_seeded_vars and initial_env_vars == "[]":
+                    initial_env_vars = json.dumps(template_seeded_vars)
+
                 context["initial_env_vars_json"] = initial_env_vars
 
         elif self.steps.current == "workflow":
@@ -313,6 +379,18 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         service_name = project_data.get("name")
         ci_workflow = workflow_data.get("ci_workflow")
 
+        # Template info for review
+        template_name = None
+        template_version_tag = None
+        template_id = repository_data.get("template_id", "")
+        if template_id:
+            try:
+                tpl = Template.objects.get(id=int(template_id))
+                template_name = tpl.name
+                template_version_tag = repository_data.get("template_version_tag", "")
+            except (Template.DoesNotExist, ValueError):
+                pass
+
         # Resolve version label for review display
         version_id = workflow_data.get("version_id", "")
         ci_workflow_version = None
@@ -344,6 +422,8 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
             "ci_workflow_name": ci_workflow.name if ci_workflow else "None",
             "ci_workflow_version": ci_workflow_version,
             "ci_workflow_version_label": ci_workflow_version_label,
+            "template_name": template_name,
+            "template_version_tag": template_version_tag,
         }
 
     def done(self, form_list, form_dict, **kwargs):
@@ -360,6 +440,16 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         repo_mode = repository_data["repo_mode"]
         existing_repo_url = repository_data.get("existing_repo_url", "")
         branch = repository_data["branch"]
+
+        # Template selection
+        template_id = repository_data.get("template_id", "")
+        template_version_tag = repository_data.get("template_version_tag", "")
+        selected_template = None
+        if template_id:
+            import contextlib
+
+            with contextlib.suppress(Template.DoesNotExist, ValueError):
+                selected_template = Template.objects.get(id=int(template_id))
 
         env_vars = config_data.get("env_vars_json", [])
 
@@ -407,6 +497,8 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
             env_vars=env_vars,
             ci_workflow=ci_workflow,
             ci_workflow_version=ci_workflow_version,
+            template=selected_template,
+            template_version=template_version_tag if selected_template else "",
             status="draft",
             scaffold_status=scaffold_status,
             created_by=self.request.user.username,
