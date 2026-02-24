@@ -1,0 +1,50 @@
+{# Unified env var container with upstream/current grouping #}
+{# Template variables: resolved_vars, current_level, is_editable, show_empty_warning #}
+{# URL context variables (pre-computed by view): env_var_add_url, env_var_edit_url, env_var_row_url, env_var_save_url, env_var_delete_url, env_var_toggle_lock_url #}
+
+<div class="space-y-1" id="env-var-container">
+    {# Section heading with count badge #}
+    <div class="flex items-center gap-2 mb-4">
+        <h3 class="text-sm font-semibold text-dark-muted uppercase tracking-wider">Environment Variables</h3>
+        <span class="px-1.5 py-0.5 text-xs rounded-full bg-dark-border text-dark-muted">{{ resolved_vars|length }}</span>
+    </div>
+
+    {% if resolved_vars %}
+        {# Upstream variables (source != current_level) #}
+        {% for var in resolved_vars %}
+            {% if var.source != current_level %}
+                {% include "core/env_vars/_env_var_row.html" with var=var is_editable=False current_level=current_level show_empty_warning=show_empty_warning env_var_edit_url=env_var_edit_url env_var_row_url=env_var_row_url env_var_save_url=env_var_save_url env_var_delete_url=env_var_delete_url env_var_toggle_lock_url=env_var_toggle_lock_url %}
+            {% endif %}
+        {% endfor %}
+
+        {# Visual separator between upstream and current-level vars #}
+        <div class="border-t border-dark-border/50 my-3"></div>
+
+        {# Current-level variables (source == current_level) #}
+        {% for var in resolved_vars %}
+            {% if var.source == current_level %}
+                {% include "core/env_vars/_env_var_row.html" with var=var is_editable=is_editable current_level=current_level show_empty_warning=show_empty_warning env_var_edit_url=env_var_edit_url env_var_row_url=env_var_row_url env_var_save_url=env_var_save_url env_var_delete_url=env_var_delete_url env_var_toggle_lock_url=env_var_toggle_lock_url %}
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <div class="text-center py-6">
+            <p class="text-dark-muted text-sm">No environment variables defined.</p>
+        </div>
+    {% endif %}
+
+    {# Add variable button #}
+    {% if is_editable %}
+    <div class="mt-3" id="env-var-add-area">
+        <button type="button"
+                hx-get="{{ env_var_add_url }}"
+                hx-target="#env-var-add-area"
+                hx-swap="beforebegin"
+                class="flex items-center gap-2 px-4 py-2 text-sm text-dark-muted hover:text-dark-accent border border-dashed border-dark-border hover:border-dark-accent rounded-lg transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add variable
+        </button>
+    </div>
+    {% endif %}
+</div>

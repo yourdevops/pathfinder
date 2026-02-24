@@ -1,0 +1,134 @@
+{# Display mode for a single env var row #}
+{# Template variables: var, is_editable, current_level, show_empty_warning #}
+{# URL context variables: env_var_edit_url, env_var_row_url, env_var_delete_url, env_var_toggle_lock_url #}
+
+<div id="env-var-row-{{ var.key }}" hx-target="this" hx-swap="outerHTML"
+     class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-dark-surface/50 hover:bg-dark-surface{% if show_empty_warning and not var.value %} bg-amber-900/10 border border-amber-500/30{% endif %}">
+
+    {# Lock icon on LEFT with three states #}
+    {% if current_level != "environment" %}
+        {% if var.locked_by == current_level %}
+            {# Locked here: calm red, clickable to toggle #}
+            {% if is_editable and var.source == current_level %}
+            <button type="button"
+                    hx-post="{{ env_var_toggle_lock_url }}?key={{ var.key }}"
+                    hx-target="#env-var-row-{{ var.key }}"
+                    hx-swap="outerHTML"
+                    class="flex-shrink-0 text-red-400 hover:text-red-300 transition-colors"
+                    title="Locked at {{ current_level }} level. Click to unlock.">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+            </button>
+            {% else %}
+            <span class="flex-shrink-0 text-red-400" title="Locked at {{ var.locked_by }} level">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+            </span>
+            {% endif %}
+        {% elif var.locked_by %}
+            {# Locked upstream: grey, not clickable #}
+            <span class="flex-shrink-0 text-gray-600" title="Locked at {{ var.locked_by }} level">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+            </span>
+        {% else %}
+            {# Unlocked: ghost icon, clickable to lock #}
+            {% if is_editable and var.source == current_level and var.value %}
+            <button type="button"
+                    hx-post="{{ env_var_toggle_lock_url }}?key={{ var.key }}"
+                    hx-target="#env-var-row-{{ var.key }}"
+                    hx-swap="outerHTML"
+                    class="flex-shrink-0 text-gray-700/30 hover:text-gray-500 transition-colors"
+                    title="Unlocked. Click to lock.">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                </svg>
+            </button>
+            {% else %}
+            <span class="flex-shrink-0 text-gray-700/30">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                </svg>
+            </span>
+            {% endif %}
+        {% endif %}
+    {% else %}
+        {# Environment level: no lock toggle, show upstream lock state #}
+        {% if var.locked_by %}
+        <span class="flex-shrink-0 text-gray-600" title="Locked at {{ var.locked_by }} level">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+        </span>
+        {% else %}
+        <span class="flex-shrink-0 text-gray-700/30">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+            </svg>
+        </span>
+        {% endif %}
+    {% endif %}
+
+    {# Key with tooltip #}
+    <div class="relative" x-data="{ tip: false }">
+        <code class="text-dark-text font-mono text-sm cursor-default"
+              @mouseenter="tip = true"
+              @mouseleave="tip = false">{{ var.key }}</code>
+        {# Tooltip #}
+        <div x-show="tip" x-cloak
+             class="absolute left-0 bottom-full mb-1 px-3 py-1.5 text-xs rounded bg-dark-bg border border-dark-border text-dark-muted whitespace-nowrap z-10 shadow-lg">
+            From: {{ var.source }}{% if var.description %}. {{ var.description }}{% endif %}
+        </div>
+    </div>
+
+    {# Separator #}
+    <span class="text-dark-muted">=</span>
+
+    {# Value #}
+    {% if var.value %}
+        <code class="text-dark-muted font-mono text-sm truncate flex-1 min-w-0">{{ var.value|truncatechars:60 }}</code>
+    {% else %}
+        <span class="text-dark-muted italic text-sm flex-1">not set</span>
+    {% endif %}
+
+    {# Source badge #}
+    <span class="flex-shrink-0 px-2 py-0.5 text-xs rounded
+        {% if var.source == 'system' %}bg-purple-500/20 text-purple-400
+        {% elif var.source == 'project' %}bg-blue-500/20 text-blue-400
+        {% elif var.source == 'service' %}bg-teal-500/20 text-teal-400
+        {% else %}bg-green-500/20 text-green-400{% endif %}">
+        {{ var.source|title }}
+    </span>
+
+    {# Edit/Delete actions (only if editable and source == current_level) #}
+    {% if is_editable and var.source == current_level %}
+    <div class="flex items-center gap-1 flex-shrink-0">
+        <button type="button"
+                hx-get="{{ env_var_edit_url }}?key={{ var.key }}"
+                hx-target="#env-var-row-{{ var.key }}"
+                hx-swap="outerHTML"
+                class="p-1 text-dark-muted hover:text-dark-accent transition-colors"
+                title="Edit variable">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+        </button>
+        {% if var.source != 'system' %}
+        <button type="button"
+                hx-delete="{{ env_var_delete_url }}?key={{ var.key }}"
+                hx-target="#env-var-row-{{ var.key }}"
+                hx-swap="outerHTML"
+                hx-confirm="Delete variable {{ var.key }}?"
+                class="p-1 text-dark-muted hover:text-red-400 transition-colors"
+                title="Delete variable">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+        </button>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
