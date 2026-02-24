@@ -11,30 +11,7 @@
             <h2 class="text-lg font-semibold text-dark-text">Environment Variables</h2>
         </div>
         <div class="p-4">
-            {% if merged_env_vars %}
-            <div class="space-y-2">
-                {% for var in merged_env_vars %}
-                <div class="flex items-center justify-between p-2 bg-dark-bg rounded">
-                    <div class="flex items-center gap-2">
-                        <span class="font-mono text-dark-text">{{ var.key }}</span>
-                        <span class="text-dark-muted">=</span>
-                        <span class="text-dark-muted truncate max-w-md">{{ var.value|truncatechars:50 }}</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        {% if var.lock %}
-                        <span class="px-2 py-0.5 text-xs bg-amber-500/20 text-amber-300 rounded">Locked</span>
-                        {% endif %}
-                        <span class="px-2 py-0.5 text-xs rounded
-                            {% if var.source == 'project' %}bg-blue-500/20 text-blue-300{% else %}bg-green-500/20 text-green-300{% endif %}">
-                            {{ var.source|title }}
-                        </span>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p class="text-dark-muted">No environment variables configured.</p>
-            {% endif %}
+            {% include "core/env_vars/_env_var_container.html" with resolved_vars=resolved_vars current_level="service" is_editable=is_editable_env_vars show_empty_warning=False env_var_add_url=env_var_add_url env_var_edit_url=env_var_edit_url env_var_row_url=env_var_row_url env_var_save_url=env_var_save_url env_var_delete_url=env_var_delete_url env_var_toggle_lock_url=env_var_toggle_lock_url %}
         </div>
     </div>
 

@@ -621,12 +621,22 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
             context["has_any_builds"] = Build.objects.filter(service=self.service).exists()
 
         elif tab == "environments":
-            # Show environments with deployment info (placeholder for Phase 7)
-            context["environments"] = self.project.environments.filter(status="active").order_by("order", "name")
+            # Show per-environment resolved cascade views
+            environments = self.project.environments.filter(status="active").order_by("order", "name")
+            env_resolved = []
+            for env in environments:
+                resolved = resolve_env_vars(self.project, service=self.service, environment=env)
+                env_resolved.append({"environment": env, "resolved_vars": resolved})
+            context["env_resolved"] = env_resolved
+            context["environments"] = environments
 
         elif tab == "settings":
-            context["merged_env_vars"] = resolve_env_vars(self.project, service=self.service)
+            from core.views.env_vars import _get_env_var_urls
+
+            context["resolved_vars"] = resolve_env_vars(self.project, service=self.service)
+            context["is_editable_env_vars"] = self.user_project_role in ("contributor", "owner")
             context["can_edit"] = self.user_project_role in ("contributor", "owner")
+            context.update(_get_env_var_urls("service", self.project.name, service_name=self.service.name))
 
         return context
 
