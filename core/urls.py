@@ -93,6 +93,7 @@ from .views.services import (
     ServiceProvisionVariablesView,
     ServicePushManifestView,
     ServiceRegisterWebhookView,
+    ServiceRetryScaffoldView,
     ServiceScaffoldStatusView,
 )
 from .views.templates import (
@@ -376,6 +377,11 @@ projects_patterns = [
         "<dns:project_name>/services/<dns:service_name>/scaffold-status/",
         ServiceScaffoldStatusView.as_view(),
         name="service_scaffold_status",
+    ),
+    path(
+        "<dns:project_name>/services/<dns:service_name>/retry-scaffold/",
+        ServiceRetryScaffoldView.as_view(),
+        name="service_retry_scaffold",
     ),
     path(
         "<dns:project_name>/services/<dns:service_name>/ci/assign-workflow/",

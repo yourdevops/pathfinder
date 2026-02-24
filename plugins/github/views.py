@@ -171,6 +171,7 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
             "callback_urls": [f"{external_url}{webhook_path}"],
             "public": False,
             "default_permissions": {
+                "administration": "write",
                 "contents": "write",
                 "metadata": "read",
                 "pull_requests": "write",

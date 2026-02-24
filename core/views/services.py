@@ -889,6 +889,47 @@ class ServiceScaffoldStatusView(LoginRequiredMixin, View):
         return HttpResponse(html)
 
 
+class ServiceRetryScaffoldView(LoginRequiredMixin, View):
+    """Retry a failed scaffold operation."""
+
+    def post(self, request, project_name, service_name):
+        from core.models import ProjectConnection
+
+        project = get_object_or_404(Project, name=project_name, status="active")
+        service = get_object_or_404(Service, project=project, name=service_name)
+
+        # Check contributor permission
+        role = can_access_project(request.user, project)
+        if not role or role == "viewer":
+            messages.error(request, "You don't have permission to modify this service.")
+            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+        # Only allow retry on failed scaffolds
+        if service.scaffold_status != "failed":
+            messages.error(request, "Scaffold can only be retried when in failed state.")
+            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+        # Get SCM connection from project's default
+        scm_connection = (
+            ProjectConnection.objects.filter(project=project, is_default=True).select_related("connection").first()
+        )
+        if not scm_connection:
+            messages.error(request, "No SCM connection configured for this project.")
+            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+        # Reset status and enqueue
+        service.scaffold_status = "pending"
+        service.scaffold_error = ""
+        service.save(update_fields=["scaffold_status", "scaffold_error"])
+
+        scaffold_repository.enqueue(
+            service_id=service.id,
+            scm_connection_id=scm_connection.connection.id,
+        )
+        messages.success(request, "Scaffold retry started.")
+        return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+
+
 class ServiceAssignWorkflowView(LoginRequiredMixin, View):
     """Assign or change the CI Workflow for a service."""
 
