@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "django_tasks.backends.database",
     "django_scheduled_tasks",
     "formtools",
+    "channels",
     "tailwind",
     "theme",  # django-tailwind theme app
     "django.contrib.admin",
@@ -192,6 +193,8 @@ SECURE_CSP = {
     "script-src": [CSP.SELF, CSP.NONCE],
     "style-src": [CSP.SELF, CSP.NONCE],
     "img-src": [CSP.SELF, "data:", "https://avatars.githubusercontent.com"],
+    # WebSocket connections for real-time updates (CSP 'self' does NOT match ws:// across browsers)
+    "connect-src": [CSP.SELF, "ws:", "wss:"],
     # No iframes are used, so blocking them entirely is reasonable hardening
     "frame-src": [CSP.NONE],
     # The <object>/<embed> have no legitimate use in this app and are a classic attack vector.

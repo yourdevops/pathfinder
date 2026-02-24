@@ -15,6 +15,7 @@ const files = [
   ['node_modules/@alpinejs/persist/dist/cdn.min.js', 'alpine-persist.min.js'],
   ['node_modules/@alpinejs/csp/dist/cdn.min.js', 'alpine-csp.min.js'],
   ['node_modules/htmx.org/dist/htmx.min.js', 'htmx.min.js'],
+  ['node_modules/htmx-ext-ws/dist/ws.min.js', 'htmx-ext-ws.min.js'],
 ];
 
 files.forEach(([src, target]) => {

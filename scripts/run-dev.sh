@@ -74,7 +74,7 @@ sleep 0.5
 
 # Start web server with prefixed output
 (
-    $PYTHON manage.py runserver 2>&1 | while IFS= read -r line; do
+    $PYTHON -m uvicorn pathfinder.asgi:application --reload --host 127.0.0.1 --port 8000 2>&1 | while IFS= read -r line; do
         echo -e "${CYAN}[portal]${RESET} $line"
     done
 ) &
