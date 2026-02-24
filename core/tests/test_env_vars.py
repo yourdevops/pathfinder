@@ -182,12 +182,32 @@ class TestResolveEnvVars(TestCase):
         empty_var = next(v for v in result if v["key"] == "EMPTY_VAR")
         self.assertFalse(empty_var["lock"])  # Empty value cannot be locked
 
-    def test_results_sorted_by_key(self):
-        """Output is alphabetically sorted by key."""
+    def test_results_sorted_by_source_priority_then_key(self):
+        """Output is sorted by source hierarchy (system > project > service > environment), then alphabetically."""
         result = resolve_env_vars(self.project, service=self.service, environment=self.environment)
 
+        # Extract (source, key) tuples to verify ordering
+        actual = [(v["source"], v["key"]) for v in result]
+
+        # System vars first (alphabetical), then project, service, environment
+        source_priority = {"system": 0, "project": 1, "service": 2, "environment": 3}
+        expected = sorted(actual, key=lambda t: (source_priority[t[0]], t[1]))
+        self.assertEqual(actual, expected)
+
+    def test_system_vars_always_first(self):
+        """System PTF_* vars precede project vars regardless of alphabetical key ordering."""
+        # Create project with vars that alphabetically precede PTF_PROJECT
+        self.project.env_vars = [
+            {"key": "A_VAR", "value": "alpha", "lock": False, "description": ""},
+            {"key": "B_VAR", "value": "beta", "lock": False, "description": ""},
+        ]
+        self.project.save()
+
+        result = resolve_env_vars(self.project)
         keys = [v["key"] for v in result]
-        self.assertEqual(keys, sorted(keys))
+
+        # PTF_PROJECT (system) must come before A_VAR and B_VAR (project)
+        self.assertEqual(keys, ["PTF_PROJECT", "A_VAR", "B_VAR"])
 
 
 class TestCheckDeploymentGate(TestCase):

@@ -182,8 +182,10 @@ def resolve_env_vars(project, service=None, environment=None):
                 "locked_by": None,
             }
 
-    # Return sorted by key
-    return sorted(merged.values(), key=lambda v: v["key"])
+    # Return sorted by source hierarchy (System > Project > Service > Environment),
+    # then alphabetically within each group
+    source_priority = {"system": 0, "project": 1, "service": 2, "environment": 3}
+    return sorted(merged.values(), key=lambda v: (source_priority.get(v["source"], 99), v["key"]))
 
 
 def check_deployment_gate(resolved_vars):
