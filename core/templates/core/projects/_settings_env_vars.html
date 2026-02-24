@@ -5,6 +5,6 @@
         <p class="text-dark-muted text-sm mt-1">Variables set here are inherited by all environments and services. Lock variables to prevent override.</p>
     </div>
     <div class="p-6">
-        {% include "core/env_vars/_env_var_container.html" with resolved_vars=resolved_vars current_level="project" is_editable=is_editable_env_vars show_empty_warning=False env_var_add_url=env_var_add_url env_var_edit_url=env_var_edit_url env_var_row_url=env_var_row_url env_var_save_url=env_var_save_url env_var_delete_url=env_var_delete_url env_var_toggle_lock_url=env_var_toggle_lock_url %}
+        {% include "core/env_vars/_env_var_container.html" with resolved_vars=resolved_vars current_level="project" is_editable=is_editable_env_vars show_empty_warning=False current_level_vars_json=current_level_vars_json env_var_bulk_save_url=env_var_bulk_save_url %}
     </div>
 </div>

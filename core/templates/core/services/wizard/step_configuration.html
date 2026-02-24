@@ -8,6 +8,7 @@ document.addEventListener('alpine:init', function() {
             vars: [],
             ptfVars: [],
             showDesc: {},
+            lastAddedIdx: -1,
 
             initFromField: function(fieldId, ptfData) {
                 this.ptfVars = ptfData;
@@ -20,6 +21,9 @@ document.addEventListener('alpine:init', function() {
             addVar: function() {
                 this.vars.push({ key: '', value: '', lock: false, description: '' });
                 this.syncField();
+                var self = this;
+                self.lastAddedIdx = self.vars.length - 1;
+                setTimeout(function() { self.lastAddedIdx = -1; }, 1500);
             },
 
             removeVar: function(idx) {
@@ -96,7 +100,8 @@ document.addEventListener('alpine:init', function() {
     <div class="space-y-1">
         <template x-for="(v, idx) in vars" :key="idx">
             <div>
-                <div class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-dark-surface/50">
+                <div class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-dark-surface/50 transition-all duration-500"
+                     :class="idx === lastAddedIdx ? 'ring-1 ring-green-500/50' : ''">
                     <!-- Lock toggle -->
                     <button type="button" @click="toggleLock(idx)"
                             :class="v.lock ? 'text-red-400' : 'text-gray-700/30 hover:text-gray-500'"

@@ -1,44 +1,237 @@
-{# Unified env var container with upstream/current grouping #}
+{# Unified env var container with Alpine.js client-side state management #}
 {# Template variables: resolved_vars, current_level, is_editable, show_empty_warning #}
-{# URL context variables (pre-computed by view): env_var_add_url, env_var_edit_url, env_var_row_url, env_var_save_url, env_var_delete_url, env_var_toggle_lock_url #}
+{# current_level_vars_json, env_var_bulk_save_url from view context #}
 
-<div class="space-y-1" id="env-var-container">
+<div x-data="envVarEditor"
+     x-init="initFromData({{ current_level_vars_json|default:'[]' }}, '{{ env_var_bulk_save_url|default:'' }}', '{{ csrf_token }}', '{{ current_level }}', {{ is_editable|yesno:'true,false' }})">
+
     {# Section heading with count badge #}
     <div class="flex items-center gap-2 mb-4">
         <h3 class="text-sm font-semibold text-dark-muted uppercase tracking-wider">Environment Variables</h3>
-        <span class="px-1.5 py-0.5 text-xs rounded-full bg-dark-border text-dark-muted">{{ resolved_vars|length }}</span>
+        <span class="px-1.5 py-0.5 text-xs rounded-full bg-dark-border text-dark-muted"
+              x-text="vars.length + {{ upstream_var_count|default:0 }}"></span>
     </div>
 
+    {# Upstream variables (server-rendered, read-only) #}
+    {% for var in resolved_vars %}
+        {% if var.source != current_level %}
+            {% include "core/env_vars/_env_var_row.html" with var=var current_level=current_level %}
+        {% endif %}
+    {% endfor %}
+
+    {# Visual separator between upstream and current-level vars #}
     {% if resolved_vars %}
-        {# Upstream variables (source != current_level) #}
-        {% for var in resolved_vars %}
-            {% if var.source != current_level %}
-                {% include "core/env_vars/_env_var_row.html" with var=var is_editable=False current_level=current_level show_empty_warning=show_empty_warning env_var_edit_url=env_var_edit_url env_var_row_url=env_var_row_url env_var_save_url=env_var_save_url env_var_delete_url=env_var_delete_url env_var_toggle_lock_url=env_var_toggle_lock_url %}
-            {% endif %}
-        {% endfor %}
+    <div class="border-t border-dark-border/50 my-3"></div>
+    {% endif %}
 
-        {# Visual separator between upstream and current-level vars #}
-        <div class="border-t border-dark-border/50 my-3"></div>
+    {# Current-level variables (Alpine-driven) #}
+    <template x-for="(v, idx) in vars" :key="idx">
+        <div>
+            {# Display row (when not editing this row) #}
+            <div x-show="editingIdx !== idx"
+                 class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-dark-surface/50 hover:bg-dark-surface mb-1">
 
-        {# Current-level variables (source == current_level) #}
-        {% for var in resolved_vars %}
-            {% if var.source == current_level %}
-                {% include "core/env_vars/_env_var_row.html" with var=var is_editable=is_editable current_level=current_level show_empty_warning=show_empty_warning env_var_edit_url=env_var_edit_url env_var_row_url=env_var_row_url env_var_save_url=env_var_save_url env_var_delete_url=env_var_delete_url env_var_toggle_lock_url=env_var_toggle_lock_url %}
-            {% endif %}
-        {% endfor %}
-    {% else %}
-        <div class="text-center py-6">
-            <p class="text-dark-muted text-sm">No environment variables defined.</p>
+                {# Lock icon #}
+                {% if current_level != "environment" %}
+                <template x-if="isEditable">
+                    <button type="button" @click="toggleLock(idx)"
+                            :class="v.lock ? 'text-red-400 hover:text-red-300' : 'text-gray-700/30 hover:text-gray-500'"
+                            class="flex-shrink-0 transition-colors"
+                            :title="v.lock ? 'Locked. Click to unlock.' : 'Unlocked. Click to lock.'">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  x-bind:d="v.lock ? 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' : 'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z'" />
+                        </svg>
+                    </button>
+                </template>
+                <template x-if="!isEditable">
+                    <span :class="v.lock ? 'text-red-400' : 'text-gray-700/30'" class="flex-shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  x-bind:d="v.lock ? 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' : 'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z'" />
+                        </svg>
+                    </span>
+                </template>
+                {% endif %}
+
+                {# Key with tooltip #}
+                <div class="relative" x-data="{ tip: false }">
+                    <code class="text-dark-text font-mono text-sm cursor-default"
+                          @mouseenter="tip = true"
+                          @mouseleave="tip = false"
+                          x-text="v.key"></code>
+                    <div x-show="tip" x-cloak
+                         class="absolute left-0 bottom-full mb-1 px-3 py-1.5 text-xs rounded bg-dark-bg border border-dark-border text-dark-muted whitespace-nowrap z-10 shadow-lg">
+                        <span>From: {{ current_level }}</span>
+                        <template x-if="v.description">
+                            <span x-text="'. ' + v.description"></span>
+                        </template>
+                    </div>
+                </div>
+
+                {# Separator #}
+                <span class="text-dark-muted">=</span>
+
+                {# Value #}
+                <template x-if="v.value">
+                    <code class="text-dark-muted font-mono text-sm truncate flex-1 min-w-0" x-text="v.value"></code>
+                </template>
+                <template x-if="!v.value">
+                    <span class="text-dark-muted italic text-sm flex-1">not set</span>
+                </template>
+
+                {# Edit/Delete actions #}
+                <template x-if="isEditable">
+                    <div class="flex items-center gap-1 flex-shrink-0">
+                        <button type="button" @click="startEdit(idx)"
+                                class="p-1 text-dark-muted hover:text-dark-accent transition-colors" title="Edit variable">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </button>
+                        <button type="button" @click="removeVar(idx)"
+                                class="p-1 text-dark-muted hover:text-red-400 transition-colors" title="Delete variable">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
+                </template>
+            </div>
+
+            {# Edit row (when editing this row) #}
+            <div x-show="editingIdx === idx"
+                 class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-dark-surface border border-dark-accent/30 mb-1 relative">
+
+                {# Lock toggle in edit mode #}
+                {% if current_level != "environment" %}
+                <button type="button" @click="toggleLock(idx)"
+                        :class="v.lock ? 'text-red-400' : 'text-gray-700/30 hover:text-gray-500'"
+                        class="flex-shrink-0 transition-colors"
+                        :title="v.lock ? 'Locked. Click to unlock.' : 'Unlocked. Click to lock.'">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              x-bind:d="v.lock ? 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' : 'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z'" />
+                    </svg>
+                </button>
+                {% endif %}
+
+                {# Key input (read-only during edit - key changes not allowed) #}
+                <input type="text" :value="v.key" readonly
+                       class="w-40 px-2 py-1 bg-dark-bg/50 border border-dark-border rounded text-dark-text font-mono text-sm cursor-not-allowed uppercase">
+
+                <span class="text-dark-muted">=</span>
+
+                {# Value input #}
+                <input type="text" :value="v.value" @input="v.value = $event.target.value"
+                       placeholder="value"
+                       class="flex-1 min-w-0 px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-text font-mono text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent">
+
+                {# Description toggle #}
+                <button type="button" @click="showEditDesc = !showEditDesc"
+                        class="flex-shrink-0 p-1 text-dark-muted hover:text-dark-accent transition-colors" title="Edit description">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </button>
+
+                {# Save edit #}
+                <button type="button" @click="saveEdit()"
+                        class="flex-shrink-0 p-1 text-green-400 hover:text-green-300 transition-colors" title="Save">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                </button>
+
+                {# Cancel edit #}
+                <button type="button" @click="cancelEdit()"
+                        class="flex-shrink-0 p-1 text-dark-muted hover:text-red-400 transition-colors" title="Cancel">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                {# Description input (collapsible) #}
+                <div x-show="showEditDesc" x-cloak class="absolute left-0 top-full mt-1 w-full px-4 z-10">
+                    <input type="text" :value="v.description" @input="v.description = $event.target.value"
+                           placeholder="Description (optional)"
+                           class="w-full px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-muted text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent">
+                </div>
+            </div>
         </div>
+    </template>
+
+    {# Add row (shown when addingNew) #}
+    <div x-show="addingNew" x-cloak
+         class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-dark-surface border border-dark-accent/30 mb-1 relative">
+
+        {# Lock toggle for new var #}
+        {% if current_level != "environment" %}
+        <button type="button" @click="newVar.lock = !newVar.lock"
+                :class="newVar.lock ? 'text-red-400' : 'text-gray-700/30 hover:text-gray-500'"
+                class="flex-shrink-0 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      x-bind:d="newVar.lock ? 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' : 'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z'" />
+            </svg>
+        </button>
+        {% endif %}
+
+        {# Key input #}
+        <input type="text" :value="newVar.key" @input="updateNewKey($event.target.value)"
+               placeholder="VARIABLE_NAME"
+               class="w-40 px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-text font-mono text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent uppercase">
+
+        <span class="text-dark-muted">=</span>
+
+        {# Value input #}
+        <input type="text" :value="newVar.value" @input="newVar.value = $event.target.value"
+               placeholder="value"
+               class="flex-1 min-w-0 px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-text font-mono text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent">
+
+        {# Description toggle #}
+        <button type="button" @click="showNewDesc = !showNewDesc"
+                class="flex-shrink-0 p-1 text-dark-muted hover:text-dark-accent transition-colors" title="Add description">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </button>
+
+        {# Confirm add #}
+        <button type="button" @click="confirmAdd()"
+                class="flex-shrink-0 p-1 text-green-400 hover:text-green-300 transition-colors" title="Add">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+        </button>
+
+        {# Cancel add #}
+        <button type="button" @click="cancelAdd()"
+                class="flex-shrink-0 p-1 text-dark-muted hover:text-red-400 transition-colors" title="Cancel">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        {# Description input (collapsible) #}
+        <div x-show="showNewDesc" x-cloak class="absolute left-0 top-full mt-1 w-full px-4 z-10">
+            <input type="text" :value="newVar.description" @input="newVar.description = $event.target.value"
+                   placeholder="Description (optional)"
+                   class="w-full px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-muted text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent">
+        </div>
+    </div>
+
+    {# No variables message (only if no upstream vars either) #}
+    {% if upstream_var_count == 0 or not resolved_vars %}
+    <div x-show="vars.length === 0" x-cloak class="text-center py-6">
+        <p class="text-dark-muted text-sm">No environment variables defined.</p>
+    </div>
     {% endif %}
 
     {# Add variable button #}
     {% if is_editable %}
-    <div class="mt-3" id="env-var-add-area">
-        <button type="button"
-                hx-get="{{ env_var_add_url }}"
-                hx-target="#env-var-add-area"
-                hx-swap="beforebegin"
+    <div class="mt-3">
+        <button type="button" x-show="!addingNew" @click="startAdd()"
                 class="flex items-center gap-2 px-4 py-2 text-sm text-dark-muted hover:text-dark-accent border border-dashed border-dark-border hover:border-dark-accent rounded-lg transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -47,4 +240,29 @@
         </button>
     </div>
     {% endif %}
+
+    {# Save / Cancel bar (shown when dirty) #}
+    {% if is_editable %}
+    <div x-show="dirty" x-cloak
+         class="mt-4 flex items-center justify-between px-4 py-3 bg-dark-accent/10 border border-dark-accent/30 rounded-lg">
+        <span class="text-sm text-dark-accent">Unsaved changes</span>
+        <div class="flex items-center gap-2">
+            <span x-show="saveError" x-text="saveError" class="text-sm text-red-400 mr-2"></span>
+            <button type="button" @click="bulkSave()" :disabled="saving"
+                    class="px-4 py-1.5 bg-dark-accent hover:bg-dark-accent/80 text-white text-sm rounded-lg transition-colors disabled:opacity-50">
+                <span x-show="!saving">Save Changes</span>
+                <span x-show="saving">Saving...</span>
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    {# Save success feedback #}
+    <div x-show="saveSuccess" x-cloak
+         class="mt-4 flex items-center gap-2 px-4 py-3 bg-green-500/10 border border-green-500/30 rounded-lg">
+        <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        <span class="text-sm text-green-400">Changes saved successfully</span>
+    </div>
 </div>

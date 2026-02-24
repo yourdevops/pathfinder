@@ -161,6 +161,124 @@
                 }
             };
         });
+        Alpine.data('envVarEditor', function() {
+            return {
+                vars: [],
+                editingIdx: -1,
+                editBackup: null,
+                addingNew: false,
+                newVar: { key: '', value: '', lock: false, description: '' },
+                showNewDesc: false,
+                showEditDesc: false,
+                dirty: false,
+                saving: false,
+                saveUrl: '',
+                csrfToken: '',
+                currentLevel: 'project',
+                isEditable: true,
+                saveSuccess: false,
+                saveError: '',
+
+                initFromData: function(initialVars, saveUrl, csrfToken, currentLevel, isEditable) {
+                    this.vars = initialVars || [];
+                    this.saveUrl = saveUrl;
+                    this.csrfToken = csrfToken;
+                    this.currentLevel = currentLevel || 'project';
+                    this.isEditable = isEditable !== false;
+                },
+
+                startEdit: function(idx) {
+                    this.editBackup = JSON.parse(JSON.stringify(this.vars[idx]));
+                    this.editingIdx = idx;
+                    this.showEditDesc = false;
+                },
+
+                cancelEdit: function() {
+                    if (this.editBackup !== null && this.editingIdx >= 0) {
+                        this.vars[this.editingIdx] = this.editBackup;
+                    }
+                    this.editingIdx = -1;
+                    this.editBackup = null;
+                    this.showEditDesc = false;
+                },
+
+                saveEdit: function() {
+                    var v = this.vars[this.editingIdx];
+                    if (!v.key || !v.key.match(/^[A-Z][A-Z0-9_]*$/)) { return; }
+                    this.editingIdx = -1;
+                    this.editBackup = null;
+                    this.showEditDesc = false;
+                    this.dirty = true;
+                },
+
+                startAdd: function() {
+                    this.addingNew = true;
+                    this.newVar = { key: '', value: '', lock: false, description: '' };
+                    this.showNewDesc = false;
+                },
+
+                cancelAdd: function() {
+                    this.addingNew = false;
+                    this.showNewDesc = false;
+                },
+
+                confirmAdd: function() {
+                    var k = this.newVar.key;
+                    if (!k || !k.match(/^[A-Z][A-Z0-9_]*$/)) { return; }
+                    if (k.startsWith('PTF_')) { return; }
+                    var self = this;
+                    var dup = false;
+                    self.vars.forEach(function(v) { if (v.key === k) { dup = true; } });
+                    if (dup) { return; }
+                    self.vars.push({ key: self.newVar.key, value: self.newVar.value, lock: self.newVar.lock, description: self.newVar.description });
+                    self.addingNew = false;
+                    self.showNewDesc = false;
+                    self.dirty = true;
+                },
+
+                removeVar: function(idx) {
+                    this.vars.splice(idx, 1);
+                    this.dirty = true;
+                },
+
+                toggleLock: function(idx) {
+                    if (!this.vars[idx].value) { return; }
+                    this.vars[idx].lock = !this.vars[idx].lock;
+                    this.dirty = true;
+                },
+
+                updateNewKey: function(val) {
+                    this.newVar.key = val.toUpperCase().replace(/[^A-Z0-9_]/g, '');
+                },
+
+                updateEditKey: function(idx, val) {
+                    this.vars[idx].key = val.toUpperCase().replace(/[^A-Z0-9_]/g, '');
+                },
+
+                bulkSave: function() {
+                    var self = this;
+                    self.saving = true;
+                    self.saveError = '';
+                    fetch(self.saveUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': self.csrfToken },
+                        body: JSON.stringify(self.vars)
+                    }).then(function(resp) {
+                        if (resp.ok) {
+                            self.dirty = false;
+                            self.saving = false;
+                            self.saveSuccess = true;
+                            setTimeout(function() { self.saveSuccess = false; }, 2000);
+                        } else {
+                            resp.text().then(function(t) { self.saveError = t; self.saving = false; });
+                        }
+                    }).catch(function(err) {
+                        self.saveError = 'Network error';
+                        self.saving = false;
+                    });
+                }
+            };
+        });
         Alpine.data('ciWorkflowSelector', function(initialWf, initialVer, versionsMap) {
             return {
                 wfVal: String(initialWf),
