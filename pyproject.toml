@@ -41,6 +41,7 @@ dev = [
     "django-upgrade>=1.29.1",
     "pytest>=9.0.2",
     "pytest-django>=4.12.0",
+    "import-linter>=2.10",
 ]
 
 [tool.ruff]
@@ -74,6 +75,26 @@ known-first-party = ["pathfinder"]
 DJANGO_SETTINGS_MODULE = "pathfinder.settings"
 python_files = ["test_*.py"]
 pythonpath = ["."]
+
+[tool.importlinter]
+root_packages = ["core", "plugins", "pathfinder", "theme"]
+
+[[tool.importlinter.contracts]]
+name = "Core must not import from plugin implementations"
+type = "forbidden"
+source_modules = ["core"]
+forbidden_modules = ["plugins.github", "plugins.docker"]
+
+[[tool.importlinter.contracts]]
+name = "Plugin implementations are independent"
+type = "independence"
+modules = ["plugins.github", "plugins.docker"]
+
+[[tool.importlinter.contracts]]
+name = "Theme must not import from core or plugins"
+type = "forbidden"
+source_modules = ["theme"]
+forbidden_modules = ["core", "plugins"]
 
 [tool.bandit]
 exclude_dirs = ["tests"]
