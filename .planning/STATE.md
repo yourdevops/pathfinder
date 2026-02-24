@@ -284,6 +284,7 @@ Recent decisions affecting current work:
 - Phase 6.10 inserted after Phase 6: Pluggable Webhook Routing Framework (URGENT)
 - Phase 6.11 inserted after Phase 6: Templates documentation folder (URGENT)
 - Phase 7 added: Implement unified Environment Variables management
+- Phase 8 added: Implement Service Templates
 
 ### Pending Todos
 
