@@ -94,15 +94,6 @@
         <span class="text-dark-muted italic text-sm flex-1">not set</span>
     {% endif %}
 
-    {# Source badge #}
-    <span class="flex-shrink-0 px-2 py-0.5 text-xs rounded
-        {% if var.source == 'system' %}bg-purple-500/20 text-purple-400
-        {% elif var.source == 'project' %}bg-blue-500/20 text-blue-400
-        {% elif var.source == 'service' %}bg-teal-500/20 text-teal-400
-        {% else %}bg-green-500/20 text-green-400{% endif %}">
-        {{ var.source|title }}
-    </span>
-
     {# Edit/Delete actions (only if editable and source == current_level) #}
     {% if is_editable and var.source == current_level %}
     <div class="flex items-center gap-1 flex-shrink-0">
