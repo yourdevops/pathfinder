@@ -447,7 +447,7 @@ Plans:
 
 **Goal:** Unified env var management with cascade resolution, inline editing component, system-injected PTF_* variables, and deployment gate readiness check across all contexts (project, service, environment, wizard)
 **Depends on:** Phase 6
-**Requirements:** DPLY-01, DPLY-02, DPLY-03, DPLY-04, DPLY-05, DPLY-06, DPLY-07, DPLY-08
+**Requirements:** DPLY-01, DPLY-02, DPLY-03, DPLY-04
 **Plans:** 5 plans
 
 Plans:
