@@ -174,19 +174,30 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
                     context["preview_repo_name"] = f"{project.name}-{service_name}"
 
         elif self.steps.current == "configuration":
-            # Show inherited project vars
+            # Build PTF system vars and context for Alpine.js wizard component
             project_data = self.get_cleaned_data_for_step("project")
             if project_data:
                 project = project_data.get("project") or self.project
                 service_name = project_data.get("name")
-                context["project_env_vars"] = project.env_vars or [] if project else []
                 context["service_name"] = service_name
-                # Default PTF_SERVICE variable (locked)
-                context["default_service_var"] = {
-                    "key": "PTF_SERVICE",
-                    "value": service_name,
-                    "lock": True,
-                }
+
+                # System-injected PTF_* vars shown read-only at top
+                ptf_vars = [
+                    {
+                        "key": "PTF_PROJECT",
+                        "value": project.name if project else "",
+                        "source": "system",
+                        "description": "Project name (system-injected)",
+                    },
+                    {
+                        "key": "PTF_SERVICE",
+                        "value": service_name or "",
+                        "source": "system",
+                        "description": "Service name (system-injected)",
+                    },
+                ]
+                context["ptf_vars_json"] = json.dumps(ptf_vars)
+                context["ptf_env_note"] = "PTF_ENVIRONMENT will be injected per-environment at deployment time."
 
         elif self.steps.current == "workflow":
             # Add workflow list and detail context for step 3
