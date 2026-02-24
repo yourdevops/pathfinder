@@ -448,7 +448,7 @@ Plans:
 **Goal:** Unified env var management with cascade resolution, inline editing component, system-injected PTF_* variables, and deployment gate readiness check across all contexts (project, service, environment, wizard)
 **Depends on:** Phase 6
 **Requirements:** DPLY-01, DPLY-02, DPLY-03, DPLY-04
-**Plans:** 7 plans (5 complete + 2 gap closure)
+**Plans:** 7/7 plans complete
 
 Plans:
 - [x] 07-01-PLAN.md -- Cascade resolution utility and variable shape migration (TDD)
@@ -456,5 +456,5 @@ Plans:
 - [x] 07-03-PLAN.md -- Wire unified component into Project and Environment settings
 - [x] 07-04-PLAN.md -- Wire unified component into Service settings and Wizard
 - [x] 07-05-PLAN.md -- Cleanup deprecated code and human verification
-- [ ] 07-06-PLAN.md -- Gap closure: fix sort order and remove visible source badges
-- [ ] 07-07-PLAN.md -- Gap closure: replace HTMX per-row save with Alpine bulk save
+- [x] 07-06-PLAN.md -- Gap closure: fix sort order and remove visible source badges
+- [x] 07-07-PLAN.md -- Gap closure: replace HTMX per-row save with Alpine bulk save
