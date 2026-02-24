@@ -12,11 +12,15 @@
     </div>
 
     <!-- Service Header -->
-    <div class="p-4 border-b border-dark-border">
+    <div class="p-4 border-b border-dark-border" x-data="wsStatus()">
         <div class="flex items-center gap-2">
             <h2 class="text-lg font-bold text-dark-text truncate" title="{{ service.name }}">
                 {{ service.name }}
             </h2>
+            <!-- WebSocket Connection Status -->
+            <span class="w-2 h-2 rounded-full shrink-0 transition-colors duration-300"
+                  :class="connected ? 'bg-green-400' : 'bg-gray-500'"
+                  :title="connected ? 'Live updates active' : 'Live updates inactive'"></span>
             <!-- Status Badge -->
             <span class="px-2 py-0.5 text-xs rounded
                 {% if service.status == 'draft' %}bg-gray-500/20 text-gray-300

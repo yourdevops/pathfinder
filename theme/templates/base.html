@@ -367,6 +367,23 @@
                 }
             };
         });
+        Alpine.data('wsStatus', function() {
+            return {
+                connected: false,
+                init: function() {
+                    var self = this;
+                    document.addEventListener('htmx:wsOpen', function() {
+                        self.connected = true;
+                    });
+                    document.addEventListener('htmx:wsClose', function() {
+                        self.connected = false;
+                    });
+                    document.addEventListener('htmx:wsError', function() {
+                        self.connected = false;
+                    });
+                }
+            };
+        });
     });
     </script>
     <!-- HTMX -->
@@ -396,6 +413,18 @@
             if (builds) {
                 builds.style.opacity = '0.7';
                 setTimeout(function() { builds.style.opacity = '1'; }, 150);
+            }
+        });
+        var wsEverConnected = false;
+        document.addEventListener('htmx:wsOpen', function() {
+            wsEverConnected = true;
+            var wsWarning = document.getElementById('ws-fallback-warning');
+            if (wsWarning) wsWarning.classList.add('hidden');
+        });
+        document.addEventListener('htmx:wsClose', function() {
+            if (wsEverConnected) {
+                var wsWarning = document.getElementById('ws-fallback-warning');
+                if (wsWarning) wsWarning.classList.remove('hidden');
             }
         });
     </script>
