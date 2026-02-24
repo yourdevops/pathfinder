@@ -78,3 +78,121 @@ def complete_setup():
     token_path = get_unlock_token_path()
     if token_path.exists():
         token_path.unlink()
+
+
+def resolve_env_vars(project, service=None, environment=None):
+    """Resolve environment variables using cascade logic.
+
+    Layers variables top-down: system -> project -> service -> environment.
+    Locked variables cannot be overridden by downstream levels.
+    Description is inherited from upstream unless downstream provides its own.
+
+    Returns sorted list of dicts:
+        {key, value, lock, description, source, locked_by}
+    """
+    merged = {}
+
+    # 1. System-injected variables (always locked)
+    merged["PTF_PROJECT"] = {
+        "key": "PTF_PROJECT",
+        "value": project.name,
+        "lock": True,
+        "description": "Project name (system-injected)",
+        "source": "system",
+        "locked_by": "system",
+    }
+
+    if service:
+        merged["PTF_SERVICE"] = {
+            "key": "PTF_SERVICE",
+            "value": service.name,
+            "lock": True,
+            "description": "Service name (system-injected)",
+            "source": "system",
+            "locked_by": "system",
+        }
+
+    if environment:
+        merged["PTF_ENVIRONMENT"] = {
+            "key": "PTF_ENVIRONMENT",
+            "value": environment.name,
+            "lock": True,
+            "description": "Environment name (system-injected)",
+            "source": "system",
+            "locked_by": "system",
+        }
+
+    # 2. Project variables
+    for var in project.env_vars or []:
+        key = var["key"]
+        if key in merged:
+            continue  # System vars cannot be overridden
+        value = var.get("value", "")
+        lock = var.get("lock", False)
+        # Empty value cannot be locked
+        if not value:
+            lock = False
+        merged[key] = {
+            "key": key,
+            "value": value,
+            "lock": lock,
+            "description": var.get("description", ""),
+            "source": "project",
+            "locked_by": "project" if lock else None,
+        }
+
+    # 3. Service variables (if provided)
+    if service:
+        for var in service.env_vars or []:
+            key = var["key"]
+            if key in merged and merged[key]["lock"]:
+                continue  # Cannot override locked upstream
+            value = var.get("value", "")
+            lock = var.get("lock", False)
+            if not value:
+                lock = False
+            # Inherit description from upstream if downstream is empty
+            upstream_desc = merged[key]["description"] if key in merged else ""
+            desc = var.get("description", "") or upstream_desc
+            merged[key] = {
+                "key": key,
+                "value": value,
+                "lock": lock,
+                "description": desc,
+                "source": "service",
+                "locked_by": "service" if lock else None,
+            }
+
+    # 4. Environment variables (if provided)
+    if environment:
+        for var in environment.env_vars or []:
+            key = var["key"]
+            if key in merged and merged[key]["lock"]:
+                continue  # Cannot override locked upstream
+            value = var.get("value", "")
+            # Environment is terminal level, locked_by is None
+            upstream_desc = merged[key]["description"] if key in merged else ""
+            desc = var.get("description", "") or upstream_desc
+            merged[key] = {
+                "key": key,
+                "value": value,
+                "lock": False,  # Environment is terminal, no downstream to lock
+                "description": desc,
+                "source": "environment",
+                "locked_by": None,
+            }
+
+    # Return sorted by key
+    return sorted(merged.values(), key=lambda v: v["key"])
+
+
+def check_deployment_gate(resolved_vars):
+    """Check if all resolved variables have values (deployment readiness).
+
+    Excludes system PTF_* variables from the check (they always have values).
+
+    Returns:
+        tuple: (is_ready: bool, empty_vars: list of vars with empty values)
+    """
+    empty_vars = [var for var in resolved_vars if var["source"] != "system" and not var["value"]]
+    return (len(empty_vars) == 0, empty_vars)
