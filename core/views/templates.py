@@ -169,6 +169,22 @@ class TemplateDeregisterView(OperatorRequiredMixin, View):
         return redirect("templates:list")
 
 
+class TemplateSyncView(OperatorRequiredMixin, View):
+    """Trigger manual sync of a service template."""
+
+    def post(self, request, template_name):
+        template = get_object_or_404(Template, name=template_name)
+        if template.sync_status == "syncing":
+            messages.info(request, "Sync already in progress.")
+            return redirect("templates:detail", template_name=template.name)
+
+        from core.tasks import sync_template
+
+        sync_template.enqueue(template_id=template.id)
+        messages.success(request, f'Sync started for template "{template.name}".')
+        return redirect("templates:detail", template_name=template.name)
+
+
 class TemplateSyncStatusView(LoginRequiredMixin, View):
     """HTMX partial returning sync status badge for auto-refresh."""
 

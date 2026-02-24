@@ -103,6 +103,7 @@ from .views.templates import (
     TemplateListView,
     TemplateRegisterView,
     TemplateSyncStatusView,
+    TemplateSyncView,
 )
 
 # Setup URLs
@@ -237,6 +238,7 @@ templates_patterns = [
     path("register/", TemplateRegisterView.as_view(), name="register"),
     path("<dns:template_name>/", TemplateDetailView.as_view(), name="detail"),
     path("<dns:template_name>/deregister/", TemplateDeregisterView.as_view(), name="deregister"),
+    path("<dns:template_name>/sync/", TemplateSyncView.as_view(), name="sync"),
     path("<dns:template_name>/sync-status/", TemplateSyncStatusView.as_view(), name="sync_status"),
 ]
 
