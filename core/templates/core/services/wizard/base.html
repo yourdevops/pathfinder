@@ -18,92 +18,31 @@
         <p class="text-dark-muted mt-1">Follow the wizard to create a new service</p>
     </div>
 
-    <!-- Step Progress Bar -->
-    <div class="flex items-center mb-8">
-        {% for step in steps %}
-        <div class="flex items-center">
-            <!-- Step indicator -->
-            <div class="flex items-center justify-center w-8 h-8 rounded-full
-                {% if step.index < current_step_index %}
-                    bg-green-600 text-white
-                {% elif step.is_current %}
-                    bg-dark-accent text-white
-                {% else %}
-                    bg-dark-border text-dark-muted
-                {% endif %}">
-                {% if step.index < current_step_index %}
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                {% else %}
-                    {{ forloop.counter }}
-                {% endif %}
-            </div>
-            <!-- Step title -->
-            <span class="ml-2 text-sm font-medium
-                {% if step.is_current %}text-dark-text{% else %}text-dark-muted{% endif %}">
-                {{ step.title }}
-            </span>
-        </div>
-        {% if not forloop.last %}
-        <!-- Connector line -->
-        <div class="flex-1 h-px bg-dark-border mx-4"></div>
-        {% endif %}
-        {% endfor %}
-    </div>
-
-    <!-- Form Card -->
-    <div class="bg-dark-surface border border-dark-border rounded-lg p-6">
-        <h2 class="text-lg font-semibold text-dark-text mb-6">{{ step_title }}</h2>
-
-        <form method="post" id="wizard-form" x-data="validatedForm">
-            {% csrf_token %}
-            {{ wizard.management_form }}
-
-            {% block wizard_content %}
-            <!-- Step-specific content -->
-            {% endblock %}
-
-            <!-- Navigation -->
-            <div class="flex justify-between mt-8 pt-6 border-t border-dark-border">
-                {% if wizard.steps.prev %}
-                <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.prev }}"
-                        class="px-4 py-2 text-dark-text border border-dark-border rounded-lg hover:bg-dark-border/50 transition-colors"
-                        formnovalidate>
-                    Back
-                </button>
-                {% else %}
-                <div></div>
-                {% endif %}
-
-                <button type="submit"
-                        class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors">
-                    {% if wizard.steps.current == wizard.steps.last %}
-                        Create Service
-                    {% else %}
-                        Next
-                    {% endif %}
-                </button>
-            </div>
-        </form>
+    <!-- HTMX swap target: progress bar + form card -->
+    <div id="wizard-step">
+        {% include "core/services/wizard/_wizard_step.html" %}
     </div>
 </div>
 </div>
 
-<!-- Warn before leaving mid-wizard -->
+<!-- Warn before leaving mid-wizard (event delegation for HTMX swaps) -->
 <script nonce="{{ csp_nonce }}">
 window.addEventListener('beforeunload', function(e) {
-    // Only warn if form has been interacted with
-    if (document.querySelector('#wizard-form').dataset.dirty === 'true') {
+    var form = document.getElementById('wizard-form');
+    if (form && form.dataset.dirty === 'true') {
         e.preventDefault();
         e.returnValue = '';
     }
 });
-document.querySelector('#wizard-form').addEventListener('change', function() {
-    this.dataset.dirty = 'true';
+document.addEventListener('change', function(e) {
+    if (e.target.closest('#wizard-form')) {
+        document.getElementById('wizard-form').dataset.dirty = 'true';
+    }
 });
-document.querySelector('#wizard-form').addEventListener('submit', function() {
-    this.dataset.dirty = 'false';
+document.addEventListener('submit', function(e) {
+    if (e.target.id === 'wizard-form') {
+        e.target.dataset.dirty = 'false';
+    }
 });
 </script>
 {% endblock %}

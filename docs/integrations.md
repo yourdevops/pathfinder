@@ -1,5 +1,7 @@
 # Integrations
 
+Status: Stale, need update
+
 Integrations connect Pathfinder to external services like source control, CI systems, artifact registries, and deployment targets.
 
 ## Architecture Overview

@@ -1,5 +1,7 @@
 # Service Creation Wizard
 
+Status: actual guideline for implementation
+
 A 5-page wizard for creating new Services. Built on `django-formtools` `SessionWizardView` with session-based state. A progress bar with numbered step indicators tracks completion throughout the flow.
 
 Every page has "Back" and "Next" buttons to navigate without losing wizard data.

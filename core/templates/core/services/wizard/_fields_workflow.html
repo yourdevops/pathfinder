@@ -1,6 +1,3 @@
-{% extends "core/services/wizard/base.html" %}
-
-{% block wizard_content %}
 <div x-data="ciWorkflowSelector('{{ default_workflow_id }}', '{{ default_version_id }}', {{ workflow_versions_json }})" class="space-y-6">
     <!-- Hidden inputs bound to Alpine state -->
     <input type="hidden" name="workflow-ci_workflow" :value="wfVal">
@@ -196,4 +193,3 @@
         </div>
     </div>
 </div>
-{% endblock %}

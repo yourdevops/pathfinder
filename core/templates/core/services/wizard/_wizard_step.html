@@ -1,0 +1,97 @@
+<!-- Step Progress Bar -->
+<div class="flex items-center mb-8">
+    {% for step in steps %}
+    {% if step.clickable %}
+    {# Clickable: visited or completed step — jump directly via HTMX #}
+    <button type="button" class="flex items-center cursor-pointer group"
+            hx-post="{{ request.path }}"
+            hx-target="#wizard-step"
+            hx-swap="innerHTML"
+            hx-include="#wizard-form"
+            hx-vals='{"wizard_goto_step": "{{ step.key }}"}'>
+        <div class="flex items-center justify-center w-8 h-8 rounded-full transition-colors
+            {% if step.completed %}
+                bg-green-600 text-white group-hover:bg-green-500
+            {% else %}
+                bg-dark-accent/60 text-white group-hover:bg-dark-accent/80
+            {% endif %}">
+            {% if step.completed %}
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            {% else %}
+                {{ forloop.counter }}
+            {% endif %}
+        </div>
+        <span class="ml-2 text-sm font-medium text-dark-muted group-hover:text-dark-text transition-colors">
+            {{ step.title }}
+        </span>
+    </button>
+    {% else %}
+    {# Non-clickable: current step or not yet reached #}
+    <div class="flex items-center">
+        <div class="flex items-center justify-center w-8 h-8 rounded-full
+            {% if step.is_current %}
+                bg-dark-accent text-white
+            {% elif step.completed %}
+                bg-green-600 text-white
+            {% else %}
+                bg-dark-border text-dark-muted
+            {% endif %}">
+            {% if step.completed and not step.is_current %}
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+            {% else %}
+                {{ forloop.counter }}
+            {% endif %}
+        </div>
+        <span class="ml-2 text-sm font-medium
+            {% if step.is_current %}text-dark-text{% else %}text-dark-muted{% endif %}">
+            {{ step.title }}
+        </span>
+    </div>
+    {% endif %}
+    {% if not forloop.last %}
+    <!-- Connector line -->
+    <div class="flex-1 h-px bg-dark-border mx-4"></div>
+    {% endif %}
+    {% endfor %}
+</div>
+
+<!-- Form Card -->
+<div class="bg-dark-surface border border-dark-border rounded-lg p-6">
+    <h2 class="text-lg font-semibold text-dark-text mb-6">{{ step_title }}</h2>
+
+    <form method="post" id="wizard-form" x-data="validatedForm"
+          hx-post="{{ request.path }}"
+          hx-target="#wizard-step"
+          hx-swap="innerHTML">
+        {% csrf_token %}
+        {{ wizard.management_form }}
+
+        {% include step_template %}
+
+        <!-- Navigation -->
+        <div class="flex justify-between mt-8 pt-6 border-t border-dark-border">
+            {% if wizard.steps.prev %}
+            <button type="submit" name="wizard_goto_step" value="{{ wizard.steps.prev }}"
+                    class="px-4 py-2 text-dark-text border border-dark-border rounded-lg hover:bg-dark-border/50 transition-colors"
+                    formnovalidate>
+                Back
+            </button>
+            {% else %}
+            <div></div>
+            {% endif %}
+
+            <button type="submit"
+                    class="px-4 py-2 bg-dark-accent hover:bg-dark-accent/80 text-white rounded-lg transition-colors">
+                {% if wizard.steps.current == wizard.steps.last %}
+                    Create Service
+                {% else %}
+                    Next
+                {% endif %}
+            </button>
+        </div>
+    </form>
+</div>

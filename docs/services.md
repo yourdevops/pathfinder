@@ -1,5 +1,7 @@
 # Services
 
+Status: Stale, need review
+
 Services are deployable application configurations within a Project. They represent the full lifecycle from source code to running deployment.
 
 ## Overview

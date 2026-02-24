@@ -75,14 +75,6 @@ WIZARD_FORMS = [
     ("review", ReviewStepForm),
 ]
 
-WIZARD_TEMPLATES = {
-    "project": "core/services/wizard/step_project.html",
-    "repository": "core/services/wizard/step_repository.html",
-    "workflow": "core/services/wizard/step_workflow.html",
-    "configuration": "core/services/wizard/step_configuration.html",
-    "review": "core/services/wizard/step_review.html",
-}
-
 STEP_TITLES = {
     "project": "Service",
     "repository": "Repository",
@@ -92,6 +84,7 @@ STEP_TITLES = {
 }
 
 
+@method_decorator(vary_on_headers("HX-Request"), name="dispatch")
 class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
     """5-step service creation wizard (project, repository, configuration, workflow, review)."""
 
@@ -116,7 +109,9 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         return super().dispatch(request, *args, **kwargs)
 
     def get_template_names(self):
-        return [WIZARD_TEMPLATES[self.steps.current]]
+        if self.request.htmx:
+            return ["core/services/wizard/_wizard_step.html"]
+        return ["core/services/wizard/base.html"]
 
     def get_form_kwargs(self, step=None):
         kwargs = super().get_form_kwargs(step)
@@ -147,18 +142,31 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
     def get_context_data(self, form, **kwargs):
         context = super().get_context_data(form, **kwargs)
 
+        # Track the furthest step the user has reached (persists across navigation)
+        extra = self.storage.extra_data
+        furthest = max(extra.get("furthest_step_index", 0), self.steps.index)
+        extra["furthest_step_index"] = furthest
+        self.storage.extra_data = extra
+
         # Step metadata for progress bar
+        # A step is "visited" if user has reached it (index <= furthest) or it has saved data.
+        # A step is "completed" if it has validated data in session storage.
+        # Clickable = visited and not the current step.
         context["steps"] = [
             {
                 "key": key,
                 "title": STEP_TITLES[key],
                 "is_current": key == self.steps.current,
                 "index": i,
+                "clickable": key != self.steps.current
+                and (i <= furthest or self.storage.get_step_data(key) is not None),
+                "completed": self.storage.get_step_data(key) is not None,
             }
             for i, (key, _) in enumerate(WIZARD_FORMS)
         ]
         context["current_step_index"] = self.steps.index
         context["step_title"] = STEP_TITLES[self.steps.current]
+        context["step_template"] = f"core/services/wizard/_fields_{self.steps.current}.html"
 
         # Project context
         context["project"] = self.project
@@ -197,7 +205,6 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
                     },
                 ]
                 context["ptf_vars"] = ptf_vars
-                context["ptf_env_note"] = "PTF_ENVIRONMENT will be injected per-environment at deployment time."
 
                 # Pass current env vars as JSON for Alpine initFromData
                 form = context.get("wizard", {}).get("form")
@@ -424,7 +431,10 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
                 f'Service "{service_name}" created. You can assign a CI Workflow later to push a manifest.',
             )
 
-        return redirect("projects:detail", project_name=project.name)
+        response = redirect("projects:detail", project_name=project.name)
+        if self.request.htmx:
+            response["HX-Redirect"] = response.url
+        return response
 
 
 @method_decorator(vary_on_headers("HX-Request"), name="dispatch")

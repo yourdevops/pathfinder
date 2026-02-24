@@ -1,7 +1,4 @@
-{% extends "core/services/wizard/base.html" %}
-
-{% block wizard_content %}
-<div class="space-y-6">
+<div class="space-y-6" x-data="repoModeToggle">
     <!-- SCM Connection -->
     <div>
         <label class="block text-sm font-medium text-dark-text mb-2">SCM Connection</label>
@@ -16,7 +13,8 @@
         <label class="block text-sm font-medium text-dark-text mb-2">Repository</label>
         <div class="space-y-3">
             {% for choice in wizard.form.repo_mode %}
-            <label class="flex items-center p-3 border border-dark-border rounded-lg cursor-pointer hover:bg-dark-border/30 transition-colors">
+            <label class="flex items-center p-3 border border-dark-border rounded-lg cursor-pointer hover:bg-dark-border/30 transition-colors"
+                   @change="setMode($event.target.value)">
                 {{ choice.tag }}
                 <span class="ml-3 text-dark-text">{{ choice.choice_label }}</span>
             </label>
@@ -28,13 +26,13 @@
     </div>
 
     <!-- New Repo Preview -->
-    <div id="new-repo-preview" class="p-4 bg-dark-bg border border-dark-border rounded-lg">
+    <div x-show="isNew" class="p-4 bg-dark-bg border border-dark-border rounded-lg">
         <p class="text-sm text-dark-muted">New repository will be created:</p>
         <p class="text-dark-text font-mono mt-1">{{ preview_repo_name }}</p>
     </div>
 
     <!-- Existing Repo URL (shown conditionally) -->
-    <div id="existing-repo-field" class="hidden">
+    <div x-show="!isNew" x-cloak>
         <label class="block text-sm font-medium text-dark-text mb-2">Repository URL</label>
         {{ wizard.form.existing_repo_url }}
         {% if wizard.form.existing_repo_url.errors %}
@@ -44,9 +42,11 @@
 
     <!-- Branch -->
     <div>
-        <label id="branch-label" class="block text-sm font-medium text-dark-text mb-2">Main Branch</label>
+        <label class="block text-sm font-medium text-dark-text mb-2"
+               x-text="isNew ? 'Main Branch' : 'Base Branch'">Main Branch</label>
         {{ wizard.form.branch }}
-        <p class="mt-1 text-sm text-dark-muted" id="branch-hint">Target branch for the new repository</p>
+        <p class="mt-1 text-sm text-dark-muted"
+           x-text="isNew ? 'Main branch for the new repository' : 'Base branch for the feature branch (PR will target this)'">Target branch for the new repository</p>
         {% if wizard.form.branch.errors %}
         <p class="mt-1 text-sm text-red-400">{{ wizard.form.branch.errors.0 }}</p>
         {% endif %}
@@ -58,24 +58,3 @@
     <p class="text-sm text-red-400">{{ wizard.form.non_field_errors.0 }}</p>
 </div>
 {% endif %}
-
-<script nonce="{{ csp_nonce }}">
-// Toggle fields based on repo mode
-document.querySelectorAll('input[name="repository-repo_mode"]').forEach(function(radio) {
-    radio.addEventListener('change', function() {
-        const isNew = this.value === 'new';
-        document.getElementById('new-repo-preview').classList.toggle('hidden', !isNew);
-        document.getElementById('existing-repo-field').classList.toggle('hidden', isNew);
-        document.getElementById('branch-label').textContent = isNew ? 'Main Branch' : 'Base Branch';
-        document.getElementById('branch-hint').textContent = isNew
-            ? 'Main branch for the new repository'
-            : 'Base branch for the feature branch (PR will target this)';
-    });
-});
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const checked = document.querySelector('input[name="repository-repo_mode"]:checked');
-    if (checked) checked.dispatchEvent(new Event('change'));
-});
-</script>
-{% endblock %}

@@ -1,5 +1,7 @@
 # Environments
 
+Status: Stale, need update
+
 Environments are deployment target configurations within a Project. They define where services are deployed and how they connect to external services (integrations).
 
 ## Environment Model

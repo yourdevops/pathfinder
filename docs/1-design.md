@@ -1,5 +1,7 @@
 # Pathfinder - Self-Service Portal for Developers
 
+Status: Stale, needs review
+
 This document contains the design specification for Pathfinder features. It serves as the source of truth for implementation.
 
 ## Design Principles

@@ -310,6 +310,18 @@
                 }
             };
         });
+        Alpine.data('repoModeToggle', function() {
+            return {
+                isNew: true,
+                init: function() {
+                    var checked = this.$el.querySelector('input[name="repository-repo_mode"]:checked');
+                    if (checked) { this.isNew = checked.value === 'new'; }
+                },
+                setMode: function(val) {
+                    this.isNew = val === 'new';
+                }
+            };
+        });
         Alpine.data('ciWorkflowSelector', function(initialWf, initialVer, versionsMap) {
             return {
                 wfVal: String(initialWf),
