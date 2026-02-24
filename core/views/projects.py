@@ -249,40 +249,12 @@ class EnvironmentDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView
         env = get_object_or_404(Environment, name=kwargs.get("env_name"), project=self.project)
         context["environment"] = env
         context["form"] = EnvironmentForm(instance=env)
-        # Get merged env vars with inheritance info
-        context["merged_env_vars"] = self.get_merged_env_vars(env)
+        # Resolved cascade via unified resolve_env_vars
+        resolved_vars = resolve_env_vars(self.project, environment=env)
+        context["resolved_vars"] = resolved_vars
+        context["is_editable_env_vars"] = self.user_project_role in ("contributor", "owner")
+        context.update(_get_env_var_urls("environment", self.project.name, env_name=env.name))
         return context
-
-    def get_merged_env_vars(self, environment):
-        """Merge project and environment env vars with inheritance tracking."""
-        merged = {}
-
-        # First add project-level vars (all inherited)
-        for var in self.project.env_vars or []:
-            merged[var["key"]] = {
-                "key": var["key"],
-                "value": var["value"],
-                "lock": var.get("lock", False),
-                "inherited": True,
-                "source": "project",
-            }
-
-        # Then add/override with environment-level vars
-        for var in environment.env_vars or []:
-            key = var["key"]
-            if key in merged and merged[key]["lock"]:
-                # Locked at project level - can't override, mark as locked
-                merged[key]["locked_override"] = True
-            else:
-                merged[key] = {
-                    "key": var["key"],
-                    "value": var["value"],
-                    "lock": var.get("lock", False),
-                    "inherited": False,
-                    "source": "environment",
-                }
-
-        return list(merged.values())
 
 
 class EnvironmentUpdateView(LoginRequiredMixin, ProjectContributorMixin, View):
