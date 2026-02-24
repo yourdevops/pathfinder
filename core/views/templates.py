@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views import View
 
@@ -61,6 +62,7 @@ class TemplateDetailView(LoginRequiredMixin, View):
                 "versions": versions,
                 "is_operator": is_operator,
                 "can_delete": can_delete,
+                "deregister_url": reverse("templates:deregister", kwargs={"template_name": template.name}),
             },
         )
 

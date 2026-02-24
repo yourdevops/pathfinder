@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% load humanize %}
+
+{% block title %}{{ template.name }} - Template - Pathfinder{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <!-- Back link -->
+    <div class="mb-6">
+        <a href="{% url 'templates:list' %}" class="text-dark-muted hover:text-dark-text text-sm transition-colors">
+            &larr; Back to Templates
+        </a>
+    </div>
+
+    <!-- Header -->
+    <div class="flex items-start justify-between mb-6">
+        <div>
+            <h1 class="text-2xl font-bold text-dark-text">{{ template.name }}</h1>
+            {% if template.description %}
+            <p class="text-dark-muted mt-1">{{ template.description }}</p>
+            {% endif %}
+        </div>
+        <div class="flex items-center gap-3">
+            <!-- Sync Status -->
+            <div id="sync-status">
+                {% include "core/templates/_sync_status.html" %}
+            </div>
+            {% if is_operator %}
+            <!-- Sync Now button (will be wired to sync task in Plan 03) -->
+            <button type="button" disabled
+                    class="px-4 py-2 bg-dark-surface border border-dark-border text-dark-muted rounded-lg text-sm cursor-not-allowed"
+                    title="Sync will be available after sync task is implemented">
+                Sync Now
+            </button>
+            {% endif %}
+            {% if can_delete %}
+            <button type="button" data-confirm-modal="confirm-deregister"
+                    class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm">
+                Deregister
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Section 1: Metadata -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg p-5 mb-6">
+        <h2 class="text-lg font-semibold text-dark-text mb-4">Metadata</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+                <span class="text-dark-muted">Git URL</span>
+                <p class="text-dark-text font-medium mt-1 truncate" title="{{ template.git_url }}">{{ template.git_url }}</p>
+            </div>
+            <div>
+                <span class="text-dark-muted">Connection</span>
+                <p class="text-dark-text font-medium mt-1">{{ template.connection.name|default:"None (public)" }}</p>
+            </div>
+            <div>
+                <span class="text-dark-muted">Created</span>
+                <p class="text-dark-text font-medium mt-1">{{ template.created_at|naturaltime }}</p>
+            </div>
+            <div>
+                <span class="text-dark-muted">Created By</span>
+                <p class="text-dark-text font-medium mt-1">{{ template.created_by|default:"-" }}</p>
+            </div>
+        </div>
+
+        <!-- Runtimes -->
+        {% if template.runtimes %}
+        <div class="mt-4">
+            <span class="text-dark-muted text-sm">Runtimes</span>
+            <div class="flex flex-wrap gap-2 mt-1">
+                {% for runtime in template.runtimes %}
+                    {% for rt_name, rt_version in runtime.items %}
+                    <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-blue-500/20 text-blue-400">
+                        {{ rt_name }} {{ rt_version }}
+                    </span>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Required Variables -->
+        {% if template.required_vars %}
+        <div class="mt-4">
+            <span class="text-dark-muted text-sm">Required Variables</span>
+            <div class="mt-2 bg-dark-bg rounded-lg overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-dark-border text-left">
+                            <th class="py-2 px-3 font-medium text-dark-muted">Variable</th>
+                            <th class="py-2 px-3 font-medium text-dark-muted">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for key, desc in template.required_vars.items %}
+                        <tr class="border-b border-dark-border/30">
+                            <td class="py-2 px-3 text-dark-text font-mono text-xs">{{ key }}</td>
+                            <td class="py-2 px-3 text-dark-muted">{{ desc }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Section 2: Versions -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg p-5 mb-6">
+        <h2 class="text-lg font-semibold text-dark-text mb-4">Versions ({{ versions|length }})</h2>
+        {% if versions %}
+        <div class="overflow-hidden rounded-lg bg-dark-bg">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="border-b border-dark-border text-left">
+                        <th class="py-2 px-3 font-medium text-dark-muted">Tag</th>
+                        <th class="py-2 px-3 font-medium text-dark-muted">Synced</th>
+                        <th class="py-2 px-3 font-medium text-dark-muted">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for version in versions %}
+                    <tr class="border-b border-dark-border/30{% if not version.available %} opacity-50{% endif %}">
+                        <td class="py-2 px-3 text-dark-text font-mono{% if not version.available %} line-through{% endif %}">
+                            {{ version.tag_name }}
+                        </td>
+                        <td class="py-2 px-3 text-dark-muted">{{ version.synced_at|naturaltime }}</td>
+                        <td class="py-2 px-3">
+                            {% if version.available %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">
+                                Available
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-400">
+                                Unavailable
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-dark-muted text-sm">No versions found. The repository has no semver tags.</p>
+        {% endif %}
+    </div>
+
+    <!-- Section 3: Sync Status -->
+    <div class="bg-dark-surface border border-dark-border rounded-lg p-5 mb-6">
+        <h2 class="text-lg font-semibold text-dark-text mb-4">Sync Status</h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+            <div>
+                <span class="text-dark-muted">Status</span>
+                <p class="mt-1">
+                    {% if template.sync_status == 'synced' %}
+                    <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-green-500/20 text-green-400">Synced</span>
+                    {% elif template.sync_status == 'syncing' %}
+                    <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-blue-500/20 text-blue-400">Syncing</span>
+                    {% elif template.sync_status == 'error' %}
+                    <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-red-500/20 text-red-400">Error</span>
+                    {% else %}
+                    <span class="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-gray-500/20 text-gray-400">Pending</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div>
+                <span class="text-dark-muted">Last Synced</span>
+                <p class="text-dark-text font-medium mt-1">
+                    {% if template.last_synced_at %}{{ template.last_synced_at|naturaltime }}{% else %}Never{% endif %}
+                </p>
+            </div>
+            <div>
+                <span class="text-dark-muted">Last SHA</span>
+                <p class="text-dark-text font-mono text-xs mt-1">{{ template.last_synced_sha|default:"-" }}</p>
+            </div>
+        </div>
+        {% if template.sync_error %}
+        <div class="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+            <p class="text-red-400 text-sm">{{ template.sync_error }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Deregister confirmation modal -->
+    {% if can_delete %}
+    {% include "core/components/_confirm_modal.html" with confirm_id="confirm-deregister" confirm_title="Deregister Template" confirm_message="This template will be permanently removed. Services created from this template will retain their scaffolded code but lose the template reference." confirm_action=deregister_url confirm_button_text="Deregister" %}
+    {% endif %}
+</div>
+{% endblock %}
