@@ -442,3 +442,17 @@ Plans:
 - [x] 06.3-01-PLAN.md — Security domain README and secrets management documentation
 - [x] 06.3-02-PLAN.md — SLSA provenance and artifact signing documentation
 - [x] 06.3-03-PLAN.md — SOX-compliant RBAC with granular permissions and approval workflow
+
+### Phase 7: Implement unified Environment Variables management
+
+**Goal:** Unified env var management with cascade resolution, inline editing component, system-injected PTF_* variables, and deployment gate readiness check across all contexts (project, service, environment, wizard)
+**Depends on:** Phase 6
+**Requirements:** DPLY-01, DPLY-02, DPLY-03, DPLY-04, DPLY-05, DPLY-06, DPLY-07, DPLY-08
+**Plans:** 5 plans
+
+Plans:
+- [ ] 07-01-PLAN.md -- Cascade resolution utility and variable shape migration (TDD)
+- [ ] 07-02-PLAN.md -- Unified env var HTMX templates and views
+- [ ] 07-03-PLAN.md -- Wire unified component into Project and Environment settings
+- [ ] 07-04-PLAN.md -- Wire unified component into Service settings and Wizard
+- [ ] 07-05-PLAN.md -- Cleanup deprecated code and human verification
