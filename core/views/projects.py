@@ -34,7 +34,6 @@ from core.permissions import (
     ProjectViewerMixin,
 )
 from core.utils import resolve_env_vars
-from core.views.env_vars import _get_env_var_urls
 
 
 class ProjectListView(LoginRequiredMixin, ListView):
@@ -156,10 +155,16 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
             context["approve_workflow_form"] = ApproveWorkflowForm(project=self.project)
 
             # Env vars resolved cascade for unified component
+            import json as _json
+
             resolved_vars = resolve_env_vars(self.project)
             context["resolved_vars"] = resolved_vars
             context["is_editable_env_vars"] = self.user_project_role == "owner"
-            context.update(_get_env_var_urls("project", self.project.name))
+            context["current_level_vars_json"] = _json.dumps(self.project.env_vars or [])
+            context["env_var_bulk_save_url"] = reverse(
+                "projects:project_env_var_bulk_save", kwargs={"project_name": self.project.name}
+            )
+            context["upstream_var_count"] = sum(1 for v in resolved_vars if v["source"] != "project")
 
         return context
 
@@ -250,10 +255,17 @@ class EnvironmentDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView
         context["environment"] = env
         context["form"] = EnvironmentForm(instance=env)
         # Resolved cascade via unified resolve_env_vars
+        import json as _json
+
         resolved_vars = resolve_env_vars(self.project, environment=env)
         context["resolved_vars"] = resolved_vars
         context["is_editable_env_vars"] = self.user_project_role in ("contributor", "owner")
-        context.update(_get_env_var_urls("environment", self.project.name, env_name=env.name))
+        context["current_level_vars_json"] = _json.dumps(env.env_vars or [])
+        context["env_var_bulk_save_url"] = reverse(
+            "projects:env_env_var_bulk_save",
+            kwargs={"project_name": self.project.name, "env_name": env.name},
+        )
+        context["upstream_var_count"] = sum(1 for v in resolved_vars if v["source"] != "environment")
         return context
 
 

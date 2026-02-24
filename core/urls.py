@@ -80,12 +80,7 @@ from .views.ci_workflows import (
     WorkflowManifestView,
 )
 from .views.env_vars import (
-    EnvVarAddRowView,
-    EnvVarDeleteView,
-    EnvVarDisplayRowView,
-    EnvVarEditRowView,
-    EnvVarSaveView,
-    EnvVarToggleLockView,
+    EnvVarBulkSaveView,
 )
 from .views.services import (
     BuildLogsView,
@@ -286,98 +281,23 @@ projects_patterns = [
         RemoveMemberView.as_view(),
         name="remove_member",
     ),
-    # Unified env var CRUD — Project-level
+    # Env var bulk save — Project-level
     path(
-        "<dns:project_name>/env-vars/row/",
-        EnvVarDisplayRowView.as_view(),
-        name="project_env_var_row",
+        "<dns:project_name>/env-vars/bulk-save/",
+        EnvVarBulkSaveView.as_view(),
+        name="project_env_var_bulk_save",
     ),
+    # Env var bulk save — Environment-level
     path(
-        "<dns:project_name>/env-vars/edit-row/",
-        EnvVarEditRowView.as_view(),
-        name="project_env_var_edit_row",
+        "<dns:project_name>/environments/<dns:env_name>/env-vars/bulk-save/",
+        EnvVarBulkSaveView.as_view(),
+        name="env_env_var_bulk_save",
     ),
+    # Env var bulk save — Service-level
     path(
-        "<dns:project_name>/env-vars/add-row/",
-        EnvVarAddRowView.as_view(),
-        name="project_env_var_add_row",
-    ),
-    path(
-        "<dns:project_name>/env-vars/save-new/",
-        EnvVarSaveView.as_view(),
-        name="project_env_var_save_new",
-    ),
-    path(
-        "<dns:project_name>/env-vars/delete-new/",
-        EnvVarDeleteView.as_view(),
-        name="project_env_var_delete_new",
-    ),
-    path(
-        "<dns:project_name>/env-vars/toggle-lock/",
-        EnvVarToggleLockView.as_view(),
-        name="project_env_var_toggle_lock",
-    ),
-    # Unified env var CRUD — Environment-level
-    path(
-        "<dns:project_name>/environments/<dns:env_name>/env-vars/row/",
-        EnvVarDisplayRowView.as_view(),
-        name="env_env_var_row",
-    ),
-    path(
-        "<dns:project_name>/environments/<dns:env_name>/env-vars/edit-row/",
-        EnvVarEditRowView.as_view(),
-        name="env_env_var_edit_row",
-    ),
-    path(
-        "<dns:project_name>/environments/<dns:env_name>/env-vars/add-row/",
-        EnvVarAddRowView.as_view(),
-        name="env_env_var_add_row",
-    ),
-    path(
-        "<dns:project_name>/environments/<dns:env_name>/env-vars/save-new/",
-        EnvVarSaveView.as_view(),
-        name="env_env_var_save_new",
-    ),
-    path(
-        "<dns:project_name>/environments/<dns:env_name>/env-vars/delete-new/",
-        EnvVarDeleteView.as_view(),
-        name="env_env_var_delete_new",
-    ),
-    path(
-        "<dns:project_name>/environments/<dns:env_name>/env-vars/toggle-lock/",
-        EnvVarToggleLockView.as_view(),
-        name="env_env_var_toggle_lock",
-    ),
-    # Unified env var CRUD — Service-level
-    path(
-        "<dns:project_name>/services/<dns:service_name>/env-vars/row/",
-        EnvVarDisplayRowView.as_view(),
-        name="service_env_var_row",
-    ),
-    path(
-        "<dns:project_name>/services/<dns:service_name>/env-vars/edit-row/",
-        EnvVarEditRowView.as_view(),
-        name="service_env_var_edit_row",
-    ),
-    path(
-        "<dns:project_name>/services/<dns:service_name>/env-vars/add-row/",
-        EnvVarAddRowView.as_view(),
-        name="service_env_var_add_row",
-    ),
-    path(
-        "<dns:project_name>/services/<dns:service_name>/env-vars/save-new/",
-        EnvVarSaveView.as_view(),
-        name="service_env_var_save_new",
-    ),
-    path(
-        "<dns:project_name>/services/<dns:service_name>/env-vars/delete-new/",
-        EnvVarDeleteView.as_view(),
-        name="service_env_var_delete_new",
-    ),
-    path(
-        "<dns:project_name>/services/<dns:service_name>/env-vars/toggle-lock/",
-        EnvVarToggleLockView.as_view(),
-        name="service_env_var_toggle_lock",
+        "<dns:project_name>/services/<dns:service_name>/env-vars/bulk-save/",
+        EnvVarBulkSaveView.as_view(),
+        name="service_env_var_bulk_save",
     ),
     # Project connections
     path(

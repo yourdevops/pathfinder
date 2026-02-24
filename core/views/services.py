@@ -642,12 +642,18 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
             context["environments"] = environments
 
         elif tab == "settings":
-            from core.views.env_vars import _get_env_var_urls
+            from django.urls import reverse
 
-            context["resolved_vars"] = resolve_env_vars(self.project, service=self.service)
+            resolved_vars = resolve_env_vars(self.project, service=self.service)
+            context["resolved_vars"] = resolved_vars
             context["is_editable_env_vars"] = self.user_project_role in ("contributor", "owner")
             context["can_edit"] = self.user_project_role in ("contributor", "owner")
-            context.update(_get_env_var_urls("service", self.project.name, service_name=self.service.name))
+            context["current_level_vars_json"] = json.dumps(self.service.env_vars or [])
+            context["env_var_bulk_save_url"] = reverse(
+                "projects:service_env_var_bulk_save",
+                kwargs={"project_name": self.project.name, "service_name": self.service.name},
+            )
+            context["upstream_var_count"] = sum(1 for v in resolved_vars if v["source"] != "service")
 
         return context
 

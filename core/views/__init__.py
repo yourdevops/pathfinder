@@ -21,12 +21,7 @@ from .connections import (
 )
 from .dashboard import DashboardView
 from .env_vars import (
-    EnvVarAddRowView,
-    EnvVarDeleteView,
-    EnvVarDisplayRowView,
-    EnvVarEditRowView,
-    EnvVarSaveView,
-    EnvVarToggleLockView,
+    EnvVarBulkSaveView,
 )
 from .groups import (
     GroupAddMemberView,
@@ -83,12 +78,7 @@ __all__ = [
     "ConnectionListView",
     "ConnectionTestView",
     "DashboardView",
-    "EnvVarAddRowView",
-    "EnvVarDeleteView",
-    "EnvVarDisplayRowView",
-    "EnvVarEditRowView",
-    "EnvVarSaveView",
-    "EnvVarToggleLockView",
+    "EnvVarBulkSaveView",
     "EnvironmentAttachConnectionView",
     "EnvironmentCreateView",
     "EnvironmentDeleteView",
