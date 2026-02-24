@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 ## Current Position
 
 Phase: 09 (WebSockets for Service's pages)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: IN PROGRESS
-Last activity: 2026-02-24 - Plan 09-01 complete (WebSocket infrastructure)
+Last activity: 2026-02-24 - Plan 09-02 complete (Dashboard partials with OOB IDs)
 
-Progress: [==========------------------------------] 25% (Phase 09 - 1/4 plans complete)
+Progress: [====================--------------------] 50% (Phase 09 - 2/4 plans complete)
 
 ## Performance Metrics
 
@@ -51,7 +51,7 @@ Progress: [==========------------------------------] 25% (Phase 09 - 1/4 plans c
 | 06.11-templates-documentation-folder | 4 | 7 min | 1.75 min |
 
 **Recent Trend:**
-- Last 5 plans: 08-02 (5 min), 08-03 (3 min), 08-04 (3 min), 08-05 (human verify), 09-01 (4 min)
+- Last 5 plans: 08-03 (3 min), 08-04 (3 min), 08-05 (human verify), 09-01 (4 min), 09-02 (3 min)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -70,6 +70,7 @@ Progress: [==========------------------------------] 25% (Phase 09 - 1/4 plans c
 | Phase 08 P04 | 3 | 2 tasks | 5 files |
 | Phase 08 P05 | - | human verify | 1 file |
 | Phase 09 P01 | 4 | 2 tasks | 12 files |
+| Phase 09 P02 | 3 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -285,6 +286,10 @@ Recent decisions affecting current work:
 | 09-01 | SHA-256 instead of MD5 for state hashing | bandit/semgrep security compliance; equally fast for small payloads |
 | 09-01 | Stub routing.py in Task 1 for ASGI import | Unblocks manage.py check before consumer exists |
 | 09-01 | contextlib.suppress for CancelledError cleanup | ruff SIM105 compliance |
+| 09-02 | OOB partial pattern: {% if oob %}hx-swap-oob="true"{% endif %} on root div | Dual HTTP/WS rendering from same partial |
+| 09-02 | Commit SHA link priority: ci_run_url > repo commit URL > plain text | Best available link for each build |
+| 09-02 | CI pipeline accent: green=healthy, amber=needs attention, none=unconfigured | Visual health indicator at a glance |
+| 09-02 | Stats row hidden when total_builds == 0, replaced by empty state | Contextual guidance instead of empty dashes |
 
 ### Roadmap Evolution
 
@@ -367,5 +372,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-24
-Stopped at: Completed 09-01-PLAN.md (WebSocket infrastructure)
-Resume file: .planning/phases/09-websockets-for-service-s-pages/09-02-PLAN.md
+Stopped at: Completed 09-02-PLAN.md (Dashboard partials with OOB IDs)
+Resume file: .planning/phases/09-websockets-for-service-s-pages/09-03-PLAN.md
