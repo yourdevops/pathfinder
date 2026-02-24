@@ -59,8 +59,10 @@
         {% include "core/services/_stats_row.html" %}
     {% endif %}
 
-    <!-- Section 3: CI Pipeline Status -->
-    {% include "core/services/_ci_pipeline_card.html" %}
+    <!-- Section 3: CI Pipeline Status (hidden when empty state already shows assign CTA) -->
+    {% if ci_workflow or total_builds > 0 %}
+        {% include "core/services/_ci_pipeline_card.html" %}
+    {% endif %}
 
     <!-- Section 4: Recent Builds (only when builds exist) -->
     {% if total_builds > 0 %}
