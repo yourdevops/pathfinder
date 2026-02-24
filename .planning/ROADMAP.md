@@ -458,3 +458,17 @@ Plans:
 - [x] 07-05-PLAN.md -- Cleanup deprecated code and human verification
 - [x] 07-06-PLAN.md -- Gap closure: fix sort order and remove visible source badges
 - [x] 07-07-PLAN.md -- Gap closure: replace HTMX per-row save with Alpine bulk save
+
+### Phase 8: Implement Service Templates
+
+**Goal:** Operators can register git repos as templates via pathfinder.yaml manifests, sync versions via git tags, and developers select templates when creating services to get pre-populated scaffolding and environment variables
+**Depends on:** Phase 7
+**Requirements:** BPRT-01, BPRT-02, BPRT-03, BPRT-04, BPRT-05, BPRT-06
+**Plans:** 5 plans
+
+Plans:
+- [ ] 08-01-PLAN.md -- Template, TemplateVersion, ProjectTemplateConfig models; Service FK; pathfinder.yaml manifest parser; migration
+- [ ] 08-02-PLAN.md -- Template CRUD views (list, detail, register, deregister); sidebar navigation; URLs
+- [ ] 08-03-PLAN.md -- sync_template task; manual sync view; scaffold_repository rewrite for template-aware scaffolding
+- [ ] 08-04-PLAN.md -- Wizard template picker (dropdown + version selector); env var pre-population; service creation template fields
+- [ ] 08-05-PLAN.md -- Human verification of complete template system
