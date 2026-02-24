@@ -273,7 +273,6 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
         build_authenticated_git_url,
         cleanup_repo,
         clone_repo_full,
-        get_template_variables,
         scaffold_new_repository,
         scrub_credentials,
     )
@@ -284,7 +283,9 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
 
     # Get service and connection
     try:
-        service = Service.objects.select_related("project", "template").get(id=service_id)
+        service = Service.objects.select_related("project", "template", "ci_workflow", "ci_workflow_version").get(
+            id=service_id
+        )
     except Service.DoesNotExist:
         logger.error(f"Service {service_id} not found for scaffolding")
         return {"error": "Service not found"}
@@ -304,9 +305,6 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
     service.save(update_fields=["scaffold_status", "scaffold_error"])
 
     try:
-        # Get template variables
-        variables = get_template_variables(service)
-
         if service.repo_is_new:
             # Clone template repo if service has a template and version
             if service.template and service.template_version:
@@ -341,7 +339,6 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
                 service=service,
                 connection=connection,
                 template_temp_dir=template_temp_dir,
-                variables=variables,
             )
             # Update service with repo URL
             service.repo_url = result.get("repo_url", "")

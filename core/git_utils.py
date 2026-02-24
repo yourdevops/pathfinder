@@ -12,7 +12,6 @@ import tempfile
 from urllib.parse import urlparse
 
 import git
-import jinja2
 import semver
 import yaml
 
@@ -323,38 +322,18 @@ def parse_version_tag(tag_name: str) -> dict:
         }
 
 
-def get_template_variables(service) -> dict:
+def apply_template_to_directory(src_dir: str, dest_dir: str, exclude_files: list | None = None):
     """
-    Get template variables for service template substitution.
-
-    Args:
-        service: Service model instance
-
-    Returns:
-        Dict of variables: service_name, project_name, service_handler
-    """
-    return {
-        "service_name": service.name,
-        "project_name": service.project.name,
-        "service_handler": service.handler,
-    }
-
-
-def apply_template_to_directory(src_dir: str, dest_dir: str, variables: dict, exclude_files: list | None = None):
-    """
-    Copy template files and apply variable substitution.
+    Copy template files to destination directory.
 
     Args:
         src_dir: Source directory (cloned template)
         dest_dir: Destination directory (target repo)
-        variables: Dict of template variables for substitution
         exclude_files: Files to skip (e.g., manifest files)
     """
-
     if exclude_files is None:
         exclude_files = ["pathfinder.yaml", ".git"]
 
-    # Copy all files except excluded
     for item in os.listdir(src_dir):
         if item in exclude_files:
             continue
@@ -367,70 +346,20 @@ def apply_template_to_directory(src_dir: str, dest_dir: str, variables: dict, ex
         else:
             shutil.copy2(src_path, dest_path)
 
-    # Apply variable substitution to text files
-    text_extensions = {
-        ".yaml",
-        ".yml",
-        ".json",
-        ".md",
-        ".txt",
-        ".py",
-        ".js",
-        ".ts",
-        ".html",
-        ".css",
-        ".sh",
-        ".dockerfile",
-        ".toml",
-        ".ini",
-        ".cfg",
-        ".env",
-        ".env.example",
-    }
 
-    for root, dirs, files in os.walk(dest_dir):
-        # Skip .git directory
-        if ".git" in dirs:
-            dirs.remove(".git")
-
-        for filename in files:
-            _, ext = os.path.splitext(filename.lower())
-            if ext in text_extensions or filename.lower() in {
-                "dockerfile",
-                "makefile",
-                "readme",
-            }:
-                filepath = os.path.join(root, filename)
-                try:
-                    with open(filepath, encoding="utf-8") as f:
-                        content = f.read()
-
-                    # Use Jinja2 for substitution (handles {{ var }} syntax)
-                    template = jinja2.Template(content, undefined=jinja2.StrictUndefined)
-                    rendered = template.render(**variables)
-
-                    with open(filepath, "w", encoding="utf-8") as f:
-                        f.write(rendered)
-                except (UnicodeDecodeError, jinja2.TemplateError) as e:
-                    # Skip binary files or files with template errors
-                    logger.warning(f"Skipping template substitution for {filepath}: {e}")
-
-
-def scaffold_new_repository(service, connection, template_temp_dir: str, variables: dict) -> dict:
+def scaffold_new_repository(service, connection, template_temp_dir: str) -> dict:
     """
     Scaffold a new repository from a service template.
 
     1. Create empty repo via SCM plugin
-    2. Clone the new repo
-    3. Apply template with variable substitution (if template dir provided)
-    4. Generate CI manifest if workflow assigned
-    5. Commit and push to main branch
+    2. Copy template files (if template dir provided)
+    3. Generate CI manifest if workflow assigned
+    4. Commit and push to main branch
 
     Args:
         service: Service model instance
         connection: IntegrationConnection for SCM
         template_temp_dir: Path to template directory (optional)
-        variables: Template variables
 
     Returns:
         Dict with repo_url and status
@@ -463,7 +392,7 @@ def scaffold_new_repository(service, connection, template_temp_dir: str, variabl
 
         # Apply template if provided
         if template_temp_dir:
-            apply_template_to_directory(template_temp_dir, repo_temp_dir, variables)
+            apply_template_to_directory(template_temp_dir, repo_temp_dir)
 
         # Generate CI manifest if workflow is assigned
         if service.ci_workflow:
@@ -472,7 +401,11 @@ def scaffold_new_repository(service, connection, template_temp_dir: str, variabl
             ci_plugin = get_ci_plugin_for_engine(engine)
 
             if ci_plugin:
-                manifest_yaml = ci_plugin.generate_manifest(service.ci_workflow)
+                # Use stored manifest from pinned version, or generate fresh draft
+                if service.ci_workflow_version and service.ci_workflow_version.manifest_content:
+                    manifest_yaml = service.ci_workflow_version.manifest_content
+                else:
+                    manifest_yaml = ci_plugin.generate_manifest(service.ci_workflow)
                 manifest_path = ci_plugin.manifest_id(service.ci_workflow)
 
                 # Create directory structure and write manifest
@@ -488,8 +421,8 @@ def scaffold_new_repository(service, connection, template_temp_dir: str, variabl
             with open(readme_path, "w") as f:
                 f.write(f"# {service.name}\n\nService managed by Pathfinder.\n")
 
-        # Git add all files
-        repo.index.add("*")
+        # Git add all files (including dotfiles like .github/)
+        repo.git.add("-A")
 
         # Commit
         repo.index.commit(
@@ -527,13 +460,13 @@ def scaffold_new_repository(service, connection, template_temp_dir: str, variabl
         shutil.rmtree(repo_temp_dir, ignore_errors=True)
 
 
-def scaffold_existing_repository(service, connection, template_temp_dir: str, variables: dict) -> dict:
+def scaffold_existing_repository(service, connection, template_temp_dir: str) -> dict:
     """
     Scaffold into existing repository with feature branch and PR.
 
     1. Clone existing repo
     2. Create feature/{service-name} branch
-    3. Apply template with variable substitution (if template dir provided)
+    3. Copy template files (if template dir provided)
     4. Generate CI manifest if workflow assigned
     5. Commit and push feature branch
     6. Create PR to base branch
@@ -542,7 +475,6 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str, va
         service: Service model instance
         connection: IntegrationConnection for SCM
         template_temp_dir: Path to template directory (optional)
-        variables: Template variables
 
     Returns:
         Dict with pr_url and status
@@ -569,7 +501,7 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str, va
 
         # Apply template if provided
         if template_temp_dir:
-            apply_template_to_directory(template_temp_dir, repo_temp_dir, variables)
+            apply_template_to_directory(template_temp_dir, repo_temp_dir)
 
         # Generate CI manifest if workflow is assigned
         if service.ci_workflow:
@@ -577,7 +509,10 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str, va
             ci_plugin = get_ci_plugin_for_engine(engine)
 
             if ci_plugin:
-                manifest_yaml = ci_plugin.generate_manifest(service.ci_workflow)
+                if service.ci_workflow_version and service.ci_workflow_version.manifest_content:
+                    manifest_yaml = service.ci_workflow_version.manifest_content
+                else:
+                    manifest_yaml = ci_plugin.generate_manifest(service.ci_workflow)
                 manifest_path = ci_plugin.manifest_id(service.ci_workflow)
 
                 manifest_full_path = os.path.join(repo_temp_dir, manifest_path)
@@ -594,8 +529,8 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str, va
                 "message": "No changes - template already applied",
             }
 
-        # Git add and commit
-        repo.index.add("*")
+        # Git add and commit (including dotfiles like .github/)
+        repo.git.add("-A")
         repo.index.commit(
             f"Add service scaffold for {service.name}",
             author=git.Actor("Pathfinder", "pathfinder@localhost"),
