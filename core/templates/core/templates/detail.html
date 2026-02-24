@@ -26,12 +26,13 @@
                 {% include "core/templates/_sync_status.html" %}
             </div>
             {% if is_operator %}
-            <!-- Sync Now button (will be wired to sync task in Plan 03) -->
-            <button type="button" disabled
-                    class="px-4 py-2 bg-dark-surface border border-dark-border text-dark-muted rounded-lg text-sm cursor-not-allowed"
-                    title="Sync will be available after sync task is implemented">
-                Sync Now
-            </button>
+            <form method="post" action="{% url 'templates:sync' template_name=template.name %}">
+                {% csrf_token %}
+                <button type="submit"
+                        class="px-4 py-2 bg-dark-accent/20 hover:bg-dark-accent/30 text-dark-accent rounded-lg transition-colors text-sm">
+                    Sync Now
+                </button>
+            </form>
             {% endif %}
             {% if can_delete %}
             <button type="button" data-confirm-modal="confirm-deregister"
