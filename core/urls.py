@@ -97,6 +97,13 @@ from .views.services import (
     ServiceRegisterWebhookView,
     ServiceScaffoldStatusView,
 )
+from .views.templates import (
+    TemplateDeregisterView,
+    TemplateDetailView,
+    TemplateListView,
+    TemplateRegisterView,
+    TemplateSyncStatusView,
+)
 
 # Setup URLs
 setup_patterns = [
@@ -222,6 +229,15 @@ ci_workflows_patterns = [
 services_patterns = [
     path("", ServiceListView.as_view(), name="list"),
     path("create/", ServiceCreateWizard.as_view(), name="create"),
+]
+
+# Templates URLs
+templates_patterns = [
+    path("", TemplateListView.as_view(), name="list"),
+    path("register/", TemplateRegisterView.as_view(), name="register"),
+    path("<dns:template_name>/", TemplateDetailView.as_view(), name="detail"),
+    path("<dns:template_name>/deregister/", TemplateDeregisterView.as_view(), name="deregister"),
+    path("<dns:template_name>/sync-status/", TemplateSyncStatusView.as_view(), name="sync_status"),
 ]
 
 # Connection URLs (real implementation)

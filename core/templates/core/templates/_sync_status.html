@@ -1,0 +1,31 @@
+{% if template.sync_status == 'syncing' %}
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400"
+      hx-get="{% url 'templates:sync_status' template_name=template.name %}"
+      hx-trigger="every 3s"
+      hx-target="#sync-status"
+      hx-swap="innerHTML">
+    <svg class="animate-spin -ml-0.5 mr-1.5 h-3 w-3 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+    Syncing...
+</span>
+{% elif template.sync_status == 'synced' %}
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400">
+    <span class="w-1.5 h-1.5 rounded-full bg-green-400 mr-1.5"></span>
+    Synced
+</span>
+{% elif template.sync_status == 'error' %}
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400" title="{{ template.sync_error }}">
+    <span class="w-1.5 h-1.5 rounded-full bg-red-400 mr-1.5"></span>
+    Error
+</span>
+{% else %}
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-500/20 text-gray-400"
+      hx-get="{% url 'templates:sync_status' template_name=template.name %}"
+      hx-trigger="every 3s"
+      hx-target="#sync-status"
+      hx-swap="innerHTML">
+    Pending
+</span>
+{% endif %}

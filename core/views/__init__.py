@@ -63,6 +63,13 @@ from .settings import (
     UserManagementView,
 )
 from .setup import UnlockView
+from .templates import (
+    TemplateDeregisterView,
+    TemplateDetailView,
+    TemplateListView,
+    TemplateRegisterView,
+    TemplateSyncStatusView,
+)
 from .users import UserCreateView, UserDeleteView, UserEditView, UserListView
 
 __all__ = [
@@ -118,6 +125,11 @@ __all__ = [
     "StepsRepoScanStatusView",
     "StepsRepoScanView",
     "StepsTableView",
+    "TemplateDeregisterView",
+    "TemplateDetailView",
+    "TemplateListView",
+    "TemplateRegisterView",
+    "TemplateSyncStatusView",
     "UnlockView",
     "UserCreateView",
     "UserDeleteView",

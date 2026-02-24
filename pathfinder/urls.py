@@ -35,6 +35,7 @@ from core.urls import (  # noqa: E402
     services_patterns,
     settings_patterns,
     setup_patterns,
+    templates_patterns,
     users_patterns,
 )
 from core.views.api import step_validate_api  # noqa: E402
@@ -63,6 +64,10 @@ urlpatterns = [
     path("projects/", include((projects_patterns, "projects"), namespace="projects")),
     path("settings/", include((settings_patterns, "settings"), namespace="settings")),
     path("services/", include((services_patterns, "services"), namespace="services")),
+    path(
+        "templates/",
+        include((templates_patterns, "templates"), namespace="templates"),
+    ),
     # API endpoints (outside namespaces for clean API paths)
     path("api/ci-workflows/steps/validate", step_validate_api, name="step_validate_api"),
 ]
