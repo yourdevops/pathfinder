@@ -185,18 +185,22 @@
                     </span>
                     <div class="flex-1">
                         <span class="text-dark-text font-medium">{{ ws.step.name }}</span>
-                        {% if ws.step.status == "archived" %}
+                        {% if ws.is_archived %}
                         <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-500/20 text-red-400">
                             Archived
                         </span>
                         {% endif %}
-                        {% if ws.step.last_change_type == "interface" %}
+                        {% if ws.change_badge == "interface" %}
                         <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-300">
                             Step Updated
                         </span>
-                        {% elif ws.step.last_change_type == "metadata" %}
+                        {% elif ws.change_badge == "metadata" %}
                         <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-500/20 text-blue-300">
                             Metadata Updated
+                        </span>
+                        {% elif ws.change_badge == "updated" %}
+                        <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-300">
+                            Updated
                         </span>
                         {% endif %}
                         {% if ws.step.description %}

@@ -856,6 +856,11 @@ class CIWorkflowStep(models.Model):
     step = models.ForeignKey(CIStep, on_delete=models.PROTECT, related_name="workflow_usages")
     order = models.IntegerField()
     input_config = models.JSONField(default=dict)  # per-step overrides
+    step_commit_sha = models.CharField(
+        max_length=40,
+        blank=True,
+        help_text="CIStep.commit_sha captured when this workflow was last saved.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

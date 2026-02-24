@@ -808,6 +808,7 @@ class WorkflowComposerView(LoginRequiredMixin, View):
                     step=ci_step,
                     order=i,
                     input_config=step_entry.get("input_config", {}),
+                    step_commit_sha=ci_step.commit_sha,
                 )
             except CIStep.DoesNotExist:
                 continue
@@ -859,12 +860,21 @@ class WorkflowDetailView(LoginRequiredMixin, View):
         workflow = get_object_or_404(CIWorkflow, name=workflow_name)
         workflow_steps = workflow.workflow_steps.select_related("step").order_by("order")
 
-        # Check for step warnings (archived or interface changes)
+        # Check for step warnings via per-workflow SHA comparison
         has_step_warnings = False
         for ws in workflow_steps:
-            if ws.step.status == "archived" or ws.step.last_change_type == "interface":
+            ws.is_archived = ws.step.status == "archived"
+            ws.is_updated = ws.step_commit_sha and ws.step.commit_sha and ws.step_commit_sha != ws.step.commit_sha
+            ws.change_badge = ""
+            if ws.is_updated:
+                if ws.step.last_change_type == "interface":
+                    ws.change_badge = "interface"
+                elif ws.step.last_change_type == "metadata":
+                    ws.change_badge = "metadata"
+                else:
+                    ws.change_badge = "updated"
+            if ws.is_archived or ws.is_updated:
                 has_step_warnings = True
-                break
 
         engine = workflow.engine
         ci_plugin = get_ci_plugin_for_engine(engine)
