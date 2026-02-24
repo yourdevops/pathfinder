@@ -5,7 +5,7 @@ import json
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Avg, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -581,8 +581,31 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
 
         # Tab-specific context
         if tab == "details":
-            # Get merged env vars for display
-            context["merged_env_vars"] = resolve_env_vars(self.project, service=self.service)
+            # Build stats
+            builds_qs = Build.objects.filter(service=self.service)
+            context["total_builds"] = builds_qs.count()
+            context["last_build"] = builds_qs.first()  # default ordering is -created_at
+            completed = builds_qs.filter(status__in=["success", "failed", "cancelled"])
+            completed_count = completed.count()
+            if completed_count > 0:
+                success_count = completed.filter(status="success").count()
+                context["success_rate"] = round(success_count * 100 / completed_count)
+            else:
+                context["success_rate"] = None
+            avg_duration = builds_qs.filter(duration_seconds__isnull=False).aggregate(avg=Avg("duration_seconds"))[
+                "avg"
+            ]
+            context["avg_build_time_seconds"] = round(avg_duration) if avg_duration else None
+            context["recent_builds"] = list(builds_qs[:5])
+
+            # CI workflow info
+            context["ci_workflow"] = self.service.ci_workflow
+            context["ci_workflow_version"] = self.service.ci_workflow_version
+
+            # Counts
+            context["environments_count"] = self.project.environments.filter(status="active").count()
+            context["service_vars_count"] = len(self.service.env_vars) if self.service.env_vars else 0
+
             # Can edit if contributor or owner
             context["can_edit"] = self.user_project_role in ("contributor", "owner")
 
