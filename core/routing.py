@@ -1,2 +1,7 @@
-# WebSocket URL routing - will be populated when consumers are created
-websocket_urlpatterns = []
+from django.urls import path
+
+from core.consumers import ServiceConsumer
+
+websocket_urlpatterns = [
+    path("ws/services/<int:service_id>/", ServiceConsumer.as_asgi()),
+]
