@@ -1,4 +1,4 @@
-# Templates
+# Service Templates
 
 A Template is a versioned git repository that provides a reusable file tree for scaffolding new services. Templates carry a `pathfinder.yaml` manifest that declares metadata — description, runtime hints, and suggested variables. When an operator creates a service from a template, Pathfinder copies the template's files into a new repository, seeds the metadata into its database, and drops the manifest. After scaffolding, Pathfinder's database is the source of truth for all service configuration.
 
