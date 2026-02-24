@@ -80,7 +80,6 @@ runtimes:
   - go: ">=1.22"
 required_vars:
   DATABASE_URL: "PostgreSQL connection string"
-  LOG_LEVEL: "Log verbosity: debug, info, warn, error"
 ```
 
 Minimal valid manifest (only the two required fields):
@@ -119,37 +118,9 @@ required_vars:
 
 The wizard flow, template selection, step-by-step field reference, and scaffolding execution are documented in [Service Creation Wizard](../wizard.md).
 
-## Environment Variables — Unified Model
+## Environment Variables
 
-Variable shape, cascade rules, override logic, and the deployment gate are defined in [Environment Variables](../env-vars.md).
-
-### Unified env vars UI component
-
-One reusable component used everywhere variables are displayed or edited. Each variable row shows:
-
-| Key | Value | Lock | Source | Actions |
-|-----|-------|------|--------|---------|
-| `PTF_SERVICE` | `order-service` | Locked | System | — |
-| `LOG_FORMAT` | `json` | Locked | Project | — |
-| `DATABASE_URL` | `postgres://...` | | Service | — |
-| `SECRET_KEY` | `s3cr3t...` | | Environment | Edit, Delete |
-| `REDIS_URL` | *(empty)* | | Environment | Edit, Delete |
-
-Rules for the component:
-
-- **Rows from upstream levels** are read-only at the current level. Shown with a source badge but no edit/delete actions.
-- **Rows at the current level** are editable. Edit and delete actions are available (subject to role permissions).
-- **Locked rows from upstream** show a lock icon and cannot be overridden — if the current level has a variable with the same key, it is ignored (the locked upstream value wins).
-- **Source badge** indicates where the variable originates: `System`, `Project`, `Service`, `Environment`.
-- **Empty value** is visually distinct from a populated value (e.g., italicized placeholder text "not set" or a muted dash), so it's clear the variable still needs a value at some level.
-
-This component is used in:
-
-- Service creation wizard (Page 4)
-- Project settings
-- Service settings
-- Environment detail
-- (Future) Deployment configuration
+Variable shape, cascade rules, override logic, the deployment gate, and the unified UI component are defined in [Environment Variables](../env-vars.md).
 
 ### Non-scaffolded services
 

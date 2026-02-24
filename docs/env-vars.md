@@ -1,18 +1,6 @@
-# Variable Lifecycle
+# Service Environment Variables
 
-Environment variables in Pathfinder follow a cascade model. Variables are defined at multiple levels and merged at resolution time, with lower levels overriding higher levels — unless the higher level locked the variable.
-
-## The Cascade
-
-```
-System (PTF_* variables, always locked)
-  └── Project
-    └── Service
-      └── Environment
-        └── Deployment (future)
-```
-
-At resolution time (build authorization, deployment gate), variables merge top-down. Each level can add new variables or override values from the level above — unless the upstream variable is locked.
+Environment variables configure service behavior across environments — database connections, feature flags, secrets, and runtime settings. Pathfinder manages these variables through a cascade model where each level (Project, Service, Environment) can define, override, or lock values.
 
 ## Variable Shape
 
@@ -24,7 +12,7 @@ Every variable at every level has the same structure:
 
 - `key` — required. The variable name. Must match `^[A-Z][A-Z0-9_]*$` (uppercase letters, digits, underscores; must start with a letter).
 - `value` — required (may be empty string). The variable value.
-- `lock` — required. Boolean, prevents downstream override when true.
+- `lock` — required. Boolean, prevents downstream override when true. A variable with an empty value cannot be locked — locking is only meaningful when there is a concrete value to protect.
 - `description` — optional. Human-readable explanation of what the variable is for. Shown as helper text in the UI. When a template declares `required_vars`, the description strings from the manifest are carried into this field. Description is stored per-level alongside the variable — when a downstream level overrides a variable's value, it inherits the upstream description unless the downstream level provides its own.
 
 Three valid states for a variable:
@@ -65,6 +53,18 @@ Variables are managed through the Pathfinder UI at the appropriate level:
 - **Project settings** — variables shared across all services and environments in the project.
 - **Service settings** — variables specific to a service (override project-level unless locked).
 - **Environment detail** — variables specific to an environment (override project/service-level unless locked).
+
+## The Cascade
+
+Variables are defined at multiple levels and merged top-down at resolution time (deployment gate). Each level can add new variables or override values from the level above — unless the upstream variable is locked.
+
+```
+System (PTF_* variables, always locked)
+  └── Project
+    └── Service
+      └── Environment
+        └── Deployment (future)
+```
 
 ## Override Rules
 
@@ -127,6 +127,36 @@ allowed       UI shows list of
 The deployment gate is hard — there is no override or bypass. The operator must configure values for all empty variables before deployment can proceed.
 
 The gate applies at deploy time, not at build time. Builds always complete. This means a developer can add new service variables, have the build succeed, and the operator resolves missing values before deploying.
+
+## Unified UI Component
+
+One reusable component used everywhere variables are displayed or edited. Each variable row shows:
+
+| Key | Value | Lock | Source | Description | Actions |
+|-----|-------|------|--------|-------------|---------|
+| `PTF_SERVICE` | `order-service` | Locked | System | Auto-injected service name | — |
+| `LOG_FORMAT` | `json` | Locked | Project | Logging output format | — |
+| `DATABASE_URL` | `postgres://...` | | Service | PostgreSQL connection string | — |
+| `SECRET_KEY` | `s3cr3t...` | | Environment | Application secret key | Edit, Delete |
+| `LOG_LEVEL` | `info` | | Environment | Logging verbosity | Edit, Delete |
+| `REDIS_URL` | *(empty)* | | Environment | Redis connection string | Edit, Delete |
+
+Rules for the component:
+
+- **Rows from upstream levels** are read-only at the current level. Shown with a source badge but no edit/delete actions.
+- **Rows at the current level** are editable. Edit and delete actions are available (subject to role permissions).
+- **Locked rows from upstream** show a lock icon and cannot be overridden — if the current level has a variable with the same key, it is ignored (the locked upstream value wins).
+- **Source badge** indicates where the variable originates: `System`, `Project`, `Service`, `Environment`.
+- **Description** is shown as helper text below or beside the value. Inherited from upstream when a downstream level overrides a value, unless the downstream level provides its own description.
+- **Empty value** is visually distinct from a populated value (e.g., italicized placeholder text "not set" or a muted dash), so it's clear the variable still needs a value at some level.
+
+This component is used in:
+
+- Service creation wizard (Page 4)
+- Project settings
+- Service settings
+- Environment detail
+- (Future) Deployment configuration
 
 ## Adding and Removing Variables
 
