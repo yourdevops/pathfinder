@@ -532,31 +532,11 @@ class Service(models.Model):
         return self.ci_workflow.updated_at > self.ci_manifest_pushed_at
 
     def get_merged_env_vars(self):
-        """Return service env vars merged with project vars."""
-        merged = {}
+        # DEPRECATED: Use core.utils.resolve_env_vars() instead. Kept for backwards compat during migration.
+        """Return service env vars merged with project vars via resolve_env_vars."""
+        from core.utils import resolve_env_vars
 
-        # Project-level vars first
-        for var in self.project.env_vars or []:
-            merged[var["key"]] = {
-                "key": var["key"],
-                "value": var["value"],
-                "lock": var.get("lock", False),
-                "source": "project",
-            }
-
-        # Service-level vars override (unless locked)
-        for var in self.env_vars or []:
-            key = var["key"]
-            if key in merged and merged[key]["lock"]:
-                continue  # Can't override locked project vars
-            merged[key] = {
-                "key": var["key"],
-                "value": var["value"],
-                "lock": var.get("lock", False),
-                "source": "service",
-            }
-
-        return list(merged.values())
+        return resolve_env_vars(self.project, service=self)
 
 
 # --- CI Workflow Domain Models ---

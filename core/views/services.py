@@ -32,6 +32,7 @@ from core.models import (
 )
 from core.permissions import can_access_project, get_user_project_role, has_system_role
 from core.tasks import scaffold_repository
+from core.utils import resolve_env_vars
 from plugins.base import get_ci_plugin_for_engine
 
 
@@ -180,9 +181,9 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
                 service_name = project_data.get("name")
                 context["project_env_vars"] = project.env_vars or [] if project else []
                 context["service_name"] = service_name
-                # Default SERVICE_NAME variable (locked)
+                # Default PTF_SERVICE variable (locked)
                 context["default_service_var"] = {
-                    "key": "SERVICE_NAME",
+                    "key": "PTF_SERVICE",
                     "value": service_name,
                     "lock": True,
                 }
@@ -326,9 +327,9 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
 
         env_vars = config_data.get("env_vars_json", [])
 
-        # Add default SERVICE_NAME variable (locked)
-        env_vars = [{"key": "SERVICE_NAME", "value": service_name, "lock": True}] + [
-            v for v in env_vars if v.get("key") != "SERVICE_NAME"
+        # Add default PTF_SERVICE variable (locked)
+        env_vars = [{"key": "PTF_SERVICE", "value": service_name, "lock": True}] + [
+            v for v in env_vars if v.get("key") != "PTF_SERVICE"
         ]
 
         # Determine repo URL
@@ -444,7 +445,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
         # Tab-specific context
         if tab == "details":
             # Get merged env vars for display
-            context["merged_env_vars"] = self.service.get_merged_env_vars()
+            context["merged_env_vars"] = resolve_env_vars(self.project, service=self.service)
             # Can edit if contributor or owner
             context["can_edit"] = self.user_project_role in ("contributor", "owner")
 
@@ -624,7 +625,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
             context["environments"] = self.project.environments.filter(status="active").order_by("order", "name")
 
         elif tab == "settings":
-            context["merged_env_vars"] = self.service.get_merged_env_vars()
+            context["merged_env_vars"] = resolve_env_vars(self.project, service=self.service)
             context["can_edit"] = self.user_project_role in ("contributor", "owner")
 
         return context
