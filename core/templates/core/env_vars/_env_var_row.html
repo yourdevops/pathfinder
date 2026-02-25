@@ -20,8 +20,8 @@
     {% endif %}
 
     {# Key with tooltip #}
-    <div class="relative" x-data="{ tip: false }">
-        <code class="text-dark-text/60 font-mono text-sm cursor-default"
+    <div class="relative w-40 flex-shrink-0" x-data="{ tip: false }">
+        <code class="block truncate text-dark-text/60 font-mono text-sm cursor-default"
               @mouseenter="tip = true"
               @mouseleave="tip = false">{{ var.key }}</code>
         <div x-show="tip" x-cloak

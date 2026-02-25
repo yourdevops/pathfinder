@@ -53,11 +53,13 @@
                         </svg>
                     </span>
                 </template>
+                {% else %}
+                <span class="flex-shrink-0 w-4"></span>
                 {% endif %}
 
                 {# Key with tooltip #}
-                <div class="relative" x-data="{ tip: false }">
-                    <code class="text-dark-text font-mono text-sm cursor-default"
+                <div class="relative w-40 flex-shrink-0" x-data="{ tip: false }">
+                    <code class="block truncate text-dark-text font-mono text-sm cursor-default"
                           @mouseenter="tip = true"
                           @mouseleave="tip = false"
                           x-text="v.key"></code>
@@ -102,6 +104,7 @@
 
             {# Edit row (when editing this row) #}
             <div x-show="editingIdx === idx"
+                 @focusout="handleEditBlur($event)"
                  class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-dark-surface border border-dark-accent/30 mb-1 relative">
 
                 {# Lock toggle in edit mode #}
@@ -115,11 +118,13 @@
                               x-bind:d="v.lock ? 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' : 'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z'" />
                     </svg>
                 </button>
+                {% else %}
+                <span class="flex-shrink-0 w-4"></span>
                 {% endif %}
 
                 {# Key input (read-only during edit - key changes not allowed) #}
                 <input type="text" :value="v.key" readonly
-                       class="w-40 px-2 py-1 bg-dark-bg/50 border border-dark-border rounded text-dark-text font-mono text-sm cursor-not-allowed uppercase">
+                       class="w-40 flex-shrink-0 px-2 py-1 bg-dark-bg/50 border border-dark-border rounded text-dark-text font-mono text-sm cursor-not-allowed uppercase">
 
                 <span class="text-dark-muted">=</span>
 
@@ -165,6 +170,7 @@
 
     {# Add row (shown when addingNew) #}
     <div x-show="addingNew" x-cloak
+         @focusout="handleAddBlur($event)"
          class="flex items-center gap-3 px-4 py-2.5 rounded-lg bg-dark-surface border border-dark-accent/30 mb-1 relative">
 
         {# Lock toggle for new var #}
@@ -177,13 +183,15 @@
                       x-bind:d="newVar.lock ? 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z' : 'M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z'" />
             </svg>
         </button>
+        {% else %}
+        <span class="flex-shrink-0 w-4"></span>
         {% endif %}
 
         {# Key input #}
-        <input type="text" :value="newVar.key" @input="updateNewKey($event.target.value)"
+        <input type="text" x-ref="newKeyInput" :value="newVar.key" @input="updateNewKey($event.target.value)"
                @keydown.enter.prevent="confirmAdd()"
                placeholder="VARIABLE_NAME"
-               class="w-40 px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-text font-mono text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent uppercase">
+               class="w-40 flex-shrink-0 px-2 py-1 bg-dark-bg border border-dark-border rounded text-dark-text font-mono text-sm focus:outline-none focus:ring-1 focus:ring-dark-accent uppercase">
 
         <span class="text-dark-muted">=</span>
 

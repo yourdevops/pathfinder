@@ -212,6 +212,7 @@
                 },
 
                 saveEdit: function() {
+                    if (this.editingIdx < 0) { return; }
                     var v = this.vars[this.editingIdx];
                     if (!v.key || !v.key.match(/^[A-Z][A-Z0-9_]*$/)) { return; }
                     this.editingIdx = -1;
@@ -221,10 +222,41 @@
                     this.syncField();
                 },
 
+                handleEditBlur: function(event) {
+                    var self = this;
+                    var container = event.currentTarget;
+                    setTimeout(function() {
+                        if (self.editingIdx < 0) { return; }
+                        if (!container.contains(document.activeElement)) {
+                            self.saveEdit();
+                        }
+                    }, 150);
+                },
+
                 startAdd: function() {
                     this.addingNew = true;
                     this.newVar = { key: '', value: '', lock: false, description: '' };
                     this.showNewDesc = false;
+                    var self = this;
+                    setTimeout(function() {
+                        if (self.$refs.newKeyInput) { self.$refs.newKeyInput.focus(); }
+                    }, 50);
+                },
+
+                handleAddBlur: function(event) {
+                    var self = this;
+                    var container = event.currentTarget;
+                    setTimeout(function() {
+                        if (!self.addingNew) { return; }
+                        if (!container.contains(document.activeElement)) {
+                            var k = self.newVar.key;
+                            if (k && k.match(/^[A-Z][A-Z0-9_]*$/)) {
+                                self.confirmAdd();
+                            } else {
+                                self.cancelAdd();
+                            }
+                        }
+                    }, 150);
                 },
 
                 cancelAdd: function() {
@@ -233,6 +265,7 @@
                 },
 
                 confirmAdd: function() {
+                    if (!this.addingNew) { return; }
                     var k = this.newVar.key;
                     if (!k || !k.match(/^[A-Z][A-Z0-9_]*$/)) { return; }
                     if (k.startsWith('PTF_')) { return; }
