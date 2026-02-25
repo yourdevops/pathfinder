@@ -10,6 +10,7 @@ import re
 import shutil
 import tempfile
 import time
+from collections.abc import Callable
 from urllib.parse import urlparse
 
 import git
@@ -410,7 +411,7 @@ def _write_ci_manifest(service, repo_temp_dir: str) -> None:
     logger.info(f"Generated CI manifest at {manifest_path}")
 
 
-def scaffold_new_repository(service, connection, template_temp_dir: str, pre_push_hook: callable | None = None) -> dict:
+def scaffold_new_repository(service, connection, template_temp_dir: str, pre_push_hook: Callable | None = None) -> dict:
     """
     Scaffold a new repository from a service template.
 
