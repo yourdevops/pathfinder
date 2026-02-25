@@ -1,0 +1,38 @@
+{% load humanize %}
+<div id="repo-info" {% if oob %}hx-swap-oob="true"{% endif %} class="bg-dark-surface border border-dark-border rounded-lg p-5 mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+        <div>
+            <span class="text-dark-muted">Default Branch</span>
+            <p class="text-dark-text font-medium mt-1">{{ repo.default_branch }}</p>
+        </div>
+        <div>
+            <span class="text-dark-muted">Connection</span>
+            <p class="text-dark-text font-medium mt-1">{{ repo.connection.name|default:"None (public)" }}</p>
+        </div>
+        <div>
+            <span class="text-dark-muted">Last Scanned</span>
+            <p class="text-dark-text font-medium mt-1">
+                {% if repo.last_scanned_at %}{{ repo.last_scanned_at|naturaltime }}{% else %}Never{% endif %}
+            </p>
+        </div>
+        <div>
+            <span class="text-dark-muted">Created</span>
+            <p class="text-dark-text font-medium mt-1">{{ repo.created_at|naturaltime }}</p>
+        </div>
+        <div>
+            <span class="text-dark-muted">Branch Protection</span>
+            <p class="mt-1">
+                {% if repo.protection_valid %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">Protected</span>
+                {% else %}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-400">Not Verified</span>
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    {% if repo.scan_error %}
+    <div class="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+        <p class="text-red-400 text-sm">{{ repo.scan_error }}</p>
+    </div>
+    {% endif %}
+</div>

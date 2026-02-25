@@ -4,7 +4,15 @@
 {% block title %}{{ repo.name }} - Steps Repository - Pathfinder{% endblock %}
 
 {% block content %}
-<div class="p-8">
+<div class="p-8" hx-ext="ws" ws-connect="/ws/repos/{{ repo.id }}/">
+    <!-- Disconnected warning (toggled by vanilla JS in base.html) -->
+    <div id="ws-fallback-warning" class="hidden mb-4 px-4 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg text-sm text-amber-300 flex items-center gap-2">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        </svg>
+        Live updates temporarily unavailable. Reconnecting...
+    </div>
+
     <!-- Page Header -->
     <div class="mb-6">
         <a href="{% url 'ci_workflows:repo_list' %}" class="text-dark-muted hover:text-dark-text text-sm transition-colors">
@@ -44,43 +52,7 @@
     </div>
 
     <!-- Repository Info -->
-    <div class="bg-dark-surface border border-dark-border rounded-lg p-5 mb-6">
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
-            <div>
-                <span class="text-dark-muted">Default Branch</span>
-                <p class="text-dark-text font-medium mt-1">{{ repo.default_branch }}</p>
-            </div>
-            <div>
-                <span class="text-dark-muted">Connection</span>
-                <p class="text-dark-text font-medium mt-1">{{ repo.connection.name|default:"None (public)" }}</p>
-            </div>
-            <div>
-                <span class="text-dark-muted">Last Scanned</span>
-                <p class="text-dark-text font-medium mt-1">
-                    {% if repo.last_scanned_at %}{{ repo.last_scanned_at|naturaltime }}{% else %}Never{% endif %}
-                </p>
-            </div>
-            <div>
-                <span class="text-dark-muted">Created</span>
-                <p class="text-dark-text font-medium mt-1">{{ repo.created_at|naturaltime }}</p>
-            </div>
-            <div>
-                <span class="text-dark-muted">Branch Protection</span>
-                <p class="mt-1">
-                    {% if repo.protection_valid %}
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-500/20 text-green-400">Protected</span>
-                    {% else %}
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-500/20 text-amber-400">Not Verified</span>
-                    {% endif %}
-                </p>
-            </div>
-        </div>
-        {% if repo.scan_error %}
-        <div class="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-            <p class="text-red-400 text-sm">{{ repo.scan_error }}</p>
-        </div>
-        {% endif %}
-    </div>
+    {% include "core/ci_workflows/_repo_info.html" %}
 
     <!-- Runtime Families -->
     {% if runtimes %}
@@ -127,52 +99,19 @@
     {% endif %}
 
     <!-- Sync History -->
-    {% if sync_logs %}
     <div class="mb-6">
         <h2 class="text-lg font-semibold text-dark-text mb-3">Sync History</h2>
+        {% if sync_logs %}
         {% include "core/ci_workflows/_sync_history.html" %}
+        {% else %}
+        <div id="sync-history-table"></div>
+        {% endif %}
     </div>
-    {% endif %}
 
     <!-- Imported Steps by Phase -->
     <div>
         <h2 class="text-lg font-semibold text-dark-text mb-3">Imported Steps ({{ total_steps }})</h2>
-        {% if steps_by_phase %}
-        {% for phase_label, phase_steps in steps_by_phase.items %}
-        <div class="mb-4">
-            <h3 class="text-sm font-medium text-dark-muted uppercase tracking-wider mb-2">{{ phase_label }} ({{ phase_steps|length }})</h3>
-            <div class="space-y-2">
-                {% for step in phase_steps %}
-                <a href="{% url 'ci_workflows:step_detail' step_uuid=step.uuid %}"
-                   class="flex items-center justify-between bg-dark-surface border border-dark-border rounded-lg p-4 hover:border-dark-accent/50 transition-colors block">
-                    <div>
-                        <div class="flex items-center">
-                            <h4 class="font-medium text-dark-text">{{ step.name }}</h4>
-                            {% if step.status == "archived" %}
-                            <span class="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-500/20 text-red-400">Archived</span>
-                            {% endif %}
-                        </div>
-                        {% if step.description %}
-                        <p class="text-sm text-dark-muted mt-0.5">{{ step.description|truncatechars:80 }}</p>
-                        {% endif %}
-                    </div>
-                    <div class="flex items-center gap-2">
-                        {% for tag in step.tags %}
-                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-500/20 text-gray-400">
-                            {{ tag }}
-                        </span>
-                        {% endfor %}
-                    </div>
-                </a>
-                {% endfor %}
-            </div>
-        </div>
-        {% endfor %}
-        {% else %}
-        <div class="bg-dark-surface border border-dark-border rounded-lg p-8 text-center">
-            <p class="text-dark-muted">No steps imported yet. {% if repo.scan_status == 'pending' %}Repository scan is pending.{% elif repo.scan_status == 'scanning' %}Scan in progress...{% endif %}</p>
-        </div>
-        {% endif %}
+        {% include "core/ci_workflows/_imported_steps.html" %}
     </div>
 
     {% if archived_steps %}
