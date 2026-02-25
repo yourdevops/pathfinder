@@ -273,7 +273,7 @@ def _register_webhook(service, connection, repo_url: str) -> bool:
         if not parsed:
             return False
         repo_name = f"{parsed['owner']}/{parsed['repo']}"
-        plugin.configure_webhook(config, repo_name, webhook_url, events=["workflow_run"])
+        plugin.configure_webhook(config, repo_name, webhook_url, events=["workflow_run", "pull_request"])
         logger.info(f"Registered webhook for {service.name}")
         return True
     except Exception as e:

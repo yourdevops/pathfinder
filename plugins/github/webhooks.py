@@ -11,6 +11,7 @@ import json
 import logging
 
 from django.http import HttpRequest, HttpResponse
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
 logger = logging.getLogger(__name__)
@@ -124,6 +125,8 @@ def github_webhook(request: HttpRequest) -> HttpResponse:
         return _handle_workflow_run(request)
     elif event == "push":
         return _handle_push(request)
+    elif event == "pull_request":
+        return _handle_pull_request(request)
 
     return HttpResponse(status=200)
 
@@ -275,4 +278,79 @@ def _handle_push(request: HttpRequest) -> HttpResponse:
 
     scan_steps_repository.enqueue(repository_id=repository.id, trigger="webhook")
     logger.info(f"Enqueued webhook-triggered scan for steps repo {repository.name}")
+    return HttpResponse(status=200)
+
+
+def _handle_pull_request(request: HttpRequest) -> HttpResponse:
+    """Handle pull_request events for CI manifest PRs.
+
+    Detects when a CI manifest PR is merged or closed and updates
+    the service's ci_manifest_status accordingly:
+      - Merged -> "synced"
+      - Closed without merge -> "out_of_sync"
+
+    Security: Always returns 200 OK to prevent information leakage.
+    """
+    from core.models import ProjectConnection
+
+    try:
+        payload = json.loads(request.body)
+    except json.JSONDecodeError:
+        logger.warning("Invalid JSON in pull_request webhook payload")
+        return HttpResponse(status=200)
+
+    # Only process closed PRs (covers both merged and closed-without-merge)
+    if payload.get("action") != "closed":
+        return HttpResponse(status=200)
+
+    # Identify service
+    service = identify_service_from_webhook(payload)
+    if not service:
+        return HttpResponse(status=200)
+
+    # Only relevant if we're waiting on a PR
+    if service.ci_manifest_status != "pending_pr":
+        return HttpResponse(status=200)
+
+    # Match PR: check html_url, fallback to branch name
+    pr = payload.get("pull_request", {})
+    pr_url = pr.get("html_url", "")
+    pr_branch = pr.get("head", {}).get("ref", "")
+
+    url_match = service.ci_manifest_pr_url and pr_url == service.ci_manifest_pr_url
+    branch_match = pr_branch == "pathfinder/ci-manifest"
+
+    if not url_match and not branch_match:
+        return HttpResponse(status=200)
+
+    # Verify HMAC signature
+    project_connection = (
+        ProjectConnection.objects.filter(project=service.project, is_default=True).select_related("connection").first()
+    )
+    if not project_connection:
+        logger.warning(f"No default SCM connection for project {service.project.name}")
+        return HttpResponse(status=200)
+
+    connection = project_connection.connection
+    config = connection.get_config()
+    webhook_secret = config.get("webhook_secret", "")
+    if webhook_secret:
+        if not verify_github_signature(request, webhook_secret):
+            logger.warning(f"Invalid webhook signature for service {service.name}")
+            return HttpResponse(status=200)
+    else:
+        logger.warning(f"No webhook secret configured for connection {connection.name}")
+
+    # Update status based on merge outcome
+    merged = pr.get("merged", False)
+    if merged:
+        service.ci_manifest_status = "synced"
+        service.ci_manifest_pushed_at = timezone.now()
+        service.save(update_fields=["ci_manifest_status", "ci_manifest_pushed_at"])
+        logger.info(f"CI manifest PR merged for service {service.name}, status -> synced")
+    else:
+        service.ci_manifest_status = "out_of_sync"
+        service.save(update_fields=["ci_manifest_status"])
+        logger.info(f"CI manifest PR closed without merge for service {service.name}, status -> out_of_sync")
+
     return HttpResponse(status=200)
