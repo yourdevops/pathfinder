@@ -916,7 +916,21 @@ class WorkflowDetailView(LoginRequiredMixin, View):
         is_operator = request.user.is_authenticated and (
             has_system_role(request.user, "admin") or has_system_role(request.user, "operator")
         )
-        can_delete = is_operator and not services_using.exists()
+
+        # Determine delete eligibility: check if any versions are blocked by references
+        blocked_versions = []
+        for v in versions:
+            reasons = []
+            if v.pinned_count > 0:
+                reasons.append(f"pinned by {v.pinned_count} service{'s' if v.pinned_count != 1 else ''}")
+            if v.build_count > 0:
+                reasons.append(f"referenced by {v.build_count} build{'s' if v.build_count != 1 else ''}")
+            if reasons:
+                blocked_versions.append(f"Version {v.version or 'draft'}: {', '.join(reasons)}")
+
+        can_delete = is_operator and not services_using.exists() and not blocked_versions
+        delete_blocked_reasons = blocked_versions if is_operator and not services_using.exists() else []
+        workflow_version_count = versions.count()
 
         # Can discard draft only if other versions exist (don't leave workflow empty)
         can_discard_draft = (
@@ -945,6 +959,8 @@ class WorkflowDetailView(LoginRequiredMixin, View):
                 "services_using": services_using,
                 "has_step_warnings": has_step_warnings,
                 "active_tab": active_tab,
+                "delete_blocked_reasons": delete_blocked_reasons,
+                "workflow_version_count": workflow_version_count,
                 "workflow_delete_url": reverse("ci_workflows:workflow_delete", kwargs={"workflow_name": workflow.name}),
             },
         )
@@ -977,19 +993,36 @@ class WorkflowManifestView(LoginRequiredMixin, View):
 
 
 class WorkflowDeleteView(OperatorRequiredMixin, View):
-    """Delete a CI workflow."""
+    """Delete a CI workflow and cascade-delete its versions (if none are blocked)."""
 
     def post(self, request, workflow_name):
         workflow = get_object_or_404(CIWorkflow, name=workflow_name)
         if workflow.services.exists():
             messages.error(request, "Cannot delete workflow: it is still used by services.")
             return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
-        if workflow.versions.exists():
-            messages.error(
-                request,
-                "Cannot delete workflow: it still has versions. Delete all versions first (Version History tab).",
-            )
+
+        # Check if any versions are blocked by pinned services or builds
+        versions = workflow.versions.annotate(
+            pinned_count=Count("pinned_services"),
+            build_count=Count("builds"),
+        )
+        blocked = []
+        for v in versions:
+            reasons = []
+            if v.pinned_count > 0:
+                reasons.append(f"pinned by {v.pinned_count} service{'s' if v.pinned_count != 1 else ''}")
+            if v.build_count > 0:
+                reasons.append(f"referenced by {v.build_count} build{'s' if v.build_count != 1 else ''}")
+            if reasons:
+                blocked.append(f"Version {v.version or 'draft'}: {', '.join(reasons)}")
+
+        if blocked:
+            detail = "; ".join(blocked)
+            messages.error(request, f"Cannot delete workflow: {detail}.")
             return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+
+        # Safe to cascade — delete all versions then workflow
+        workflow.versions.all().delete()
         workflow.delete()
         return redirect("ci_workflows:workflow_list")
 

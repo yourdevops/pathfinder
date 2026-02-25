@@ -1,4 +1,5 @@
 <div id="imported-steps" {% if oob %}hx-swap-oob="true"{% endif %}>
+<h2 class="text-lg font-semibold text-dark-text mb-3">Imported Steps ({{ total_steps }})</h2>
 {% if steps_by_phase %}
 {% for phase_label, phase_steps in steps_by_phase.items %}
 <div class="mb-4">

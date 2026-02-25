@@ -89,6 +89,22 @@
                     class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm">
                 Delete
             </button>
+            {% elif is_operator and not services_using.count and delete_blocked_reasons %}
+            <div class="relative" x-data="{ showTip: false }">
+                <button type="button" @mouseenter="showTip = true" @mouseleave="showTip = false"
+                        class="px-4 py-2 bg-red-500/10 text-red-400/50 rounded-lg text-sm cursor-not-allowed">
+                    Delete
+                </button>
+                <div x-show="showTip" x-cloak
+                     class="absolute right-0 top-full mt-2 w-72 p-3 bg-dark-surface border border-dark-border rounded-lg shadow-xl z-20 text-xs text-dark-muted">
+                    <p class="font-medium text-dark-text mb-1">Cannot delete workflow:</p>
+                    <ul class="list-disc list-inside space-y-0.5">
+                        {% for reason in delete_blocked_reasons %}
+                        <li>{{ reason }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
             {% endif %}
         </div>
     </div>
@@ -264,7 +280,35 @@
     </div>
 
     {% if can_delete %}
-    {% include "core/components/_confirm_modal.html" with confirm_id="confirm-delete-workflow" confirm_title="Delete Workflow" confirm_message="Are you sure you want to delete this workflow? This cannot be undone." confirm_action=workflow_delete_url confirm_button_text="Delete Workflow" %}
+    <div id="confirm-delete-workflow" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black/50 confirm-modal-backdrop"></div>
+        <div class="relative bg-dark-surface border border-dark-border rounded-lg shadow-xl w-full max-w-md mx-4">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold text-dark-text">Delete Workflow</h2>
+                    <button type="button" class="text-dark-muted hover:text-dark-text transition-colors confirm-modal-close">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-dark-muted text-sm">
+                    This will permanently delete this workflow{% if workflow_version_count %} and its {{ workflow_version_count }} version{{ workflow_version_count|pluralize }}{% endif %}. This cannot be undone.
+                </p>
+            </div>
+            <div class="flex justify-end gap-3 p-4 border-t border-dark-border">
+                <button type="button" class="px-4 py-2 text-dark-text hover:bg-dark-border rounded-lg transition-colors confirm-modal-close">
+                    Cancel
+                </button>
+                <form method="post" action="{{ workflow_delete_url }}">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors text-sm">
+                        Delete Workflow
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
     {% endif %}
 
     {% if draft_version %}
