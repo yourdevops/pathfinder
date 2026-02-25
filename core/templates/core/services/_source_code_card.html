@@ -40,12 +40,10 @@
                 <p class="text-xs text-red-300 font-mono break-all">{{ service.scaffold_error }}</p>
             </div>
             {% if service.scaffold_status == 'failed' %}
-            <form method="post" action="{% url 'projects:service_retry_scaffold' project_name=project.name service_name=service.name %}">
-                {% csrf_token %}
-                <button type="submit" class="shrink-0 px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-medium rounded-lg transition-colors">
-                    Retry
-                </button>
-            </form>
+            <button hx-post="{% url 'projects:service_retry_scaffold' project_name=project.name service_name=service.name %}"
+                    class="shrink-0 px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-medium rounded-lg transition-colors">
+                Retry
+            </button>
             {% endif %}
         </div>
     </div>
