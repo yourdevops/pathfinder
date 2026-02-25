@@ -4,7 +4,9 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
+from django.core.validators import URLValidator
 from django.db.models import Avg, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -619,6 +621,11 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
             # Can edit if contributor or owner
             context["can_edit"] = self.user_project_role in ("contributor", "owner")
 
+            # Can edit service info (description, endpoint) if owner or system admin
+            context["can_edit_info"] = self.user_project_role == "owner" or has_system_role(
+                self.request.user, ["admin"]
+            )
+
         elif tab == "ci":
             # CI Workflow tab context
             context["ci_workflow"] = self.service.ci_workflow
@@ -828,6 +835,44 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
             context["upstream_var_count"] = sum(1 for v in resolved_vars if v["source"] != "service")
 
         return context
+
+
+class ServiceUpdateInfoView(LoginRequiredMixin, View):
+    """HTMX endpoint to update service description and endpoint (owner/admin only)."""
+
+    def post(self, request, project_name, service_name):
+        project = get_object_or_404(Project, name=project_name, status="active")
+        service = get_object_or_404(Service, project=project, name=service_name)
+
+        role = get_user_project_role(request.user, project)
+        if role != "owner" and not has_system_role(request.user, ["admin"]):
+            return HttpResponse(status=403)
+
+        field = request.POST.get("field")
+        value = request.POST.get("value", "").strip()
+
+        if field == "description":
+            service.description = value
+            service.save(update_fields=["description", "updated_at"])
+        elif field == "endpoint":
+            if value:
+                validator = URLValidator(schemes=["http", "https"])
+                try:
+                    validator(value)
+                except ValidationError:
+                    return HttpResponse("Invalid URL", status=400)
+            service.endpoint = value
+            service.save(update_fields=["endpoint", "updated_at"])
+        else:
+            return HttpResponse(status=400)
+
+        # Return the updated service info card partial
+        ctx = {
+            "project": project,
+            "service": service,
+            "can_edit_info": True,
+        }
+        return render(request, "core/services/_service_info_card.html", ctx)
 
 
 class ServiceDeleteView(LoginRequiredMixin, View):

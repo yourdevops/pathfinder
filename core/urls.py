@@ -96,6 +96,7 @@ from .views.services import (
     ServiceRegisterWebhookView,
     ServiceRetryScaffoldView,
     ServiceScaffoldStatusView,
+    ServiceUpdateInfoView,
 )
 from .views.templates import (
     TemplateDeregisterView,
@@ -373,6 +374,11 @@ projects_patterns = [
         "<dns:project_name>/services/<dns:service_name>/",
         ServiceDetailView.as_view(),
         name="service_detail",
+    ),
+    path(
+        "<dns:project_name>/services/<dns:service_name>/update-info/",
+        ServiceUpdateInfoView.as_view(),
+        name="service_update_info",
     ),
     path(
         "<dns:project_name>/services/<dns:service_name>/delete/",

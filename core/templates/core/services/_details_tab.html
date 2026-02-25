@@ -1,12 +1,15 @@
 {% load humanize core_filters %}
 
-<div class="space-y-6">
+{# Golden Path overview — 3 sections: Service Info → Builds → Deployments #}
+<div class="space-y-10">
 
-    <!-- Section 1: Header -->
-    <div class="flex items-center justify-between">
+    {# ════════════════════════════════════════════════════════════ #}
+    {# SERVICE HEADER + INFO CARD                                  #}
+    {# ════════════════════════════════════════════════════════════ #}
+    <section class="space-y-5">
+        {# Service header: name + status badges #}
         <div class="flex items-center gap-3">
             <h1 class="text-2xl font-bold text-dark-text">{{ service.name }}</h1>
-            <!-- Status Badge -->
             <span class="px-2.5 py-0.5 text-xs font-medium rounded-full
                 {% if service.status == 'draft' %}bg-gray-500/20 text-gray-300
                 {% elif service.status == 'active' %}bg-green-500/20 text-green-300
@@ -14,7 +17,6 @@
                 {% endif %}">
                 {{ service.get_status_display }}
             </span>
-            <!-- Scaffold Badge (no polling - replaced by WebSocket push in Plan 03) -->
             {% if service.scaffold_status == 'pending' or service.scaffold_status == 'running' or service.scaffold_status == 'failed' %}
             <span class="px-2 py-0.5 text-xs rounded
                 {% if service.scaffold_status == 'pending' %}bg-gray-500/20 text-gray-300
@@ -25,120 +27,99 @@
             </span>
             {% endif %}
         </div>
-    </div>
 
-    {% if service.description %}
-    <p class="text-dark-muted -mt-3">{{ service.description }}</p>
-    {% endif %}
-
-    <!-- Section 2: Stats Row or Empty State -->
-    {% if total_builds == 0 %}
-        {% include "core/services/_dashboard_empty.html" %}
-    {% else %}
-        {% include "core/services/_stats_row.html" %}
-    {% endif %}
-
-    <!-- Section 3: CI Pipeline Status (hidden when empty state already shows assign CTA) -->
-    {% if ci_workflow or total_builds > 0 %}
-        {% include "core/services/_ci_pipeline_card.html" %}
-    {% endif %}
-
-    <!-- Section 4: Recent Builds (placeholder ensures OOB swap target exists) -->
-    {% if total_builds > 0 %}
-        {% include "core/services/_recent_builds.html" %}
-    {% else %}
-        <div id="dashboard-recent-builds"></div>
-    {% endif %}
-
-    <!-- Section 5: Recent Deployments -->
-    <div class="bg-dark-surface border border-dark-border rounded-lg">
-        <div class="flex items-center justify-between px-5 py-3 border-b border-dark-border">
-            <h2 class="text-sm font-semibold text-dark-text uppercase tracking-wider">Recent Deployments</h2>
-            {% if environments_count > 0 %}
-            <a href="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}?tab=deployments"
-               hx-get="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}?tab=deployments"
-               hx-target="#tab-content"
-               hx-push-url="true"
-               class="text-xs text-dark-accent hover:underline">View all</a>
-            {% endif %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {% include "core/services/_service_info_card.html" %}
+            {% include "core/services/_source_code_card.html" %}
         </div>
-        {% if environments_count > 0 %}
-        <div class="px-5 py-6 text-center">
-            <svg class="w-8 h-8 text-dark-muted mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.63 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-            </svg>
-            <p class="text-dark-muted text-sm">No deployments yet</p>
-            <p class="text-dark-muted text-xs mt-1">Deployments will appear here after the first deployment succeeds</p>
-        </div>
-        {% else %}
-        <div class="px-5 py-6 text-center">
-            <svg class="w-8 h-8 text-dark-muted mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.63 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
-            </svg>
-            <p class="text-dark-muted text-sm">No environments configured</p>
-            <p class="text-dark-muted text-xs mt-1">
-                <a href="{% url 'projects:detail' project_name=project.name %}?tab=environments"
-                   class="text-dark-accent hover:underline">Create environments</a> to enable deployments
-            </p>
+
+        {# Scaffold error (conditional) #}
+        {% if service.scaffold_error %}
+        <div class="p-4 bg-red-900/20 border border-red-500/50 rounded-lg">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <p class="text-sm font-medium text-red-400 mb-1">Scaffold Error</p>
+                    <p class="text-sm text-red-300 font-mono">{{ service.scaffold_error }}</p>
+                </div>
+                {% if service.scaffold_status == 'failed' %}
+                <form method="post" action="{% url 'projects:service_retry_scaffold' project_name=project.name service_name=service.name %}">
+                    {% csrf_token %}
+                    <button type="submit" class="shrink-0 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors">
+                        Retry Scaffold
+                    </button>
+                </form>
+                {% endif %}
+            </div>
         </div>
         {% endif %}
-    </div>
+    </section>
 
-    <!-- Section 6: Service Info (2-column) -->
-    <div class="grid grid-cols-2 gap-4">
-        <!-- Left: Repository Info -->
-        {% include "core/services/_repo_info_card.html" %}
+    {# ════════════════════════════════════════════════════════════ #}
+    {# BUILDS                                                      #}
+    {# ════════════════════════════════════════════════════════════ #}
+    <section>
+        <h2 class="text-[11px] font-semibold text-amber-400/80 uppercase tracking-[0.2em] mb-5">Builds</h2>
 
-        <!-- Right: Service Metadata -->
-        <div class="bg-dark-surface border border-dark-border rounded-lg p-5">
-            <h2 class="text-sm font-semibold text-dark-text uppercase tracking-wider mb-4">Service Info</h2>
-            <dl class="space-y-3">
-                <div>
-                    <dt class="text-xs text-dark-muted">Template</dt>
-                    <dd class="text-sm text-dark-text mt-0.5">
-                        {% if service.template %}{{ service.template.name }}{% if service.template_version %} <span class="text-dark-muted font-mono">{{ service.template_version }}</span>{% endif %}{% else %}<span class="text-dark-muted">None</span>{% endif %}
-                    </dd>
-                </div>
-                <div>
-                    <dt class="text-xs text-dark-muted">Created By</dt>
-                    <dd class="text-sm text-dark-text mt-0.5">{{ service.created_by|default:"-" }}</dd>
-                </div>
-                <div>
-                    <dt class="text-xs text-dark-muted">Created</dt>
-                    <dd class="text-sm text-dark-text mt-0.5" title="{{ service.created_at|date:'Y-m-d H:i:s' }}">{{ service.created_at|timesince }} ago</dd>
-                </div>
-                <div class="flex gap-6">
-                    <div>
-                        <dt class="text-xs text-dark-muted">Environments</dt>
-                        <dd class="text-sm text-dark-text mt-0.5">{{ environments_count }}</dd>
-                    </div>
-                    <div>
-                        <dt class="text-xs text-dark-muted">Service Variables</dt>
-                        <dd class="text-sm text-dark-text mt-0.5">{{ service_vars_count }}</dd>
-                    </div>
-                </div>
-            </dl>
-        </div>
-    </div>
+        <div class="space-y-4">
+            {# CI Workflow status card (shows when workflow assigned or builds exist) #}
+            {% if ci_workflow or total_builds > 0 %}
+                {% include "core/services/_ci_pipeline_card.html" %}
+            {% endif %}
 
-    <!-- Section 6: Scaffold Error (conditional) -->
-    {% if service.scaffold_error %}
-    <div class="p-4 bg-red-900/20 border border-red-500/50 rounded-lg">
-        <div class="flex items-start justify-between gap-4">
-            <div>
-                <p class="text-sm font-medium text-red-400 mb-1">Scaffold Error</p>
-                <p class="text-sm text-red-300 font-mono">{{ service.scaffold_error }}</p>
-            </div>
-            {% if service.scaffold_status == 'failed' %}
-            <form method="post" action="{% url 'projects:service_retry_scaffold' project_name=project.name service_name=service.name %}">
-                {% csrf_token %}
-                <button type="submit" class="shrink-0 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors">
-                    Retry Scaffold
-                </button>
-            </form>
+            {# Build statistics or empty state #}
+            {% if total_builds == 0 %}
+                {% include "core/services/_dashboard_empty.html" %}
+            {% else %}
+                {% include "core/services/_stats_row.html" %}
+            {% endif %}
+
+            {# Recent builds list (placeholder div ensures OOB swap target exists) #}
+            {% if total_builds > 0 %}
+                {% include "core/services/_recent_builds.html" %}
+            {% else %}
+                <div id="dashboard-recent-builds"></div>
             {% endif %}
         </div>
-    </div>
-    {% endif %}
+    </section>
+
+    {# ════════════════════════════════════════════════════════════ #}
+    {# DEPLOYMENTS                                                 #}
+    {# ════════════════════════════════════════════════════════════ #}
+    <section>
+        <h2 class="text-[11px] font-semibold text-emerald-400/80 uppercase tracking-[0.2em] mb-5">Deployments</h2>
+
+        <div class="bg-dark-surface border border-dark-border rounded-lg">
+            <div class="flex items-center justify-between px-5 py-3 border-b border-dark-border">
+                <h2 class="text-sm font-semibold text-dark-text uppercase tracking-wider">Environments</h2>
+                {% if environments_count > 0 %}
+                <a href="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}?tab=deployments"
+                   hx-get="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}?tab=deployments"
+                   hx-target="#tab-content"
+                   hx-push-url="true"
+                   class="text-xs text-dark-accent hover:underline">View all</a>
+                {% endif %}
+            </div>
+            {% if environments_count > 0 %}
+            <div class="px-5 py-6 text-center">
+                <svg class="w-8 h-8 text-dark-muted mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.63 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                </svg>
+                <p class="text-dark-muted text-sm">No deployments yet</p>
+                <p class="text-dark-muted text-xs mt-1">Deployments will appear here after the first deployment succeeds</p>
+            </div>
+            {% else %}
+            <div class="px-5 py-6 text-center">
+                <svg class="w-8 h-8 text-dark-muted mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.63 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+                </svg>
+                <p class="text-dark-muted text-sm">No environments configured</p>
+                <p class="text-dark-muted text-xs mt-1">
+                    <a href="{% url 'projects:detail' project_name=project.name %}?tab=environments"
+                       class="text-dark-accent hover:underline">Create environments</a> to enable deployments
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
 
 </div>

@@ -434,6 +434,9 @@ class Service(models.Model):
         help_text="DNS-compatible name: lowercase letters, numbers, hyphens. Max 63 chars.",
     )
     description = models.TextField(blank=True)
+    endpoint = models.URLField(
+        max_length=500, blank=True, help_text="Service endpoint URL (e.g. https://api.example.com)"
+    )
 
     # Repository configuration
     repo_url = models.URLField(max_length=500, blank=True)

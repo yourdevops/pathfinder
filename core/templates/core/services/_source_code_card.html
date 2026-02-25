@@ -1,0 +1,30 @@
+{% load core_filters %}
+
+<div class="bg-dark-surface border border-dark-border rounded-lg p-5">
+    <h2 class="text-sm font-semibold text-dark-text uppercase tracking-wider mb-4">Source Code</h2>
+    <dl class="space-y-3">
+        {# Repository URL #}
+        <div>
+            <dt class="text-xs text-dark-muted">Repository</dt>
+            <dd class="mt-0.5">
+                {% if service.repo_url %}
+                <a href="{{ service.repo_url|strip_git_suffix }}" target="_blank" rel="noopener noreferrer"
+                   class="text-sm text-dark-accent hover:underline break-all">{{ service.repo_url|strip_git_suffix }}</a>
+                {% else %}
+                <span class="text-sm text-dark-muted">Pending...</span>
+                {% endif %}
+            </dd>
+        </div>
+
+        {# Template (only if used, clickable) #}
+        {% if service.template %}
+        <div>
+            <dt class="text-xs text-dark-muted">From Template</dt>
+            <dd class="text-sm mt-0.5">
+                <a href="{% url 'templates:detail' template_name=service.template.name %}"
+                   class="text-dark-accent hover:underline">{{ service.template.name }}</a>{% if service.template_version %} <span class="text-dark-muted font-mono">{{ service.template_version }}</span>{% endif %}
+            </dd>
+        </div>
+        {% endif %}
+    </dl>
+</div>

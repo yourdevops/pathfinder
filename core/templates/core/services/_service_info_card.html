@@ -1,0 +1,96 @@
+{% load core_filters %}
+
+<div id="service-info-card" class="bg-dark-surface border border-dark-border rounded-lg p-5">
+    <h2 class="text-sm font-semibold text-dark-text uppercase tracking-wider mb-4">Service Info</h2>
+    <dl class="space-y-3">
+        {# Description (editable) #}
+        <div x-data="{ editing: false }">
+            <dt class="text-xs text-dark-muted flex items-center gap-2">
+                Description
+                {% if can_edit_info %}
+                <button type="button" @click="editing = !editing"
+                        class="text-dark-muted hover:text-dark-accent transition-colors" title="Edit">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                </button>
+                {% endif %}
+            </dt>
+            <dd class="mt-0.5">
+                <div x-show="!editing">
+                    {% if service.description %}
+                    <p class="text-sm text-dark-text">{{ service.description }}</p>
+                    {% else %}
+                    <p class="text-sm text-dark-muted italic">No description</p>
+                    {% endif %}
+                </div>
+                {% if can_edit_info %}
+                <form x-show="editing" x-cloak
+                      hx-post="{% url 'projects:service_update_info' project_name=project.name service_name=service.name %}"
+                      hx-target="#service-info-card"
+                      hx-swap="outerHTML">
+                    {% csrf_token %}
+                    <input type="hidden" name="field" value="description">
+                    <textarea name="value" rows="2"
+                              class="w-full text-sm bg-dark-bg border border-dark-border rounded-md px-3 py-1.5 text-dark-text placeholder-dark-muted focus:border-dark-accent focus:ring-1 focus:ring-dark-accent outline-none resize-y"
+                              placeholder="Describe this service...">{{ service.description }}</textarea>
+                    <div class="flex items-center gap-2 mt-1.5">
+                        <button type="submit" class="px-2.5 py-1 text-xs font-medium bg-dark-accent hover:bg-dark-accent-hover text-white rounded transition-colors">Save</button>
+                        <button type="button" @click="editing = false" class="px-2.5 py-1 text-xs text-dark-muted hover:text-dark-text transition-colors">Cancel</button>
+                    </div>
+                </form>
+                {% endif %}
+            </dd>
+        </div>
+
+        {# Service Endpoint (editable) #}
+        <div x-data="{ editing: false }">
+            <dt class="text-xs text-dark-muted flex items-center gap-2">
+                Service Endpoint
+                {% if can_edit_info %}
+                <button type="button" @click="editing = !editing"
+                        class="text-dark-muted hover:text-dark-accent transition-colors" title="Edit">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                </button>
+                {% endif %}
+            </dt>
+            <dd class="mt-0.5">
+                <div x-show="!editing">
+                    {% if service.endpoint %}
+                    <a href="{{ service.endpoint }}" target="_blank" rel="noopener noreferrer"
+                       class="text-sm text-dark-accent hover:underline break-all">{{ service.endpoint }}</a>
+                    {% else %}
+                    <p class="text-sm text-dark-muted italic">Not set</p>
+                    {% endif %}
+                </div>
+                {% if can_edit_info %}
+                <form x-show="editing" x-cloak
+                      hx-post="{% url 'projects:service_update_info' project_name=project.name service_name=service.name %}"
+                      hx-target="#service-info-card"
+                      hx-swap="outerHTML">
+                    {% csrf_token %}
+                    <input type="hidden" name="field" value="endpoint">
+                    <input type="url" name="value" value="{{ service.endpoint }}"
+                           class="w-full text-sm bg-dark-bg border border-dark-border rounded-md px-3 py-1.5 text-dark-text placeholder-dark-muted focus:border-dark-accent focus:ring-1 focus:ring-dark-accent outline-none"
+                           placeholder="https://api.example.com">
+                    <div class="flex items-center gap-2 mt-1.5">
+                        <button type="submit" class="px-2.5 py-1 text-xs font-medium bg-dark-accent hover:bg-dark-accent-hover text-white rounded transition-colors">Save</button>
+                        <button type="button" @click="editing = false" class="px-2.5 py-1 text-xs text-dark-muted hover:text-dark-text transition-colors">Cancel</button>
+                    </div>
+                </form>
+                {% endif %}
+            </dd>
+        </div>
+
+        {# Created By + when #}
+        <div>
+            <dt class="text-xs text-dark-muted">Created by</dt>
+            <dd class="text-sm text-dark-text mt-0.5">
+                {{ service.created_by|default:"Unknown" }}<span class="text-dark-muted">,</span>
+                <span class="text-dark-muted" title="{{ service.created_at|date:'Y-m-d H:i:s' }}">{{ service.created_at|timesince }} ago</span>
+            </dd>
+        </div>
+    </dl>
+</div>
