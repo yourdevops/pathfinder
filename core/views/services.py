@@ -459,11 +459,6 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
 
         env_vars = config_data.get("env_vars_json", [])
 
-        # Add default PTF_SERVICE variable (locked)
-        env_vars = [{"key": "PTF_SERVICE", "value": service_name, "lock": True}] + [
-            v for v in env_vars if v.get("key") != "PTF_SERVICE"
-        ]
-
         # Determine repo URL
         if repo_mode == "new":
             # Will be set by scaffolding task after repo creation
