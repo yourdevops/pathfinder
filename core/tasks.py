@@ -336,10 +336,41 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
                         f"{service.template_version} ({version.commit_sha[:8]})"
                     )
 
+            # Build webhook registration hook to run before initial push
+            webhook_registered = False
+
+            def register_webhook(repo_url):
+                nonlocal webhook_registered
+                from core.models import SiteConfiguration
+
+                site_config = SiteConfiguration.get_instance()
+                if not (site_config and site_config.external_url and repo_url):
+                    return
+                plugin = connection.get_plugin()
+                config = connection.get_config()
+                webhook_url = plugin.get_webhook_url(site_config.external_url)
+                if not webhook_url:
+                    return
+                try:
+                    parsed = parse_git_url(repo_url)
+                    if parsed:
+                        repo_name = f"{parsed['owner']}/{parsed['repo']}"
+                        plugin.configure_webhook(
+                            config,
+                            repo_name,
+                            webhook_url,
+                            events=["workflow_run"],
+                        )
+                        webhook_registered = True
+                        logger.info(f"Registered webhook for new repo {service.name}")
+                except Exception as e:
+                    logger.warning(f"Failed to register webhook for new repo {service.name}: {e}")
+
             result = scaffold_new_repository(
                 service=service,
                 connection=connection,
                 template_temp_dir=template_temp_dir,
+                pre_push_hook=register_webhook if service.ci_workflow else None,
             )
             # Update service with repo URL
             service.repo_url = result.get("repo_url", "")
@@ -355,30 +386,9 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
                 service.ci_manifest_status = "synced"
                 update_fields.extend(["ci_manifest_pushed_at", "ci_manifest_status"])
 
-                # Register webhook for build notifications (same as push_ci_manifest)
-                from core.models import SiteConfiguration
-
-                site_config = SiteConfiguration.get_instance()
-                if site_config and site_config.external_url and service.repo_url:
-                    plugin = connection.get_plugin()
-                    config = connection.get_config()
-                    webhook_url = plugin.get_webhook_url(site_config.external_url)
-                    if webhook_url:
-                        try:
-                            parsed = parse_git_url(service.repo_url)
-                            if parsed:
-                                repo_name = f"{parsed['owner']}/{parsed['repo']}"
-                                plugin.configure_webhook(
-                                    config,
-                                    repo_name,
-                                    webhook_url,
-                                    events=["workflow_run"],
-                                )
-                                service.webhook_registered = True
-                                update_fields.append("webhook_registered")
-                                logger.info(f"Registered webhook for new repo {service.name}")
-                        except Exception as e:
-                            logger.warning(f"Failed to register webhook for new repo {service.name}: {e}")
+            if webhook_registered:
+                service.webhook_registered = True
+                update_fields.append("webhook_registered")
 
             service.save(update_fields=update_fields)
 

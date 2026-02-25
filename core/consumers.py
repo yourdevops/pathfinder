@@ -277,7 +277,7 @@ class ServiceConsumer(BasePollingConsumer):
 
         parts.append(render_to_string("core/services/_recent_builds.html", ctx))
         parts.append(render_to_string("core/services/_ci_pipeline_card.html", ctx))
-        parts.append(render_to_string("core/services/_repo_info_card.html", ctx))
+        parts.append(render_to_string("core/services/_source_code_card.html", ctx))
 
         # Builds tab (always sent; HTMX ignores if element not in DOM)
         parts.append(render_to_string("core/services/_builds_tab.html", ctx))

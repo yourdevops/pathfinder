@@ -1,6 +1,7 @@
 {% load core_filters %}
 
-<div class="bg-dark-surface border border-dark-border rounded-lg p-5">
+<div id="dashboard-source-code" {% if oob %}hx-swap-oob="true"{% endif %}
+     class="bg-dark-surface border border-dark-border rounded-lg p-5">
     <h2 class="text-sm font-semibold text-dark-text uppercase tracking-wider mb-4">Source Code</h2>
     <dl class="space-y-3">
         {# Repository URL #}

@@ -410,7 +410,7 @@ def _write_ci_manifest(service, repo_temp_dir: str) -> None:
     logger.info(f"Generated CI manifest at {manifest_path}")
 
 
-def scaffold_new_repository(service, connection, template_temp_dir: str) -> dict:
+def scaffold_new_repository(service, connection, template_temp_dir: str, pre_push_hook: callable | None = None) -> dict:
     """
     Scaffold a new repository from a service template.
 
@@ -480,6 +480,9 @@ def scaffold_new_repository(service, connection, template_temp_dir: str) -> dict
         # Rename branch to match target (usually 'main')
         if repo.active_branch.name != service.repo_branch:
             repo.active_branch.rename(service.repo_branch)
+
+        if pre_push_hook:
+            pre_push_hook(repo_url)
 
         origin.push(service.repo_branch)
 
