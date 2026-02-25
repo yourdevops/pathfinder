@@ -47,7 +47,6 @@ INSTALLED_APPS = [
     "channels",
     "tailwind",
     "theme",  # django-tailwind theme app
-    "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
