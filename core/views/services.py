@@ -564,7 +564,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
 
     def get_template_names(self):
         tab = self.request.GET.get("tab", "details")
-        valid_tabs = ["details", "ci", "builds", "environments", "settings"]
+        valid_tabs = ["details", "ci", "builds", "deployments", "settings"]
         if tab not in valid_tabs:
             tab = "details"
 
@@ -575,7 +575,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         tab = self.request.GET.get("tab", "details")
-        valid_tabs = ["details", "ci", "builds", "environments", "settings"]
+        valid_tabs = ["details", "ci", "builds", "deployments", "settings"]
         if tab not in valid_tabs:
             tab = "details"
 
@@ -792,14 +792,25 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
 
             context["can_edit"] = self.user_project_role in ("contributor", "owner")
 
-        elif tab == "environments":
-            # Show per-environment resolved cascade views
+        elif tab == "deployments":
+            # Show per-environment deployment cards with resolved env var cascade
             environments = self.project.environments.filter(status="active").order_by("order", "name")
-            env_resolved = []
+            env_cards = []
             for env in environments:
                 resolved = resolve_env_vars(self.project, service=self.service, environment=env)
-                env_resolved.append({"environment": env, "resolved_vars": resolved})
-            context["env_resolved"] = env_resolved
+                # Count vars by status
+                total_vars = len(resolved)
+                empty_vars = sum(1 for v in resolved if not v.get("value"))
+                env_cards.append(
+                    {
+                        "environment": env,
+                        "resolved_vars": resolved,
+                        "total_vars": total_vars,
+                        "empty_vars": empty_vars,
+                        "deploy_ready": empty_vars == 0,
+                    }
+                )
+            context["env_cards"] = env_cards
             context["environments"] = environments
 
         elif tab == "settings":
