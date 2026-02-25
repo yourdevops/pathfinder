@@ -273,6 +273,7 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
         build_authenticated_git_url,
         cleanup_repo,
         clone_repo_full,
+        parse_git_url,
         scaffold_new_repository,
         scrub_credentials,
     )
@@ -353,6 +354,31 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
                 service.ci_manifest_pushed_at = timezone.now()
                 service.ci_manifest_status = "synced"
                 update_fields.extend(["ci_manifest_pushed_at", "ci_manifest_status"])
+
+                # Register webhook for build notifications (same as push_ci_manifest)
+                from core.models import SiteConfiguration
+
+                site_config = SiteConfiguration.get_instance()
+                if site_config and site_config.external_url and service.repo_url:
+                    plugin = connection.get_plugin()
+                    config = connection.get_config()
+                    webhook_url = plugin.get_webhook_url(site_config.external_url)
+                    if webhook_url:
+                        try:
+                            parsed = parse_git_url(service.repo_url)
+                            if parsed:
+                                repo_name = f"{parsed['owner']}/{parsed['repo']}"
+                                plugin.configure_webhook(
+                                    config,
+                                    repo_name,
+                                    webhook_url,
+                                    events=["workflow_run"],
+                                )
+                                service.webhook_registered = True
+                                update_fields.append("webhook_registered")
+                                logger.info(f"Registered webhook for new repo {service.name}")
+                        except Exception as e:
+                            logger.warning(f"Failed to register webhook for new repo {service.name}: {e}")
 
             service.save(update_fields=update_fields)
 

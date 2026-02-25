@@ -134,6 +134,7 @@ class ServiceConsumer(AsyncWebsocketConsumer):
         return {
             "service_status": service.status,
             "scaffold_status": service.scaffold_status,
+            "repo_url": service.repo_url,
             "ci_manifest_status": service.ci_manifest_status,
             "ci_manifest_pr_url": service.ci_manifest_pr_url,
             "webhook_registered": service.webhook_registered,
@@ -262,6 +263,7 @@ class ServiceConsumer(AsyncWebsocketConsumer):
 
         parts.append(render_to_string("core/services/_recent_builds.html", ctx))
         parts.append(render_to_string("core/services/_ci_pipeline_card.html", ctx))
+        parts.append(render_to_string("core/services/_repo_info_card.html", ctx))
 
         # Builds tab (always sent; HTMX ignores if element not in DOM)
         parts.append(render_to_string("core/services/_builds_tab.html", ctx))

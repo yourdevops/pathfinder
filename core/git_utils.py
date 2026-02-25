@@ -9,6 +9,7 @@ import os
 import re
 import shutil
 import tempfile
+import time
 from urllib.parse import urlparse
 
 import git
@@ -118,27 +119,59 @@ def build_authenticated_git_url(git_url: str, connection=None) -> str:
     return f"https://{username}@{host}/{owner}/{repo}.git"
 
 
-def _clone_repo(git_url: str, branch: str, auth_url: str | None, prefix: str, **kwargs):
-    """Internal clone helper with credential scrubbing on errors."""
-    temp_dir = tempfile.mkdtemp(prefix=prefix)
+_TRANSIENT_CLONE_PATTERNS = [
+    "repository not found",
+    "could not read from remote repository",
+    "the requested url returned error: 403",
+    "unable to access",
+]
+_CLONE_MAX_RETRIES = 3
+_CLONE_RETRY_DELAYS = [1, 4, 8]  # seconds, exponential backoff
 
-    try:
-        url_to_clone = auth_url or git_url
-        repo = git.Repo.clone_from(url_to_clone, temp_dir, branch=branch, single_branch=True, **kwargs)
-        return repo, temp_dir
 
-    except git.GitCommandError as e:
-        shutil.rmtree(temp_dir, ignore_errors=True)
-        raise git.GitCommandError(
-            scrub_credentials(str(e.command)),
-            e.status,
-            scrub_credentials(e.stderr or ""),
-            scrub_credentials(e.stdout or ""),
-        ) from None
+def _is_transient_clone_error(exc: git.GitCommandError) -> bool:
+    """Check if a git clone error is likely transient and worth retrying."""
+    if exc.status != 128:
+        return False
+    stderr_lower = (exc.stderr or "").lower()
+    return any(pattern in stderr_lower for pattern in _TRANSIENT_CLONE_PATTERNS)
 
-    except Exception:
-        shutil.rmtree(temp_dir, ignore_errors=True)
-        raise
+
+def _clone_repo(git_url: str, branch: str, auth_url: str | None, prefix: str, **kwargs) -> tuple[git.Repo, str]:
+    """Internal clone helper with retry for transient errors and credential scrubbing."""
+    url_to_clone = auth_url or git_url
+
+    for attempt in range(_CLONE_MAX_RETRIES):
+        temp_dir = tempfile.mkdtemp(prefix=prefix)
+
+        try:
+            repo = git.Repo.clone_from(url_to_clone, temp_dir, branch=branch, single_branch=True, **kwargs)
+            return repo, temp_dir
+
+        except git.GitCommandError as e:
+            shutil.rmtree(temp_dir, ignore_errors=True)
+
+            if attempt < _CLONE_MAX_RETRIES - 1 and _is_transient_clone_error(e):
+                delay = _CLONE_RETRY_DELAYS[attempt]
+                logger.warning(
+                    f"Transient clone error (attempt {attempt + 1}/{_CLONE_MAX_RETRIES}), "
+                    f"retrying in {delay}s: {scrub_credentials(e.stderr or '')}"
+                )
+                time.sleep(delay)
+                continue
+
+            raise git.GitCommandError(
+                scrub_credentials(str(e.command)),
+                e.status,
+                scrub_credentials(e.stderr or ""),
+                scrub_credentials(e.stdout or ""),
+            ) from None
+
+        except Exception:
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            raise
+
+    raise RuntimeError("Unreachable: clone retries exhausted without raise")
 
 
 def clone_repo_shallow(git_url: str, branch: str = "main", auth_url: str | None = None, depth: int = 1):
@@ -487,13 +520,16 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str) ->
     # Build authenticated URL
     auth_url = build_authenticated_git_url(service.repo_url, connection)
 
-    # Clone existing repo
-    repo_temp_dir = tempfile.mkdtemp(prefix="ssp_scaffold_existing_")
+    # Clone existing repo (with retry for transient errors)
+    logger.info(f"Cloning existing repository: {service.repo_url}")
+    repo, repo_temp_dir = _clone_repo(
+        git_url=service.repo_url,
+        branch=service.repo_branch,
+        auth_url=auth_url,
+        prefix="ssp_scaffold_existing_",
+    )
 
     try:
-        logger.info(f"Cloning existing repository: {service.repo_url}")
-        repo = git.Repo.clone_from(auth_url, repo_temp_dir, branch=service.repo_branch)
-
         # Create feature branch
         feature_branch = f"feature/{service.name}"
         repo.create_head(feature_branch)
