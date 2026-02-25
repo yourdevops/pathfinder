@@ -49,7 +49,7 @@
                 <select name="engine" id="id_engine"
                         class="w-full px-4 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text focus:outline-none focus:border-dark-accent">
                     {% for value, label in form.engine.field.choices %}
-                    <option value="{{ value }}" {% if form.engine.value == value %}selected{% endif %}>{{ label }}</option>
+                    <option value="{{ value }}" {% if form.engine.value == value or value == form.engine.initial %}selected{% endif %}>{{ label }}</option>
                     {% endfor %}
                 </select>
                 {% if form.engine.errors %}

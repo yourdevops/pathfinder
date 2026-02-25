@@ -39,7 +39,7 @@
             <tbody>
                 {% for tpl in templates %}
                 <tr class="border-b border-dark-border/50 hover:bg-dark-border/30 cursor-pointer transition-colors"
-                    onclick="window.location='{% url 'templates:detail' template_name=tpl.name %}'">
+                    data-href="{% url 'templates:detail' template_name=tpl.name %}">
                     <td class="py-3 px-4">
                         <a href="{% url 'templates:detail' template_name=tpl.name %}" class="text-dark-text font-medium hover:text-dark-accent transition-colors">
                             {{ tpl.name }}

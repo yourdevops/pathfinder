@@ -121,10 +121,24 @@ class WorkflowCreateForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        from plugins.base import get_available_engines
 
-        engine_choices = [("", "-- Select CI engine --"), *get_available_engines()]
-        self.fields["engine"].choices = engine_choices
+        # Derive available engines from connected Steps Repositories
+        repo_engines = list(StepsRepository.objects.values_list("engine", flat=True).distinct().order_by("engine"))
+
+        from plugins.base import get_ci_plugin_for_engine
+
+        engine_choices = []
+        for eng in repo_engines:
+            plugin = get_ci_plugin_for_engine(eng)
+            label = plugin.engine_display_name if plugin else eng
+            engine_choices.append((eng, label))
+
+        if len(engine_choices) == 1:
+            # Single engine: pre-select it, no placeholder
+            self.fields["engine"].choices = engine_choices
+            self.fields["engine"].initial = engine_choices[0][0]
+        else:
+            self.fields["engine"].choices = [("", "-- Select CI engine --"), *engine_choices]
 
     def clean_name(self):
         name = self.cleaned_data["name"]
