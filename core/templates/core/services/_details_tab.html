@@ -43,9 +43,11 @@
         {% include "core/services/_ci_pipeline_card.html" %}
     {% endif %}
 
-    <!-- Section 4: Recent Builds (only when builds exist) -->
+    <!-- Section 4: Recent Builds (placeholder ensures OOB swap target exists) -->
     {% if total_builds > 0 %}
         {% include "core/services/_recent_builds.html" %}
+    {% else %}
+        <div id="dashboard-recent-builds"></div>
     {% endif %}
 
     <!-- Section 5: Service Info (2-column) -->
