@@ -287,3 +287,171 @@ class ServiceConsumer(AsyncWebsocketConsumer):
             )
 
         return "".join(parts)
+
+
+class StepsRepoConsumer(AsyncWebsocketConsumer):
+    """
+    WebSocket consumer for real-time CI Steps Repository detail page updates.
+
+    Polls the database every 3 seconds, computes a state hash,
+    and sends OOB HTML updates only when the state changes.
+    """
+
+    async def connect(self):
+        user = self.scope["user"]
+        if not user.is_authenticated:
+            await self.close()
+            return
+
+        self.user = user
+        self.repo_id = self.scope["url_route"]["kwargs"]["repo_id"]
+
+        if not await self._repo_exists():
+            await self.close()
+            return
+
+        await self.accept()
+
+        self.last_state_hash = None
+        self.poll_task = asyncio.create_task(self.poll_loop())
+
+    async def disconnect(self, close_code):
+        if hasattr(self, "poll_task"):
+            self.poll_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self.poll_task
+
+    async def poll_loop(self):
+        """Poll database for state changes and send updates when detected."""
+        while True:
+            try:
+                state = await self.get_current_state()
+                if state is None:
+                    await self.close()
+                    return
+
+                state_hash = ServiceConsumer.compute_hash(state)
+
+                if state_hash != self.last_state_hash:
+                    self.last_state_hash = state_hash
+                    html = await self.render_updates(state)
+                    if html:
+                        await self.send(text_data=html)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                logger.exception("Error in StepsRepoConsumer poll loop for repo %s", self.repo_id)
+
+            await asyncio.sleep(3)
+
+    @database_sync_to_async
+    def _repo_exists(self):
+        from core.models import StepsRepository
+
+        return StepsRepository.objects.filter(id=self.repo_id).exists()
+
+    @database_sync_to_async
+    def get_current_state(self):
+        """Fetch all relevant repo data for change detection."""
+
+        from core.models import CIStep, StepsRepository
+
+        try:
+            repo = StepsRepository.objects.select_related("connection").get(id=self.repo_id)
+        except StepsRepository.DoesNotExist:
+            return None
+
+        active_steps = list(
+            CIStep.objects.filter(repository=repo, status="active")
+            .order_by("phase", "name")
+            .values("id", "name", "phase")
+        )
+
+        sync_logs = list(
+            repo.sync_logs.order_by("-started_at")[:20].values(
+                "id",
+                "status",
+                "trigger",
+                "commit_sha",
+                "steps_added",
+                "steps_updated",
+                "steps_archived",
+                "started_at",
+            )
+        )
+
+        runtime_count = repo.runtimes.count()
+
+        return {
+            "scan_status": repo.scan_status,
+            "scan_error": repo.scan_error,
+            "last_scanned_at": repo.last_scanned_at,
+            "protection_valid": repo.protection_valid,
+            "last_scanned_sha": repo.last_scanned_sha,
+            "active_step_count": len(active_steps),
+            "active_steps": active_steps,
+            "sync_logs": sync_logs,
+            "runtime_count": runtime_count,
+        }
+
+    def build_template_context(self, state):
+        """Build template context mirroring StepsRepoDetailView.get()."""
+        from collections import OrderedDict
+
+        from core.models import CIWorkflow, StepsRepository
+
+        repo = StepsRepository.objects.select_related("connection").get(id=self.repo_id)
+        active_steps = repo.steps.filter(status="active").order_by("phase", "name")
+        archived_steps = repo.steps.filter(status="archived").order_by("name")
+        runtimes = repo.runtimes.all().order_by("name")
+
+        # Group active steps by phase (same logic as view)
+        phase_order = ["setup", "test", "build", "package"]
+        phase_labels = {
+            "setup": "Setup",
+            "build": "Build",
+            "test": "Test",
+            "package": "Package",
+        }
+        steps_by_phase = OrderedDict()
+        for phase in phase_order:
+            phase_steps = [s for s in active_steps if s.phase == phase]
+            if phase_steps:
+                steps_by_phase[phase_labels[phase]] = phase_steps
+        uncategorized = [s for s in active_steps if s.phase not in phase_order]
+        if uncategorized:
+            steps_by_phase["Other"] = uncategorized
+
+        workflows_using = CIWorkflow.objects.filter(workflow_steps__step__repository=repo).distinct().order_by("name")
+
+        sync_logs = repo.sync_logs.prefetch_related("entries").order_by("-started_at")[:20]
+
+        return {
+            "repo": repo,
+            "steps_by_phase": steps_by_phase,
+            "total_steps": active_steps.count(),
+            "archived_steps": archived_steps,
+            "runtimes": runtimes,
+            "sync_logs": sync_logs,
+            "workflows_using": workflows_using,
+            "can_manage": False,
+            "can_delete": False,
+        }
+
+    @database_sync_to_async
+    def render_updates(self, state):
+        """
+        Render OOB HTML partials for WebSocket push.
+
+        Concatenates all OOB-targetable partials into a single message.
+        """
+        ctx = self.build_template_context(state)
+        ctx["oob"] = True
+        parts = []
+
+        parts.append(render_to_string("core/ci_workflows/_scan_status.html", ctx))
+        parts.append(render_to_string("core/ci_workflows/_sync_history.html", ctx))
+        parts.append(render_to_string("core/ci_workflows/_imported_steps.html", ctx))
+        parts.append(render_to_string("core/ci_workflows/_repo_info.html", ctx))
+
+        return "".join(parts)
