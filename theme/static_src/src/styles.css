@@ -21,6 +21,9 @@
   .htmx-request.htmx-indicator {
     opacity: 1;
   }
+  .htmx-request .fetch-builds-icon {
+    animation: spin 1s linear infinite;
+  }
 }
 
 /* Custom component classes */

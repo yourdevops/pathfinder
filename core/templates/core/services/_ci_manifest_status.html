@@ -33,21 +33,15 @@
 
         {% if can_edit %}
             {% if ci_manifest_status == "never_pushed" or ci_manifest_status == "out_of_sync" or ci_manifest_out_of_sync %}
-            <form method="post" action="{% url 'projects:service_push_manifest' project_name=project.name service_name=service.name %}">
-                {% csrf_token %}
-                <button type="submit"
-                        class="px-3 py-1.5 text-sm bg-dark-accent hover:bg-dark-accent/80 text-white rounded transition-colors">
-                    Push Manifest
-                </button>
-            </form>
+            <button hx-post="{% url 'projects:service_push_manifest' project_name=project.name service_name=service.name %}"
+                    class="px-3 py-1.5 text-sm bg-dark-accent hover:bg-dark-accent/80 text-white rounded transition-colors">
+                Push Manifest
+            </button>
             {% elif ci_manifest_status == "pending_pr" %}
-            <form method="post" action="{% url 'projects:service_push_manifest' project_name=project.name service_name=service.name %}">
-                {% csrf_token %}
-                <button type="submit"
-                        class="px-3 py-1.5 text-sm bg-dark-accent hover:bg-dark-accent/80 text-white rounded transition-colors">
-                    Update Pull Request
-                </button>
-            </form>
+            <button hx-post="{% url 'projects:service_push_manifest' project_name=project.name service_name=service.name %}"
+                    class="px-3 py-1.5 text-sm bg-dark-accent hover:bg-dark-accent/80 text-white rounded transition-colors">
+                Update Pull Request
+            </button>
             {% endif %}
         {% endif %}
     </div>

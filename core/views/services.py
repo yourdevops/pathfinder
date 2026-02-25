@@ -764,7 +764,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
             ]
             if sort_by not in valid_sorts:
                 sort_by = "-started_at"
-            builds_qs = builds_qs.order_by(sort_by)
+            builds_qs = builds_qs.order_by(sort_by, "-created_at")
             context["sort_by"] = sort_by
 
             # Paginate (20 per page per CONTEXT.md)
@@ -1020,6 +1020,13 @@ class ServiceAssignWorkflowView(LoginRequiredMixin, View):
 class ServiceFetchBuildsView(LoginRequiredMixin, View):
     """Manually poll GitHub for recent workflow runs."""
 
+    @staticmethod
+    def _toast_response(message, tags="success"):
+        """Return a no-content response with an HX-Trigger toast event."""
+        response = HttpResponse(status=204)
+        response["HX-Trigger"] = json.dumps({"showToast": {"message": message, "tags": tags}})
+        return response
+
     def post(self, request, project_name, service_name):
         from core.git_utils import parse_git_url
         from core.models import ProjectConnection
@@ -1031,35 +1038,30 @@ class ServiceFetchBuildsView(LoginRequiredMixin, View):
         # Check permissions (viewer can trigger sync)
         role = get_user_project_role(request.user, project)
         if not role:
-            messages.error(request, "You don't have permission to access this service.")
-            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+            return self._toast_response("You don't have permission to access this service.", "error")
 
         # Guard: service must have a repo_url
         if not service.repo_url:
-            messages.error(request, "Service has no repository URL.")
-            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+            return self._toast_response("Service has no repository URL.", "error")
 
         # Get SCM connection
         project_connection = (
             ProjectConnection.objects.filter(project=project, is_default=True).select_related("connection").first()
         )
         if not project_connection:
-            messages.error(request, "No SCM connection configured for this project.")
-            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+            return self._toast_response("No SCM connection configured for this project.", "error")
 
         connection = project_connection.connection
         plugin = connection.get_plugin()
         config = connection.get_config()
 
         if not plugin:
-            messages.error(request, "SCM plugin not available.")
-            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+            return self._toast_response("SCM plugin not available.", "error")
 
         # Parse repo URL
         parsed = parse_git_url(service.repo_url)
         if not parsed:
-            messages.error(request, "Invalid repository URL.")
-            return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
+            return self._toast_response("Invalid repository URL.", "error")
 
         repo_name = f"{parsed['owner']}/{parsed['repo']}"
 
@@ -1087,14 +1089,12 @@ class ServiceFetchBuildsView(LoginRequiredMixin, View):
                 queued += 1
 
             if queued > 0:
-                messages.success(request, f"Fetching {queued} workflow run(s) from GitHub...")
+                return self._toast_response(f"Fetching {queued} workflow run(s) from GitHub...")
             else:
-                messages.info(request, "No matching workflow runs found.")
+                return self._toast_response("No matching workflow runs found.", "info")
 
         except Exception as e:
-            messages.error(request, f"Failed to fetch workflow runs: {e}")
-
-        return redirect(f"/projects/{project_name}/services/{service_name}/?tab=builds")
+            return self._toast_response(f"Failed to fetch workflow runs: {e}", "error")
 
 
 class ServiceRegisterWebhookView(LoginRequiredMixin, View):

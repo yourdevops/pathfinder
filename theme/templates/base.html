@@ -367,6 +367,46 @@
                 }
             };
         });
+        Alpine.data('toastNotifications', function() {
+            return {
+                toasts: [],
+                nextId: 0,
+                init: function() {
+                    var self = this;
+                    var seeds = self.$el.querySelectorAll('[data-toast-text]');
+                    seeds.forEach(function(el) {
+                        self.add(el.getAttribute('data-toast-text'), el.getAttribute('data-toast-tags'));
+                        el.remove();
+                    });
+                    document.addEventListener('showToast', function(e) {
+                        self.add(e.detail.message, e.detail.tags);
+                    });
+                },
+                add: function(text, tags) {
+                    var self = this;
+                    var id = self.nextId++;
+                    var cls = 'bg-blue-900/90 border-blue-700/50 text-blue-200';
+                    if (tags && tags.indexOf('success') >= 0) {
+                        cls = 'bg-green-900/90 border-green-700/50 text-green-200';
+                    } else if (tags && tags.indexOf('error') >= 0) {
+                        cls = 'bg-red-900/90 border-red-700/50 text-red-200';
+                    } else if (tags && tags.indexOf('warning') >= 0) {
+                        cls = 'bg-amber-900/90 border-amber-700/50 text-amber-200';
+                    }
+                    self.toasts.push({ id: id, message: text, cls: cls });
+                    if (!tags || tags.indexOf('error') < 0) {
+                        setTimeout(function() { self.dismissById(id); }, 5000);
+                    }
+                },
+                dismissById: function(id) {
+                    var idx = -1;
+                    for (var i = 0; i < this.toasts.length; i++) {
+                        if (this.toasts[i].id === id) { idx = i; break; }
+                    }
+                    if (idx >= 0) { this.toasts.splice(idx, 1); }
+                }
+            };
+        });
         Alpine.data('wsStatus', function() {
             return {
                 connected: false,
@@ -406,6 +446,8 @@
     <style nonce="{{ csp_nonce }}">
         @keyframes ws-highlight { from { background-color: rgba(59, 130, 246, 0.15); } to { background-color: transparent; } }
         [data-ws-updated] { animation: ws-highlight 2s ease-out; }
+        @keyframes toast-in { from { opacity: 0; transform: translateX(1rem); } to { opacity: 1; transform: translateX(0); } }
+        .toast-enter { animation: toast-in 0.3s ease-out; }
     </style>
     <script nonce="{{ csp_nonce }}">
         document.addEventListener('htmx:wsAfterMessage', function() {
@@ -441,17 +483,24 @@
         {% endblock %}
     {% endif %}
 
-    <main class="{% if user.is_authenticated %}ml-64{% endif %} min-h-screen">
-        {% if messages %}
-        <div class="p-4">
-            {% for message in messages %}
-            <div class="card mb-2 {% if message.tags == 'error' %}message-error{% endif %}">
-                {{ message }}
+    <!-- Toast notifications (fixed overlay) -->
+    <div x-data="toastNotifications" class="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm">
+        {% for message in messages %}
+        <div class="hidden" data-toast-text="{{ message }}" data-toast-tags="{{ message.tags }}"></div>
+        {% endfor %}
+        <template x-for="toast in toasts" :key="toast.id">
+            <div :class="toast.cls" class="toast-enter flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg border text-sm backdrop-blur-sm">
+                <span x-text="toast.message" class="flex-1"></span>
+                <button @click="dismissById(toast.id)" class="shrink-0 opacity-60 hover:opacity-100 mt-0.5" type="button">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
-            {% endfor %}
-        </div>
-        {% endif %}
+        </template>
+    </div>
 
+    <main class="{% if user.is_authenticated %}ml-64{% endif %} min-h-screen">
         {% block content %}{% endblock %}
     </main>
 

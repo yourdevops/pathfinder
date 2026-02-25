@@ -26,6 +26,7 @@ class ServiceConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
 
+        self.user = user
         self.service_id = self.scope["url_route"]["kwargs"]["service_id"]
 
         # Verify service exists
@@ -73,6 +74,12 @@ class ServiceConsumer(AsyncWebsocketConsumer):
         from core.models import Service
 
         return Service.objects.filter(id=self.service_id).exists()
+
+    def _can_edit(self, project):
+        from core.permissions import get_user_project_role
+
+        role = get_user_project_role(self.user, project)
+        return role in ("contributor", "owner")
 
     @database_sync_to_async
     def get_current_state(self):
@@ -128,6 +135,9 @@ class ServiceConsumer(AsyncWebsocketConsumer):
             "service_status": service.status,
             "scaffold_status": service.scaffold_status,
             "ci_manifest_status": service.ci_manifest_status,
+            "ci_manifest_pr_url": service.ci_manifest_pr_url,
+            "webhook_registered": service.webhook_registered,
+            "ci_variables_status": service.ci_variables_status,
             "ci_workflow_id": service.ci_workflow_id,
             "ci_workflow_name": service.ci_workflow.name if service.ci_workflow else None,
             "ci_workflow_version_id": service.ci_workflow_version_id,
@@ -227,7 +237,7 @@ class ServiceConsumer(AsyncWebsocketConsumer):
             "ci_manifest_out_of_sync": service.ci_manifest_out_of_sync,
             "ci_manifest_pr_url": service.ci_manifest_pr_url,
             "ci_manifest_pushed_at": service.ci_manifest_pushed_at,
-            "can_edit": False,  # WS push is read-only; interactive forms use HTTP
+            "can_edit": self._can_edit(project),
         }
 
     @database_sync_to_async
@@ -243,8 +253,10 @@ class ServiceConsumer(AsyncWebsocketConsumer):
         parts = []
 
         # Dashboard sections
+        # Skip empty-state OOB swap: the initial HTTP render has correct can_edit + CSRF.
+        # Only swap when builds exist (transitioning empty → stats row).
         if ctx["total_builds"] == 0:
-            parts.append(render_to_string("core/services/_dashboard_empty.html", ctx))
+            pass
         else:
             parts.append(render_to_string("core/services/_stats_row.html", ctx))
 

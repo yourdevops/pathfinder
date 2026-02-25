@@ -357,11 +357,14 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
             service.save(update_fields=update_fields)
 
         else:
-            # Existing repo: CI manifest push handled by push_ci_manifest task
+            # Existing repo: scaffold not needed, but auto-push CI manifest if workflow assigned
             service.scaffold_status = "not_required"
             service.scaffold_error = ""
             service.save(update_fields=["scaffold_status", "scaffold_error"])
             result = {"status": "not_required"}
+
+            if service.ci_workflow:
+                push_ci_manifest.enqueue(service_id=service.id)
 
         # Provision CI variables (non-blocking)
         if service.repo_url and connection:
@@ -1121,6 +1124,15 @@ def push_ci_manifest(service_id: int) -> dict:
 
         # Resolve manifest file path from workflow
         manifest_file_path = ci_plugin.manifest_id(service.ci_workflow)
+
+        # Compare with current manifest in repo — skip PR if content already matches
+        existing_content = ci_plugin.fetch_manifest_content(config, repo_name, manifest_file_path, source_branch)
+        if existing_content is not None and existing_content.rstrip() == manifest_yaml.rstrip():
+            logger.info(f"Manifest already in sync for service {service.name}, skipping PR")
+            service.ci_manifest_status = "synced"
+            service.ci_manifest_pushed_at = timezone.now()
+            service.save(update_fields=["ci_manifest_status", "ci_manifest_pushed_at"])
+            return {"status": "already_synced"}
 
         # Build version-aware commit message
         version_str = service.ci_workflow_version.version if service.ci_workflow_version else "draft"

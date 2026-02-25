@@ -6,17 +6,17 @@
         <div class="flex items-center gap-4">
             <!-- Fetch button -->
             {% if can_edit %}
-            <form method="post" action="{% url 'projects:service_fetch_builds' project.name service.name %}">
-                {% csrf_token %}
-                <button type="submit"
-                        class="flex items-center gap-2 px-3 py-1.5 bg-dark-surface border border-dark-border rounded text-sm text-dark-text hover:bg-gray-800 transition-colors"
-                        title="Fetch recent builds from GitHub">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    Fetch Builds
-                </button>
-            </form>
+            <button type="button"
+                    hx-post="{% url 'projects:service_fetch_builds' project.name service.name %}"
+                    hx-swap="none"
+                    hx-disabled-elt="this"
+                    class="fetch-builds-btn flex items-center gap-2 px-3 py-1.5 bg-dark-surface border border-dark-border rounded text-sm text-dark-text hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-wait"
+                    title="Fetch recent builds from GitHub">
+                <svg class="w-4 h-4 fetch-builds-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Fetch Builds
+            </button>
             {% endif %}
 
             {% if has_any_builds %}
