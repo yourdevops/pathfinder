@@ -286,20 +286,6 @@ class ServiceConsumer(BasePollingConsumer):
         if ctx["ci_workflow"]:
             parts.append(render_to_string("core/services/_ci_manifest_status.html", ctx))
 
-        # Scaffold badge (only when relevant)
-        if state.get("scaffold_status") in ("pending", "running", "failed"):
-            scaffold_display = state["scaffold_status"].replace("_", " ").title()
-            status_class = {
-                "pending": "bg-gray-500/20 text-gray-300",
-                "running": "bg-blue-500/20 text-blue-300",
-                "failed": "bg-red-500/20 text-red-300",
-            }.get(state["scaffold_status"], "bg-gray-500/20 text-gray-300")
-            parts.append(
-                f'<span id="scaffold-badge" hx-swap-oob="true"'
-                f' class="px-2 py-0.5 text-xs rounded {status_class}">'
-                f"Scaffold: {scaffold_display}</span>"
-            )
-
         return "".join(parts)
 
 

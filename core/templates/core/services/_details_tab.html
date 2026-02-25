@@ -17,15 +17,6 @@
                 {% endif %}">
                 {{ service.get_status_display }}
             </span>
-            {% if service.scaffold_status == 'pending' or service.scaffold_status == 'running' or service.scaffold_status == 'failed' %}
-            <span class="px-2 py-0.5 text-xs rounded
-                {% if service.scaffold_status == 'pending' %}bg-gray-500/20 text-gray-300
-                {% elif service.scaffold_status == 'running' %}bg-blue-500/20 text-blue-300
-                {% elif service.scaffold_status == 'failed' %}bg-red-500/20 text-red-300
-                {% endif %}">
-                Scaffold: {{ service.get_scaffold_status_display }}
-            </span>
-            {% endif %}
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -33,25 +24,6 @@
             {% include "core/services/_source_code_card.html" %}
         </div>
 
-        {# Scaffold error (conditional) #}
-        {% if service.scaffold_error %}
-        <div class="p-4 bg-red-900/20 border border-red-500/50 rounded-lg">
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <p class="text-sm font-medium text-red-400 mb-1">Scaffold Error</p>
-                    <p class="text-sm text-red-300 font-mono">{{ service.scaffold_error }}</p>
-                </div>
-                {% if service.scaffold_status == 'failed' %}
-                <form method="post" action="{% url 'projects:service_retry_scaffold' project_name=project.name service_name=service.name %}">
-                    {% csrf_token %}
-                    <button type="submit" class="shrink-0 px-3 py-1.5 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors">
-                        Retry Scaffold
-                    </button>
-                </form>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
     </section>
 
     {# ════════════════════════════════════════════════════════════ #}

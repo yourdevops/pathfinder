@@ -11,6 +11,8 @@
                 {% if service.repo_url %}
                 <a href="{{ service.repo_url|strip_git_suffix }}" target="_blank" rel="noopener noreferrer"
                    class="text-sm text-dark-accent hover:underline break-all">{{ service.repo_url|strip_git_suffix }}</a>
+                {% elif service.scaffold_status == 'running' %}
+                <span class="text-sm text-blue-300">Scaffolding...</span>
                 {% else %}
                 <span class="text-sm text-dark-muted">Pending...</span>
                 {% endif %}
@@ -28,4 +30,24 @@
         </div>
         {% endif %}
     </dl>
+
+    {# Scaffold error + retry #}
+    {% if service.scaffold_error %}
+    <div class="mt-4 p-3 bg-red-900/20 border border-red-500/50 rounded-lg">
+        <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+                <p class="text-xs font-medium text-red-400 mb-1">Scaffold Error</p>
+                <p class="text-xs text-red-300 font-mono break-all">{{ service.scaffold_error }}</p>
+            </div>
+            {% if service.scaffold_status == 'failed' %}
+            <form method="post" action="{% url 'projects:service_retry_scaffold' project_name=project.name service_name=service.name %}">
+                {% csrf_token %}
+                <button type="submit" class="shrink-0 px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-medium rounded-lg transition-colors">
+                    Retry
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 </div>
