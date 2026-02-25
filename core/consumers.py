@@ -24,6 +24,10 @@ class BasePollingConsumer(AsyncWebsocketConsumer):
     entity_id_kwarg = None  # Override in subclass
     poll_interval = 3  # seconds
 
+    def get_poll_interval(self):
+        """Return current poll interval. Override for dynamic intervals."""
+        return self.poll_interval
+
     async def connect(self):
         user = self.scope["user"]
         if not user.is_authenticated:
@@ -71,7 +75,7 @@ class BasePollingConsumer(AsyncWebsocketConsumer):
                     "Error in %s poll loop for %s %s", type(self).__name__, self.entity_id_kwarg, self.entity_id
                 )
 
-            await asyncio.sleep(self.poll_interval)
+            await asyncio.sleep(self.get_poll_interval())
 
     @staticmethod
     def compute_hash(state):
@@ -83,6 +87,8 @@ class ServiceConsumer(BasePollingConsumer):
     """WebSocket consumer for real-time service page updates."""
 
     entity_id_kwarg = "service_id"
+    FAST_POLL_INTERVAL = 1  # seconds, for newly created services
+    FAST_POLL_DURATION = 600  # 10 minutes after creation
 
     @property
     def service_id(self):
@@ -92,7 +98,19 @@ class ServiceConsumer(BasePollingConsumer):
     def _entity_exists(self):
         from core.models import Service
 
-        return Service.objects.filter(id=self.entity_id).exists()
+        service = Service.objects.filter(id=self.entity_id).values("created_at").first()
+        if service is None:
+            return False
+        self._service_created_at = service["created_at"]
+        return True
+
+    def get_poll_interval(self):
+        from django.utils import timezone
+
+        age = (timezone.now() - self._service_created_at).total_seconds()
+        if age < self.FAST_POLL_DURATION:
+            return self.FAST_POLL_INTERVAL
+        return self.poll_interval
 
     def _can_edit(self, project):
         from core.permissions import get_user_project_role
