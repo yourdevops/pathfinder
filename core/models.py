@@ -181,10 +181,15 @@ class ProjectMembership(models.Model):
 
 
 class ApiToken(models.Model):
-    """API token for authenticating external API calls (e.g., step validation)."""
+    """API token for authenticating external API calls (e.g., step validation).
+
+    The `key` field stores a SHA-256 hash of the actual token.
+    The raw token is shown only once at creation time.
+    """
 
     id = models.BigAutoField(primary_key=True)
-    key = models.CharField(max_length=64, unique=True, db_index=True)
+    key = models.CharField(max_length=64, unique=True, db_index=True, help_text="SHA-256 hash of the token")
+    key_prefix = models.CharField(max_length=8, blank=True, default="", help_text="First 8 chars for identification")
     name = models.CharField(max_length=100, help_text="Human-readable label for this token")
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,

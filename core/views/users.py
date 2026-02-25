@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 
@@ -7,7 +8,7 @@ from ..forms import UserCreateForm, UserEditForm
 from ..models import Group, GroupMembership, User
 
 
-class UserListView(AdminRequiredMixin, View):
+class UserListView(LoginRequiredMixin, AdminRequiredMixin, View):
     """Display list of all users."""
 
     template_name = "core/users/list.html"
@@ -24,7 +25,7 @@ class UserListView(AdminRequiredMixin, View):
         )
 
 
-class UserCreateView(AdminRequiredMixin, View):
+class UserCreateView(LoginRequiredMixin, AdminRequiredMixin, View):
     """Create a new user via modal form."""
 
     def post(self, request):
@@ -53,7 +54,7 @@ class UserCreateView(AdminRequiredMixin, View):
         )
 
 
-class UserEditView(AdminRequiredMixin, View):
+class UserEditView(LoginRequiredMixin, AdminRequiredMixin, View):
     """Edit user details and group memberships."""
 
     template_name = "core/users/edit.html"
@@ -120,7 +121,7 @@ class UserEditView(AdminRequiredMixin, View):
         )
 
 
-class UserDeleteView(AdminRequiredMixin, View):
+class UserDeleteView(LoginRequiredMixin, AdminRequiredMixin, View):
     """Delete a user."""
 
     def post(self, request, uuid):

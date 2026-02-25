@@ -15,7 +15,7 @@ def admin_required(view_func):
     def wrapper(request, *args, **kwargs):
         if not has_system_role(request.user, "admin"):
             messages.error(request, "You do not have permission to access this page.")
-            return redirect("auth:login")
+            return redirect("dashboard:home")
         return view_func(request, *args, **kwargs)
 
     return wrapper
@@ -27,9 +27,9 @@ def operator_required(view_func):
     @wraps(view_func)
     @login_required
     def wrapper(request, *args, **kwargs):
-        if not (has_system_role(request.user, "admin") or has_system_role(request.user, "operator")):
+        if not has_system_role(request.user, ["admin", "operator"]):
             messages.error(request, "You do not have permission to access this page.")
-            return redirect("auth:login")
+            return redirect("dashboard:home")
         return view_func(request, *args, **kwargs)
 
     return wrapper
@@ -43,5 +43,5 @@ class AdminRequiredMixin:
             return redirect("auth:login")
         if not has_system_role(request.user, "admin"):
             messages.error(request, "You do not have permission to access this page.")
-            return redirect("auth:login")
+            return redirect("dashboard:home")
         return super().dispatch(request, *args, **kwargs)

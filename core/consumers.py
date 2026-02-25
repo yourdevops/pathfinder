@@ -11,26 +11,29 @@ from django.template.loader import render_to_string
 logger = logging.getLogger(__name__)
 
 
-class ServiceConsumer(AsyncWebsocketConsumer):
-    """
-    WebSocket consumer for real-time service page updates.
+class BasePollingConsumer(AsyncWebsocketConsumer):
+    """Base WebSocket consumer with polling pattern for real-time page updates.
 
-    Polls the database every 3 seconds, computes a state hash,
-    and sends HTML updates only when the state changes.
+    Subclasses must implement:
+        entity_id_kwarg: str -- URL route kwarg name for the entity ID
+        _entity_exists(): bool -- check if entity exists in DB
+        get_current_state(): dict|None -- fetch current state (None = deleted)
+        render_updates(state): str -- render HTML for OOB swap
     """
+
+    entity_id_kwarg = None  # Override in subclass
+    poll_interval = 3  # seconds
 
     async def connect(self):
-        # Reject unauthenticated connections
         user = self.scope["user"]
         if not user.is_authenticated:
             await self.close()
             return
 
         self.user = user
-        self.service_id = self.scope["url_route"]["kwargs"]["service_id"]
+        self.entity_id = self.scope["url_route"]["kwargs"][self.entity_id_kwarg]
 
-        # Verify service exists
-        if not await self._service_exists():
+        if not await self._entity_exists():
             await self.close()
             return
 
@@ -51,7 +54,6 @@ class ServiceConsumer(AsyncWebsocketConsumer):
             try:
                 state = await self.get_current_state()
                 if state is None:
-                    # Service was deleted
                     await self.close()
                     return
 
@@ -65,15 +67,32 @@ class ServiceConsumer(AsyncWebsocketConsumer):
             except asyncio.CancelledError:
                 raise
             except Exception:
-                logger.exception("Error in ServiceConsumer poll loop for service %s", self.service_id)
+                logger.exception(
+                    "Error in %s poll loop for %s %s", type(self).__name__, self.entity_id_kwarg, self.entity_id
+                )
 
-            await asyncio.sleep(3)
+            await asyncio.sleep(self.poll_interval)
+
+    @staticmethod
+    def compute_hash(state):
+        """Compute SHA-256 hash of state dict for change detection."""
+        return hashlib.sha256(json.dumps(state, default=str, sort_keys=True).encode()).hexdigest()
+
+
+class ServiceConsumer(BasePollingConsumer):
+    """WebSocket consumer for real-time service page updates."""
+
+    entity_id_kwarg = "service_id"
+
+    @property
+    def service_id(self):
+        return self.entity_id
 
     @database_sync_to_async
-    def _service_exists(self):
+    def _entity_exists(self):
         from core.models import Service
 
-        return Service.objects.filter(id=self.service_id).exists()
+        return Service.objects.filter(id=self.entity_id).exists()
 
     def _can_edit(self, project):
         from core.permissions import get_user_project_role
@@ -150,11 +169,6 @@ class ServiceConsumer(AsyncWebsocketConsumer):
                 "avg_duration": avg_duration,
             },
         }
-
-    @staticmethod
-    def compute_hash(state):
-        """Compute SHA-256 hash of state dict for change detection."""
-        return hashlib.sha256(json.dumps(state, default=str, sort_keys=True).encode()).hexdigest()
 
     def build_template_context(self, state):
         """Build template context matching ServiceDetailView.get_context_data."""
@@ -289,66 +303,20 @@ class ServiceConsumer(AsyncWebsocketConsumer):
         return "".join(parts)
 
 
-class StepsRepoConsumer(AsyncWebsocketConsumer):
-    """
-    WebSocket consumer for real-time CI Steps Repository detail page updates.
+class StepsRepoConsumer(BasePollingConsumer):
+    """WebSocket consumer for real-time CI Steps Repository detail page updates."""
 
-    Polls the database every 3 seconds, computes a state hash,
-    and sends OOB HTML updates only when the state changes.
-    """
+    entity_id_kwarg = "repo_id"
 
-    async def connect(self):
-        user = self.scope["user"]
-        if not user.is_authenticated:
-            await self.close()
-            return
-
-        self.user = user
-        self.repo_id = self.scope["url_route"]["kwargs"]["repo_id"]
-
-        if not await self._repo_exists():
-            await self.close()
-            return
-
-        await self.accept()
-
-        self.last_state_hash = None
-        self.poll_task = asyncio.create_task(self.poll_loop())
-
-    async def disconnect(self, close_code):
-        if hasattr(self, "poll_task"):
-            self.poll_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self.poll_task
-
-    async def poll_loop(self):
-        """Poll database for state changes and send updates when detected."""
-        while True:
-            try:
-                state = await self.get_current_state()
-                if state is None:
-                    await self.close()
-                    return
-
-                state_hash = ServiceConsumer.compute_hash(state)
-
-                if state_hash != self.last_state_hash:
-                    self.last_state_hash = state_hash
-                    html = await self.render_updates(state)
-                    if html:
-                        await self.send(text_data=html)
-            except asyncio.CancelledError:
-                raise
-            except Exception:
-                logger.exception("Error in StepsRepoConsumer poll loop for repo %s", self.repo_id)
-
-            await asyncio.sleep(3)
+    @property
+    def repo_id(self):
+        return self.entity_id
 
     @database_sync_to_async
-    def _repo_exists(self):
+    def _entity_exists(self):
         from core.models import StepsRepository
 
-        return StepsRepository.objects.filter(id=self.repo_id).exists()
+        return StepsRepository.objects.filter(id=self.entity_id).exists()
 
     @database_sync_to_async
     def get_current_state(self):

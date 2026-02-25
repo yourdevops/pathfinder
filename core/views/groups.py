@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 
@@ -7,7 +8,7 @@ from ..forms import GroupAddMemberForm, GroupCreateForm, GroupEditForm
 from ..models import Group, GroupMembership, User
 
 
-class GroupListView(AdminRequiredMixin, View):
+class GroupListView(LoginRequiredMixin, AdminRequiredMixin, View):
     """Display list of all groups."""
 
     template_name = "core/groups/list.html"
@@ -17,7 +18,7 @@ class GroupListView(AdminRequiredMixin, View):
         return render(request, self.template_name, {"groups": groups})
 
 
-class GroupDetailView(AdminRequiredMixin, View):
+class GroupDetailView(LoginRequiredMixin, AdminRequiredMixin, View):
     """Display group detail with members."""
 
     template_name = "core/groups/detail.html"
@@ -38,7 +39,7 @@ class GroupDetailView(AdminRequiredMixin, View):
         )
 
 
-class GroupCreateView(AdminRequiredMixin, View):
+class GroupCreateView(LoginRequiredMixin, AdminRequiredMixin, View):
     """Create a new group."""
 
     template_name = "core/groups/create.html"
@@ -62,7 +63,7 @@ class GroupCreateView(AdminRequiredMixin, View):
         return render(request, self.template_name, {"form": form})
 
 
-class GroupEditView(AdminRequiredMixin, View):
+class GroupEditView(LoginRequiredMixin, AdminRequiredMixin, View):
     """Edit group settings."""
 
     template_name = "core/groups/edit.html"
@@ -94,7 +95,7 @@ class GroupEditView(AdminRequiredMixin, View):
         return render(request, self.template_name, {"group": group, "form": form})
 
 
-class GroupDeleteView(AdminRequiredMixin, View):
+class GroupDeleteView(LoginRequiredMixin, AdminRequiredMixin, View):
     """Delete a group."""
 
     def post(self, request, group_name):
@@ -111,7 +112,7 @@ class GroupDeleteView(AdminRequiredMixin, View):
         return redirect("groups:list")
 
 
-class GroupAddMemberView(AdminRequiredMixin, View):
+class GroupAddMemberView(LoginRequiredMixin, AdminRequiredMixin, View):
     """Add a user to a group."""
 
     def post(self, request, group_name):
@@ -128,7 +129,7 @@ class GroupAddMemberView(AdminRequiredMixin, View):
         return redirect("groups:detail", group_name=group.name)
 
 
-class GroupRemoveMemberView(AdminRequiredMixin, View):
+class GroupRemoveMemberView(LoginRequiredMixin, AdminRequiredMixin, View):
     """Remove a user from a group."""
 
     def post(self, request, group_name, user_uuid):

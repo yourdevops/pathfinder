@@ -15,6 +15,15 @@ from core.models import (
     SiteConfiguration,
     User,
 )
+from core.validators import DNS_LABEL_REGEX
+
+# Shared CSS class constants for dark-themed form widgets
+DARK_INPUT = (
+    "w-full px-3 py-2 bg-dark-bg border border-dark-border"
+    " rounded-lg text-dark-text focus:outline-none"
+    " focus:ring-2 focus:ring-dark-accent"
+)
+DARK_CHECKBOX = "rounded border-dark-border bg-dark-bg text-dark-accent focus:ring-dark-accent"
 
 
 class UnlockForm(forms.Form):
@@ -326,10 +335,8 @@ class GroupCreateForm(forms.Form):
     )
 
     def clean_name(self):
-        import re
-
         name = self.cleaned_data.get("name", "").lower()
-        if not re.match(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$", name):
+        if not re.match(DNS_LABEL_REGEX, name):
             raise forms.ValidationError(
                 "Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. "
                 "Max 63 characters, no leading/trailing hyphens."
@@ -403,11 +410,7 @@ class ProjectCreateForm(forms.ModelForm):
         widgets = {
             "name": forms.TextInput(
                 attrs={
-                    "class": (
-                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
-                        " rounded-lg text-dark-text focus:outline-none"
-                        " focus:ring-2 focus:ring-dark-accent"
-                    ),
+                    "class": DARK_INPUT,
                     "placeholder": "my-project",
                     "pattern": "[a-z0-9]([a-z0-9\\-]*[a-z0-9])?",
                     "title": "Lowercase letters, numbers, and hyphens only",
@@ -417,11 +420,7 @@ class ProjectCreateForm(forms.ModelForm):
             ),
             "description": forms.Textarea(
                 attrs={
-                    "class": (
-                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
-                        " rounded-lg text-dark-text focus:outline-none"
-                        " focus:ring-2 focus:ring-dark-accent"
-                    ),
+                    "class": DARK_INPUT,
                     "rows": 3,
                     "placeholder": "A brief description of this project",
                 }
@@ -430,8 +429,7 @@ class ProjectCreateForm(forms.ModelForm):
 
     def clean_name(self):
         name = self.cleaned_data["name"].lower()
-        # DNS-compatible validation (RFC 1123 label format)
-        if not re.match(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$", name):
+        if not re.match(DNS_LABEL_REGEX, name):
             raise forms.ValidationError(
                 "Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. "
                 "Max 63 characters, no leading/trailing hyphens."
@@ -473,21 +471,13 @@ class ProjectUpdateForm(forms.ModelForm):
         widgets = {
             "description": forms.Textarea(
                 attrs={
-                    "class": (
-                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
-                        " rounded-lg text-dark-text focus:outline-none"
-                        " focus:ring-2 focus:ring-dark-accent"
-                    ),
+                    "class": DARK_INPUT,
                     "rows": 3,
                 }
             ),
             "status": forms.Select(
                 attrs={
-                    "class": (
-                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
-                        " rounded-lg text-dark-text focus:outline-none"
-                        " focus:ring-2 focus:ring-dark-accent"
-                    ),
+                    "class": DARK_INPUT,
                 }
             ),
         }
@@ -511,11 +501,7 @@ class EnvironmentForm(forms.ModelForm):
         widgets = {
             "name": forms.TextInput(
                 attrs={
-                    "class": (
-                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
-                        " rounded-lg text-dark-text focus:outline-none"
-                        " focus:ring-2 focus:ring-dark-accent"
-                    ),
+                    "class": DARK_INPUT,
                     "placeholder": "e.g., dev, staging, production",
                     "pattern": "[a-z0-9]([a-z0-9\\-]*[a-z0-9])?",
                     "title": "Lowercase letters, numbers, and hyphens only. No leading/trailing hyphens.",
@@ -525,31 +511,23 @@ class EnvironmentForm(forms.ModelForm):
             ),
             "description": forms.Textarea(
                 attrs={
-                    "class": (
-                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
-                        " rounded-lg text-dark-text focus:outline-none"
-                        " focus:ring-2 focus:ring-dark-accent"
-                    ),
+                    "class": DARK_INPUT,
                     "rows": 2,
                 }
             ),
             "is_production": forms.CheckboxInput(
                 attrs={
-                    "class": "rounded border-dark-border bg-dark-bg text-dark-accent focus:ring-dark-accent",
+                    "class": DARK_CHECKBOX,
                 }
             ),
             "is_default": forms.CheckboxInput(
                 attrs={
-                    "class": "rounded border-dark-border bg-dark-bg text-dark-accent focus:ring-dark-accent",
+                    "class": DARK_CHECKBOX,
                 }
             ),
             "order": forms.NumberInput(
                 attrs={
-                    "class": (
-                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
-                        " rounded-lg text-dark-text focus:outline-none"
-                        " focus:ring-2 focus:ring-dark-accent"
-                    ),
+                    "class": DARK_INPUT,
                 }
             ),
         }
@@ -563,8 +541,7 @@ class EnvironmentForm(forms.ModelForm):
 
     def clean_name(self):
         name = self.cleaned_data["name"].lower()
-        # DNS-compatible validation (RFC 1123 label format)
-        if not re.match(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$", name):
+        if not re.match(DNS_LABEL_REGEX, name):
             raise forms.ValidationError(
                 "Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. "
                 "Max 63 characters, no leading/trailing hyphens."
@@ -585,28 +562,12 @@ class AddProjectMemberForm(forms.Form):
 
     group = forms.ModelChoiceField(
         queryset=Group.objects.filter(status="active"),
-        widget=forms.Select(
-            attrs={
-                "class": (
-                    "w-full px-3 py-2 bg-dark-bg border border-dark-border"
-                    " rounded-lg text-dark-text focus:outline-none"
-                    " focus:ring-2 focus:ring-dark-accent"
-                ),
-            }
-        ),
+        widget=forms.Select(attrs={"class": DARK_INPUT}),
         label="Group",
     )
     project_role = forms.ChoiceField(
         choices=PROJECT_ROLE_CHOICES,
-        widget=forms.Select(
-            attrs={
-                "class": (
-                    "w-full px-3 py-2 bg-dark-bg border border-dark-border"
-                    " rounded-lg text-dark-text focus:outline-none"
-                    " focus:ring-2 focus:ring-dark-accent"
-                ),
-            }
-        ),
+        widget=forms.Select(attrs={"class": DARK_INPUT}),
         label="Role",
     )
 
@@ -622,24 +583,12 @@ class AttachConnectionForm(forms.Form):
     connection = forms.ModelChoiceField(
         queryset=IntegrationConnection.objects.none(),
         label="Connection",
-        widget=forms.Select(
-            attrs={
-                "class": (
-                    "w-full px-3 py-2 bg-dark-bg border border-dark-border"
-                    " rounded-lg text-dark-text focus:outline-none"
-                    " focus:ring-2 focus:ring-dark-accent"
-                ),
-            }
-        ),
+        widget=forms.Select(attrs={"class": DARK_INPUT}),
     )
     is_default = forms.BooleanField(
         required=False,
         label="Set as default",
-        widget=forms.CheckboxInput(
-            attrs={
-                "class": "rounded border-dark-border bg-dark-bg text-dark-accent focus:ring-dark-accent",
-            }
-        ),
+        widget=forms.CheckboxInput(attrs={"class": DARK_CHECKBOX}),
     )
 
     def __init__(self, *args, category=None, exclude_ids=None, **kwargs):
@@ -663,11 +612,7 @@ class ConnectionConfigUpdateForm(forms.Form):
         required=False,
         widget=forms.Textarea(
             attrs={
-                "class": (
-                    "w-full px-3 py-2 bg-dark-bg border border-dark-border"
-                    " rounded-lg text-dark-text focus:outline-none"
-                    " focus:ring-2 focus:ring-dark-accent"
-                ),
+                "class": DARK_INPUT,
                 "rows": 2,
                 "placeholder": "Optional description",
             }
@@ -703,11 +648,7 @@ class ConnectionConfigUpdateForm(forms.Form):
                             required=False,
                             widget=forms.PasswordInput(
                                 attrs={
-                                    "class": (
-                                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
-                                        " rounded-lg text-dark-text focus:outline-none"
-                                        " focus:ring-2 focus:ring-dark-accent"
-                                    ),
+                                    "class": DARK_INPUT,
                                     "placeholder": "••••••••",
                                     "autocomplete": "off",
                                 }
@@ -719,15 +660,7 @@ class ConnectionConfigUpdateForm(forms.Form):
                         self.fields[field_name] = forms.CharField(
                             required=False,
                             initial=config.get(field_name, ""),
-                            widget=forms.TextInput(
-                                attrs={
-                                    "class": (
-                                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
-                                        " rounded-lg text-dark-text focus:outline-none"
-                                        " focus:ring-2 focus:ring-dark-accent"
-                                    ),
-                                }
-                            ),
+                            widget=forms.TextInput(attrs={"class": DARK_INPUT}),
                             label=field_info.get("label", field_name),
                         )
                     self.editable_fields.append(field_name)
@@ -742,11 +675,7 @@ class SiteConfigurationForm(forms.ModelForm):
         widgets = {
             "external_url": forms.URLInput(
                 attrs={
-                    "class": (
-                        "w-full px-3 py-2 bg-dark-bg border border-dark-border"
-                        " rounded-lg text-dark-text focus:outline-none"
-                        " focus:ring-2 focus:ring-dark-accent"
-                    ),
+                    "class": DARK_INPUT,
                     "placeholder": "https://pathfinder.example.com",
                 }
             ),

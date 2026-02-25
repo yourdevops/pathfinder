@@ -1,3 +1,4 @@
+import hashlib
 import secrets
 
 from django.contrib import messages
@@ -101,13 +102,15 @@ class ApiTokensView(LoginRequiredMixin, AdminRequiredMixin, View):
             if not name:
                 messages.error(request, "Token name is required.")
             else:
-                key = secrets.token_hex(32)
+                raw_key = secrets.token_hex(32)
+                key_hash = hashlib.sha256(raw_key.encode()).hexdigest()
                 ApiToken.objects.create(
-                    key=key,
+                    key=key_hash,
+                    key_prefix=raw_key[:8],
                     name=name,
                     created_by=request.user,
                 )
-                new_token_key = key
+                new_token_key = raw_key
                 messages.success(request, f"Token '{name}' created successfully.")
 
         elif action == "revoke":

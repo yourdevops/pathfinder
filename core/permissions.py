@@ -5,6 +5,8 @@ from django.shortcuts import get_object_or_404, redirect
 
 from core.models import GroupMembership, Project, ProjectMembership
 
+ROLE_HIERARCHY = ["viewer", "contributor", "owner"]
+
 
 def has_system_role(user, role):
     """Check if user has a specific SystemRole through any group.
@@ -36,7 +38,7 @@ def get_user_project_role(user, project):
     ROLE_PRIORITY = {"owner": 3, "contributor": 2, "viewer": 1}
 
     # System admins and operators get owner access
-    if has_system_role(user, "admin") or has_system_role(user, "operator"):
+    if has_system_role(user, ["admin", "operator"]):
         return "owner"
 
     # Get all memberships through user's groups
@@ -56,7 +58,6 @@ def get_user_project_role(user, project):
 
 def can_access_project(user, project, required_role="viewer"):
     """Check if user has at least the required role."""
-    ROLE_HIERARCHY = ["viewer", "contributor", "owner"]
     user_role = get_user_project_role(user, project)
 
     if not user_role:
@@ -79,7 +80,6 @@ class ProjectPermissionMixin:
             messages.error(request, "You do not have access to this project.")
             return redirect("projects:list")
 
-        ROLE_HIERARCHY = ["viewer", "contributor", "owner"]
         if ROLE_HIERARCHY.index(self.user_project_role) < ROLE_HIERARCHY.index(self.required_role):
             messages.error(request, "You do not have permission for this action.")
             # Changed: use name instead of uuid
@@ -118,7 +118,7 @@ class OperatorRequiredMixin:
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-        if not (has_system_role(request.user, "admin") or has_system_role(request.user, "operator")):
+        if not has_system_role(request.user, ["admin", "operator"]):
             messages.error(request, "You need operator permissions to access this page.")
             return redirect("projects:list")
         return super().dispatch(request, *args, **kwargs)
@@ -130,11 +130,7 @@ class IntegrationsReadMixin:
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-        if not (
-            has_system_role(request.user, "admin")
-            or has_system_role(request.user, "operator")
-            or has_system_role(request.user, "auditor")
-        ):
+        if not has_system_role(request.user, ["admin", "operator", "auditor"]):
             messages.error(
                 request,
                 "You need operator or auditor permissions to view connection details.",

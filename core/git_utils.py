@@ -237,8 +237,10 @@ def read_pathfinder_manifest(repo_path: str) -> dict:
     if not data.get("name"):
         raise ValueError("name field is required in pathfinder.yaml")
 
+    from core.validators import DNS_LABEL_REGEX
+
     name = data["name"]
-    if not re.match(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$", name):
+    if not re.match(DNS_LABEL_REGEX, name):
         raise ValueError(f"name '{name}' must be DNS-compatible (lowercase letters, numbers, hyphens)")
 
     return data
@@ -380,6 +382,34 @@ def apply_template_to_directory(src_dir: str, dest_dir: str, exclude_files: list
             shutil.copy2(src_path, dest_path)
 
 
+def _write_ci_manifest(service, repo_temp_dir: str) -> None:
+    """Write CI manifest file to repo directory if a workflow is assigned.
+
+    Resolves the CI engine plugin and generates (or uses pinned) manifest content.
+    """
+    from plugins.base import get_ci_plugin_for_engine
+
+    if not service.ci_workflow:
+        return
+
+    engine = service.ci_workflow.engine
+    ci_plugin = get_ci_plugin_for_engine(engine)
+    if not ci_plugin:
+        return
+
+    if service.ci_workflow_version and service.ci_workflow_version.manifest_content:
+        manifest_yaml = service.ci_workflow_version.manifest_content
+    else:
+        manifest_yaml = ci_plugin.generate_manifest(service.ci_workflow)
+    manifest_path = ci_plugin.manifest_id(service.ci_workflow)
+
+    manifest_full_path = os.path.join(repo_temp_dir, manifest_path)
+    os.makedirs(os.path.dirname(manifest_full_path), exist_ok=True)
+    with open(manifest_full_path, "w") as f:
+        f.write(manifest_yaml)
+    logger.info(f"Generated CI manifest at {manifest_path}")
+
+
 def scaffold_new_repository(service, connection, template_temp_dir: str) -> dict:
     """
     Scaffold a new repository from a service template.
@@ -397,8 +427,6 @@ def scaffold_new_repository(service, connection, template_temp_dir: str) -> dict
     Returns:
         Dict with repo_url and status
     """
-    from plugins.base import get_ci_plugin_for_engine
-
     plugin = connection.get_plugin()
     config = connection.get_config()
 
@@ -428,25 +456,7 @@ def scaffold_new_repository(service, connection, template_temp_dir: str) -> dict
             apply_template_to_directory(template_temp_dir, repo_temp_dir)
 
         # Generate CI manifest if workflow is assigned
-        if service.ci_workflow:
-            # Get CI plugin for the workflow's engine
-            engine = service.ci_workflow.engine
-            ci_plugin = get_ci_plugin_for_engine(engine)
-
-            if ci_plugin:
-                # Use stored manifest from pinned version, or generate fresh draft
-                if service.ci_workflow_version and service.ci_workflow_version.manifest_content:
-                    manifest_yaml = service.ci_workflow_version.manifest_content
-                else:
-                    manifest_yaml = ci_plugin.generate_manifest(service.ci_workflow)
-                manifest_path = ci_plugin.manifest_id(service.ci_workflow)
-
-                # Create directory structure and write manifest
-                manifest_full_path = os.path.join(repo_temp_dir, manifest_path)
-                os.makedirs(os.path.dirname(manifest_full_path), exist_ok=True)
-                with open(manifest_full_path, "w") as f:
-                    f.write(manifest_yaml)
-                logger.info(f"Generated CI manifest at {manifest_path}")
+        _write_ci_manifest(service, repo_temp_dir)
 
         # Create a minimal README if nothing else exists
         readme_path = os.path.join(repo_temp_dir, "README.md")
@@ -512,8 +522,6 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str) ->
     Returns:
         Dict with pr_url and status
     """
-    from plugins.base import get_ci_plugin_for_engine
-
     plugin = connection.get_plugin()
     config = connection.get_config()
 
@@ -540,22 +548,7 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str) ->
             apply_template_to_directory(template_temp_dir, repo_temp_dir)
 
         # Generate CI manifest if workflow is assigned
-        if service.ci_workflow:
-            engine = service.ci_workflow.engine
-            ci_plugin = get_ci_plugin_for_engine(engine)
-
-            if ci_plugin:
-                if service.ci_workflow_version and service.ci_workflow_version.manifest_content:
-                    manifest_yaml = service.ci_workflow_version.manifest_content
-                else:
-                    manifest_yaml = ci_plugin.generate_manifest(service.ci_workflow)
-                manifest_path = ci_plugin.manifest_id(service.ci_workflow)
-
-                manifest_full_path = os.path.join(repo_temp_dir, manifest_path)
-                os.makedirs(os.path.dirname(manifest_full_path), exist_ok=True)
-                with open(manifest_full_path, "w") as f:
-                    f.write(manifest_yaml)
-                logger.info(f"Generated CI manifest at {manifest_path}")
+        _write_ci_manifest(service, repo_temp_dir)
 
         # Check if there are changes
         if not repo.is_dirty() and not repo.untracked_files:

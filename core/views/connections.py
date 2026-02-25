@@ -44,9 +44,7 @@ class ConnectionListView(LoginRequiredMixin, ListView):
             connection.category = category
 
         # Add permission context
-        context["can_manage"] = has_system_role(self.request.user, "admin") or has_system_role(
-            self.request.user, "operator"
-        )
+        context["can_manage"] = has_system_role(self.request.user, ["admin", "operator"])
         context["can_view_details"] = context["can_manage"] or has_system_role(self.request.user, "auditor")
 
         # Lazy health check scheduling: enqueue checks for stale connections
@@ -134,9 +132,7 @@ class ConnectionDetailView(LoginRequiredMixin, IntegrationsReadMixin, DetailView
         context["config_form"] = ConnectionConfigUpdateForm(connection=connection)
 
         # Check if user can manage (for edit/delete buttons)
-        context["can_manage"] = has_system_role(self.request.user, "admin") or has_system_role(
-            self.request.user, "operator"
-        )
+        context["can_manage"] = has_system_role(self.request.user, ["admin", "operator"])
 
         return context
 
@@ -286,7 +282,5 @@ class PluginListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["categories"] = ["scm", "deploy", "ci"]  # For filter dropdown
-        context["can_manage"] = has_system_role(self.request.user, "admin") or has_system_role(
-            self.request.user, "operator"
-        )
+        context["can_manage"] = has_system_role(self.request.user, ["admin", "operator"])
         return context

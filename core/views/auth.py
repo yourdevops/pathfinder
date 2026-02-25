@@ -11,9 +11,9 @@ from ..forms import LoginForm
 def get_default_redirect_url():
     """Get default redirect URL after login, with fallback."""
     try:
-        return reverse("users:list")
+        return reverse("dashboard:home")
     except NoReverseMatch:
-        return "/users/"
+        return "/dashboard/"
 
 
 class LoginView(View):
@@ -50,13 +50,10 @@ class LoginView(View):
 
 
 class LogoutView(LoginRequiredMixin, View):
-    """Handle user logout."""
+    """Handle user logout (POST only to prevent CSRF logout via GET)."""
 
-    http_method_names = ["get", "post"]
+    http_method_names = ["post"]
 
-    def _do_logout(self, request):
+    def post(self, request):
         logout(request)
         return redirect("auth:login")
-
-    get = _do_logout
-    post = _do_logout

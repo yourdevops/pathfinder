@@ -1,5 +1,6 @@
 """API views for external integrations."""
 
+import hashlib
 import json
 import logging
 
@@ -47,7 +48,8 @@ def step_validate_api(request):
 
     token_key = auth_header[6:].strip()
     try:
-        token = ApiToken.objects.get(key=token_key, is_active=True)
+        key_hash = hashlib.sha256(token_key.encode()).hexdigest()
+        token = ApiToken.objects.get(key=key_hash, is_active=True)
         token.last_used_at = timezone.now()
         token.save(update_fields=["last_used_at"])
     except ApiToken.DoesNotExist:

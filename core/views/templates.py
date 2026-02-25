@@ -31,9 +31,7 @@ class TemplateListView(LoginRequiredMixin, View):
 
     def get(self, request):
         templates = Template.objects.annotate(version_count=Count("versions")).order_by("name")
-        is_operator = request.user.is_authenticated and (
-            has_system_role(request.user, "admin") or has_system_role(request.user, "operator")
-        )
+        is_operator = request.user.is_authenticated and (has_system_role(request.user, ["admin", "operator"]))
         return render(
             request,
             "core/templates/list.html",
@@ -50,9 +48,7 @@ class TemplateDetailView(LoginRequiredMixin, View):
     def get(self, request, template_name):
         template = get_object_or_404(Template, name=template_name)
         versions = template.versions.order_by("-sort_key")
-        is_operator = request.user.is_authenticated and (
-            has_system_role(request.user, "admin") or has_system_role(request.user, "operator")
-        )
+        is_operator = request.user.is_authenticated and (has_system_role(request.user, ["admin", "operator"]))
         can_delete = is_operator and not template.services.exists()
         return render(
             request,

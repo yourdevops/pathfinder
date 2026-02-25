@@ -14,6 +14,7 @@ from core.models import (
     TemplateVersion,
     get_available_workflows_for_project,
 )
+from core.validators import DNS_LABEL_REGEX
 
 
 class ProjectStepForm(forms.Form):
@@ -62,8 +63,7 @@ class ProjectStepForm(forms.Form):
 
     def clean_name(self):
         name = self.cleaned_data["name"].lower()
-        # DNS-compatible validation (RFC 1123 label format)
-        if not re.match(r"^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$", name):
+        if not re.match(DNS_LABEL_REGEX, name):
             raise forms.ValidationError(
                 "Name must be DNS-compatible: lowercase letters, numbers, and hyphens only. "
                 "No leading/trailing hyphens."

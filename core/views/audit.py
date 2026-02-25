@@ -17,7 +17,7 @@ class AuditLogView(AdminRequiredMixin, View):
 
         # Basic filtering
         action_filter = request.GET.get("action")
-        if action_filter:
+        if action_filter and action_filter.isdigit():
             entries = entries.filter(action=int(action_filter))
 
         model_filter = request.GET.get("model")

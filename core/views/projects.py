@@ -1,3 +1,5 @@
+import json
+
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
@@ -155,12 +157,10 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
             context["approve_workflow_form"] = ApproveWorkflowForm(project=self.project)
 
             # Env vars resolved cascade for unified component
-            import json as _json
-
             resolved_vars = resolve_env_vars(self.project)
             context["resolved_vars"] = resolved_vars
             context["is_editable_env_vars"] = self.user_project_role == "owner"
-            context["current_level_vars_json"] = _json.dumps(self.project.env_vars or [])
+            context["current_level_vars_json"] = json.dumps(self.project.env_vars or [])
             context["env_var_bulk_save_url"] = reverse(
                 "projects:project_env_var_bulk_save", kwargs={"project_name": self.project.name}
             )
@@ -255,12 +255,10 @@ class EnvironmentDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView
         context["environment"] = env
         context["form"] = EnvironmentForm(instance=env)
         # Resolved cascade via unified resolve_env_vars
-        import json as _json
-
         resolved_vars = resolve_env_vars(self.project, environment=env)
         context["resolved_vars"] = resolved_vars
         context["is_editable_env_vars"] = self.user_project_role in ("contributor", "owner")
-        context["current_level_vars_json"] = _json.dumps(env.env_vars or [])
+        context["current_level_vars_json"] = json.dumps(env.env_vars or [])
         context["env_var_bulk_save_url"] = reverse(
             "projects:env_env_var_bulk_save",
             kwargs={"project_name": self.project.name, "env_name": env.name},
@@ -587,12 +585,11 @@ class ProjectApproveWorkflowView(LoginRequiredMixin, ProjectOwnerMixin, View):
         return _render_approved_workflows_section(request, self.project, self.user_project_role)
 
 
-class ProjectUpdateCIConfigView(LoginRequiredMixin, View):
+class ProjectUpdateCIConfigView(LoginRequiredMixin, ProjectOwnerMixin, View):
     """Update project CI configuration settings (e.g., Allow Drafts toggle)."""
 
-    def post(self, request, project_name):
-        project = get_object_or_404(Project, name=project_name)
-        ci_config, _ = ProjectCIConfig.objects.get_or_create(project=project)
+    def post(self, request, *args, **kwargs):
+        ci_config, _ = ProjectCIConfig.objects.get_or_create(project=self.project)
 
         setting = request.POST.get("setting", "")
         if setting == "allow_draft_workflows":
@@ -600,7 +597,7 @@ class ProjectUpdateCIConfigView(LoginRequiredMixin, View):
             ci_config.save(update_fields=["allow_draft_workflows"])
             messages.success(request, "Draft workflows setting updated.")
 
-        return redirect("projects:detail", project_name=project_name)
+        return redirect("projects:detail", project_name=self.project.name)
 
 
 class ProjectRemoveApprovedWorkflowView(LoginRequiredMixin, ProjectOwnerMixin, View):
