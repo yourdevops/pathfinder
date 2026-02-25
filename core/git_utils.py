@@ -10,7 +10,6 @@ import re
 import shutil
 import tempfile
 import time
-from collections.abc import Callable
 from urllib.parse import urlparse
 
 import git
@@ -411,7 +410,7 @@ def _write_ci_manifest(service, repo_temp_dir: str) -> None:
     logger.info(f"Generated CI manifest at {manifest_path}")
 
 
-def scaffold_new_repository(service, connection, template_temp_dir: str, pre_push_hook: Callable | None = None) -> dict:
+def scaffold_new_repository(service, connection, template_temp_dir: str) -> dict:
     """
     Scaffold a new repository from a service template.
 
@@ -482,8 +481,10 @@ def scaffold_new_repository(service, connection, template_temp_dir: str, pre_pus
         if repo.active_branch.name != service.repo_branch:
             repo.active_branch.rename(service.repo_branch)
 
-        if pre_push_hook:
-            pre_push_hook(repo_url)
+        # Register webhook before push so the first build is caught
+        from core.tasks import _register_webhook
+
+        webhook_registered = _register_webhook(service, connection, repo_url) if service.ci_workflow else False
 
         origin.push(service.repo_branch)
 
@@ -492,6 +493,7 @@ def scaffold_new_repository(service, connection, template_temp_dir: str, pre_pus
         return {
             "status": "success",
             "repo_url": repo_url,
+            "webhook_registered": webhook_registered,
         }
 
     except git.GitCommandError as e:

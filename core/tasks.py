@@ -253,6 +253,34 @@ def sync_template(template_id: int) -> dict:
             cleanup_repo(repo_obj, temp_dir)
 
 
+def _register_webhook(service, connection, repo_url: str) -> bool:
+    """Register SCM webhook for build notifications. Returns True on success."""
+    from core.git_utils import parse_git_url
+    from core.models import SiteConfiguration
+
+    site_config = SiteConfiguration.get_instance()
+    if not (site_config and site_config.external_url and repo_url):
+        return False
+
+    plugin = connection.get_plugin()
+    config = connection.get_config()
+    webhook_url = plugin.get_webhook_url(site_config.external_url)
+    if not webhook_url:
+        return False
+
+    try:
+        parsed = parse_git_url(repo_url)
+        if not parsed:
+            return False
+        repo_name = f"{parsed['owner']}/{parsed['repo']}"
+        plugin.configure_webhook(config, repo_name, webhook_url, events=["workflow_run"])
+        logger.info(f"Registered webhook for {service.name}")
+        return True
+    except Exception as e:
+        logger.warning(f"Failed to register webhook for {service.name}: {e}")
+        return False
+
+
 @task(queue_name="repository_scaffolding")
 def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
     """
@@ -336,41 +364,10 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
                         f"{service.template_version} ({version.commit_sha[:8]})"
                     )
 
-            # Build webhook registration hook to run before initial push
-            webhook_registered = False
-
-            def register_webhook(repo_url):
-                nonlocal webhook_registered
-                from core.models import SiteConfiguration
-
-                site_config = SiteConfiguration.get_instance()
-                if not (site_config and site_config.external_url and repo_url):
-                    return
-                plugin = connection.get_plugin()
-                config = connection.get_config()
-                webhook_url = plugin.get_webhook_url(site_config.external_url)
-                if not webhook_url:
-                    return
-                try:
-                    parsed = parse_git_url(repo_url)
-                    if parsed:
-                        repo_name = f"{parsed['owner']}/{parsed['repo']}"
-                        plugin.configure_webhook(
-                            config,
-                            repo_name,
-                            webhook_url,
-                            events=["workflow_run"],
-                        )
-                        webhook_registered = True
-                        logger.info(f"Registered webhook for new repo {service.name}")
-                except Exception as e:
-                    logger.warning(f"Failed to register webhook for new repo {service.name}: {e}")
-
             result = scaffold_new_repository(
                 service=service,
                 connection=connection,
                 template_temp_dir=template_temp_dir,
-                pre_push_hook=register_webhook if service.ci_workflow else None,
             )
             # Update service with repo URL
             service.repo_url = result.get("repo_url", "")
@@ -386,7 +383,7 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
                 service.ci_manifest_status = "synced"
                 update_fields.extend(["ci_manifest_pushed_at", "ci_manifest_status"])
 
-            if webhook_registered:
+            if result.get("webhook_registered"):
                 service.webhook_registered = True
                 update_fields.append("webhook_registered")
 
@@ -1230,25 +1227,8 @@ def push_ci_manifest(service_id: int) -> dict:
             pr_url = pr_result.get("html_url", "")
 
         # Register webhook for build notifications
-        from core.models import SiteConfiguration
-
-        site_config = SiteConfiguration.get_instance()
-        if site_config and site_config.external_url:
-            webhook_url = plugin.get_webhook_url(site_config.external_url)
-            try:
-                plugin.configure_webhook(
-                    config,
-                    repo_name,
-                    webhook_url,
-                    events=["workflow_run"],
-                )
-                service.webhook_registered = True
-                logger.info(f"Registered webhook for service {service.name}")
-            except Exception as e:
-                # Log but don't fail the manifest push
-                logger.warning(f"Failed to register webhook for service {service.name}: {e}")
-        else:
-            logger.warning(f"External URL not configured, skipping webhook registration for {service.name}")
+        if _register_webhook(service, connection, service.repo_url):
+            service.webhook_registered = True
 
         # Update service status — PR created/updated but not yet merged
         service.ci_manifest_status = "pending_pr"
