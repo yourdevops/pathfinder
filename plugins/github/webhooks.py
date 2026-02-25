@@ -65,7 +65,8 @@ def identify_service_from_webhook(payload: dict):
 
     repo_url = payload.get("repository", {}).get("html_url", "")
     if repo_url:
-        service = Service.objects.filter(repo_url=repo_url).first()
+        # Service may store clone_url (.git suffix) or html_url — try both
+        service = Service.objects.filter(repo_url__in=[repo_url, f"{repo_url}.git"]).first()
         if service:
             return service
 
