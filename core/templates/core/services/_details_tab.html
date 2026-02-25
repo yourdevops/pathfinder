@@ -25,27 +25,6 @@
             </span>
             {% endif %}
         </div>
-        <div class="flex items-center gap-2">
-            {% if service.repo_url %}
-            <a href="{{ service.repo_url|strip_git_suffix }}" target="_blank" rel="noopener noreferrer"
-               class="flex items-center gap-1.5 px-3 py-1.5 bg-dark-surface border border-dark-border rounded-lg text-sm text-dark-text hover:bg-gray-800 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                </svg>
-                View Repo
-            </a>
-            {% endif %}
-            <a href="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}?tab=ci"
-               hx-get="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}?tab=ci"
-               hx-target="#tab-content"
-               hx-push-url="true"
-               class="flex items-center gap-1.5 px-3 py-1.5 bg-dark-surface border border-dark-border rounded-lg text-sm text-dark-text hover:bg-gray-800 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                CI Workflow
-            </a>
-        </div>
     </div>
 
     {% if service.description %}

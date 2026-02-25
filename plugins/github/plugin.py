@@ -759,6 +759,21 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
         if webhook_secret:
             hook_config["secret"] = webhook_secret
 
+        # Check for existing webhook with the same URL (e.g. re-onboarded repo)
+        for existing_hook in repo.get_hooks():
+            if existing_hook.config.get("url") == webhook_url:
+                existing_hook.edit(
+                    name="web",
+                    config=hook_config,
+                    events=events,
+                    active=True,
+                )
+                return {
+                    "id": existing_hook.id,
+                    "url": existing_hook.url,
+                    "events": existing_hook.events,
+                }
+
         hook = repo.create_hook("web", hook_config, events=events, active=True)
 
         return {

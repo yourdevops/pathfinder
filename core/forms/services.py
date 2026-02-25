@@ -205,6 +205,22 @@ class RepositoryStepForm(forms.Form):
                 "existing_repo_url",
                 "Repository URL is required for existing repository mode.",
             )
+        elif repo_mode == "existing" and existing_repo_url:
+            # Check if this repo URL is already used by another service.
+            # Normalize via parse_git_url to match regardless of .git suffix.
+            from core.git_utils import parse_git_url
+
+            parsed = parse_git_url(existing_repo_url)
+            if parsed:
+                needle = f"{parsed['owner']}/{parsed['repo']}".lower()
+                for svc in Service.objects.exclude(repo_url="").select_related("project"):
+                    svc_parsed = parse_git_url(svc.repo_url)
+                    if svc_parsed and f"{svc_parsed['owner']}/{svc_parsed['repo']}".lower() == needle:
+                        self.add_error(
+                            "existing_repo_url",
+                            f'This repository is already onboarded as "{svc.project.name}/{svc.name}".',
+                        )
+                        break
 
         return cleaned_data
 
