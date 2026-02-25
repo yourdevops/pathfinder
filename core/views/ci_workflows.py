@@ -918,8 +918,15 @@ class WorkflowDetailView(LoginRequiredMixin, View):
         )
         can_delete = is_operator and not services_using.exists()
 
+        # Can discard draft only if other versions exist (don't leave workflow empty)
+        can_discard_draft = (
+            draft_version is not None and versions.exclude(status=CIWorkflowVersion.Status.DRAFT).exists()
+        )
+
         # Active tab from query param
         active_tab = request.GET.get("tab", "steps")
+        if active_tab not in ("steps", "versions", "services"):
+            active_tab = "steps"
 
         return render(
             request,
@@ -934,6 +941,7 @@ class WorkflowDetailView(LoginRequiredMixin, View):
                 "suggested_version": suggested_version,
                 "can_delete": can_delete,
                 "is_operator": is_operator,
+                "can_discard_draft": can_discard_draft,
                 "services_using": services_using,
                 "has_step_warnings": has_step_warnings,
                 "active_tab": active_tab,
@@ -1095,7 +1103,13 @@ class PublishVersionView(LoginRequiredMixin, View):
         else:
             messages.success(request, f"Version {version_number} published.")
 
-        return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+        return _redirect_versions_tab(workflow.name)
+
+
+def _redirect_versions_tab(workflow_name):
+    """Redirect to the workflow detail page with the versions tab active."""
+    url = reverse("ci_workflows:workflow_detail", kwargs={"workflow_name": workflow_name})
+    return redirect(f"{url}?tab=versions")
 
 
 class RevokeVersionView(OperatorRequiredMixin, View):
@@ -1119,7 +1133,7 @@ class RevokeVersionView(OperatorRequiredMixin, View):
         version.save(update_fields=["status", "revoked_at", "revoked_by", "manifest_content"])
 
         messages.success(request, f"Version {version.version} has been revoked.")
-        return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+        return _redirect_versions_tab(workflow.name)
 
 
 class DiscardDraftView(LoginRequiredMixin, View):
@@ -1131,7 +1145,7 @@ class DiscardDraftView(LoginRequiredMixin, View):
         if draft:
             draft.delete()
             messages.success(request, "Draft discarded.")
-        return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+        return _redirect_versions_tab(workflow_name)
 
 
 class DeleteVersionView(OperatorRequiredMixin, View):
@@ -1144,15 +1158,92 @@ class DeleteVersionView(OperatorRequiredMixin, View):
         # Block deletion if any services or builds still reference this version
         if version.pinned_services.exists():
             messages.error(request, f"Cannot delete version {version.version}: still pinned by services.")
-            return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+            return _redirect_versions_tab(workflow_name)
         if version.builds.exists():
             messages.error(request, f"Cannot delete version {version.version}: still referenced by builds.")
-            return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+            return _redirect_versions_tab(workflow_name)
 
         label = version.version or "draft"
         version.delete()
         messages.success(request, f"Version {label} deleted.")
-        return redirect("ci_workflows:workflow_detail", workflow_name=workflow.name)
+        return _redirect_versions_tab(workflow_name)
+
+
+class VersionManifestView(LoginRequiredMixin, View):
+    """HTMX endpoint: return manifest or diff for a specific version."""
+
+    def get(self, request, workflow_name, version_id):
+        workflow = get_object_or_404(CIWorkflow, name=workflow_name)
+        version = get_object_or_404(CIWorkflowVersion, id=version_id, workflow=workflow)
+
+        # Versions available for comparison (exclude self, only those with manifest)
+        compare_candidates = (
+            workflow.versions.exclude(id=version_id).exclude(manifest_content="").order_by("-created_at")
+        )
+
+        # Two modes: "manifest" (default) and "diff" (when compare param is set)
+        compare_param = request.GET.get("compare")
+        compare_version = None
+        mode = "manifest"
+
+        if compare_param:
+            mode = "diff"
+            try:
+                compare_version = compare_candidates.get(id=int(compare_param))
+            except (CIWorkflowVersion.DoesNotExist, ValueError):
+                mode = "manifest"  # Fallback if invalid compare target
+
+        # Compute diff only in diff mode
+        diff_lines = []
+        no_changes = False
+
+        if mode == "diff" and compare_version and version.manifest_content and compare_version.manifest_content:
+            import difflib
+
+            old_lines = compare_version.manifest_content.splitlines(keepends=False)
+            new_lines = version.manifest_content.splitlines(keepends=False)
+
+            old_label = f"v{compare_version.version}" if compare_version.version else "Previous"
+            new_label = f"v{version.version}" if version.version else "Draft"
+
+            raw_diff = list(
+                difflib.unified_diff(
+                    old_lines,
+                    new_lines,
+                    fromfile=old_label,
+                    tofile=new_label,
+                    lineterm="",
+                )
+            )
+
+            if not raw_diff:
+                no_changes = True
+            else:
+                for line in raw_diff:
+                    if line.startswith("+++") or line.startswith("---"):
+                        diff_lines.append(("header", line))
+                    elif line.startswith("@@"):
+                        diff_lines.append(("hunk", line))
+                    elif line.startswith("+"):
+                        diff_lines.append(("add", line))
+                    elif line.startswith("-"):
+                        diff_lines.append(("remove", line))
+                    else:
+                        diff_lines.append(("context", line))
+
+        return render(
+            request,
+            "core/ci_workflows/_version_manifest_panel.html",
+            {
+                "workflow": workflow,
+                "version": version,
+                "mode": mode,
+                "compare_version": compare_version,
+                "compare_candidates": compare_candidates,
+                "diff_lines": diff_lines,
+                "no_changes": no_changes,
+            },
+        )
 
 
 class ForkWorkflowView(LoginRequiredMixin, View):

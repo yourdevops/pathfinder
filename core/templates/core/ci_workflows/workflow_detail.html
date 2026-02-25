@@ -140,10 +140,6 @@
                 <span class="ml-1.5 px-1.5 py-0.5 text-xs rounded-full bg-dark-border text-dark-muted">{{ versions.count }}</span>
                 {% endif %}
             </a>
-            <a href="?tab=manifest"
-               class="px-4 py-2.5 text-sm font-medium transition-colors border-b-2 {% if active_tab == 'manifest' %}border-dark-accent text-dark-accent{% else %}border-transparent text-dark-muted hover:text-dark-text hover:border-dark-border{% endif %}">
-                Manifest
-            </a>
             <a href="?tab=services"
                class="px-4 py-2.5 text-sm font-medium transition-colors border-b-2 {% if active_tab == 'services' %}border-dark-accent text-dark-accent{% else %}border-transparent text-dark-muted hover:text-dark-text hover:border-dark-border{% endif %}">
                 Services
@@ -228,22 +224,6 @@
         <!-- Versions Tab -->
         {% include "core/ci_workflows/_version_history_tab.html" %}
 
-        {% elif active_tab == 'manifest' %}
-        <!-- Manifest Tab -->
-        <div>
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-lg font-semibold text-dark-text">Manifest</h2>
-                <button id="copy-btn"
-                        class="px-3 py-1.5 text-xs bg-dark-border hover:bg-dark-border/80 text-dark-text rounded-lg transition-colors flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                    <span id="copy-text">Copy to Clipboard</span>
-                </button>
-            </div>
-            {% include "core/ci_workflows/_manifest_preview.html" %}
-        </div>
-
         {% elif active_tab == 'services' %}
         <!-- Services Tab -->
         <div>
@@ -292,17 +272,59 @@
     {% endif %}
 </div>
 
-{% if active_tab == 'manifest' %}
+{% if active_tab == 'versions' %}
 <script nonce="{{ csp_nonce }}">
-function copyManifest() {
-    var yamlContent = document.getElementById('manifest-yaml').textContent;
-    navigator.clipboard.writeText(yamlContent).then(function() {
-        var btn = document.getElementById('copy-text');
-        btn.textContent = 'Copied!';
-        setTimeout(function() { btn.textContent = 'Copy to Clipboard'; }, 2000);
+// Accordion: click version row to expand/collapse inline manifest
+document.addEventListener("click", function(e) {
+    var row = e.target.closest("tr[data-version-manifest]");
+    if (!row) return;
+    if (e.target.closest("[data-no-version-click], button, a, form")) return;
+
+    var versionId = row.getAttribute("data-version-id");
+    var expandRow = document.getElementById("version-expand-" + versionId);
+    var content = document.getElementById("version-content-" + versionId);
+    if (!expandRow) return;
+
+    var isOpen = !expandRow.classList.contains("hidden");
+
+    // Collapse all expanded rows first
+    document.querySelectorAll("tr[id^='version-expand-']").forEach(function(r) {
+        r.classList.add("hidden");
     });
-}
-document.getElementById('copy-btn').addEventListener('click', copyManifest);
+    document.querySelectorAll("tr[data-version-manifest]").forEach(function(r) {
+        r.classList.remove("bg-dark-accent/5");
+        var chev = r.querySelector(".version-chevron");
+        if (chev) chev.style.transform = "";
+    });
+
+    // If it was closed, open it
+    if (!isOpen) {
+        expandRow.classList.remove("hidden");
+        row.classList.add("bg-dark-accent/5");
+        var chevron = row.querySelector(".version-chevron");
+        if (chevron) chevron.style.transform = "rotate(90deg)";
+        // Load content if not yet loaded
+        if (!content.hasAttribute("data-loaded")) {
+            var url = row.getAttribute("data-version-manifest");
+            htmx.ajax("GET", url, {target: content, swap: "innerHTML"});
+            content.setAttribute("data-loaded", "1");
+        }
+    }
+});
+// Copy manifest button (event delegation for HTMX-loaded content)
+document.addEventListener("click", function(e) {
+    var btn = e.target.closest("[data-copy-manifest]");
+    if (!btn) return;
+    var yamlEl = document.getElementById("version-manifest-yaml");
+    if (!yamlEl) return;
+    navigator.clipboard.writeText(yamlEl.textContent).then(function() {
+        var textEl = btn.querySelector(".copy-text");
+        if (textEl) {
+            textEl.textContent = "Copied!";
+            setTimeout(function() { textEl.textContent = "Copy"; }, 2000);
+        }
+    });
+});
 </script>
 {% endif %}
 {% endblock %}

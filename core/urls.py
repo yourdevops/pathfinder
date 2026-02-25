@@ -69,6 +69,7 @@ from .views.ci_workflows import (
     StepsTableView,
     SuggestVersionView,
     SyncDetailView,
+    VersionManifestView,
     WorkflowArchiveView,
     WorkflowComposerView,
     WorkflowCreateView,
@@ -215,6 +216,11 @@ ci_workflows_patterns = [
         "<dns:workflow_name>/version/<int:version_id>/delete/",
         DeleteVersionView.as_view(),
         name="workflow_delete_version",
+    ),
+    path(
+        "<dns:workflow_name>/version/<int:version_id>/manifest/",
+        VersionManifestView.as_view(),
+        name="version_manifest",
     ),
     path(
         "<dns:workflow_name>/suggest-version/",
