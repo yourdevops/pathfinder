@@ -13,6 +13,14 @@
             <p class="text-dark-text font-medium mt-1">{{ review_data.service_name }}</p>
         </div>
 
+        <!-- Description -->
+        {% if review_data.description %}
+        <div class="p-4 bg-dark-bg border border-dark-border rounded-lg col-span-2">
+            <p class="text-sm text-dark-muted">Description</p>
+            <p class="text-dark-text mt-1">{{ review_data.description }}</p>
+        </div>
+        {% endif %}
+
         <!-- Handler -->
         <div class="p-4 bg-dark-bg border border-dark-border rounded-lg col-span-2">
             <p class="text-sm text-dark-muted">Service Handler</p>

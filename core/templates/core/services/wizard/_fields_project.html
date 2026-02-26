@@ -18,6 +18,15 @@
            data-validation-for="{{ wizard.form.name.html_name }}">{{ wizard.form.name.errors.0 }}</p>
         <p class="mt-1 text-sm text-dark-muted">{{ wizard.form.name.help_text }}</p>
     </div>
+
+    <!-- Description -->
+    <div>
+        <label class="block text-sm font-medium text-dark-text mb-2">Description</label>
+        {{ wizard.form.description }}
+        {% if wizard.form.description.errors %}
+        <p class="mt-1 text-sm text-red-400">{{ wizard.form.description.errors.0 }}</p>
+        {% endif %}
+    </div>
 </div>
 
 {% if wizard.form.non_field_errors %}

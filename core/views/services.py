@@ -415,6 +415,7 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         return {
             "project": project,
             "service_name": service_name,
+            "description": project_data.get("description", ""),
             "handler": f"{project.name}-{service_name}" if project and service_name else "",
             "scm_connection": repository_data.get("scm_connection"),
             "repo_mode": repository_data.get("repo_mode"),
@@ -441,6 +442,7 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
 
         project = project_data.get("project") or self.project
         service_name = project_data["name"]
+        description = project_data.get("description", "")
 
         scm_connection = repository_data["scm_connection"]
         repo_mode = repository_data["repo_mode"]
@@ -492,6 +494,7 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         service = Service.objects.create(
             project=project,
             name=service_name,
+            description=description,
             repo_url=repo_url,
             repo_branch=branch,
             repo_is_new=repo_is_new,

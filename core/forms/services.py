@@ -48,6 +48,19 @@ class ProjectStepForm(forms.Form):
         help_text="DNS-compatible name (lowercase, numbers, hyphens)",
     )
 
+    description = forms.CharField(
+        required=False,
+        max_length=500,
+        widget=forms.Textarea(
+            attrs={
+                "class": "w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-text focus:outline-none focus:ring-2 focus:ring-dark-accent",
+                "placeholder": "Brief description of this service",
+                "rows": "2",
+            }
+        ),
+        label="Description",
+    )
+
     def __init__(self, *args, project=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.initial_project = project

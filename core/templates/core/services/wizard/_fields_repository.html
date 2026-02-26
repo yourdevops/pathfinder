@@ -10,45 +10,53 @@
 
     <!-- Repository Mode -->
     <div>
-        <label class="block text-sm font-medium text-dark-text mb-2">Repository</label>
-        <div class="space-y-3">
-            {% for choice in wizard.form.repo_mode %}
-            <label class="flex items-center p-3 border border-dark-border rounded-lg cursor-pointer hover:bg-dark-border/30 transition-colors"
-                   @change="setMode($event.target.value)">
-                {{ choice.tag }}
-                <span class="ml-3 text-dark-text">{{ choice.choice_label }}</span>
+        <label class="block text-sm font-medium text-dark-text mb-3">Repository</label>
+        <div class="grid grid-cols-2 gap-4">
+            <!-- Create New Option -->
+            <label class="relative flex cursor-pointer rounded-lg border p-4 focus:outline-none transition-all"
+                   :class="isNew ? 'border-dark-accent bg-dark-accent/10' : 'border-dark-border bg-dark-surface hover:border-dark-border-hover'"
+                   @change="setMode('new')">
+                <input type="radio" name="repository-repo_mode" value="new" class="sr-only"
+                       {% if wizard.form.repo_mode.value == 'new' or not wizard.form.repo_mode.value %}checked{% endif %}>
+                <span class="flex flex-1">
+                    <span class="flex flex-col">
+                        <span class="block text-sm font-medium text-dark-text">Create new repository</span>
+                        <span class="mt-1 text-xs text-dark-muted">Scaffold a fresh repo with template</span>
+                    </span>
+                </span>
+                <svg x-show="isNew" class="h-5 w-5 text-dark-accent flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                </svg>
             </label>
-            {% endfor %}
+
+            <!-- Use Existing Option -->
+            <label class="relative flex cursor-pointer rounded-lg border p-4 focus:outline-none transition-all"
+                   :class="!isNew ? 'border-dark-accent bg-dark-accent/10' : 'border-dark-border bg-dark-surface hover:border-dark-border-hover'"
+                   @change="setMode('existing')">
+                <input type="radio" name="repository-repo_mode" value="existing" class="sr-only"
+                       {% if wizard.form.repo_mode.value == 'existing' %}checked{% endif %}>
+                <span class="flex flex-1">
+                    <span class="flex flex-col">
+                        <span class="block text-sm font-medium text-dark-text">Use existing repository</span>
+                        <span class="mt-1 text-xs text-dark-muted">Connect to a repo you already have</span>
+                    </span>
+                </span>
+                <svg x-show="!isNew" class="h-5 w-5 text-dark-accent flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
+                </svg>
+            </label>
         </div>
         {% if wizard.form.repo_mode.errors %}
         <p class="mt-1 text-sm text-red-400">{{ wizard.form.repo_mode.errors.0 }}</p>
         {% endif %}
     </div>
 
-    <!-- New Repo Preview -->
-    <div x-show="isNew" class="p-4 bg-dark-bg border border-dark-border rounded-lg">
-        <p class="text-sm text-dark-muted">New repository will be created:</p>
-        <p class="text-dark-text font-mono mt-1">{{ preview_repo_name }}</p>
-    </div>
-
-    <!-- Existing Repo URL (shown conditionally) -->
+    <!-- Existing Repo URL (shown when "Use existing" selected) -->
     <div x-show="!isNew" x-cloak>
         <label class="block text-sm font-medium text-dark-text mb-2">Repository URL</label>
         {{ wizard.form.existing_repo_url }}
         {% if wizard.form.existing_repo_url.errors %}
         <p class="mt-1 text-sm text-red-400">{{ wizard.form.existing_repo_url.errors.0 }}</p>
-        {% endif %}
-    </div>
-
-    <!-- Branch -->
-    <div>
-        <label class="block text-sm font-medium text-dark-text mb-2"
-               x-text="isNew ? 'Main Branch' : 'Base Branch'">Main Branch</label>
-        {{ wizard.form.branch }}
-        <p class="mt-1 text-sm text-dark-muted"
-           x-text="isNew ? 'Main branch for the new repository' : 'Base branch for the feature branch (PR will target this)'">Target branch for the new repository</p>
-        {% if wizard.form.branch.errors %}
-        <p class="mt-1 text-sm text-red-400">{{ wizard.form.branch.errors.0 }}</p>
         {% endif %}
     </div>
 
@@ -133,6 +141,25 @@
         </div>
     </div>
     {% endif %}
+
+    <!-- Branch -->
+    <div>
+        <label class="block text-sm font-medium text-dark-text mb-2"
+               x-text="isNew ? 'Main Branch' : 'Base Branch'">Main Branch</label>
+        {{ wizard.form.branch }}
+        <p class="mt-1 text-sm text-dark-muted"
+           x-text="isNew ? 'Main branch for the new repository' : 'Base branch for the feature branch (PR will target this)'">Target branch for the new repository</p>
+        {% if wizard.form.branch.errors %}
+        <p class="mt-1 text-sm text-red-400">{{ wizard.form.branch.errors.0 }}</p>
+        {% endif %}
+    </div>
+
+    <!-- New Repo Name (read-only) -->
+    <div x-show="isNew">
+        <label class="block text-sm font-medium text-dark-text mb-2">Repository Name (autogenerated)</label>
+        <input type="text" value="{{ preview_repo_name }}" disabled
+               class="w-full px-3 py-2 bg-dark-bg border border-dark-border rounded-lg text-dark-muted cursor-not-allowed">
+    </div>
 </div>
 
 {% if wizard.form.non_field_errors %}
