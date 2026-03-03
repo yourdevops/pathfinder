@@ -74,6 +74,7 @@ Progress: [========================================] 100% (Phase 09 - 4/4 plans 
 | Phase 09 P02 | 3 | 2 tasks | 6 files |
 | Phase 09 P03 | 4 | 2 tasks | 7 files |
 | Phase 09 P04 | 1 | human verify | 0 files |
+| Phase quick-43 P01 | 4 | 2 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -297,6 +298,7 @@ Recent decisions affecting current work:
 | 09-03 | CI manifest status extracted into standalone partial | Independent OOB push rendering by consumer |
 | 09-03 | Vanilla JS for fallback warning, Alpine for status dot | Avoids CSP event name parsing issues |
 | 09-03 | WS push context sets can_edit=False for read-only rendering | Interactive forms only work via HTTP |
+- [Phase quick-43]: Status indicator dots (cancelled=gray-400, disconnected=gray-500) kept as raw gray since they are semantic status colors
 
 ### Roadmap Evolution
 
@@ -376,9 +378,10 @@ None.
 | 040 | Fix python-uv step not imported (yml/yaml extension) | 2026-02-16 | 6a40bf7 | [40-fix-python-uv-step-not-imported-from-ci-](./quick/40-fix-python-uv-step-not-imported-from-ci-/) |
 | 041 | Fix workflow manifest page to use stored version content | 2026-02-17 | d451894 | [41-fix-workflow-manifest-page-to-use-stored](./quick/41-fix-workflow-manifest-page-to-use-stored/) |
 | 042 | WebSockets for CI Steps Repository detail page | 2026-02-25 | 94890fc | [42-websockets-for-ci-step-repo](./quick/42-websockets-for-ci-step-repo/) |
+| 043 | Frontend code deduplication as preparation for theme toggle | 2026-03-03 | 321a935 | [43-frontend-code-deduplication-as-preparati](./quick/43-frontend-code-deduplication-as-preparati/) |
 
 ## Session Continuity
 
-Last session: 2026-02-25
-Stopped at: Completed quick-42 (WebSockets for CI Steps Repository detail page)
+Last session: 2026-03-03
+Stopped at: Completed quick-43 (Frontend code deduplication as preparation for theme toggle)
 Resume file: N/A
