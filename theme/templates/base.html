@@ -459,7 +459,7 @@
         });
         Alpine.data('themeToggle', function() {
             return {
-                theme: this.$persist('dark').as('theme'),
+                theme: this.$persist('dark'),
                 toggle: function() {
                     this.theme = this.theme === 'dark' ? 'light' : 'dark';
                     this.applyTheme();
@@ -493,7 +493,7 @@
     </script>
     <script nonce="{{ csp_nonce }}">
         // Apply saved theme before render to prevent flash
-        // Alpine $persist stores as _x_theme in localStorage
+        // Alpine $persist stores property 'theme' as _x_theme in localStorage
         try {
             var saved = localStorage.getItem('_x_theme');
             if (saved) saved = JSON.parse(saved);
