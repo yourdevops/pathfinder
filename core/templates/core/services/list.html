@@ -54,7 +54,7 @@
                         {% elif service.status == 'error' %}
                         <span class="px-2 py-1 text-xs rounded bg-red-500/20 text-red-300">Error</span>
                         {% else %}
-                        <span class="px-2 py-1 text-xs rounded bg-gray-500/20 text-gray-300">{{ service.get_status_display }}</span>
+                        <span class="badge-neutral">{{ service.get_status_display }}</span>
                         {% endif %}
                     </td>
                     <td class="px-6 py-4 text-dark-muted text-sm">

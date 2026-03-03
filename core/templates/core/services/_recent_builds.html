@@ -15,7 +15,7 @@
         {% if recent_builds %}
         <div class="divide-y divide-dark-border">
             {% for build in recent_builds %}
-            <div class="flex items-center gap-4 px-5 py-3 hover:bg-gray-800/50 transition-colors">
+            <div class="flex items-center gap-4 px-5 py-3 hover:bg-dark-surface-hover/50 transition-colors">
                 <!-- Status dot -->
                 <span class="w-2 h-2 rounded-full shrink-0
                     {% if build.status == 'success' %}bg-green-400

@@ -7,7 +7,7 @@
            hx-get="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}?tab=builds"
            hx-target="#tab-content"
            hx-push-url="true"
-           class="bg-dark-surface border border-dark-border rounded-lg p-4 hover:bg-gray-800/50 transition-colors cursor-pointer block">
+           class="bg-dark-surface border border-dark-border rounded-lg p-4 hover:bg-dark-surface-hover/50 transition-colors cursor-pointer block">
             <p class="text-xs text-dark-muted uppercase tracking-wider mb-2">Last Build</p>
             {% if last_build %}
             <div class="flex items-center gap-2">
@@ -49,7 +49,7 @@
            hx-get="{% url 'projects:service_detail' project_name=project.name service_name=service.name %}?tab=builds"
            hx-target="#tab-content"
            hx-push-url="true"
-           class="bg-dark-surface border border-dark-border rounded-lg p-4 hover:bg-gray-800/50 transition-colors cursor-pointer block">
+           class="bg-dark-surface border border-dark-border rounded-lg p-4 hover:bg-dark-surface-hover/50 transition-colors cursor-pointer block">
             <p class="text-xs text-dark-muted uppercase tracking-wider mb-2">Total Builds</p>
             <p class="text-lg font-semibold text-dark-text">{{ total_builds }}</p>
             <p class="text-xs text-dark-muted mt-1">all time</p>

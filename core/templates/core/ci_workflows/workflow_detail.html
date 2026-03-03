@@ -78,7 +78,7 @@
                     Restore
                 </button>
                 {% else %}
-                <button type="submit" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-sm transition-colors">
+                <button type="submit" class="px-4 py-2 bg-dark-btn-neutral hover:bg-dark-btn-neutral-hover text-white rounded-lg text-sm transition-colors">
                     Archive
                 </button>
                 {% endif %}
@@ -260,7 +260,7 @@
                         {% elif svc.ci_manifest_out_of_sync or svc.ci_manifest_status == "out_of_sync" %}
                         <span class="px-2 py-0.5 text-xs rounded bg-amber-500/20 text-amber-300">Out of Sync</span>
                         {% elif svc.ci_manifest_status == "never_pushed" %}
-                        <span class="px-2 py-0.5 text-xs rounded bg-gray-500/20 text-gray-300">Never Pushed</span>
+                        <span class="badge-sm-neutral">Never Pushed</span>
                         {% endif %}
                         <svg class="w-4 h-4 text-dark-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

@@ -27,14 +27,14 @@
         <!-- Scroll controls -->
         <div class="absolute top-2 right-2 z-10 flex gap-1">
             <button @click="$refs.logs.scrollTo({top: 0, behavior: 'smooth'})"
-                    class="p-1.5 bg-gray-800/90 rounded hover:bg-gray-700 text-gray-400 hover:text-gray-200 transition-colors"
+                    class="p-1.5 bg-dark-surface-hover/90 rounded hover:bg-dark-surface-hover text-dark-text-tertiary hover:text-dark-text transition-colors"
                     title="Scroll to top">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
                 </svg>
             </button>
             <button @click="$refs.logs.scrollTo({top: $refs.logs.scrollHeight, behavior: 'smooth'})"
-                    class="p-1.5 bg-gray-800/90 rounded hover:bg-gray-700 text-gray-400 hover:text-gray-200 transition-colors"
+                    class="p-1.5 bg-dark-surface-hover/90 rounded hover:bg-dark-surface-hover text-dark-text-tertiary hover:text-dark-text transition-colors"
                     title="Scroll to bottom">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -43,7 +43,7 @@
         </div>
         <!-- Log container - constrained width with vertical scroll only -->
         <div x-ref="logs" class="bg-gray-950 rounded-lg p-3 max-h-[60vh] overflow-y-auto overflow-x-hidden w-full min-w-0 max-w-full">
-            <pre class="text-xs font-mono leading-relaxed whitespace-pre-wrap m-0 break-all max-w-full w-full">{% for line in log_lines %}{% if line.is_error %}<span class="log-error">{{ line.text }}</span>{% elif line.is_warning %}<span class="log-warning">{{ line.text }}</span>{% else %}<span class="text-gray-300">{{ line.text }}</span>{% endif %}
+            <pre class="text-xs font-mono leading-relaxed whitespace-pre-wrap m-0 break-all max-w-full w-full">{% for line in log_lines %}{% if line.is_error %}<span class="log-error">{{ line.text }}</span>{% elif line.is_warning %}<span class="log-warning">{{ line.text }}</span>{% else %}<span class="text-dark-text-secondary">{{ line.text }}</span>{% endif %}
 {% endfor %}</pre>
         </div>
     </div>

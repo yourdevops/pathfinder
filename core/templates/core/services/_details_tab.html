@@ -11,7 +11,7 @@
         <div class="flex items-center gap-3">
             <h1 class="text-2xl font-bold text-dark-text">{{ service.name }}</h1>
             <span class="px-2.5 py-0.5 text-xs font-medium rounded-full
-                {% if service.status == 'draft' %}bg-gray-500/20 text-gray-300
+                {% if service.status == 'draft' %}bg-dark-icon-muted/20 text-dark-text-secondary
                 {% elif service.status == 'active' %}bg-green-500/20 text-green-300
                 {% elif service.status == 'error' %}bg-red-500/20 text-red-300
                 {% endif %}">
