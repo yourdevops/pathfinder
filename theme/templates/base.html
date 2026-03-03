@@ -1,6 +1,6 @@
 {% load static tailwind_tags %}
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -457,6 +457,25 @@
                 }
             };
         });
+        Alpine.data('themeToggle', function() {
+            return {
+                theme: this.$persist('dark').as('theme'),
+                toggle: function() {
+                    this.theme = this.theme === 'dark' ? 'light' : 'dark';
+                    this.applyTheme();
+                },
+                applyTheme: function() {
+                    if (this.theme === 'dark') {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.documentElement.classList.remove('dark');
+                    }
+                },
+                init: function() {
+                    this.applyTheme();
+                }
+            };
+        });
     });
     </script>
     <!-- HTMX -->
@@ -473,8 +492,22 @@
         });
     </script>
     <script nonce="{{ csp_nonce }}">
-        // Ensure dark mode class is set before render to prevent flash
-        document.documentElement.classList.add('dark');
+        // Apply saved theme before render to prevent flash
+        // Alpine $persist stores as _x_theme in localStorage
+        try {
+            var saved = localStorage.getItem('_x_theme');
+            if (saved) saved = JSON.parse(saved);
+            if (saved === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else if (saved === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else {
+                // Default to dark if no preference saved
+                document.documentElement.classList.add('dark');
+            }
+        } catch(e) {
+            document.documentElement.classList.add('dark');
+        }
     </script>
     <style nonce="{{ csp_nonce }}">
         @keyframes ws-highlight { from { background-color: rgba(59, 130, 246, 0.15); } to { background-color: transparent; } }

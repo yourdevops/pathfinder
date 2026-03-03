@@ -1,12 +1,24 @@
 {% load static tailwind_tags %}
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% if unlock_verified %}Create Admin Account{% else %}Unlock{% endif %} - Pathfinder</title>
     {% tailwind_css %}
-    <script nonce="{{ csp_nonce }}">document.documentElement.classList.add('dark');</script>
+    <script nonce="{{ csp_nonce }}">
+        try {
+            var saved = localStorage.getItem('_x_theme');
+            if (saved) saved = JSON.parse(saved);
+            if (saved === 'light') {
+                /* light: no dark class */
+            } else {
+                document.documentElement.classList.add('dark');
+            }
+        } catch(e) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
 </head>
 <body class="bg-dark-bg text-dark-text min-h-screen flex items-center justify-center">
     <div class="w-full max-w-md p-8">
