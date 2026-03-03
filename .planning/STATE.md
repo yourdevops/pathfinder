@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-01-21)
 Phase: 09 (WebSockets for Service's pages)
 Plan: 4 of 4 in current phase
 Status: PHASE COMPLETE
-Last activity: 2026-03-03 - Completed quick task 43: Frontend code deduplication as preparation to introduce light/dark theme switch
+Last activity: 2026-03-03 - Completed quick task 44: Implement light/dark theme toggle for the app
 
 Progress: [========================================] 100% (Phase 09 - 4/4 plans complete)
 
@@ -75,6 +75,7 @@ Progress: [========================================] 100% (Phase 09 - 4/4 plans 
 | Phase 09 P03 | 4 | 2 tasks | 7 files |
 | Phase 09 P04 | 1 | human verify | 0 files |
 | Phase quick-43 P01 | 4 | 2 tasks | 15 files |
+| Phase quick-44 P01 | 3 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -299,6 +300,8 @@ Recent decisions affecting current work:
 | 09-03 | Vanilla JS for fallback warning, Alpine for status dot | Avoids CSP event name parsing issues |
 | 09-03 | WS push context sets can_edit=False for read-only rendering | Interactive forms only work via HTTP |
 - [Phase quick-43]: Status indicator dots (cancelled=gray-400, disconnected=gray-500) kept as raw gray since they are semantic status colors
+- [Phase quick-44]: CSS custom properties with RGB channels for light/dark palette switching via .dark class
+- [Phase quick-44]: Theme stored as _x_theme in localStorage via Alpine $persist, default dark for backwards compat
 
 ### Roadmap Evolution
 
@@ -379,9 +382,10 @@ None.
 | 041 | Fix workflow manifest page to use stored version content | 2026-02-17 | d451894 | [41-fix-workflow-manifest-page-to-use-stored](./quick/41-fix-workflow-manifest-page-to-use-stored/) |
 | 042 | WebSockets for CI Steps Repository detail page | 2026-02-25 | 94890fc | [42-websockets-for-ci-step-repo](./quick/42-websockets-for-ci-step-repo/) |
 | 043 | Frontend code deduplication as preparation for theme toggle | 2026-03-03 | 321a935 | [43-frontend-code-deduplication-as-preparati](./quick/43-frontend-code-deduplication-as-preparati/) |
+| 044 | Implement light/dark theme toggle for the app | 2026-03-03 | 28aec04 | [44-implement-light-theme-for-the-app-with-u](./quick/44-implement-light-theme-for-the-app-with-u/) |
 
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed quick-43 (Frontend code deduplication as preparation for theme toggle)
+Stopped at: Completed quick-44 (Implement light/dark theme toggle for the app)
 Resume file: N/A
