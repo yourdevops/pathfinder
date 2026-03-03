@@ -1,3 +1,9 @@
+:root {
+  --scrollbar-track: #1e293b;
+  --scrollbar-thumb: #4b5563;
+  --scrollbar-thumb-hover: #6b7280;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -52,25 +58,59 @@
     @apply bg-red-500/20 border-red-500 text-red-400;
   }
 
+  /* Status badge component classes */
+  .badge-success {
+    @apply px-2 py-1 text-xs rounded bg-green-500/20 text-green-400;
+  }
+  .badge-warning {
+    @apply px-2 py-1 text-xs rounded bg-amber-500/20 text-amber-400;
+  }
+  .badge-danger {
+    @apply px-2 py-1 text-xs rounded bg-red-500/20 text-red-400;
+  }
+  .badge-info {
+    @apply px-2 py-1 text-xs rounded bg-blue-500/20 text-blue-400;
+  }
+  .badge-neutral {
+    @apply px-2 py-1 text-xs rounded bg-dark-icon-muted/20 text-dark-text-secondary;
+  }
+  .badge-sm-success {
+    @apply px-2 py-0.5 text-xs rounded bg-green-500/20 text-green-400;
+  }
+  .badge-sm-warning {
+    @apply px-2 py-0.5 text-xs rounded bg-amber-500/20 text-amber-400;
+  }
+  .badge-sm-danger {
+    @apply px-2 py-0.5 text-xs rounded bg-red-500/20 text-red-400;
+  }
+  .badge-sm-neutral {
+    @apply px-2 py-0.5 text-xs rounded bg-dark-icon-muted/20 text-dark-text-secondary;
+  }
+
+  /* Interactive surface hover utility */
+  .surface-interactive {
+    @apply bg-dark-surface border border-dark-border rounded hover:bg-dark-surface-hover transition-colors;
+  }
+
   /* Scrollbar always visible for log containers */
   .scrollbar-visible {
     scrollbar-width: thin;
-    scrollbar-color: #4b5563 #1f2937;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   }
   .scrollbar-visible::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   .scrollbar-visible::-webkit-scrollbar-track {
-    background: #1f2937;
+    background: var(--scrollbar-track);
     border-radius: 4px;
   }
   .scrollbar-visible::-webkit-scrollbar-thumb {
-    background: #4b5563;
+    background: var(--scrollbar-thumb);
     border-radius: 4px;
   }
   .scrollbar-visible::-webkit-scrollbar-thumb:hover {
-    background: #6b7280;
+    background: var(--scrollbar-thumb-hover);
   }
 
   /* Log line highlighting for errors and warnings */
