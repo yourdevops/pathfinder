@@ -3,6 +3,12 @@ name: python-uv CI workflow
   push:
     branches:
     - main
+    paths-ignore:
+    - 'docs/**'
+    - '.planning/**'
+    - '.*'
+    - '.*/**'
+    - '!.github/**'
 jobs:
   build:
     runs-on: ubuntu-latest
