@@ -288,6 +288,10 @@
                     this.syncField();
                 },
 
+                toggleNewLock: function() {
+                    this.newVar.lock = !this.newVar.lock;
+                },
+
                 toggleLock: function(idx) {
                     if (!this.vars[idx].value) { return; }
                     this.vars[idx].lock = !this.vars[idx].lock;

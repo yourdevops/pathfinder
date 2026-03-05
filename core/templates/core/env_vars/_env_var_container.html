@@ -175,7 +175,7 @@
 
         {# Lock toggle for new var #}
         {% if current_level != "environment" %}
-        <button type="button" @click="newVar.lock = !newVar.lock"
+        <button type="button" @click="toggleNewLock()"
                 :class="newVar.lock ? 'text-red-400' : 'text-gray-700/30 hover:text-gray-500'"
                 class="flex-shrink-0 transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
