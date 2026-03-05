@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """Docker plugin forms."""
 
 from django import forms

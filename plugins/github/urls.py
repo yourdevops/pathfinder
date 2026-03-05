@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
 """GitHub plugin URL configuration."""
 
 from django.urls import path
