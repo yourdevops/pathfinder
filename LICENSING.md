@@ -11,11 +11,13 @@ implementations. Third-party plugin authors may use any license of their choice.
 
 ## Vendor Code
 
-Files under `theme/static/js/vendor/` retain their original upstream licenses:
+Files under `theme/static/js/vendor/` are copied from npm packages during
+`npm run build` (or `npm run dev`) and are not checked into the repository.
+They retain their original upstream licenses:
 
 | File | License |
 |------|---------|
-| `alpine-csp.min.js` | MIT (Alpine.js) |
-| `alpine-persist.min.js` | MIT (Alpine.js) |
-| `htmx.min.js` | 0BSD (HTMX) |
-| `htmx-ext-ws.min.js` | 0BSD (HTMX) |
+| `alpine-csp.js` | MIT (Alpine.js) |
+| `alpine-persist.js` | MIT (Alpine.js) |
+| `htmx.js` | 0BSD (HTMX) |
+| `htmx-ext-ws.js` | 0BSD (HTMX) |
