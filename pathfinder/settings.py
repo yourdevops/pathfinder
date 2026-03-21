@@ -106,16 +106,28 @@ WSGI_APPLICATION = "pathfinder.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-# Ensure data directory exists
+# Ensure data directory exists (also used for file-based cache)
 DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": DATA_DIR / "db.sqlite3",
+if os.environ.get("DATABASE_HOST"):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "HOST": os.environ["DATABASE_HOST"],
+            "PORT": os.environ.get("DATABASE_PORT", "5432"),
+            "NAME": os.environ.get("DATABASE_NAME", "pathfinder"),
+            "USER": os.environ.get("DATABASE_USER", "pathfinder"),
+            "PASSWORD": os.environ.get("DATABASE_PASSWORD", ""),
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": DATA_DIR / "db.sqlite3",
+        }
+    }
 
 
 # Password validation

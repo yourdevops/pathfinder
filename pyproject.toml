@@ -34,6 +34,8 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "whitenoise>=6.11.0",
     "channels==4.3.2",
+    # PostgreSQL (used in Kubernetes/Helm deployments)
+    "psycopg[binary]>=3.2",
 ]
 
 [dependency-groups]
