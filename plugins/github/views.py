@@ -18,7 +18,7 @@ from core.models import IntegrationConnection, SiteConfiguration
 from core.permissions import OperatorRequiredMixin
 
 from .forms import GitHubConnectionForm
-from .plugin import GitHubPlugin
+from .plugin import GH_API_HEADERS, GitHubPlugin
 
 _CREATE_URL_NAME = "github:create"
 
@@ -180,6 +180,7 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
                 "secrets": "write",
                 "workflows": "write",
                 "actions": "read",
+                "variables": "write",
             },
             "default_events": [
                 "push",
@@ -290,7 +291,7 @@ class GitHubManifestCallbackView(LoginRequiredMixin, OperatorRequiredMixin, View
         try:
             api_response = requests.post(
                 conversion_url,
-                headers={"Accept": "application/vnd.github+json"},
+                headers=GH_API_HEADERS,
                 timeout=30,
             )
             api_response.raise_for_status()

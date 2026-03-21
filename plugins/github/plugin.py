@@ -17,6 +17,9 @@ from plugins.base import BasePlugin, CICapableMixin
 
 _GH_OUTPUT_REF_RE = re.compile(r"^\$\{\{\s*steps\.([a-z0-9][a-z0-9-]*)\.outputs\.([a-z0-9][a-z0-9_-]*)\s*\}\}$")
 
+GH_API_VERSION = "2026-03-10"
+GH_API_HEADERS = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": GH_API_VERSION}
+
 
 class GitHubPlugin(CICapableMixin, BasePlugin):
     """
@@ -280,7 +283,7 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
                 f"{base_url}/orgs/{owner}/packages/container/{package_name}/versions",
                 f"{base_url}/users/{owner}/packages/container/{package_name}/versions",
             ]:
-                headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.v3+json"}
+                headers = {**GH_API_HEADERS, "Authorization": f"Bearer {token}"}
                 resp = requests.get(endpoint, headers=headers, timeout=15)
                 if resp.status_code == 200:
                     for version in resp.json():
@@ -999,7 +1002,7 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
         token = g._Github__requester._Requester__auth.token
         base_url = config.get("base_url", "https://api.github.com")
         url = f"{base_url}/repos/{repo_name}/actions/jobs/{job_id}/logs"
-        headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.v3+json"}
+        headers = {**GH_API_HEADERS, "Authorization": f"Bearer {token}"}
         try:
             resp = requests.get(url, headers=headers, allow_redirects=True, timeout=30)
             if resp.status_code == 200:
