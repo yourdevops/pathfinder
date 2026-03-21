@@ -1,0 +1,89 @@
+image:
+  repository: ghcr.io/yourdevops/pathfinder
+  tag: ""  # defaults to Chart.AppVersion
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+portal:
+  replicaCount: 1
+  resources: {}
+  #  requests:
+  #    cpu: 100m
+  #    memory: 256Mi
+  #  limits:
+  #    memory: 512Mi
+
+worker:
+  replicaCount: 1
+  resources: {}
+
+scheduler:
+  replicaCount: 1
+  resources: {}
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: pathfinder.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+config:
+  djangoDebug: "False"
+  allowedHosts: "localhost,127.0.0.1"
+  csrfTrustedOrigins: ""
+
+# Sensitive values — override at install time or use existingSecret
+secrets:
+  # Auto-generated if empty (persists across upgrades)
+  djangoSecretKey: ""
+  # Fernet key for field encryption — generate with:
+  #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+  encryptionKey: ""
+  existingSecret: ""
+
+postgresql:
+  enabled: true
+  image:
+    repository: postgres
+    tag: "17"
+    pullPolicy: IfNotPresent
+  auth:
+    database: pathfinder
+    username: pathfinder
+    # Auto-generated if empty (persists across upgrades)
+    password: ""
+    existingSecret: ""
+  storage:
+    size: 5Gi
+    storageClass: ""
+  resources: {}
+
+networkPolicy:
+  enabled: true
+  portal:
+    additionalEgress: []
+  worker:
+    additionalEgress: []
+  scheduler:
+    additionalEgress: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

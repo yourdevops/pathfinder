@@ -1,0 +1,30 @@
+Pathfinder DevSSP has been deployed!
+
+1. Access the application:
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+   http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
+{{- end }}
+{{- else }}
+   kubectl port-forward svc/{{ include "pathfinder.fullname" . }} 8000:{{ .Values.service.port }}
+   Then visit: http://localhost:8000
+{{- end }}
+
+2. First-time setup:
+   Navigate to the URL above, paste the unlock token, and create an admin account.
+   To retrieve the unlock token:
+     kubectl exec deploy/{{ include "pathfinder.fullname" . }} -- cat /app/secrets/initialUnlockToken
+
+{{- if not .Values.secrets.encryptionKey }}
+
+WARNING: The Fernet encryption key was auto-generated. If this secret is
+lost, any data encrypted with it becomes unrecoverable.
+Extract it now and store it in a safe place (e.g. a vault or sealed secret):
+
+   kubectl get secret {{ include "pathfinder.fullname" . }} -o jsonpath='{.data.encryption-key}' | base64 -d
+
+On subsequent installs, provide it via an existing Kubernetes secret:
+   --set secrets.existingSecret=<your-secret-name>
+
+The secret must contain keys: django-secret-key, encryption-key
+{{- end }}

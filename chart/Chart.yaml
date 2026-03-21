@@ -1,0 +1,11 @@
+apiVersion: v2
+name: pathfinder
+description: Developer Self-Service Portal
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/yourdevops/pathfinder
+sources:
+  - https://github.com/yourdevops/pathfinder
+maintainers:
+  - name: yourdevops
