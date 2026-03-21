@@ -46,6 +46,9 @@ spec:
             httpGet:
               path: /
               port: http
+              httpHeaders:
+                - name: Host
+                  value: localhost
             initialDelaySeconds: 15
             periodSeconds: 30
             timeoutSeconds: 5
@@ -53,6 +56,9 @@ spec:
             httpGet:
               path: /
               port: http
+              httpHeaders:
+                - name: Host
+                  value: localhost
             initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 5

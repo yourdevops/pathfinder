@@ -7,5 +7,5 @@ metadata:
     {{- include "pathfinder.labels" . | nindent 4 }}
 data:
   django-debug: {{ .Values.config.djangoDebug | quote }}
-  allowed-hosts: {{ .Values.config.allowedHosts | quote }}
+  allowed-hosts: {{ printf "%s,localhost" .Values.config.allowedHosts | quote }}
   csrf-trusted-origins: {{ .Values.config.csrfTrustedOrigins | quote }}
