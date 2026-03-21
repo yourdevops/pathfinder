@@ -416,6 +416,17 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
                 "sensitive": True,
                 "label": "Webhook Secret",
             },
+            "client_id": {
+                "type": "string",
+                "required": False,
+                "label": "Client ID",
+            },
+            "client_secret": {
+                "type": "string",
+                "required": False,
+                "sensitive": True,
+                "label": "Client Secret",
+            },
             "base_url": {
                 "type": "string",
                 "required": False,
