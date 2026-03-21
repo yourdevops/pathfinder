@@ -19,9 +19,6 @@ spec:
         app.kubernetes.io/component: worker
     spec:
       serviceAccountName: {{ include "pathfinder.serviceAccountName" . }}
-      securityContext:
-        seccompProfile:
-          type: RuntimeDefault
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -34,25 +31,11 @@ spec:
             - sh
             - -c
             - until pg_isready -h {{ include "pathfinder.postgresql.fullname" . }} -U {{ .Values.postgresql.auth.username }}; do echo "Waiting for PostgreSQL..."; sleep 2; done
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            capabilities:
-              drop:
-                - ALL
       {{- end }}
       containers:
         - name: worker
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          securityContext:
-            allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: true
-            runAsNonRoot: true
-            capabilities:
-              drop:
-                - ALL
           command: ["uv", "run", "python", "manage.py", "db_worker", "--queue-name", "*", "--verbosity", "2"]
           env:
             {{- include "pathfinder.env" . | nindent 12 }}
