@@ -12,6 +12,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Install dependencies
 uv sync
+cd theme/static_src && npm install
 
 # Rebuild UI
 uv run python manage.py tailwind build
