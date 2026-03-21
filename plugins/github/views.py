@@ -179,8 +179,7 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
                 "repository_hooks": "write",
                 "secrets": "write",
                 "workflows": "write",
-                "actions": "read",
-                "variables": "write",
+                "actions": "write",
             },
             "default_events": [
                 "push",
