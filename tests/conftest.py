@@ -1,15 +1,15 @@
-from unittest.mock import patch
-
 import pytest
 
+import core.utils
 from core.models import Group, GroupMembership, Project, ProjectMembership, User
 
 
 @pytest.fixture(autouse=True)
 def _bypass_setup_middleware():
-    """Skip the SetupMiddleware unlock redirect so view tests hit actual views."""
-    with patch("core.middleware.is_setup_complete", return_value=True):
-        yield
+    """Set the per-worker setup cache so view tests skip the unlock redirect."""
+    core.utils._setup_complete = True
+    yield
+    core.utils._setup_complete = False
 
 
 @pytest.fixture()

@@ -14,31 +14,29 @@ def get_unlock_token_path():
     return get_secrets_dir() / "initialUnlockToken"
 
 
+# Per-worker cache for setup state (one-way latch: False → True, never back).
+# Each Gunicorn worker independently discovers the transition and caches it.
+_setup_complete = False
+
+
 def is_setup_complete():
     """Check if initial setup has been completed.
 
-    Setup is complete when:
-    - Token doesn't exist AND at least one admin user exists
-
-    Setup is incomplete when:
-    - Token exists (in progress)
-    - Token doesn't exist AND no admin users (fresh install)
+    Uses SiteConfiguration.setup_completed as the single source of truth.
+    The result is cached in a module-level variable (per-worker latch)
+    so that only the first call after startup hits the DB.
     """
-    token_path = get_unlock_token_path()
+    global _setup_complete
+    if _setup_complete:
+        return True
 
-    if token_path.exists():
-        # Token exists means setup is in progress
-        return False
+    from core.models import SiteConfiguration
 
-    # Token doesn't exist - check if any admin users exist
-    # Import here to avoid circular imports
-    from core.models import Group, GroupMembership
+    config = SiteConfiguration.get_instance()
+    if config.setup_completed:
+        _setup_complete = True
+        return True
 
-    admins_group = Group.objects.filter(name="admins", status="active").first()
-    if admins_group:
-        return GroupMembership.objects.filter(group=admins_group).exists()
-
-    # No token and no admin group = fresh install
     return False
 
 

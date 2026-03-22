@@ -215,6 +215,10 @@ class SiteConfiguration(models.Model):
     Use SiteConfiguration.get_instance() to access the configuration.
     """
 
+    setup_completed = models.BooleanField(
+        default=False,
+        help_text="Set once during initial unlock. Prevents re-entering the setup wizard.",
+    )
     external_url = models.URLField(
         blank=True,
         help_text="Public URL for webhooks and OAuth callbacks (e.g., https://pathfinder.example.com)",

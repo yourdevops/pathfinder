@@ -3,8 +3,10 @@ from django.shortcuts import redirect, render
 from django.urls import NoReverseMatch
 from django.views import View
 
+import core.utils
+
 from ..forms import AdminRegistrationForm, UnlockForm
-from ..models import Group, GroupMembership, User
+from ..models import Group, GroupMembership, SiteConfiguration, User
 from ..utils import complete_setup, get_unlock_token_path, verify_unlock_token
 
 
@@ -107,10 +109,14 @@ class UnlockView(View):
             # Add user to admins group
             GroupMembership.objects.create(group=admins_group, user=user)
 
-            # Complete setup (delete token)
-            complete_setup()
+            # Mark setup as complete in DB (single source of truth)
+            config = SiteConfiguration.get_instance()
+            config.setup_completed = True
+            config.save()
+            core.utils._setup_complete = True
 
-            # Clear unlock_verified from session
+            # Clean up token file and session
+            complete_setup()
             if "unlock_verified" in request.session:
                 del request.session["unlock_verified"]
 
