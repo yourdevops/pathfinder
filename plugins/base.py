@@ -83,32 +83,33 @@ class PluginRegistry:
 registry = PluginRegistry
 
 
-class CICapableMixin:
+class CICapableMixin(ABC):
     """Mixin for plugins that provide CI engine capabilities."""
 
     @property
+    @abstractmethod
     def engine_name(self) -> str:
         """CI engine identifier, e.g., 'github_actions'."""
-        raise NotImplementedError
 
     @property
+    @abstractmethod
     def engine_display_name(self) -> str:
         """Human-readable engine name, e.g., 'GitHub Actions'."""
-        raise NotImplementedError
 
     @property
+    @abstractmethod
     def engine_file_name(self) -> str:
         """Filename to discover in step repos, e.g., 'action.yml'."""
-        raise NotImplementedError
 
+    @abstractmethod
     def parse_step_file(self, file_content: dict) -> dict:
         """Parse engine-native step file and extract x-pathfinder metadata.
 
         Returns dict with: name, description, inputs, phase, runtime_constraints,
         tags, produces, raw_metadata.
         """
-        raise NotImplementedError
 
+    @abstractmethod
     def derive_step_slug(self, file_content: dict, directory_path: str) -> str:
         """Derive a URL-safe slug for a step using three-tier fallback.
 
@@ -124,8 +125,8 @@ class CICapableMixin:
         Returns:
             Slug string, or empty string if none could be derived.
         """
-        raise NotImplementedError
 
+    @abstractmethod
     def generate_manifest(self, workflow, version: str | None = None) -> str:
         """Generate CI manifest YAML string for a CIWorkflow instance.
 
@@ -133,24 +134,24 @@ class CICapableMixin:
             workflow: CIWorkflow instance.
             version: Optional version string for the manifest header.
         """
-        raise NotImplementedError
 
+    @abstractmethod
     def manifest_id(self, workflow) -> str:
         """Return manifest identifier (e.g., .github/workflows/ci-python-uv.yml).
 
         Based on workflow name, not service name."""
-        raise NotImplementedError
 
+    @abstractmethod
     def extract_manifest_id(self, run_data: dict) -> str | None:
         """Extract manifest identifier from CI run data.
 
         Returns None if not Pathfinder-managed."""
-        raise NotImplementedError
 
+    @abstractmethod
     def get_manifest_id_pattern(self) -> re.Pattern:
         """Return regex pattern for validating manifest IDs."""
-        raise NotImplementedError
 
+    @abstractmethod
     def map_run_status(self, status: str, conclusion: str | None) -> str:
         """Map CI engine run status/conclusion to Build status string.
 
@@ -161,14 +162,14 @@ class CICapableMixin:
         Returns:
             One of: 'pending', 'running', 'success', 'failed', 'cancelled'.
         """
-        raise NotImplementedError
 
+    @abstractmethod
     def fetch_manifest_content(self, config: dict, repo_name: str, manifest_id: str, commit_sha: str) -> str | None:
         """Fetch manifest file content from repo at a specific commit.
 
         Returns None if file not found."""
-        raise NotImplementedError
 
+    @abstractmethod
     def check_branch_protection(self, config: dict, repo_name: str, branch: str) -> dict:
         """Check branch protection rules for a repository branch.
 
@@ -177,15 +178,15 @@ class CICapableMixin:
             rules: dict -- individual rule check results
             message: str -- human-readable summary
         """
-        raise NotImplementedError
 
+    @abstractmethod
     def find_open_pr(self, config: dict, repo_name: str, branch_name: str) -> dict | None:
         """Find an open PR for the given branch.
 
         Returns dict with number, html_url, title if found, or None.
         """
-        raise NotImplementedError
 
+    @abstractmethod
     def resolve_artifact_ref(self, config: dict, repo_name: str, run_id: int) -> str:
         """Resolve actual artifact reference (container image ref) from CI engine API.
 
@@ -201,8 +202,8 @@ class CICapableMixin:
             Image reference string (e.g., 'ghcr.io/owner/repo:sha-abc1234')
             or empty string if no artifact found.
         """
-        raise NotImplementedError
 
+    @abstractmethod
     def format_step_id(self, step_slug: str) -> str:
         """Return the engine-native step ID derived from slug.
 
@@ -212,8 +213,8 @@ class CICapableMixin:
         Returns:
             Engine-native step ID string.
         """
-        raise NotImplementedError
 
+    @abstractmethod
     def format_output_reference(self, step_slug: str, output_name: str) -> str:
         """Return the engine-native output reference string for copy-paste.
 
@@ -224,8 +225,8 @@ class CICapableMixin:
         Returns:
             Engine-native output reference expression.
         """
-        raise NotImplementedError
 
+    @abstractmethod
     def parse_output_reference(self, value: str) -> dict | None:
         """Parse an input value to check if it matches the engine's output reference pattern.
 
@@ -235,8 +236,8 @@ class CICapableMixin:
         Returns:
             Dict with 'step_slug' and 'output_name' if matched, None otherwise.
         """
-        raise NotImplementedError
 
+    @abstractmethod
     def provision_ci_variables(self, config: dict, repo_name: str, variables: dict[str, str]) -> dict:
         """Provision CI-level variables on the repository. Idempotent (create or update).
 
@@ -248,7 +249,6 @@ class CICapableMixin:
         Returns:
             Dict with status per variable: {"PTF_PROJECT": "created", "PTF_SERVICE": "updated"}
         """
-        raise NotImplementedError
 
 
 class BasePlugin(ABC):
@@ -270,8 +270,13 @@ class BasePlugin(ABC):
     name: str
     display_name: str
     category: str  # 'scm', 'ci', 'deploy'
-    capabilities: list[str] = []
+    capabilities: list[str]
     icon: str = ""
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if not getattr(cls, "__abstractmethods__", None) and "capabilities" not in cls.__dict__:
+            raise TypeError(f"Plugin {cls.__name__} must define 'capabilities' as a class attribute")
 
     # Fields matching these patterns will be encrypted
     sensitive_field_patterns: list[str] = [

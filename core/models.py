@@ -379,6 +379,7 @@ class ProjectConnection(models.Model):
             if self.is_default:
                 plugin = self.connection.get_plugin()
                 if plugin:
+                    Project.objects.select_for_update().filter(pk=self.project_id).first()
                     ProjectConnection.objects.filter(
                         project=self.project,
                         connection__plugin_name=self.connection.plugin_name,
@@ -414,6 +415,7 @@ class EnvironmentConnection(models.Model):
             if self.is_default:
                 plugin = self.connection.get_plugin()
                 if plugin:
+                    Environment.objects.select_for_update().filter(pk=self.environment_id).first()
                     EnvironmentConnection.objects.filter(
                         environment=self.environment,
                         connection__plugin_name=self.connection.plugin_name,

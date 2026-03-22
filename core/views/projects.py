@@ -237,7 +237,8 @@ class EnvironmentCreateView(LoginRequiredMixin, ProjectContributorMixin, Templat
             env = form.save(commit=False)
             env.project = self.project
             with transaction.atomic():
-                # First environment becomes default
+                # Lock project row to serialize first-default assignment
+                Project.objects.select_for_update().filter(pk=self.project.pk).first()
                 if not self.project.environments.exists():
                     env.is_default = True
                 env.save()
@@ -279,6 +280,7 @@ class EnvironmentUpdateView(LoginRequiredMixin, ProjectContributorMixin, View):
             with transaction.atomic():
                 # Handle is_default - ensure only one default
                 if form.cleaned_data.get("is_default"):
+                    Project.objects.select_for_update().filter(pk=self.project.pk).first()
                     Environment.objects.filter(project=self.project, is_default=True).exclude(pk=env.pk).update(
                         is_default=False
                     )
@@ -309,6 +311,7 @@ class EnvironmentDeleteView(LoginRequiredMixin, ProjectOwnerMixin, View):
         env = get_object_or_404(Environment, name=kwargs.get("env_name"), project=self.project)
         env_name = env.name
         with transaction.atomic():
+            Project.objects.select_for_update().filter(pk=self.project.pk).first()
             was_default = env.is_default
             env.delete()
 

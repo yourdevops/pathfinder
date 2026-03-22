@@ -53,7 +53,7 @@ def check_connection_health(connection_id: int) -> dict:
         }
 
     # Update connection
-    connection.health_status = result["status"]
+    connection.health_status = result.get("status", "unknown")
     connection.last_health_message = result.get("message", "")
     connection.last_health_check = timezone.now()
     connection.save(update_fields=["health_status", "last_health_message", "last_health_check"])
@@ -198,19 +198,17 @@ def sync_template(template_id: int) -> dict:
 
             remote_tag_names.append(tag_name)
 
-            # Skip existing versions
-            if TemplateVersion.objects.filter(template=template, tag_name=tag_name).exists():
-                continue
-
-            # Create new version
-            TemplateVersion.objects.create(
+            _, created = TemplateVersion.objects.get_or_create(
                 template=template,
                 tag_name=tag_name,
-                commit_sha=tag_info["commit_sha"],
-                sort_key=parsed["sort_key"],
-                available=True,
+                defaults={
+                    "commit_sha": tag_info["commit_sha"],
+                    "sort_key": parsed["sort_key"],
+                    "available": True,
+                },
             )
-            versions_added += 1
+            if created:
+                versions_added += 1
 
         # Mark tags no longer present on remote as unavailable (don't delete)
         versions_unavailable = (

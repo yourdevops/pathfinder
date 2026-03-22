@@ -1,14 +1,16 @@
 """Project-level permission helpers and view mixins."""
 
+from __future__ import annotations
+
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 
-from core.models import GroupMembership, Project, ProjectMembership
+from core.models import GroupMembership, Project, ProjectMembership, User
 
 ROLE_HIERARCHY = ["viewer", "contributor", "owner"]
 
 
-def has_system_role(user, role):
+def has_system_role(user: User, role: str | list[str]) -> bool:
     """Check if user has a specific SystemRole through any group.
 
     Args:
@@ -28,7 +30,7 @@ def has_system_role(user, role):
     return any(role in m.group.system_roles for m in memberships)
 
 
-def get_user_project_role(user, project):
+def get_user_project_role(user: User, project: Project) -> str | None:
     """
     Return highest project role for user, or None if no access.
 
@@ -56,7 +58,7 @@ def get_user_project_role(user, project):
     return max(roles, key=lambda r: ROLE_PRIORITY.get(r, 0))
 
 
-def can_access_project(user, project, required_role="viewer"):
+def can_access_project(user: User, project: Project, required_role: str = "viewer") -> bool:
     """Check if user has at least the required role."""
     user_role = get_user_project_role(user, project)
 

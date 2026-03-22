@@ -650,7 +650,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
                     ci_config = self.project.ci_config
                     if not ci_config.allow_draft_workflows:
                         available_versions = [v for v in available_versions if v.status != "draft"]
-                except Exception:
+                except ProjectCIConfig.DoesNotExist:
                     available_versions = [v for v in available_versions if v.status != "draft"]
             context["available_versions"] = available_versions
 
