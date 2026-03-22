@@ -2,6 +2,7 @@ import json
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -235,10 +236,11 @@ class EnvironmentCreateView(LoginRequiredMixin, ProjectContributorMixin, Templat
         if form.is_valid():
             env = form.save(commit=False)
             env.project = self.project
-            # First environment becomes default
-            if not self.project.environments.exists():
-                env.is_default = True
-            env.save()
+            with transaction.atomic():
+                # First environment becomes default
+                if not self.project.environments.exists():
+                    env.is_default = True
+                env.save()
             messages.success(request, f'Environment "{env.name}" created.')
             return redirect("projects:detail", project_name=self.project.name)
         return self.render_to_response(self.get_context_data(form=form))
@@ -274,13 +276,13 @@ class EnvironmentUpdateView(LoginRequiredMixin, ProjectContributorMixin, View):
         env = get_object_or_404(Environment, name=kwargs.get("env_name"), project=self.project)
         form = EnvironmentForm(request.POST, instance=env)
         if form.is_valid():
-            # Handle is_default - ensure only one default
-            if form.cleaned_data.get("is_default"):
-                Environment.objects.filter(project=self.project, is_default=True).exclude(pk=env.pk).update(
-                    is_default=False
-                )
-
-            form.save()
+            with transaction.atomic():
+                # Handle is_default - ensure only one default
+                if form.cleaned_data.get("is_default"):
+                    Environment.objects.filter(project=self.project, is_default=True).exclude(pk=env.pk).update(
+                        is_default=False
+                    )
+                form.save()
             messages.success(request, f'Environment "{env.name}" updated.')
             return redirect(
                 "projects:environment_detail",
@@ -306,15 +308,16 @@ class EnvironmentDeleteView(LoginRequiredMixin, ProjectOwnerMixin, View):
     def post(self, request, *args, **kwargs):
         env = get_object_or_404(Environment, name=kwargs.get("env_name"), project=self.project)
         env_name = env.name
-        was_default = env.is_default
-        env.delete()
+        with transaction.atomic():
+            was_default = env.is_default
+            env.delete()
 
-        # If deleted env was default, make another one default
-        if was_default:
-            next_env = self.project.environments.first()
-            if next_env:
-                next_env.is_default = True
-                next_env.save()
+            # If deleted env was default, make another one default
+            if was_default:
+                next_env = self.project.environments.first()
+                if next_env:
+                    next_env.is_default = True
+                    next_env.save()
 
         messages.success(request, f'Environment "{env_name}" deleted.')
         return redirect("projects:detail", project_name=self.project.name)

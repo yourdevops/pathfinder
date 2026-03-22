@@ -4,7 +4,7 @@ import uuid
 from auditlog.registry import auditlog
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.db import models
+from django.db import models, transaction
 
 from core.validators import dns_label_validator
 
@@ -374,16 +374,17 @@ class ProjectConnection(models.Model):
         return f"{self.project.name} -> {self.connection.name}"
 
     def save(self, *args, **kwargs):
-        # Ensure only one default per plugin type per project
-        if self.is_default:
-            plugin = self.connection.get_plugin()
-            if plugin:
-                ProjectConnection.objects.filter(
-                    project=self.project,
-                    connection__plugin_name=self.connection.plugin_name,
-                    is_default=True,
-                ).exclude(pk=self.pk).update(is_default=False)
-        super().save(*args, **kwargs)
+        with transaction.atomic():
+            # Ensure only one default per plugin type per project
+            if self.is_default:
+                plugin = self.connection.get_plugin()
+                if plugin:
+                    ProjectConnection.objects.filter(
+                        project=self.project,
+                        connection__plugin_name=self.connection.plugin_name,
+                        is_default=True,
+                    ).exclude(pk=self.pk).update(is_default=False)
+            super().save(*args, **kwargs)
 
 
 class EnvironmentConnection(models.Model):
@@ -408,16 +409,17 @@ class EnvironmentConnection(models.Model):
         return f"{self.environment} -> {self.connection.name}"
 
     def save(self, *args, **kwargs):
-        # Ensure only one default per plugin type per environment
-        if self.is_default:
-            plugin = self.connection.get_plugin()
-            if plugin:
-                EnvironmentConnection.objects.filter(
-                    environment=self.environment,
-                    connection__plugin_name=self.connection.plugin_name,
-                    is_default=True,
-                ).exclude(pk=self.pk).update(is_default=False)
-        super().save(*args, **kwargs)
+        with transaction.atomic():
+            # Ensure only one default per plugin type per environment
+            if self.is_default:
+                plugin = self.connection.get_plugin()
+                if plugin:
+                    EnvironmentConnection.objects.filter(
+                        environment=self.environment,
+                        connection__plugin_name=self.connection.plugin_name,
+                        is_default=True,
+                    ).exclude(pk=self.pk).update(is_default=False)
+            super().save(*args, **kwargs)
 
 
 class Service(models.Model):
