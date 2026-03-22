@@ -21,6 +21,21 @@ GH_API_VERSION = "2026-03-10"
 GH_API_HEADERS = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": GH_API_VERSION}
 
 
+def _format_github_error(exc: GithubException) -> str:
+    """Format a GithubException message, surfacing permission hints from GitHub.
+
+    When a GitHub App lacks a required permission, GitHub returns a 403 with an
+    ``X-Accepted-GitHub-Permissions`` response header listing what is needed.
+    This helper appends that hint to the error message so operators can quickly
+    identify and fix the missing permission.
+    """
+    msg = exc.data.get("message", str(exc)) if isinstance(exc.data, dict) else str(exc)
+    accepted = (exc.headers or {}).get("X-Accepted-GitHub-Permissions", "")
+    if accepted:
+        msg = f"{msg} (required permission: {accepted})"
+    return msg
+
+
 class GitHubPlugin(CICapableMixin, BasePlugin):
     """
     GitHub integration plugin using GitHub App authentication.
@@ -319,12 +334,7 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
                     except Exception as update_err:
                         results[name] = f"error: {update_err}"
                 else:
-                    msg = e.data.get("message", str(e)) if isinstance(e.data, dict) else str(e)
-                    # Surface the required permission hint from GitHub
-                    accepted = (e.headers or {}).get("X-Accepted-GitHub-Permissions", "")
-                    if accepted:
-                        msg = f"{msg} (required permission: {accepted})"
-                    results[name] = f"error: {msg}"
+                    results[name] = f"error: {_format_github_error(e)}"
         return results
 
     def check_branch_protection(self, config: dict, repo_name: str, branch: str) -> dict:
@@ -371,6 +381,12 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
                 message = "All branch protection rules are satisfied"
 
             return {"valid": valid, "rules": rules, "message": message}
+        except GithubException as e:
+            return {
+                "valid": False,
+                "rules": {},
+                "message": f"Failed to check branch protection: {_format_github_error(e)}",
+            }
         except Exception as e:
             return {
                 "valid": False,
@@ -561,10 +577,9 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
                 },
             }
         except GithubException as e:
-            error_msg = e.data.get("message", str(e)) if isinstance(e.data, dict) else str(e)
             return {
                 "status": "unhealthy",
-                "message": f"GitHub API error: {error_msg}",
+                "message": f"GitHub API error: {_format_github_error(e)}",
                 "details": {"error_code": e.status},
             }
         except Exception as e:

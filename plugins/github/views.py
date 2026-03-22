@@ -173,6 +173,7 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
             "public": False,
             "default_permissions": {
                 "actions": "write",
+                "actions_variables": "write",
                 "administration": "write",
                 "contents": "write",
                 "metadata": "read",
