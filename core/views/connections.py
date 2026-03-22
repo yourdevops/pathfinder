@@ -141,27 +141,10 @@ class ConnectionTestView(LoginRequiredMixin, View):
     """Test connection health. Available to all authenticated users."""
 
     def post(self, request, connection_name):
+        from core.tasks import run_plugin_health_check
+
         connection = get_object_or_404(IntegrationConnection, name=connection_name)
-        plugin = connection.get_plugin()
-
-        if not plugin:
-            return JsonResponse(
-                {
-                    "status": "unknown",
-                    "message": "Plugin not available",
-                },
-                status=400,
-            )
-
-        # Run health check
-        config = connection.get_config()
-        result = plugin.health_check(config)
-
-        # Update connection status
-        connection.health_status = result["status"]
-        connection.last_health_check = timezone.now()
-        connection.last_health_message = result.get("message", "")
-        connection.save(update_fields=["health_status", "last_health_check", "last_health_message"])
+        result = run_plugin_health_check(connection)
 
         # Return result for HTMX or JSON
         if request.headers.get("HX-Request"):

@@ -18,6 +18,27 @@ from django_tasks import task
 logger = logging.getLogger(__name__)
 
 
+def run_plugin_health_check(connection) -> dict:
+    """Run plugin health check for a connection and persist the result."""
+    plugin = connection.get_plugin()
+    if not plugin:
+        result = {"status": "unknown", "message": "Plugin not available"}
+    else:
+        try:
+            result = plugin.health_check(connection.get_config())
+        except Exception as e:
+            logger.exception("Plugin health check failed for connection %s", connection.id)
+            result = {"status": "unhealthy", "message": f"Health check error: {e!s}"}
+
+    connection.health_status = result.get("status", "unknown")
+    connection.last_health_message = result.get("message", "")
+    connection.last_health_check = timezone.now()
+    connection.save(update_fields=["health_status", "last_health_message", "last_health_check"])
+
+    logger.info("Health check for %s: %s", connection.name, connection.health_status)
+    return result
+
+
 @task(queue_name="health_checks")
 def check_connection_health(connection_id: int) -> dict:
     """
@@ -32,34 +53,7 @@ def check_connection_health(connection_id: int) -> dict:
         logger.warning("Connection %s not found for health check", connection_id)
         return {"error": "Connection not found"}
 
-    plugin = connection.get_plugin()
-    if not plugin:
-        connection.health_status = "unknown"
-        connection.last_health_message = "Plugin not available"
-        connection.last_health_check = timezone.now()
-        connection.save(update_fields=["health_status", "last_health_message", "last_health_check"])
-        return {"status": "unknown", "error": "Plugin missing"}
-
-    # Run health check
-    try:
-        config = connection.get_config()
-        result = plugin.health_check(config)
-    except Exception as e:
-        logger.exception("Health check failed for connection %s", connection_id)
-        result = {
-            "status": "unhealthy",
-            "message": f"Health check error: {e!s}",
-            "details": {},
-        }
-
-    # Update connection
-    connection.health_status = result.get("status", "unknown")
-    connection.last_health_message = result.get("message", "")
-    connection.last_health_check = timezone.now()
-    connection.save(update_fields=["health_status", "last_health_message", "last_health_check"])
-
-    logger.info("Health check for %s: %s", connection.name, result["status"])
-    return result
+    return run_plugin_health_check(connection)
 
 
 @task(queue_name="health_checks")
