@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from django.views.generic import DetailView, ListView, View
 
-from core.models import IntegrationConnection
+from core.models import IntegrationConnection, User
 from core.permissions import (
     IntegrationsReadMixin,
     OperatorRequiredMixin,
@@ -44,8 +44,10 @@ class ConnectionListView(LoginRequiredMixin, ListView):
             connection.category = category
 
         # Add permission context
-        context["can_manage"] = has_system_role(self.request.user, ["admin", "operator"])
-        context["can_view_details"] = context["can_manage"] or has_system_role(self.request.user, "auditor")
+        user = self.request.user
+        assert isinstance(user, User)
+        context["can_manage"] = has_system_role(user, ["admin", "operator"])
+        context["can_view_details"] = context["can_manage"] or has_system_role(user, "auditor")
 
         # Lazy health check scheduling: enqueue checks for stale connections
         self._schedule_stale_health_checks()
@@ -132,7 +134,9 @@ class ConnectionDetailView(LoginRequiredMixin, IntegrationsReadMixin, DetailView
         context["config_form"] = ConnectionConfigUpdateForm(connection=connection)
 
         # Check if user can manage (for edit/delete buttons)
-        context["can_manage"] = has_system_role(self.request.user, ["admin", "operator"])
+        user = self.request.user
+        assert isinstance(user, User)
+        context["can_manage"] = has_system_role(user, ["admin", "operator"])
 
         return context
 
@@ -265,5 +269,7 @@ class PluginListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["categories"] = ["scm", "deploy", "ci"]  # For filter dropdown
-        context["can_manage"] = has_system_role(self.request.user, ["admin", "operator"])
+        user = self.request.user
+        assert isinstance(user, User)
+        context["can_manage"] = has_system_role(user, ["admin", "operator"])
         return context

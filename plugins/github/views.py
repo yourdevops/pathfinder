@@ -139,9 +139,9 @@ class GitHubConnectionCreateView(LoginRequiredMixin, OperatorRequiredMixin, View
         # Django's CSP middleware reads response._csp_config if set.
         parsed = urlparse(manifest_url)
         target_origin = f"{parsed.scheme}://{parsed.netloc}"
-        csp_config = {k: list(v) for k, v in settings.SECURE_CSP.items()}
+        csp_config = {k: list(v) for k, v in settings.SECURE_CSP.items()}  # type: ignore[call-overload]
         csp_config["form-action"] = [*csp_config.get("form-action", []), target_origin]
-        response._csp_config = csp_config
+        response._csp_config = csp_config  # type: ignore[attr-defined]
 
         return response
 

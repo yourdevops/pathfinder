@@ -21,7 +21,7 @@ class BasePollingConsumer(AsyncWebsocketConsumer):
         render_updates(state): str -- render HTML for OOB swap
     """
 
-    entity_id_kwarg = None  # Override in subclass
+    entity_id_kwarg: str | None = None  # Override in subclass
     poll_interval = 3  # seconds
 
     def get_poll_interval(self):

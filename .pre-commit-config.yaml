@@ -67,6 +67,16 @@ repos:
   #         - '--skip-check'
   #         - 'CKV_K8S_35'   # secrets as env vars is standard for Django/12-factor apps
 
+  # Type checking
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: uv run mypy .
+        language: system
+        types: [python]
+        pass_filenames: false
+
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.0
     hooks:

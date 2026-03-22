@@ -568,9 +568,9 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
                 config = repository.connection.get_config()
                 protection_result = ci_plugin.check_branch_protection(config, repo_name, repository.default_branch)
 
-        sync_log.protection_valid = protection_result.get("valid", False)
+        sync_log.protection_valid = bool(protection_result.get("valid", False))
         sync_log.save(update_fields=["protection_valid"])
-        repository.protection_valid = protection_result.get("valid", False)
+        repository.protection_valid = bool(protection_result.get("valid", False))
         repository.save(update_fields=["protection_valid"])
 
         if not protection_result.get("valid", False):
@@ -604,11 +604,11 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
         # Scan CI steps using engine-agnostic discovery + plugin parsing
         from core.ci_steps import discover_steps
 
-        if ci_plugin:
-            raw_steps = discover_steps(temp_dir, ci_plugin.engine_file_name)
-        else:
-            raw_steps = []
+        if not ci_plugin:
             logger.warning("No CI plugin found for engine '%s', skipping step scan", engine)
+            raw_steps = []
+        else:
+            raw_steps = discover_steps(temp_dir, ci_plugin.engine_file_name)
 
         # Reset last_change_type for all active steps in this repo before scan
         CIStep.objects.filter(repository=repository, status="active").update(last_change_type="")
@@ -617,6 +617,7 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
         stats = {"created": 0, "updated": 0, "unchanged": 0, "skipped_collision": 0, "archived": 0}
 
         for raw_step in raw_steps:
+            assert ci_plugin is not None  # guaranteed: raw_steps is [] when ci_plugin is None
             step_info = ci_plugin.parse_step_file(raw_step["raw_content"])
             dir_name = os.path.basename(raw_step["directory_path"])
             file_path = raw_step["file_path"]
@@ -1303,7 +1304,9 @@ def auto_update_services(workflow_id: int, version_id: int) -> dict:
     skipped = 0
 
     for service in services:
-        current_version_str = service.ci_workflow_version.version
+        ci_wf_version = service.ci_workflow_version
+        assert ci_wf_version is not None  # filtered by ci_workflow_version__isnull=False
+        current_version_str = ci_wf_version.version
         if not current_version_str or not is_patch_bump(current_version_str, new_version.version):
             skipped += 1
             continue

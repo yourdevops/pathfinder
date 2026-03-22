@@ -32,6 +32,7 @@ from core.models import (
     ProjectMembership,
     Service,
     Template,
+    User,
     get_available_templates_for_project,
     get_available_workflows_for_project,
 )
@@ -50,6 +51,7 @@ class ServiceListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
+        assert isinstance(user, User)
         # Admin/superusers or system admins/operators see all services
         if user.is_superuser or user.is_staff or has_system_role(user, ["admin", "operator"]):
             return Service.objects.select_related("project").order_by("-created_at")
@@ -111,7 +113,7 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
                 )
                 return redirect("projects:detail", project_name=project_name)
         else:
-            self.project = None
+            self.project = None  # type: ignore[assignment]
 
         return super().dispatch(request, *args, **kwargs)
 
@@ -567,7 +569,7 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
         if tab not in valid_tabs:
             tab = "details"
 
-        if self.request.htmx:
+        if self.request.htmx:  # type: ignore[attr-defined]
             return [f"core/services/_{tab}_tab.html"]
         return ["core/services/detail.html"]
 
@@ -619,9 +621,9 @@ class ServiceDetailView(LoginRequiredMixin, TemplateView):
             context["can_edit"] = self.user_project_role in ("contributor", "owner")
 
             # Can edit service info (description, endpoint) if owner or system admin
-            context["can_edit_info"] = self.user_project_role == "owner" or has_system_role(
-                self.request.user, ["admin"]
-            )
+            user = self.request.user
+            assert isinstance(user, User)
+            context["can_edit_info"] = self.user_project_role == "owner" or has_system_role(user, ["admin"])
 
         elif tab == "ci":
             # CI Workflow tab context
@@ -1043,7 +1045,7 @@ class ServiceAssignWorkflowView(LoginRequiredMixin, View):
                             if not ci_config.allow_draft_workflows:
                                 messages.error(request, "This project does not allow draft workflow versions.")
                                 return redirect(f"/projects/{self.project.name}/services/{self.service.name}/?tab=ci")
-                        except self.project.ci_config.RelatedObjectDoesNotExist:
+                        except self.project.ci_config.RelatedObjectDoesNotExist:  # type: ignore[attr-defined]
                             messages.error(request, "This project does not allow draft workflow versions.")
                             return redirect(f"/projects/{self.project.name}/services/{self.service.name}/?tab=ci")
                     self.service.ci_workflow_version = version
@@ -1391,7 +1393,7 @@ class ServicePinVersionView(LoginRequiredMixin, View):
                                 "This project does not allow draft workflow versions. Enable 'Allow Drafts' in Project CI Settings first.",
                             )
                             return self._redirect_ci_tab(project_name, service_name)
-                    except project.ci_config.RelatedObjectDoesNotExist:
+                    except project.ci_config.RelatedObjectDoesNotExist:  # type: ignore[attr-defined]
                         messages.error(
                             request,
                             "This project does not allow draft workflow versions. Enable 'Allow Drafts' in Project CI Settings first.",
@@ -1481,7 +1483,7 @@ class BuildLogsView(LoginRequiredMixin, View):
             return "\n".join(result_lines)
         return None
 
-    def _process_logs(self, logs: str, build_status: str, failed_step_name: str = "") -> tuple[list[dict], bool]:
+    def _process_logs(self, logs: str | None, build_status: str, failed_step_name: str = "") -> tuple[list[dict], bool]:
         """
         Process logs for display.
 

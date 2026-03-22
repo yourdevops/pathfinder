@@ -113,7 +113,7 @@ class GitHubConnectionForm(forms.Form):
         return name
 
     def clean(self):
-        cleaned_data = super().clean()
+        cleaned_data = super().clean() or {}
         auth_type = cleaned_data.get("auth_type")
         setup_mode = cleaned_data.get("setup_mode")
 

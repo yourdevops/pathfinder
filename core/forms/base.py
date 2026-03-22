@@ -97,7 +97,7 @@ class AdminRegistrationForm(forms.Form):
         return password
 
     def clean(self):
-        cleaned_data = super().clean()
+        cleaned_data = super().clean() or {}
         password = cleaned_data.get("password")
         password_confirm = cleaned_data.get("password_confirm")
         if password and password_confirm and password != password_confirm:
@@ -144,7 +144,7 @@ class LoginForm(forms.Form):
         super().__init__(*args, **kwargs)
 
     def clean(self):
-        cleaned_data = super().clean()
+        cleaned_data = super().clean() or {}
         username = cleaned_data.get("username")
         password = cleaned_data.get("password")
 
@@ -398,7 +398,7 @@ class GroupAddMemberForm(forms.Form):
         if group:
             # Exclude users already in the group
             existing_user_ids = GroupMembership.objects.filter(group=group).values_list("user_id", flat=True)
-            self.fields["user"].queryset = User.objects.filter(status="active").exclude(id__in=existing_user_ids)
+            self.fields["user"].queryset = User.objects.filter(status="active").exclude(id__in=existing_user_ids)  # type: ignore[attr-defined]
 
 
 class ProjectCreateForm(forms.ModelForm):
@@ -489,7 +489,7 @@ class ProjectUpdateForm(forms.ModelForm):
         if proj and proj.pk:
             from core.models import get_available_workflows_for_project
 
-            self.fields["default_workflow"].queryset = get_available_workflows_for_project(proj)
+            self.fields["default_workflow"].queryset = get_available_workflows_for_project(proj)  # type: ignore[attr-defined]
 
 
 class EnvironmentForm(forms.ModelForm):
@@ -574,7 +574,7 @@ class AddProjectMemberForm(forms.Form):
     def __init__(self, *args, existing_group_ids=None, **kwargs):
         super().__init__(*args, **kwargs)
         if existing_group_ids:
-            self.fields["group"].queryset = Group.objects.filter(status="active").exclude(id__in=existing_group_ids)
+            self.fields["group"].queryset = Group.objects.filter(status="active").exclude(id__in=existing_group_ids)  # type: ignore[attr-defined]
 
 
 class AttachConnectionForm(forms.Form):
@@ -602,7 +602,7 @@ class AttachConnectionForm(forms.Form):
             qs = qs.filter(plugin_name__in=plugin_names)
         if exclude_ids:
             qs = qs.exclude(id__in=exclude_ids)
-        self.fields["connection"].queryset = qs
+        self.fields["connection"].queryset = qs  # type: ignore[attr-defined]
 
 
 class ConnectionConfigUpdateForm(forms.Form):

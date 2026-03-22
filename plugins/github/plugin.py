@@ -166,7 +166,8 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
             },
         }
 
-        steps_list = manifest["jobs"]["build"]["steps"]
+        jobs: dict[str, dict[str, object]] = manifest["jobs"]  # type: ignore[assignment]
+        steps_list: list[dict[str, object]] = jobs["build"]["steps"]  # type: ignore[assignment]
 
         # Auto-inject: checkout
         steps_list.append(
@@ -659,7 +660,7 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
             repo = org.create_repo(name, description=description, private=private)
         else:
             user = g.get_user()
-            repo = user.create_repo(name, description=description, private=private)
+            repo = user.create_repo(name, description=description, private=private)  # type: ignore[union-attr]
 
         return {
             "name": repo.name,
@@ -728,7 +729,7 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
         result = repo.create_file(path, message, content, branch=branch)
 
         return {
-            "path": result["content"].path,
+            "path": result["content"].path,  # type: ignore[union-attr]
             "sha": result["content"].sha,
             "commit_sha": result["commit"].sha,
         }
@@ -763,11 +764,11 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
         repo = g.get_repo(repo_name)
         try:
             existing = repo.get_contents(path, ref=branch)
-            result = repo.update_file(path, message, content, existing.sha, branch=branch)
+            result = repo.update_file(path, message, content, existing.sha, branch=branch)  # type: ignore[union-attr]
         except Exception:
             result = repo.create_file(path, message, content, branch=branch)
         return {
-            "path": result["content"].path,
+            "path": result["content"].path,  # type: ignore[union-attr]
             "sha": result["content"].sha,
             "commit_sha": result["commit"].sha,
         }
@@ -932,10 +933,11 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
         """
         g = self._get_github_client(config)
         repo = g.get_repo(repo_name)
-        runs = repo.get_workflow_runs()[:per_page]
+        all_runs = repo.get_workflow_runs()
+        runs = all_runs[:per_page]
 
-        result = []
-        for run in runs:
+        result: list[dict[str, object]] = []
+        for run in runs:  # type: ignore[var-annotated]
             result.append(
                 {
                     "id": run.id,

@@ -68,7 +68,7 @@ class ProjectStepForm(forms.Form):
         # If project is pre-selected (from project context), filter and set initial
         if project:
             self.fields["project"].initial = project
-            self.fields["project"].queryset = Project.objects.filter(pk=project.pk)
+            self.fields["project"].queryset = Project.objects.filter(pk=project.pk)  # type: ignore[attr-defined]
             self.fields["project"].widget.attrs["disabled"] = True
             # Disabled fields don't submit values, so make it not required
             # The clean() method will use self.initial_project instead
@@ -84,7 +84,7 @@ class ProjectStepForm(forms.Form):
         return name
 
     def clean(self):
-        cleaned_data = super().clean()
+        cleaned_data = super().clean() or {}
         # Use initial_project when field is disabled (disabled fields don't submit values)
         project = cleaned_data.get("project") or self.initial_project
         # Ensure project is in cleaned_data for subsequent wizard steps
@@ -174,7 +174,7 @@ class RepositoryStepForm(forms.Form):
         # Populate SCM connections from project
         if project:
             queryset = ProjectConnection.objects.filter(project=project).select_related("connection")
-            self.fields["scm_connection"].queryset = queryset
+            self.fields["scm_connection"].queryset = queryset  # type: ignore[attr-defined]
 
             # Auto-select default SCM connection if one exists
             default_connection = queryset.filter(is_default=True).first()
@@ -209,7 +209,7 @@ class RepositoryStepForm(forms.Form):
             raise forms.ValidationError("Selected template version is not available.") from None
 
     def clean(self):
-        cleaned_data = super().clean()
+        cleaned_data = super().clean() or {}
         repo_mode = cleaned_data.get("repo_mode")
         existing_repo_url = cleaned_data.get("existing_repo_url")
 
@@ -296,7 +296,7 @@ class WorkflowSelectionForm(forms.Form):
         super().__init__(*args, **kwargs)
         self.project = project
         if project:
-            self.fields["ci_workflow"].queryset = get_available_workflows_for_project(project)
+            self.fields["ci_workflow"].queryset = get_available_workflows_for_project(project)  # type: ignore[attr-defined]
             # Pre-select the project's default workflow if configured
             try:
                 ci_config = project.ci_config

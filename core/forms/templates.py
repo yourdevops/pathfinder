@@ -34,7 +34,7 @@ class TemplateRegisterForm(forms.Form):
         from plugins.base import registry
 
         scm_names = [p.name for p in registry.all().values() if p.category == "scm"]
-        self.fields["connection"].queryset = IntegrationConnection.objects.filter(
+        self.fields["connection"].queryset = IntegrationConnection.objects.filter(  # type: ignore[attr-defined]
             status="active", plugin_name__in=scm_names
         )
 

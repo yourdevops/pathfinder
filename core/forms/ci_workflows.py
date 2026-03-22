@@ -62,9 +62,9 @@ class StepsRepoRegisterForm(forms.Form):
 
         engine_choices = get_available_engines()
         if engine_choices:
-            self.fields["engine"].choices = engine_choices
+            self.fields["engine"].choices = engine_choices  # type: ignore[attr-defined]
         else:
-            self.fields["engine"].choices = [("", "No CI engines available")]
+            self.fields["engine"].choices = [("", "No CI engines available")]  # type: ignore[attr-defined]
 
     def clean_name(self):
         name = self.cleaned_data["name"]
@@ -135,10 +135,10 @@ class WorkflowCreateForm(forms.Form):
 
         if len(engine_choices) == 1:
             # Single engine: pre-select it, no placeholder
-            self.fields["engine"].choices = engine_choices
+            self.fields["engine"].choices = engine_choices  # type: ignore[attr-defined]
             self.fields["engine"].initial = engine_choices[0][0]
         else:
-            self.fields["engine"].choices = [("", "-- Select CI engine --"), *engine_choices]
+            self.fields["engine"].choices = [("", "-- Select CI engine --"), *engine_choices]  # type: ignore[attr-defined]
 
     def clean_name(self):
         name = self.cleaned_data["name"]
@@ -170,7 +170,7 @@ class ProjectCIConfigForm(forms.Form):
         if project:
             from core.models import get_available_workflows_for_project
 
-            self.fields["default_workflow"].queryset = get_available_workflows_for_project(project)
+            self.fields["default_workflow"].queryset = get_available_workflows_for_project(project)  # type: ignore[attr-defined]
 
 
 class ApproveWorkflowForm(forms.Form):
@@ -187,6 +187,6 @@ class ApproveWorkflowForm(forms.Form):
             already_approved_ids = ProjectApprovedWorkflow.objects.filter(project=project).values_list(
                 "workflow_id", flat=True
             )
-            self.fields["workflow"].queryset = CIWorkflow.objects.filter(status="published").exclude(
+            self.fields["workflow"].queryset = CIWorkflow.objects.filter(status="published").exclude(  # type: ignore[attr-defined]
                 id__in=already_approved_ids
             )

@@ -98,7 +98,7 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
         valid_tabs = ["services", "environments", "settings"]
         if tab not in valid_tabs:
             tab = "services"
-        if self.request.htmx:
+        if self.request.htmx:  # type: ignore[attr-defined]
             return [f"core/projects/_{tab}_tab.html"]
         return ["core/projects/detail.html"]
 
@@ -117,6 +117,7 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
             context["environments"] = self.project.environments.filter(status="active").order_by("order", "name")
         elif tab == "settings":
             # Initialize form with CI config values
+            ci_config: ProjectCIConfig | None
             try:
                 ci_config = self.project.ci_config
                 initial = {
@@ -124,6 +125,7 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
                     "default_workflow": ci_config.default_workflow,
                 }
             except ProjectCIConfig.DoesNotExist:
+                ci_config = None
                 initial = {
                     "approve_all_published": False,
                     "default_workflow": None,
@@ -135,11 +137,6 @@ class ProjectDetailView(LoginRequiredMixin, ProjectViewerMixin, TemplateView):
             context["owners"] = [m for m in memberships if m.project_role == "owner"]
             context["contributors"] = [m for m in memberships if m.project_role == "contributor"]
             context["viewers"] = [m for m in memberships if m.project_role == "viewer"]
-            # CI Configuration context
-            try:
-                ci_config = self.project.ci_config
-            except ProjectCIConfig.DoesNotExist:
-                ci_config = None
             context["ci_config"] = ci_config
             context["ci_config_form"] = ProjectCIConfigForm(
                 project=self.project,

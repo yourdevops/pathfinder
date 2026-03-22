@@ -44,4 +44,4 @@ class AdminRequiredMixin:
         if not has_system_role(request.user, "admin"):
             messages.error(request, "You do not have permission to access this page.")
             return redirect("dashboard:home")
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)  # type: ignore[misc]

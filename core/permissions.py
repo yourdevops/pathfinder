@@ -87,10 +87,10 @@ class ProjectPermissionMixin:
             # Changed: use name instead of uuid
             return redirect("projects:detail", project_name=self.project.name)
 
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)  # type: ignore[misc]
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
+        context = super().get_context_data(**kwargs)  # type: ignore[misc]
         context["project"] = self.project
         context["user_project_role"] = self.user_project_role
         return context
@@ -119,11 +119,11 @@ class OperatorRequiredMixin:
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return self.handle_no_permission()
+            return self.handle_no_permission()  # type: ignore[attr-defined]
         if not has_system_role(request.user, ["admin", "operator"]):
             messages.error(request, "You need operator permissions to access this page.")
             return redirect("projects:list")
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)  # type: ignore[misc]
 
 
 class IntegrationsReadMixin:
@@ -131,11 +131,11 @@ class IntegrationsReadMixin:
 
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return self.handle_no_permission()
+            return self.handle_no_permission()  # type: ignore[attr-defined]
         if not has_system_role(request.user, ["admin", "operator", "auditor"]):
             messages.error(
                 request,
                 "You need operator or auditor permissions to view connection details.",
             )
             return redirect("connections:list")
-        return super().dispatch(request, *args, **kwargs)
+        return super().dispatch(request, *args, **kwargs)  # type: ignore[misc]

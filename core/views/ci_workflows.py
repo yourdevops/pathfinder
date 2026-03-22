@@ -39,10 +39,10 @@ class StepsRepoListView(LoginRequiredMixin, View):
         )
         # Annotate step counts and engine display
         for repo in repos:
-            repo.step_count = repo.steps.count()
-            repo.runtime_count = repo.runtimes.count()
+            repo.step_count = repo.steps.count()  # type: ignore[attr-defined]
+            repo.runtime_count = repo.runtimes.count()  # type: ignore[attr-defined]
             plugin = get_ci_plugin_for_engine(repo.engine)
-            repo.engine_display = plugin.engine_display_name if plugin else repo.engine
+            repo.engine_display = plugin.engine_display_name if plugin else repo.engine  # type: ignore[attr-defined]
         return render(
             request,
             "core/ci_workflows/repo_list.html",
@@ -265,7 +265,7 @@ def _filter_steps(request):
     engines = get_available_engines()
     engine_display_map = dict(engines)
     for s in steps_list:
-        s.engine_display = engine_display_map.get(s.engine, s.engine)
+        s.engine_display = engine_display_map.get(s.engine, s.engine)  # type: ignore[attr-defined]
 
     # Collect distinct runtimes from all steps
     all_runtimes = set()
@@ -863,17 +863,17 @@ class WorkflowDetailView(LoginRequiredMixin, View):
         # Check for step warnings via per-workflow SHA comparison
         has_step_warnings = False
         for ws in workflow_steps:
-            ws.is_archived = ws.step.status == "archived"
-            ws.is_updated = ws.step_commit_sha and ws.step.commit_sha and ws.step_commit_sha != ws.step.commit_sha
-            ws.change_badge = ""
-            if ws.is_updated:
+            ws.is_archived = ws.step.status == "archived"  # type: ignore[attr-defined]
+            ws.is_updated = ws.step_commit_sha and ws.step.commit_sha and ws.step_commit_sha != ws.step.commit_sha  # type: ignore[attr-defined]
+            ws.change_badge = ""  # type: ignore[attr-defined]
+            if ws.is_updated:  # type: ignore[attr-defined]
                 if ws.step.last_change_type == "interface":
-                    ws.change_badge = "interface"
+                    ws.change_badge = "interface"  # type: ignore[attr-defined]
                 elif ws.step.last_change_type == "metadata":
-                    ws.change_badge = "metadata"
+                    ws.change_badge = "metadata"  # type: ignore[attr-defined]
                 else:
-                    ws.change_badge = "updated"
-            if ws.is_archived or ws.is_updated:
+                    ws.change_badge = "updated"  # type: ignore[attr-defined]
+            if ws.is_archived or ws.is_updated:  # type: ignore[attr-defined]
                 has_step_warnings = True
 
         engine = workflow.engine

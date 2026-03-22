@@ -38,7 +38,7 @@ def navigation_context(request):
     from core.models import Project
     from core.permissions import get_user_project_role
 
-    context = {
+    context: dict[str, object] = {
         "in_project_context": False,
         "current_project": None,
         "current_project_role": None,

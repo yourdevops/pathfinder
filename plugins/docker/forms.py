@@ -44,7 +44,7 @@ class DockerConnectionForm(forms.Form):
     )
 
     def clean(self):
-        cleaned_data = super().clean()
+        cleaned_data = super().clean() or {}
         tls_enabled = cleaned_data.get("tls_enabled")
         if tls_enabled:
             # If TLS enabled, require certificates
