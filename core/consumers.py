@@ -164,6 +164,9 @@ class ServiceConsumer(BasePollingConsumer):
         except Service.DoesNotExist:
             return None
 
+        # Cache for reuse in build_template_context (avoids redundant query)
+        self._cached_service = service
+
         # Fetch last 20 builds
         builds = list(
             Build.objects.filter(service_id=self.service_id)
@@ -209,14 +212,10 @@ class ServiceConsumer(BasePollingConsumer):
 
     def build_template_context(self, state):
         """Build template context matching ServiceDetailView.get_context_data."""
-        from core.models import Build, Service
+        from core.models import Build
 
-        service = Service.objects.select_related(
-            "ci_workflow",
-            "ci_workflow_version",
-            "project",
-        ).get(id=self.service_id)
-
+        # Reuse service fetched by get_current_state() (same sync block)
+        service = self._cached_service
         project = service.project
 
         # Build stats
