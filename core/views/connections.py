@@ -1,14 +1,9 @@
 """Connection management views."""
 
-from datetime import timedelta
-
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db.models import Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
-from django.utils import timezone
 from django.views.generic import DetailView, ListView, View
 
 from core.models import IntegrationConnection, User
@@ -49,32 +44,7 @@ class ConnectionListView(LoginRequiredMixin, ListView):
         context["can_manage"] = has_system_role(user, ["admin", "operator"])
         context["can_view_details"] = context["can_manage"] or has_system_role(user, "auditor")
 
-        # Lazy health check scheduling: enqueue checks for stale connections
-        self._schedule_stale_health_checks()
-
         return context
-
-    def _schedule_stale_health_checks(self):
-        """Enqueue health checks for connections that need them.
-
-        This provides lazy scheduling without needing cron/periodic tasks.
-        Checks are enqueued when:
-        - Connection has never been checked (last_health_check is None)
-        - Last check was more than HEALTH_CHECK_INTERVAL seconds ago
-        """
-        from core.tasks import check_connection_health
-
-        interval_seconds = getattr(settings, "HEALTH_CHECK_INTERVAL", 900)  # 15 min default
-        stale_threshold = timezone.now() - timedelta(seconds=interval_seconds)
-
-        # Find connections needing health check (limit to 5 to avoid flooding)
-        stale_connections = IntegrationConnection.objects.filter(status="active").filter(
-            # Never checked OR checked before threshold
-            Q(last_health_check__isnull=True) | Q(last_health_check__lt=stale_threshold)
-        )[:5]
-
-        for connection in stale_connections:
-            check_connection_health.enqueue(connection_id=connection.id)
 
 
 class ConnectionDetailView(LoginRequiredMixin, IntegrationsReadMixin, DetailView):
