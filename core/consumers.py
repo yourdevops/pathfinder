@@ -182,23 +182,15 @@ class ServiceConsumer(BasePollingConsumer):
             )
         )
 
-        # Build stats
-        total_count = Build.objects.filter(service_id=self.service_id).count()
-        success_count = Build.objects.filter(service_id=self.service_id, status="success").count()
-        completed_count = Build.objects.filter(
-            service_id=self.service_id, status__in=["success", "failed", "cancelled"]
-        ).count()
+        # Build stats — single aggregate query instead of 5 separate queries
+        from django.db.models import Avg, Count, Q
 
-        # Average duration for completed builds
-        completed_builds = Build.objects.filter(
-            service_id=self.service_id,
-            duration_seconds__isnull=False,
+        stats = Build.objects.filter(service_id=self.service_id).aggregate(
+            total=Count("id"),
+            success=Count("id", filter=Q(status="success")),
+            completed=Count("id", filter=Q(status__in=["success", "failed", "cancelled"])),
+            avg_duration=Avg("duration_seconds", filter=Q(duration_seconds__isnull=False)),
         )
-        avg_duration = None
-        if completed_builds.exists():
-            from django.db.models import Avg
-
-            avg_duration = completed_builds.aggregate(avg=Avg("duration_seconds"))["avg"]
 
         return {
             "service_status": service.status,
@@ -212,12 +204,7 @@ class ServiceConsumer(BasePollingConsumer):
             "ci_workflow_name": service.ci_workflow.name if service.ci_workflow else None,
             "ci_workflow_version_id": service.ci_workflow_version_id,
             "builds": builds,
-            "stats": {
-                "total": total_count,
-                "success": success_count,
-                "completed": completed_count,
-                "avg_duration": avg_duration,
-            },
+            "stats": stats,
         }
 
     def build_template_context(self, state):
