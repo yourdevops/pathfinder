@@ -14,6 +14,7 @@ For production deployments, use the PTF_ENCRYPTION_KEY environment variable.
 import json
 import logging
 import os
+import threading
 from pathlib import Path
 
 from cryptography.fernet import Fernet
@@ -22,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Cache the Fernet instance
 _fernet_instance = None
+_fernet_lock = threading.Lock()
 
 
 def get_encryption_key() -> bytes:
@@ -77,7 +79,9 @@ def get_fernet() -> Fernet:
     """
     global _fernet_instance
     if _fernet_instance is None:
-        _fernet_instance = Fernet(get_encryption_key())
+        with _fernet_lock:
+            if _fernet_instance is None:
+                _fernet_instance = Fernet(get_encryption_key())
     return _fernet_instance
 
 
