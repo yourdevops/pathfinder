@@ -104,8 +104,7 @@ class ServiceCreateWizard(LoginRequiredMixin, SessionWizardView):
         if project_name:
             self.project = get_object_or_404(Project, name=project_name, status="active")
             # Check contributor permission
-            access = can_access_project(request.user, self.project)
-            if not access or access == "viewer":
+            if not can_access_project(request.user, self.project, required_role="contributor"):
                 messages.error(
                     request,
                     "You don't have permission to create services in this project.",
@@ -953,8 +952,7 @@ class ServiceRetryScaffoldView(LoginRequiredMixin, View):
         service = get_object_or_404(Service, project=project, name=service_name)
 
         # Check contributor permission
-        role = can_access_project(request.user, project)
-        if not role or role == "viewer":
+        if not can_access_project(request.user, project, required_role="contributor"):
             messages.error(request, "You don't have permission to modify this service.")
             return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
 
@@ -998,8 +996,7 @@ class ServiceAssignWorkflowView(LoginRequiredMixin, View):
         self.service = get_object_or_404(Service, project=self.project, name=service_name)
 
         # Check contributor permission
-        role = can_access_project(request.user, self.project)
-        if not role or role == "viewer":
+        if not can_access_project(request.user, self.project, required_role="contributor"):
             messages.error(request, "You don't have permission to modify this service.")
             return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
 
@@ -1226,8 +1223,7 @@ class ServiceProvisionVariablesView(LoginRequiredMixin, View):
         service = get_object_or_404(Service, project=project, name=service_name)
 
         # Check contributor permission
-        role = can_access_project(request.user, project)
-        if not role or role == "viewer":
+        if not can_access_project(request.user, project, required_role="contributor"):
             messages.error(request, "You don't have permission to modify this service.")
             return redirect(f"/projects/{project_name}/services/{service_name}/?tab=ci")
 
@@ -1296,8 +1292,7 @@ class ServicePushManifestView(LoginRequiredMixin, View):
         self.service = get_object_or_404(Service, project=self.project, name=service_name)
 
         # Check contributor permission
-        role = can_access_project(request.user, self.project)
-        if not role or role == "viewer":
+        if not can_access_project(request.user, self.project, required_role="contributor"):
             messages.error(request, "You don't have permission to modify this service.")
             return redirect("projects:service_detail", project_name=project_name, service_name=service_name)
 
@@ -1345,8 +1340,7 @@ class ServiceAutoUpdateToggleView(LoginRequiredMixin, View):
         service = get_object_or_404(Service, project=project, name=service_name)
 
         # Check contributor permission
-        role = can_access_project(request.user, project)
-        if not role or role == "viewer":
+        if not can_access_project(request.user, project, required_role="contributor"):
             return HttpResponse("Permission denied", status=403)
 
         # Toggle based on checkbox value (checkbox sends value when checked, absent when unchecked)
