@@ -56,14 +56,14 @@ def check_connection_health(connection_id: int) -> dict:
     return run_plugin_health_check(connection)
 
 
+@cron_task(cron_schedule="*/15 * * * *")
 @task(queue_name="health_checks")
 def schedule_health_checks() -> dict:
     """
     Schedule health checks for all active connections.
     Spreads checks evenly across the interval to avoid load spikes.
 
-    This should be called periodically (e.g., every HEALTH_CHECK_INTERVAL seconds)
-    by running: python manage.py db_worker
+    Runs every 15 minutes via django-scheduled-tasks (db_worker).
     """
     from core.models import IntegrationConnection
 
@@ -613,8 +613,37 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
         # Reset last_change_type for all active steps in this repo before scan
         CIStep.objects.filter(repository=repository, status="active").update(last_change_type="")
 
+        # Pre-fetch all existing steps for this engine to avoid N+1 queries.
+        # UniqueConstraint(engine, slug) guarantees at most one step per slug.
+        existing_steps_by_slug: dict[str, CIStep] = {
+            s.slug: s for s in CIStep.objects.filter(engine=engine).select_related("repository")
+        }
+
         scanned_slugs = set()
         stats = {"created": 0, "updated": 0, "unchanged": 0, "skipped_collision": 0, "archived": 0}
+        bulk_create_steps: list[CIStep] = []
+        bulk_update_steps: list[CIStep] = []
+        bulk_reactivate_steps: list[CIStep] = []
+        bulk_sync_entries: list[StepSyncEntry] = []
+
+        _update_fields = [
+            "name",
+            "description",
+            "phase",
+            "runtime_constraints",
+            "tags",
+            "produces",
+            "inputs_schema",
+            "outputs_schema",
+            "commit_sha",
+            "raw_metadata",
+            "file_path",
+            "directory_name",
+            "slug",
+            "status",
+            "last_change_type",
+            "updated_at",
+        ]
 
         for raw_step in raw_steps:
             assert ci_plugin is not None  # guaranteed: raw_steps is [] when ci_plugin is None
@@ -635,8 +664,8 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
 
             scanned_slugs.add(slug)
 
-            # Collision detection: check if slug+engine exists from a DIFFERENT repository
-            existing = CIStep.objects.filter(engine=engine, slug=slug).first()
+            # Collision detection + same-repo match via pre-fetched dict (O(1) lookup)
+            existing = existing_steps_by_slug.get(slug)
             if existing and existing.repository_id != repository.id:
                 logger.warning(
                     "Slug collision: '%s' (engine=%s) already exists from repository '%s', skipping step from '%s'",
@@ -646,17 +675,19 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
                     repository.name,
                 )
                 stats["skipped_collision"] += 1
-                StepSyncEntry.objects.create(
-                    sync_log=sync_log,
-                    step_slug=slug,
-                    action="skipped",
-                    severity="warning",
-                    message=f"Slug collision with repository '{existing.repository.name}'",
+                bulk_sync_entries.append(
+                    StepSyncEntry(
+                        sync_log=sync_log,
+                        step_slug=slug,
+                        action="skipped",
+                        severity="warning",
+                        message=f"Slug collision with repository '{existing.repository.name}'",
+                    )
                 )
                 continue
 
-            # Check same-repo match by slug+engine (normal update path)
-            existing_same_repo = CIStep.objects.filter(repository=repository, engine=engine, slug=slug).first()
+            # existing is either from this repo or None
+            existing_same_repo = existing if existing else None
 
             if existing_same_repo:
                 # SHA unchanged? Skip (no entry -- too noisy)
@@ -665,7 +696,7 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
                     # Re-activate if it was archived (step file returned)
                     if existing_same_repo.status == "archived":
                         existing_same_repo.status = "active"
-                        existing_same_repo.save(update_fields=["status"])
+                        bulk_reactivate_steps.append(existing_same_repo)
                     continue
 
                 # SHA changed: re-parse and classify
@@ -680,7 +711,7 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
                 }
                 change_type = _classify_change(existing_same_repo, new_fields)
 
-                # Update existing step
+                # Update existing step in-memory; flush via bulk_update later
                 existing_same_repo.name = step_info["name"] or dir_name
                 existing_same_repo.description = step_info["description"]
                 existing_same_repo.phase = step_info["phase"]
@@ -696,19 +727,22 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
                 existing_same_repo.slug = slug
                 existing_same_repo.status = "active"
                 existing_same_repo.last_change_type = change_type or ""
-                existing_same_repo.save()
+                existing_same_repo.updated_at = timezone.now()
+                bulk_update_steps.append(existing_same_repo)
                 stats["updated"] += 1
                 severity = "warning" if change_type == "interface" else "info"
-                StepSyncEntry.objects.create(
-                    sync_log=sync_log,
-                    step_slug=slug,
-                    action="updated",
-                    severity=severity,
-                    message=f"Change type: {change_type or 'content'}" if change_type else "Content updated",
+                bulk_sync_entries.append(
+                    StepSyncEntry(
+                        sync_log=sync_log,
+                        step_slug=slug,
+                        action="updated",
+                        severity=severity,
+                        message=f"Change type: {change_type or 'content'}" if change_type else "Content updated",
+                    )
                 )
             else:
-                # New step: create
-                CIStep.objects.create(
+                # New step: collect for bulk_create
+                new_step = CIStep(
                     repository=repository,
                     engine=engine,
                     directory_name=dir_name,
@@ -727,28 +761,47 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
                     status="active",
                     last_change_type="",
                 )
+                bulk_create_steps.append(new_step)
+                # Track in index so later iterations see this step
+                existing_steps_by_slug[slug] = new_step
                 stats["created"] += 1
-                StepSyncEntry.objects.create(
-                    sync_log=sync_log,
-                    step_slug=slug,
-                    action="added",
-                    severity="info",
-                    message=f"New step discovered: {step_info['name'] or dir_name}",
+                bulk_sync_entries.append(
+                    StepSyncEntry(
+                        sync_log=sync_log,
+                        step_slug=slug,
+                        action="added",
+                        severity="info",
+                        message=f"New step discovered: {step_info['name'] or dir_name}",
+                    )
                 )
+
+        # Flush bulk operations
+        if bulk_create_steps:
+            CIStep.objects.bulk_create(bulk_create_steps)
+        if bulk_update_steps:
+            CIStep.objects.bulk_update(bulk_update_steps, fields=_update_fields)
+        if bulk_reactivate_steps:
+            CIStep.objects.bulk_update(bulk_reactivate_steps, fields=["status"])
 
         # Archive steps no longer found in repo (capture slugs before update)
         to_archive_qs = CIStep.objects.filter(repository=repository, status="active").exclude(slug__in=scanned_slugs)
         archived_slugs_list = list(to_archive_qs.values_list("slug", "name"))
         archived_count = to_archive_qs.update(status="archived")
         stats["archived"] = archived_count
-        for slug, name in archived_slugs_list:
-            StepSyncEntry.objects.create(
-                sync_log=sync_log,
-                step_slug=slug,
-                action="archived",
-                severity="warning",
-                message=f"Step '{name}' no longer found in repository",
+        for a_slug, a_name in archived_slugs_list:
+            bulk_sync_entries.append(
+                StepSyncEntry(
+                    sync_log=sync_log,
+                    step_slug=a_slug,
+                    action="archived",
+                    severity="warning",
+                    message=f"Step '{a_name}' no longer found in repository",
+                )
             )
+
+        # Flush all sync log entries in one INSERT
+        if bulk_sync_entries:
+            StepSyncEntry.objects.bulk_create(bulk_sync_entries)
 
         # Finalize sync log
         has_errors = sync_log.entries.filter(severity="error").exists()
