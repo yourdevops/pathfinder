@@ -38,10 +38,7 @@ from core.urls import (  # noqa: E402
     users_patterns,
 )
 from core.views.api import step_validate_api  # noqa: E402
-from plugins import autodiscover  # noqa: E402
 from plugins.base import registry  # noqa: E402
-
-autodiscover()
 
 urlpatterns = [
     path("", RedirectView.as_view(url="/dashboard/", permanent=False), name="root"),

@@ -6,5 +6,6 @@ class CoreConfig(AppConfig):
     name = "core"
 
     def ready(self):
-        # Import signals if any
-        pass
+        from plugins import autodiscover
+
+        autodiscover()
