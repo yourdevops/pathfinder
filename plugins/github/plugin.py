@@ -319,7 +319,12 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
                     except Exception as update_err:
                         results[name] = f"error: {update_err}"
                 else:
-                    results[name] = f"error: {e.data.get('message', str(e)) if isinstance(e.data, dict) else str(e)}"
+                    msg = e.data.get("message", str(e)) if isinstance(e.data, dict) else str(e)
+                    # Surface the required permission hint from GitHub
+                    accepted = (e.headers or {}).get("X-Accepted-GitHub-Permissions", "")
+                    if accepted:
+                        msg = f"{msg} (required permission: {accepted})"
+                    results[name] = f"error: {msg}"
         return results
 
     def check_branch_protection(self, config: dict, repo_name: str, branch: str) -> dict:
