@@ -79,6 +79,7 @@ known-first-party = ["pathfinder"]
 DJANGO_SETTINGS_MODULE = "pathfinder.settings"
 python_files = ["test_*.py"]
 pythonpath = ["."]
+testpaths = ["tests", "core/tests", "plugins"]
 
 [tool.importlinter]
 root_packages = ["core", "plugins", "pathfinder", "theme"]

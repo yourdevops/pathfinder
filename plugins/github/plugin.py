@@ -6,14 +6,18 @@ This module provides the GitHubPlugin class implementing GitHub App authenticati
 and repository operations via the PyGithub library.
 """
 
+import logging
 import os
 import re
 from typing import Any
 
+import requests
 from github import Auth, Github, GithubIntegration
 from github.GithubException import GithubException
 
 from plugins.base import BasePlugin, CICapableMixin
+
+logger = logging.getLogger(__name__)
 
 _GH_OUTPUT_REF_RE = re.compile(r"^\$\{\{\s*steps\.([a-z0-9][a-z0-9-]*)\.outputs\.([a-z0-9][a-z0-9_-]*)\s*\}\}$")
 
@@ -278,8 +282,6 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
 
         Returns image reference string or empty string if not found.
         """
-        import requests
-
         try:
             g = self._get_github_client(config)
             # Get the run to find the commit SHA
@@ -288,7 +290,7 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
             short_sha = run.head_sha[:7]
 
             # Query GHCR for container tagged with sha-{short_sha}
-            token = g._Github__requester._Requester__auth.token
+            token = self._get_bearer_token(config)
             base_url = config.get("base_url", "https://api.github.com")
             owner = repo_name.split("/")[0]
             package_name = repo_name.split("/")[1]
@@ -310,9 +312,7 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
 
             return ""
         except Exception as e:
-            import logging
-
-            logging.getLogger(__name__).warning(f"Failed to resolve artifact ref for run {run_id}: {e}")
+            logger.warning("Failed to resolve artifact ref for run %s: %s", run_id, e)
             return ""
 
     def provision_ci_variables(self, config: dict, repo_name: str, variables: dict[str, str]) -> dict:
@@ -518,6 +518,17 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
         if base_url:
             return Github(auth=Auth.Token(token), base_url=base_url)
         return Github(auth=Auth.Token(token))
+
+    def _get_bearer_token(self, config: dict[str, Any]) -> str:
+        """Get a bearer token for direct API calls (requests library).
+
+        Uses the same auth routing as _get_github_client but returns
+        the raw token string instead of a Github client instance.
+        """
+        auth_type = config.get("auth_type", "app")
+        if auth_type == "token":
+            return config["personal_token"]
+        return self._get_installation_token(config)
 
     def _get_github_client(self, config: dict[str, Any]) -> Github:
         """
@@ -1026,11 +1037,7 @@ class GitHubPlugin(CICapableMixin, BasePlugin):
         Returns:
             Plain text log content, or None if unavailable.
         """
-        import requests
-
-        g = self._get_github_client(config)
-        # Get token from the client's auth
-        token = g._Github__requester._Requester__auth.token
+        token = self._get_bearer_token(config)
         base_url = config.get("base_url", "https://api.github.com")
         url = f"{base_url}/repos/{repo_name}/actions/jobs/{job_id}/logs"
         headers = {**GH_API_HEADERS, "Authorization": f"Bearer {token}"}
