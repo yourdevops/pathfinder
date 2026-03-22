@@ -107,7 +107,7 @@ def build_authenticated_git_url(git_url: str, connection=None) -> str:
     try:
         credentials = plugin.get_clone_credentials(config)
     except Exception as e:
-        logger.warning(f"Failed to get clone credentials: {e}")
+        logger.warning("Failed to get clone auth: %s", e)
         return git_url
 
     if not credentials:
@@ -154,8 +154,11 @@ def _clone_repo(git_url: str, branch: str, auth_url: str | None, prefix: str, **
             if attempt < _CLONE_MAX_RETRIES - 1 and _is_transient_clone_error(e):
                 delay = _CLONE_RETRY_DELAYS[attempt]
                 logger.warning(
-                    f"Transient clone error (attempt {attempt + 1}/{_CLONE_MAX_RETRIES}), "
-                    f"retrying in {delay}s: {scrub_credentials(e.stderr or '')}"
+                    "Transient clone error (attempt %s/%s), retrying in %ss: %s",
+                    attempt + 1,
+                    _CLONE_MAX_RETRIES,
+                    delay,
+                    scrub_credentials(e.stderr or ""),
                 )
                 time.sleep(delay)
                 continue
@@ -190,7 +193,7 @@ def clone_repo_shallow(git_url: str, branch: str = "main", auth_url: str | None 
     Raises:
         git.GitCommandError: If clone fails
     """
-    logger.info(f"Cloning repository (branch={branch}, depth={depth})")
+    logger.info("Cloning repository (branch=%s, depth=%s)", branch, depth)
     return _clone_repo(git_url, branch, auth_url, prefix="ssp_clone_", depth=depth)
 
 
@@ -212,7 +215,7 @@ def clone_repo_full(git_url: str, branch: str = "main", auth_url: str | None = N
     Raises:
         git.GitCommandError: If clone fails
     """
-    logger.info(f"Full cloning repository (branch={branch})")
+    logger.info("Full cloning repository (branch=%s)", branch)
     return _clone_repo(git_url, branch, auth_url, prefix="ssp_clone_full_")
 
 
@@ -264,7 +267,7 @@ def list_tags_from_repo(repo: git.Repo) -> list:
             commit = tag.commit
             tags.append({"name": tag.name, "commit_sha": commit.hexsha})
         except Exception as e:
-            logger.warning(f"Failed to get commit for tag {tag.name}: {e}")
+            logger.warning("Failed to get commit for tag %s: %s", tag.name, e)
 
     # Sort by tag name
     tags.sort(key=lambda t: t["name"])
@@ -283,7 +286,7 @@ def cleanup_repo(repo: git.Repo, temp_dir: str):
     try:
         repo.close()
     except Exception as e:
-        logger.warning(f"Failed to close repo: {e}")
+        logger.warning("Failed to close repo: %s", e)
 
     shutil.rmtree(temp_dir, ignore_errors=True)
 
@@ -407,10 +410,10 @@ def _write_ci_manifest(service, repo_temp_dir: str) -> None:
     os.makedirs(os.path.dirname(manifest_full_path), exist_ok=True)
     with open(manifest_full_path, "w") as f:
         f.write(manifest_yaml)
-    logger.info(f"Generated CI manifest at {manifest_path}")
+    logger.info("Generated CI manifest at %s", manifest_path)
 
 
-def scaffold_new_repository(service, connection, template_temp_dir: str) -> dict:
+def scaffold_new_repository(service, connection, template_temp_dir: str | None) -> dict:
     """
     Scaffold a new repository from a service template.
 
@@ -434,7 +437,7 @@ def scaffold_new_repository(service, connection, template_temp_dir: str) -> dict
     repo_name = service.handler
 
     # Create repository via plugin
-    logger.info(f"Creating repository: {repo_name}")
+    logger.info("Creating repository: %s", repo_name)
     create_result = plugin.create_repository(config, repo_name, private=True)
     repo_url = create_result.get("clone_url") or create_result.get("html_url")
 
@@ -488,7 +491,7 @@ def scaffold_new_repository(service, connection, template_temp_dir: str) -> dict
 
         origin.push(service.repo_branch)
 
-        logger.info(f"Successfully scaffolded new repository: {repo_url}")
+        logger.info("Successfully scaffolded new repository: %s", repo_url)
 
         return {
             "status": "success",
@@ -509,7 +512,7 @@ def scaffold_new_repository(service, connection, template_temp_dir: str) -> dict
         shutil.rmtree(repo_temp_dir, ignore_errors=True)
 
 
-def scaffold_existing_repository(service, connection, template_temp_dir: str) -> dict:
+def scaffold_existing_repository(service, connection, template_temp_dir: str | None) -> dict:
     """
     Scaffold into existing repository with feature branch and PR.
 
@@ -535,7 +538,7 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str) ->
     auth_url = build_authenticated_git_url(service.repo_url, connection)
 
     # Clone existing repo (with retry for transient errors)
-    logger.info(f"Cloning existing repository: {service.repo_url}")
+    logger.info("Cloning existing repository: %s", service.repo_url)
     repo, repo_temp_dir = _clone_repo(
         git_url=service.repo_url,
         branch=service.repo_branch,
@@ -577,7 +580,7 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str) ->
         origin.push(feature_branch)
 
         # Create PR via plugin
-        logger.info(f"Creating pull request for {feature_branch}")
+        logger.info("Creating pull request for %s", feature_branch)
         pr_result = plugin.create_pull_request(
             config,
             service.repo_url,
@@ -589,7 +592,7 @@ def scaffold_existing_repository(service, connection, template_temp_dir: str) ->
 
         pr_url = pr_result.get("html_url", "")
 
-        logger.info(f"Successfully created PR: {pr_url}")
+        logger.info("Successfully created PR: %s", pr_url)
 
         return {
             "status": "success",

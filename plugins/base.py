@@ -347,7 +347,6 @@ class BasePlugin(ABC):
         Returns:
             Dictionary describing the configuration fields.
         """
-        pass
 
     @abstractmethod
     def get_wizard_forms(self) -> list[Any]:
@@ -357,7 +356,6 @@ class BasePlugin(ABC):
         Returns:
             List of form classes to be used in the connection wizard.
         """
-        pass
 
     @abstractmethod
     def health_check(self, config: dict[str, Any]) -> dict[str, Any]:
@@ -370,7 +368,6 @@ class BasePlugin(ABC):
         Returns:
             Dictionary with 'healthy' (bool) and 'message' (str) keys.
         """
-        pass
 
     @abstractmethod
     def get_urlpatterns(self) -> list[Any]:
@@ -380,7 +377,6 @@ class BasePlugin(ABC):
         Returns:
             List of URL patterns to be included in the application.
         """
-        pass
 
 
 def get_ci_plugin_for_engine(engine_name: str):

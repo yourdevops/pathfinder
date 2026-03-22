@@ -35,10 +35,10 @@ def autodiscover():
         module_name = f"plugins.{module_info.name}"
         try:
             importlib.import_module(module_name)
-            logger.debug(f"Loaded plugin: {module_name}")
+            logger.debug("Loaded plugin: %s", module_name)
         except ImportError as e:
-            logger.warning(f"Failed to import plugin {module_name}: {e}")
+            logger.warning("Failed to import plugin %s: %s", module_name, e)
         except Exception as e:
-            logger.error(f"Error loading plugin {module_name}: {e}")
+            logger.error("Error loading plugin %s: %s", module_name, e)
 
-    logger.info(f"Plugin autodiscovery complete: {len(registry.all())} plugins loaded")
+    logger.info("Plugin autodiscovery complete: %s plugins loaded", len(registry.all()))

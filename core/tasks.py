@@ -29,7 +29,7 @@ def check_connection_health(connection_id: int) -> dict:
     try:
         connection = IntegrationConnection.objects.get(id=connection_id)
     except IntegrationConnection.DoesNotExist:
-        logger.warning(f"Connection {connection_id} not found for health check")
+        logger.warning("Connection %s not found for health check", connection_id)
         return {"error": "Connection not found"}
 
     plugin = connection.get_plugin()
@@ -45,7 +45,7 @@ def check_connection_health(connection_id: int) -> dict:
         config = connection.get_config()
         result = plugin.health_check(config)
     except Exception as e:
-        logger.exception(f"Health check failed for connection {connection_id}")
+        logger.exception("Health check failed for connection %s", connection_id)
         result = {
             "status": "unhealthy",
             "message": f"Health check error: {e!s}",
@@ -58,7 +58,7 @@ def check_connection_health(connection_id: int) -> dict:
     connection.last_health_check = timezone.now()
     connection.save(update_fields=["health_status", "last_health_message", "last_health_check"])
 
-    logger.info(f"Health check for {connection.name}: {result['status']}")
+    logger.info("Health check for %s: %s", connection.name, result["status"])
     return result
 
 
@@ -92,7 +92,7 @@ def schedule_health_checks() -> dict:
         check_connection_health.using(run_after=run_after).enqueue(connection_id=connection.id)
         scheduled += 1
 
-    logger.info(f"Scheduled {scheduled} health checks over {interval_seconds}s interval")
+    logger.info("Scheduled %s health checks over %ss interval", scheduled, interval_seconds)
     return {"scheduled": scheduled, "interval": interval_seconds}
 
 
@@ -144,7 +144,7 @@ def sync_template(template_id: int) -> dict:
     try:
         template = Template.objects.get(id=template_id)
     except Template.DoesNotExist:
-        logger.error(f"Template {template_id} not found for sync")
+        logger.error("Template %s not found for sync", template_id)
         return {"error": "Template not found"}
 
     # Mark as syncing
@@ -224,15 +224,17 @@ def sync_template(template_id: int) -> dict:
         template.save(update_fields=["sync_status", "last_synced_at", "last_synced_sha"])
 
         logger.info(
-            f"Synced template {template.name}: "
-            f"{versions_added} versions added, {versions_unavailable} marked unavailable"
+            "Synced template %s: %s versions added, %s marked unavailable",
+            template.name,
+            versions_added,
+            versions_unavailable,
         )
         return {"versions_added": versions_added, "versions_unavailable": versions_unavailable}
 
     except (FileNotFoundError, ValueError) as e:
         # Manifest missing or invalid
         error_msg = str(e)
-        logger.warning(f"Template sync failed for {template_id}: {error_msg}")
+        logger.warning("Template sync failed for %s: %s", template_id, error_msg)
         template.sync_status = "error"
         template.sync_error = error_msg
         template.save(update_fields=["sync_status", "sync_error"])
@@ -240,7 +242,7 @@ def sync_template(template_id: int) -> dict:
 
     except Exception as e:
         error_msg = scrub_credentials(str(e))
-        logger.exception(f"Failed to sync template {template_id}")
+        logger.exception("Failed to sync template %s", template_id)
         template.sync_status = "error"
         template.sync_error = error_msg
         template.save(update_fields=["sync_status", "sync_error"])
@@ -272,10 +274,10 @@ def _register_webhook(service, connection, repo_url: str) -> bool:
             return False
         repo_name = f"{parsed['owner']}/{parsed['repo']}"
         plugin.configure_webhook(config, repo_name, webhook_url, events=["workflow_run", "pull_request"])
-        logger.info(f"Registered webhook for {service.name}")
+        logger.info("Registered webhook for %s", service.name)
         return True
     except Exception as e:
-        logger.warning(f"Failed to register webhook for {service.name}: {e}")
+        logger.warning("Failed to register webhook for %s: %s", service.name, e)
         return False
 
 
@@ -314,13 +316,13 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
             id=service_id
         )
     except Service.DoesNotExist:
-        logger.error(f"Service {service_id} not found for scaffolding")
+        logger.error("Service %s not found for scaffolding", service_id)
         return {"error": "Service not found"}
 
     try:
         connection = IntegrationConnection.objects.get(id=scm_connection_id)
     except IntegrationConnection.DoesNotExist:
-        logger.error(f"Connection {scm_connection_id} not found for scaffolding")
+        logger.error("Connection %s not found for scaffolding", scm_connection_id)
         service.scaffold_status = "failed"
         service.scaffold_error = "SCM connection not found"
         service.save(update_fields=["scaffold_status", "scaffold_error"])
@@ -358,8 +360,10 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
                     # Checkout the specific tag commit SHA
                     template_repo_obj.git.checkout(version.commit_sha)
                     logger.info(
-                        f"Checked out template {service.template.name} at "
-                        f"{service.template_version} ({version.commit_sha[:8]})"
+                        "Checked out template %s at %s (%s)",
+                        service.template.name,
+                        service.template_version,
+                        version.commit_sha[:8],
                     )
 
             result = scaffold_new_repository(
@@ -423,20 +427,20 @@ def scaffold_repository(service_id: int, scm_connection_id: int) -> dict:
                             service.ci_variables_status = "provisioned"
                             service.ci_variables_error = ""
                         service.save(update_fields=["ci_variables_status", "ci_variables_error"])
-                        logger.info(f"CI variable provisioning for {service.name}: {ci_result}")
+                        logger.info("CI variable provisioning for %s: %s", service.name, ci_result)
                 except Exception as e:
-                    logger.warning(f"CI variable provisioning failed for {service.name}: {e}")
+                    logger.warning("CI variable provisioning failed for %s: %s", service.name, e)
                     service.ci_variables_status = "failed"
                     service.ci_variables_error = str(e)
                     service.save(update_fields=["ci_variables_status", "ci_variables_error"])
 
-        logger.info(f"Successfully scaffolded service {service.id}: {service.name}")
+        logger.info("Successfully scaffolded service %s: %s", service.id, service.name)
         return result
 
     except Exception as e:
         # Mark as failed
         error_msg = scrub_credentials(str(e))
-        logger.exception(f"Failed to scaffold service {service_id}")
+        logger.exception("Failed to scaffold service %s", service_id)
         service.scaffold_status = "failed"
         service.scaffold_error = error_msg
         service.save(update_fields=["scaffold_status", "scaffold_error"])
@@ -507,7 +511,7 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
     try:
         repository = StepsRepository.objects.get(id=repository_id)
     except StepsRepository.DoesNotExist:
-        logger.error(f"StepsRepository {repository_id} not found for scanning")
+        logger.error("StepsRepository %s not found for scanning", repository_id)
         return {"error": "Repository not found"}
 
     # Mark as scanning
@@ -610,7 +614,7 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
             raw_steps = discover_steps(temp_dir, ci_plugin.engine_file_name)
         else:
             raw_steps = []
-            logger.warning(f"No CI plugin found for engine '{engine}', skipping step scan")
+            logger.warning("No CI plugin found for engine '%s', skipping step scan", engine)
 
         # Reset last_change_type for all active steps in this repo before scan
         CIStep.objects.filter(repository=repository, status="active").update(last_change_type="")
@@ -631,7 +635,7 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
             # Derive slug via CI plugin (three-tier: x-pathfinder.name -> native name -> full path)
             slug = ci_plugin.derive_step_slug(raw_step["raw_content"], raw_step["directory_path"])
             if not slug:
-                logger.warning(f"Could not derive slug for step in {dir_name}, skipping")
+                logger.warning("Could not derive slug for step in %s, skipping", dir_name)
                 continue
 
             scanned_slugs.add(slug)
@@ -640,8 +644,11 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
             existing = CIStep.objects.filter(engine=engine, slug=slug).first()
             if existing and existing.repository_id != repository.id:
                 logger.warning(
-                    f"Slug collision: '{slug}' (engine={engine}) already exists from "
-                    f"repository '{existing.repository.name}', skipping step from '{repository.name}'"
+                    "Slug collision: '%s' (engine=%s) already exists from repository '%s', skipping step from '%s'",
+                    slug,
+                    engine,
+                    existing.repository.name,
+                    repository.name,
                 )
                 stats["skipped_collision"] += 1
                 StepSyncEntry.objects.create(
@@ -765,10 +772,14 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
         repository.save(update_fields=["scan_status", "scan_error", "last_scanned_at", "last_scanned_sha"])
 
         logger.info(
-            f"Scanned steps repository {repository.name}: "
-            f"{stats['created']} created, {stats['updated']} updated, "
-            f"{stats['unchanged']} unchanged, {stats['archived']} archived, "
-            f"{stats['skipped_collision']} collisions, {len(runtimes_data)} runtimes"
+            "Scanned steps repository %s: %s created, %s updated, %s unchanged, %s archived, %s collisions, %s runtimes",
+            repository.name,
+            stats["created"],
+            stats["updated"],
+            stats["unchanged"],
+            stats["archived"],
+            stats["skipped_collision"],
+            len(runtimes_data),
         )
         return {
             "steps": stats["created"] + stats["updated"] + stats["unchanged"],
@@ -781,7 +792,7 @@ def scan_steps_repository(repository_id: int, trigger: str = "manual") -> dict:
         from core.git_utils import scrub_credentials
 
         error_msg = scrub_credentials(str(e))
-        logger.exception(f"Failed to scan steps repository {repository_id}")
+        logger.exception("Failed to scan steps repository %s", repository_id)
         repository.scan_status = "error"
         repository.scan_error = error_msg
         repository.save(update_fields=["scan_status", "scan_error"])
@@ -814,7 +825,7 @@ def cleanup_archived_steps() -> dict:
 
     referenced_step_ids = CIWorkflowStep.objects.values_list("step_id", flat=True)
     deleted_count, _ = CIStep.objects.filter(status="archived").exclude(id__in=referenced_step_ids).delete()
-    logger.info(f"Cleaned up {deleted_count} unreferenced archived steps")
+    logger.info("Cleaned up %s unreferenced archived steps", deleted_count)
     return {"deleted": deleted_count}
 
 
@@ -841,7 +852,7 @@ def activate_service_on_first_success(build):
     service.status = "active"
     service.current_build_id = build.id
     service.save(update_fields=["status", "current_build_id", "updated_at"])
-    logger.info(f"Service {service.name} activated on first successful build {build.id}")
+    logger.info("Service %s activated on first successful build %s", service.name, build.id)
 
 
 @task(queue_name="build_updates")
@@ -941,10 +952,14 @@ def verify_build(build_id: int, connection_id: int, repo_name: str) -> dict:
     ):
         service.ci_manifest_status = "synced"
         service.save(update_fields=["ci_manifest_status"])
-        logger.info(f"Service {service.name} manifest synced (version {version_match})")
+        logger.info("Service %s manifest synced (version %s)", service.name, version_match)
 
     logger.info(
-        f"Build {build.id} verified: {verification_status} (hash={manifest_hash[:12]}..., version={version_match})"
+        "Build %s verified: %s (hash=%s..., version=%s)",
+        build.id,
+        verification_status,
+        manifest_hash[:12],
+        version_match,
     )
     return {"status": verification_status, "build_id": build.id}
 
@@ -978,25 +993,25 @@ def poll_build_details(
     try:
         connection = IntegrationConnection.objects.get(id=connection_id)
     except IntegrationConnection.DoesNotExist:
-        logger.error(f"Connection {connection_id} not found")
+        logger.error("Connection %s not found", connection_id)
         return {"error": "Connection not found"}
 
     try:
         service = Service.objects.get(id=service_id)
     except Service.DoesNotExist:
-        logger.error(f"Service {service_id} not found")
+        logger.error("Service %s not found", service_id)
         return {"error": "Service not found"}
 
     plugin = connection.get_plugin()
     if not plugin:
-        logger.error(f"Plugin not available for connection {connection.name}")
+        logger.error("Plugin not available for connection %s", connection.name)
         return {"error": "Plugin not available"}
 
     # Fetch run details from GitHub
     try:
         run_data = plugin.get_workflow_run(connection.get_config(), repo_name, run_id)
     except Exception as e:
-        logger.exception(f"Failed to fetch workflow run {run_id}")
+        logger.exception("Failed to fetch workflow run %s", run_id)
         return {"error": str(e)}
 
     # Fetch commit message from GitHub API
@@ -1009,7 +1024,7 @@ def poll_build_details(
             full_message = commit_data.get("message", "")
             commit_message = full_message.split("\n")[0] if full_message else ""
         except Exception as e:
-            logger.warning(f"Failed to fetch commit {head_sha}: {e}")
+            logger.warning("Failed to fetch commit %s: %s", head_sha, e)
             # Continue without commit message - not critical
 
     # Map GitHub status to our status
@@ -1057,9 +1072,9 @@ def poll_build_details(
                 if resolved_ref:
                     build.artifact_ref = resolved_ref
                     build.save(update_fields=["artifact_ref"])
-                    logger.info(f"Resolved artifact ref for build {build.id}: {resolved_ref}")
+                    logger.info("Resolved artifact ref for build %s: %s", build.id, resolved_ref)
             except Exception as e:
-                logger.warning(f"Failed to resolve artifact ref for build {build.id}: {e}")
+                logger.warning("Failed to resolve artifact ref for build %s: %s", build.id, e)
 
     # Activate service on first successful build
     if status == "success":
@@ -1073,7 +1088,7 @@ def poll_build_details(
             repo_name=repo_name,
         )
 
-    logger.info(f"Build {build.id} {'created' if created else 'updated'}: {status}")
+    logger.info("Build %s %s: %s", build.id, "created" if created else "updated", status)
     return {"build_id": build.id, "status": status, "created": created}
 
 
@@ -1101,12 +1116,12 @@ def push_ci_manifest(service_id: int) -> dict:
     try:
         service = Service.objects.select_related("project", "ci_workflow", "ci_workflow_version").get(id=service_id)
     except Service.DoesNotExist:
-        logger.error(f"Service {service_id} not found for CI manifest push")
+        logger.error("Service %s not found for CI manifest push", service_id)
         return {"error": "Service not found"}
 
     # Validate workflow is assigned
     if not service.ci_workflow:
-        logger.error(f"Service {service_id} has no CI workflow assigned")
+        logger.error("Service %s has no CI workflow assigned", service_id)
         return {"error": "No CI workflow assigned"}
 
     try:
@@ -1131,7 +1146,7 @@ def push_ci_manifest(service_id: int) -> dict:
         )
 
         if not project_connection:
-            logger.error(f"No default SCM connection for project {service.project.name}")
+            logger.error("No default SCM connection for project %s", service.project.name)
             service.ci_manifest_status = "out_of_sync"
             service.save(update_fields=["ci_manifest_status"])
             return {"error": "No SCM connection configured"}
@@ -1141,13 +1156,13 @@ def push_ci_manifest(service_id: int) -> dict:
         config = connection.get_config()
 
         if not plugin:
-            logger.error(f"Plugin not available for connection {connection.name}")
+            logger.error("Plugin not available for connection %s", connection.name)
             return {"error": "SCM plugin not available"}
 
         # Parse repo URL to get owner/repo
         parsed = parse_git_url(service.repo_url)
         if not parsed:
-            logger.error(f"Cannot parse repo URL: {service.repo_url}")
+            logger.error("Cannot parse repo URL: %s", service.repo_url)
             return {"error": "Invalid repository URL"}
 
         repo_name = f"{parsed['owner']}/{parsed['repo']}"
@@ -1159,7 +1174,7 @@ def push_ci_manifest(service_id: int) -> dict:
         # Compare with current manifest in repo — skip PR if content already matches
         existing_content = ci_plugin.fetch_manifest_content(config, repo_name, manifest_file_path, source_branch)
         if existing_content is not None and existing_content.rstrip() == manifest_yaml.rstrip():
-            logger.info(f"Manifest already in sync for service {service.name}, skipping PR")
+            logger.info("Manifest already in sync for service %s, skipping PR", service.name)
             service.ci_manifest_status = "synced"
             service.ci_manifest_pushed_at = timezone.now()
             service.save(update_fields=["ci_manifest_status", "ci_manifest_pushed_at"])
@@ -1186,14 +1201,14 @@ def push_ci_manifest(service_id: int) -> dict:
                 branch=feature_branch,
             )
             pr_url = existing_pr.get("html_url", "")
-            logger.info(f"Added commit to existing digest PR #{existing_pr['number']} for {service.name}")
+            logger.info("Added commit to existing digest PR #%s for %s", existing_pr["number"], service.name)
         else:
             # No open PR: create new branch from default HEAD and open PR
             try:
                 plugin.create_branch(config, repo_name, feature_branch, source_branch)
             except Exception:
                 # Branch may already exist (closed PR), continue
-                logger.info(f"Branch {feature_branch} may already exist, continuing")
+                logger.info("Branch %s may already exist, continuing", feature_branch)
 
             # Write manifest file
             plugin.update_or_create_file(
@@ -1236,12 +1251,12 @@ def push_ci_manifest(service_id: int) -> dict:
             update_fields=["ci_manifest_status", "ci_manifest_pushed_at", "ci_manifest_pr_url", "webhook_registered"]
         )
 
-        logger.info(f"Successfully pushed CI manifest for service {service.name}: {pr_url}")
+        logger.info("Successfully pushed CI manifest for service %s: %s", service.name, pr_url)
         return {"status": "success", "pr_url": pr_url}
 
     except Exception as e:
         error_msg = str(e)
-        logger.exception(f"Failed to push CI manifest for service {service_id}")
+        logger.exception("Failed to push CI manifest for service %s", service_id)
         return {"status": "failed", "error": error_msg}
 
 
@@ -1270,17 +1285,17 @@ def auto_update_services(workflow_id: int, version_id: int) -> dict:
     try:
         workflow = CIWorkflow.objects.get(id=workflow_id)
     except CIWorkflow.DoesNotExist:
-        logger.error(f"CIWorkflow {workflow_id} not found for auto-update")
+        logger.error("CIWorkflow %s not found for auto-update", workflow_id)
         return {"error": "Workflow not found"}
 
     try:
         new_version = CIWorkflowVersion.objects.get(id=version_id)
     except CIWorkflowVersion.DoesNotExist:
-        logger.error(f"CIWorkflowVersion {version_id} not found for auto-update")
+        logger.error("CIWorkflowVersion %s not found for auto-update", version_id)
         return {"error": "Version not found"}
 
     if new_version.status != CIWorkflowVersion.Status.AUTHORIZED:
-        logger.info(f"Version {version_id} is not authorized, skipping auto-update")
+        logger.info("Version %s is not authorized, skipping auto-update", version_id)
         return {"skipped": True, "reason": "not authorized"}
 
     # Find eligible services: auto-update enabled, has a pinned version
@@ -1308,9 +1323,9 @@ def auto_update_services(workflow_id: int, version_id: int) -> dict:
         push_ci_manifest.enqueue(service_id=service.id)
         updated += 1
 
-        logger.info(f"Auto-updated service {service.name}: {current_version_str} -> {new_version.version}")
+        logger.info("Auto-updated service %s: %s -> %s", service.name, current_version_str, new_version.version)
 
-    logger.info(f"Auto-update complete for workflow {workflow.name}: {updated} updated, {skipped} skipped")
+    logger.info("Auto-update complete for workflow %s: %s updated, %s skipped", workflow.name, updated, skipped)
     return {"updated": updated, "skipped": skipped}
 
 
@@ -1364,7 +1379,7 @@ def cleanup_old_versions() -> dict:
     config.last_cleanup_at = timezone.now()
     config.save(update_fields=["last_cleanup_at"])
 
-    logger.info(f"Version cleanup: {content_cleared} manifest(s) cleared, {deleted_count} version(s) deleted")
+    logger.info("Version cleanup: %s manifest(s) cleared, %s version(s) deleted", content_cleared, deleted_count)
     return {
         "content_cleared": content_cleared,
         "versions_deleted": deleted_count,
@@ -1394,12 +1409,12 @@ def scheduled_scan_all_steps_repos() -> dict:
 
     for repo in repos:
         if repo.scan_status == "scanning":
-            logger.info(f"Skipping {repo.name} (already scanning)")
+            logger.info("Skipping %s (already scanning)", repo.name)
             skipped += 1
             continue
 
         scan_steps_repository.enqueue(repository_id=repo.id, trigger="scheduled")
         enqueued += 1
 
-    logger.info(f"Scheduled scan: enqueued {enqueued}, skipped {skipped}")
+    logger.info("Scheduled scan: enqueued %s, skipped %s", enqueued, skipped)
     return {"enqueued": enqueued, "skipped": skipped}

@@ -50,7 +50,7 @@ def get_encryption_key() -> bytes:
     key_file = secrets_dir / "encryption.key"
 
     if key_file.exists():
-        logger.debug(f"Using encryption key from {key_file}")
+        logger.debug("Using encryption key from %s", key_file)
         return key_file.read_bytes().strip()
 
     # Generate new key
@@ -64,7 +64,7 @@ def get_encryption_key() -> bytes:
     key_file.write_bytes(new_key)
     key_file.chmod(0o600)
 
-    logger.info(f"New encryption key saved to {key_file}")
+    logger.info("New encryption key saved to %s", key_file)
     return new_key
 
 

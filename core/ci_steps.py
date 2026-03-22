@@ -57,7 +57,7 @@ def discover_steps(repo_path: str, engine_file_name: str) -> list[dict]:
                 with open(file_path) as f:
                     content = yaml.safe_load(f) or {}
             except yaml.YAMLError as e:
-                logger.warning(f"Failed to parse {actual_filename} in {rel_dir}: {e}")
+                logger.warning("Failed to parse %s in %s: %s", actual_filename, rel_dir, e)
                 continue
 
             results.append(

@@ -55,21 +55,29 @@ extend-exclude = ["theme/static/js/vendor"]
 
 [tool.ruff.lint]
 select = [
-    "E",     # pycodestyle errors
-    "W",     # pycodestyle warnings
-    "F",     # pyflakes
-    "I",     # isort
+    "A",     # flake8-builtins (shadow built-in names)
     "B",     # flake8-bugbear
     "C4",    # flake8-comprehensions
-    "UP",    # pyupgrade
     "DJ",    # flake8-django
-    "SIM",   # flake8-simplify
-    "TCH",   # flake8-type-checking
+    "DTZ",   # flake8-datetimez (naive datetime)
+    "E",     # pycodestyle errors
+    "F",     # pyflakes
+    "G",     # flake8-logging-format
+    "I",     # isort
+    "PERF",  # perflint (performance anti-patterns)
+    "PIE",   # flake8-pie (misc unnecessary code)
+    "RSE",   # flake8-raise (unnecessary parens)
     "RUF",   # ruff-specific rules
+    "SIM",   # flake8-simplify
+    "T20",   # flake8-print (no print() in production)
+    "TCH",   # flake8-type-checking
+    "UP",    # pyupgrade
+    "W",     # pycodestyle warnings
 ]
 ignore = [
     "E501",  # line length handled by formatter
     "RUF012",  # mutable class attrs - false positive on Django Meta/model fields
+    "PERF401", # manual list comprehension - noisy on multi-line dict appends
 ]
 
 [tool.ruff.lint.isort]

@@ -141,7 +141,7 @@ class TemplateRegisterView(OperatorRequiredMixin, View):
             template.save(update_fields=["last_synced_sha"])
             cleanup_repo(full_repo, full_temp_dir)
         except Exception as e:
-            logger.warning(f"Failed to list tags for template {template_name}: {e}")
+            logger.warning("Failed to list tags for template %s: %s", template_name, e)
             # Template is created but without versions - that's OK
 
         messages.success(request, f'Template "{template_name}" registered successfully.')

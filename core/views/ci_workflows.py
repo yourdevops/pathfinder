@@ -96,10 +96,10 @@ class StepsRepoRegisterView(OperatorRequiredMixin, View):
                                 webhook_url,
                                 events=["push"],
                             )
-                            logger.info(f"Registered webhook for steps repo {repo.name}")
+                            logger.info("Registered webhook for steps repo %s", repo.name)
                     except Exception as e:
                         # Log but don't fail registration
-                        logger.warning(f"Failed to register webhook for steps repo {repo.name}: {e}")
+                        logger.warning("Failed to register webhook for steps repo %s: %s", repo.name, e)
 
             # Enqueue scan task
             from core.tasks import scan_steps_repository
@@ -1253,7 +1253,7 @@ class VersionManifestView(LoginRequiredMixin, View):
                 no_changes = True
             else:
                 for line in raw_diff:
-                    if line.startswith("+++") or line.startswith("---"):
+                    if line.startswith(("+++", "---")):
                         diff_lines.append(("header", line))
                     elif line.startswith("@@"):
                         diff_lines.append(("hunk", line))

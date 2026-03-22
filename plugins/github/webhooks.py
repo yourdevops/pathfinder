@@ -72,7 +72,7 @@ def identify_service_from_webhook(payload: dict):
         if service:
             return service
 
-    logger.warning(f"No service found for webhook: repo={repo_url}")
+    logger.warning("No service found for webhook: repo=%s", repo_url)
     return None
 
 
@@ -168,7 +168,7 @@ def _handle_workflow_run(request: HttpRequest) -> HttpResponse:
     )
 
     if not project_connection:
-        logger.warning(f"No default SCM connection for project {service.project.name}")
+        logger.warning("No default SCM connection for project %s", service.project.name)
         return HttpResponse(status=200)
 
     connection = project_connection.connection
@@ -178,10 +178,10 @@ def _handle_workflow_run(request: HttpRequest) -> HttpResponse:
     webhook_secret = config.get("webhook_secret", "")
     if webhook_secret:
         if not verify_github_signature(request, webhook_secret):
-            logger.warning(f"Invalid webhook signature for service {service.name}")
+            logger.warning("Invalid webhook signature for service %s", service.name)
             return HttpResponse(status=200)
     else:
-        logger.warning(f"No webhook secret configured for connection {connection.name}")
+        logger.warning("No webhook signing key configured for connection %s", connection.name)
 
     # Extract run details
     workflow_run = payload.get("workflow_run", {})
@@ -207,7 +207,7 @@ def _handle_workflow_run(request: HttpRequest) -> HttpResponse:
         artifact_ref=artifact_ref,
     )
 
-    logger.info(f"Enqueued build polling for service {service.name}, run_id={run_id}")
+    logger.info("Enqueued build polling for service %s, run_id=%s", service.name, run_id)
     return HttpResponse(status=200)
 
 
@@ -251,14 +251,14 @@ def _handle_push(request: HttpRequest) -> HttpResponse:
                 break
 
     if not repository:
-        logger.info(f"No steps repository found for webhook: {repo_html_url}")
+        logger.info("No steps repository found for webhook: %s", repo_html_url)
         return HttpResponse(status=200)
 
     # Only process pushes to default branch
     ref = payload.get("ref", "")
     expected_ref = f"refs/heads/{repository.default_branch}"
     if ref != expected_ref:
-        logger.info(f"Steps repo webhook: ignoring push to {ref} (expected {expected_ref})")
+        logger.info("Steps repo webhook: ignoring push to %s (expected %s)", ref, expected_ref)
         return HttpResponse(status=200)
 
     # Verify signature using connection's webhook secret
@@ -266,19 +266,19 @@ def _handle_push(request: HttpRequest) -> HttpResponse:
         config = repository.connection.get_config()
         webhook_secret = config.get("webhook_secret", "")
         if webhook_secret and not verify_github_signature(request, webhook_secret):
-            logger.warning(f"Invalid webhook signature for steps repo {repository.name}")
+            logger.warning("Invalid webhook signature for steps repo %s", repository.name)
             return HttpResponse(status=200)
 
     # Concurrent scan prevention
     if repository.scan_status == "scanning":
-        logger.info(f"Steps repo {repository.name} already scanning, skipping webhook trigger")
+        logger.info("Steps repo %s already scanning, skipping webhook trigger", repository.name)
         return HttpResponse(status=200)
 
     # Enqueue scan task with webhook trigger
     from core.tasks import scan_steps_repository
 
     scan_steps_repository.enqueue(repository_id=repository.id, trigger="webhook")
-    logger.info(f"Enqueued webhook-triggered scan for steps repo {repository.name}")
+    logger.info("Enqueued webhook-triggered scan for steps repo %s", repository.name)
     return HttpResponse(status=200)
 
 
@@ -329,7 +329,7 @@ def _handle_pull_request(request: HttpRequest) -> HttpResponse:
         ProjectConnection.objects.filter(project=service.project, is_default=True).select_related("connection").first()
     )
     if not project_connection:
-        logger.warning(f"No default SCM connection for project {service.project.name}")
+        logger.warning("No default SCM connection for project %s", service.project.name)
         return HttpResponse(status=200)
 
     connection = project_connection.connection
@@ -337,10 +337,10 @@ def _handle_pull_request(request: HttpRequest) -> HttpResponse:
     webhook_secret = config.get("webhook_secret", "")
     if webhook_secret:
         if not verify_github_signature(request, webhook_secret):
-            logger.warning(f"Invalid webhook signature for service {service.name}")
+            logger.warning("Invalid webhook signature for service %s", service.name)
             return HttpResponse(status=200)
     else:
-        logger.warning(f"No webhook secret configured for connection {connection.name}")
+        logger.warning("No webhook signing key configured for connection %s", connection.name)
 
     # Update status based on merge outcome
     merged = pr.get("merged", False)
@@ -348,10 +348,10 @@ def _handle_pull_request(request: HttpRequest) -> HttpResponse:
         service.ci_manifest_status = "synced"
         service.ci_manifest_pushed_at = timezone.now()
         service.save(update_fields=["ci_manifest_status", "ci_manifest_pushed_at"])
-        logger.info(f"CI manifest PR merged for service {service.name}, status -> synced")
+        logger.info("CI manifest PR merged for service %s, status -> synced", service.name)
     else:
         service.ci_manifest_status = "out_of_sync"
         service.save(update_fields=["ci_manifest_status"])
-        logger.info(f"CI manifest PR closed without merge for service {service.name}, status -> out_of_sync")
+        logger.info("CI manifest PR closed without merge for service %s, status -> out_of_sync", service.name)
 
     return HttpResponse(status=200)
