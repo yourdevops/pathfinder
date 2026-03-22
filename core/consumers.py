@@ -23,6 +23,8 @@ class BasePollingConsumer(AsyncWebsocketConsumer):
 
     entity_id_kwarg: str | None = None  # Override in subclass
     poll_interval = 3  # seconds
+    max_consecutive_errors = 5
+    max_backoff = 60  # seconds
 
     def get_poll_interval(self):
         """Return current poll interval. Override for dynamic intervals."""
@@ -53,7 +55,13 @@ class BasePollingConsumer(AsyncWebsocketConsumer):
                 await self.poll_task
 
     async def poll_loop(self):
-        """Poll database for state changes and send updates when detected."""
+        """Poll database for state changes and send updates when detected.
+
+        Uses exponential backoff + circuit breaker on persistent failure.
+        After ``max_consecutive_errors`` the WebSocket is closed so the
+        frontend's HTMX ws extension reconnects with its own jitter/backoff.
+        """
+        consecutive_errors = 0
         while True:
             try:
                 state = await self.get_current_state()
@@ -68,12 +76,36 @@ class BasePollingConsumer(AsyncWebsocketConsumer):
                     html = await self.render_updates(state)
                     if html:
                         await self.send(text_data=html)
+                consecutive_errors = 0
             except asyncio.CancelledError:
                 raise
             except Exception:
+                consecutive_errors += 1
                 logger.exception(
-                    "Error in %s poll loop for %s %s", type(self).__name__, self.entity_id_kwarg, self.entity_id
+                    "Error in %s poll loop for %s %s (%d/%d)",
+                    type(self).__name__,
+                    self.entity_id_kwarg,
+                    self.entity_id,
+                    consecutive_errors,
+                    self.max_consecutive_errors,
                 )
+                if consecutive_errors >= self.max_consecutive_errors:
+                    logger.error(
+                        "Circuit breaker: closing %s for %s %s after %d consecutive errors",
+                        type(self).__name__,
+                        self.entity_id_kwarg,
+                        self.entity_id,
+                        consecutive_errors,
+                    )
+                    await self.close()
+                    return
+                # Exponential backoff: poll_interval * 2^errors, capped
+                backoff = min(
+                    self.get_poll_interval() * (2**consecutive_errors),
+                    self.max_backoff,
+                )
+                await asyncio.sleep(backoff)
+                continue
 
             await asyncio.sleep(self.get_poll_interval())
 
